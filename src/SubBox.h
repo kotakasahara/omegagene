@@ -60,7 +60,10 @@ class SubBox : public CelesteObject {
   int n_atoms_exbox;
 
   // variables for rank0
+  // all_atomids[box_id][atomid in the box] = original atomid
+  //    set in the function SubBox::rnak0_div_box()
   int** all_atomids;
+  // all_n_atoms
   int* all_n_atoms;
 
   // for bonded potential
@@ -107,6 +110,10 @@ class SubBox : public CelesteObject {
   real* nb14_coeff_ele;
   int** excess_pairs;
   
+  int max_n_nb15off;
+  int n_nb15off;
+  int* nb15off;
+
   int n_lj_types;
   real_pw* lj_6term;
   real_pw* lj_12term;
@@ -136,6 +143,7 @@ class SubBox : public CelesteObject {
   int alloc_variables_for_impros(int in_n_impros);
   int alloc_variables_for_nb14(int in_n_nb14);
   int alloc_variables_for_excess(int in_n_excess);
+  int alloc_variables_for_nb15off(int in_max_n_nb15off);
   int free_variables();
   int free_variables_for_bonds();
   int free_variables_for_angles();
@@ -143,12 +151,12 @@ class SubBox : public CelesteObject {
   int free_variables_for_impros();
   int free_variables_for_nb14();
   int free_variables_for_excess();
+  int free_variables_for_nb15off();
   
   int set_parameters(int in_n_atomds, PBC* in_pbc, Config* in_cfg,
 		     real in_cutoff_pair,
 		     int in_n_boxes_x, int in_n_boxes_y, int in_n_boxes_z);
-  int set_nsgrid(const int* in_nb15off,
-		 const int in_max_n_nb15off);
+  int set_nsgrid();
   int nsgrid_crd_update();
   int nsgrid_update();
   int nsgrid_update_receiver();
@@ -190,11 +198,13 @@ class SubBox : public CelesteObject {
 			  const real* in_nb14_coeff_vdw,
 			  const real* in_nb14_coeff_ele);
   int set_ele_excess(const int** in_excess_pairs);
+  int set_nb15off(const int* in_nb15off);
   int set_lj_param(const int in_n_lj_types,
 		   real_pw* in_lj_6term,
 		   real_pw* in_lj_12term);
   int calc_energy();
   int calc_energy_pairwise();
+  int calc_energy_pairwise_wo_neighborsearch();
   bool check_nb15off(const int& a1, const int& a2, const int* bitmask);
   int calc_energy_bonds();
   int calc_energy_angles();

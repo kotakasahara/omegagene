@@ -135,9 +135,6 @@ class MiniCell : public CelesteObject{
   int *atomids;
 
   // atomids_buf
-  //   1. corresponding atomids for transfering 
-  //      forces from MiniCell to MmSystem
-  //        get_ene_forces()
   //   2. Temporary buffer for atomids 
   //      (atomids for space decompositions)
   //        set_crds_to_homebox
@@ -225,7 +222,7 @@ class MiniCell : public CelesteObject{
   int get_max_n_cells(){ return max_n_cells; };
   int get_max_n_cell_pairs(){ return max_n_cell_pairs; };
   
-  int get_ene_forces(real_fc& in_ene_vdw, real_fc& in_ene_ele, real_fc**& in_force);
+  //int get_ene_forces(real_fc& in_ene_vdw, real_fc& in_ene_ele, real_fc**& in_force);
 
   /////// setter
   // set_grid_parameters()
@@ -233,8 +230,8 @@ class MiniCell : public CelesteObject{
   int set_grid_parameters(const int in_n_atoms,
 			  const real in_cutoff_pair,
 			  const PBC* in_pbc,
-			  const int* in_nb15off,
-			  const int in_max_n_nb15off);
+			  const int in_max_n_nb15off,
+			  int* in_nb15off);
   
   //real move_crd_in_cell(const int atomid, const int dim, const real val);
   void add_energy(const real_fc in_vdw, const real_fc in_ele){ energy[0] += in_vdw; energy[1] += in_ele; };

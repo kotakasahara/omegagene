@@ -9,21 +9,20 @@ SubBox::~SubBox(){
 }
 
 int SubBox::alloc_variables(){
-  cout << "SubBox::alloc_variables"<<endl;
-  crd = new real[max_n_atoms_box*3];
-  vel = new real[max_n_atoms_box*3];
-  charge = new real[max_n_atoms_box*3];
-  atom_type = new int[max_n_atoms_box*3];
-  vel_next = new real[max_n_atoms_box*3];
-  vel_just = new real[max_n_atoms_box*3];
-  work = new real[max_n_atoms_box*3];
-  //frc = new real[max_n_atoms_box*3];
+  //cout << "SubBox::alloc_variables"<<endl;
+  crd = new real[max_n_atoms_exbox*3];
+  vel = new real[max_n_atoms_exbox*3];
+  charge = new real[max_n_atoms_exbox*3];
+  atom_type = new int[max_n_atoms_exbox*3];
+  vel_next = new real[max_n_atoms_exbox*3];
+  vel_just = new real[max_n_atoms_exbox*3];
+  work = new real[max_n_atoms_exbox*3];
 
   //crd_box = new real*[n_boxes];
   //for(int i = 0; i < n_boxes; i++){
   //crd_box[i] = new real[max_n_atoms_box*3];
   //}
-  atomids = new int[max_n_atoms_box];
+  atomids = new int[max_n_atoms_exbox];
   atomids_rev = new int[n_atoms];
   //atomids_box = new int*[n_boxes];
   //for(int i = 0; i < n_boxes; i++){
@@ -149,6 +148,17 @@ int SubBox::alloc_variables_for_excess(int in_n_excess){
   }
   return 0;
 }
+int SubBox::alloc_variables_for_nb15off(int in_max_n_nb15off){
+  max_n_nb15off = in_max_n_nb15off;
+  nb15off = new int[max_n_atoms_exbox * max_n_nb15off];
+  n_nb15off = 0;
+  for(int i=0; i < max_n_atoms_exbox; i++){
+    for(int j=0; j < max_n_nb15off; j++){
+      nb15off[i*max_n_nb15off + j] = -1;
+    }
+  }
+  return 0;
+}
 
 int SubBox::init_variables(){
   //for(int i=0; i < 27; i++){
@@ -178,6 +188,8 @@ int SubBox::free_variables(){
   free_variables_for_impros();
   free_variables_for_nb14();
   free_variables_for_excess();
+  free_variables_for_nb15off();
+
   //for(int i=0; i < n_boxes; i++){
   //delete[] crd_box[i];
   //}
@@ -271,6 +283,11 @@ int SubBox::free_variables_for_excess(){
   return 0;
 }
 
+int SubBox::free_variables_for_nb15off(){
+  delete[] nb15off;
+  return 0;
+}
+
 int SubBox::set_parameters(int in_n_atoms, PBC* in_pbc, 
 			   Config* in_cfg,
 			   real in_cutoff_pair,
@@ -283,7 +300,8 @@ int SubBox::set_parameters(int in_n_atoms, PBC* in_pbc,
   //   box_crd <- set_box_crd()
   //   box_lower, box_upper, exbox_lower, exbox_upper
   //   
-  cout << "SubBox::set_parameters" <<endl;
+
+  //cout << "SubBox::set_parameters" <<endl;
   n_atoms = in_n_atoms;
   pbc = in_pbc;
   cfg = in_cfg;
@@ -294,6 +312,10 @@ int SubBox::set_parameters(int in_n_atoms, PBC* in_pbc,
   n_boxes = n_boxes_xyz[0] * n_boxes_xyz[1] * n_boxes_xyz[2];
 
   max_n_atoms_box = n_atoms / n_boxes * COEF_MAX_N_ATOMS_BOX;
+
+  // temporary:
+  max_n_atoms_exbox = n_atoms / n_boxes * COEF_MAX_N_ATOMS_BOX;
+  // 
 
   rank = 0;
 
@@ -312,43 +334,36 @@ int SubBox::set_parameters(int in_n_atoms, PBC* in_pbc,
     exbox_lower[d] = box_lower[d] - cutoff_pair_half;
     exbox_upper[d] = box_upper[d] + cutoff_pair_half;
   }
-  cout << "DBG SubBox box_lower " << box_lower[0] << " " << box_lower[1] << " " << box_lower[2] << endl;
-  cout << "DBG SubBox box_upper " << box_upper[0] << " " << box_upper[1] << " " << box_upper[2] << endl;
+  //cout << "DBG SubBox box_lower " << box_lower[0] << " " << box_lower[1] << " " << box_lower[2] << endl;
+  //cout << "DBG SubBox box_upper " << box_upper[0] << " " << box_upper[1] << " " << box_upper[2] << endl;
   ff = ForceField();
   ff.set_config_parameters(cfg);
   ff.initial_preprocess((const PBC*)pbc);
   return 0;
 }
-int SubBox::set_nsgrid(const int* in_nb15off,
-		       const int in_max_n_nb15off){
-  cout << "MmSystem::nsgrid_setup()"<<endl;
+
+int SubBox::set_nsgrid(){
+  cout << "set_grid_parameters" << endl;
   nsgrid.set_grid_parameters(n_atoms, cfg->nsgrid_cutoff, 
-			     pbc,
-			     in_nb15off, in_max_n_nb15off);
+			     pbc, max_n_nb15off, nb15off);
+  cout << "set_box_info" << endl;
   nsgrid.set_box_info(n_boxes_xyz, box_l);
+
   
   nsgrid.set_max_n_atoms_region();
 
-  //cout << "setup_crd_into_grid" << endl;
   //nsgrid.setup_crd_into_grid(crd, charge, atom_type);
-  cout << "set_grid_xy()"<<endl;
   nsgrid.set_grid_xy();
-  cout << "alloc_variables" << endl;
   nsgrid.alloc_variables();
   nsgrid.set_crds_to_homebox(get_crds(),
 			     get_atomids(),
 			     get_n_atoms_box());
   //nsgrid.setup_replica_regions();
   //nsgrid.alloc_variables_box();
-  
-  cout << "set_atoms_into_grid_xy()"<<endl;
   nsgrid.set_atoms_into_grid_xy();
   nsgrid.set_atomids_buf();
-  
-  cout << "enumerate_cell_paris" << endl;
   nsgrid.enumerate_cell_pairs();
 
-  cout << "// setup_nsgrid()"<<endl;
   return 0;
 }
 int SubBox::nsgrid_crd_update(){
@@ -358,15 +373,12 @@ int SubBox::nsgrid_crd_update(){
 }
 int SubBox::nsgrid_update(){
   nsgrid.init_energy_work();
-  //  cout << "init_variables()"<<endl;
   const clock_t startTimeSet = clock();
   //nsgrid.init_variables_box();
-  //cout << "set_atoms_into_grid_xy()"<<endl;
   nsgrid.set_crds_to_homebox((const real*)crd,
 			     (const int*)atomids,
 			     (const int)n_atoms_box);
   nsgrid.set_atoms_into_grid_xy();
-  //cout << "enumerate_grid_paris" << endl;
   const clock_t endTimeSet = clock();
   nsgrid.enumerate_cell_pairs();
   const clock_t endTimePair = clock();
@@ -383,12 +395,9 @@ int SubBox::nsgrid_update_receiver(){
 
 int SubBox::rank0_alloc_variables(){
   // alloc
-  cout << "SubBox::rank0_alloc_variables()"<<endl;
-
-
   all_atomids = new int*[n_boxes];
   for(int i=0; i<n_boxes; i++){
-    all_atomids[i] = new int[max_n_atoms_box];
+    all_atomids[i] = new int[max_n_atoms_exbox];
   }
   all_n_atoms = new int[n_boxes];
   for(int i=0; i<n_boxes; i++){
@@ -430,23 +439,17 @@ int SubBox::rank0_div_box(const real** in_crd,
   //   atomids_rev
   //   all_n_atoms
   //     
-  // cout << "SubBox::rank0_div_box" << endl;
-
+  
   for(int atomid = 0; atomid < n_atoms; atomid++){
     int box_assign[3];
-
     for(int d=0; d<3; d++)
       box_assign[d] = floor((in_crd[atomid][d] - pbc->lower_bound[d]) / box_l[d]);
     int box_id = get_box_id_from_crd(box_assign);
-    //for(int d=0; d<3; d++)
-    //crd[all_n_atoms[box_id]*3+d] = in_crd[atomid][d];
     all_atomids[box_id][all_n_atoms[box_id]] = atomid;
     atomids_rev[atomid] = all_n_atoms[box_id];
-    //for(int d=0; d<3; d++)
-    //all_crd[box_id][all_n_atoms[box_id]*3+d] = in_crd[atomid][d];
-    //cout << "  "  << all_crd[box_id][all_n_atoms[box_id]*3] << endl;
     all_n_atoms[box_id]++;
   }
+
   return 0;
 }
 
@@ -480,7 +483,7 @@ int SubBox::rank0_send_init_data(const real** in_crd,
       charge[i_atom] = in_charge[all_atomids[i_box][i_atom]];
       atom_type[i_atom] = in_atom_type[all_atomids[i_box][i_atom]];
       atomids_rev[all_atomids[i_box][i_atom]] = i_atom;
-      //atomids 
+      //Atomids 
       // write the MPI code here!!
     }
   }
@@ -500,10 +503,12 @@ int SubBox::rank0_send_init_data(const real** in_crd,
     atom_type[i_atom] = in_atom_type[all_atomids[0][i_atom]];
     atomids_rev[all_atomids[0][i_atom]] = i_atom;
   }
-  cout << "rank0_send_init_data" << endl;
   //memcpy(crd,     all_crd[0],     all_n_atoms[rank]*3*sizeof(real));
   memcpy(atomids, all_atomids[0], all_n_atoms[0]*sizeof(int));
   n_atoms_box = all_n_atoms[0];
+
+  //temporary
+  n_atoms_exbox = all_n_atoms[0];
   return 0;
 }
 int SubBox::recv_init_data(){
@@ -532,7 +537,6 @@ int SubBox::set_bond_potentials(const int** in_bond_atomid_pairs,
       }
     }
   }
-  cout << "DBG SubBox.n_bonds: " << n_bonds << " / " << max_n_bonds << endl;
   return 0;
 }
 int SubBox::set_angle_potentials(const int** in_angle_atomid_triads,
@@ -596,7 +600,7 @@ int SubBox::set_torsion_potentials(const int** in_torsion_atomid_quads,
       }
     }
   }
-  cout << "DBG SubBox.n_torsions : " << n_torsions << endl;
+
   return 0;
 }
 
@@ -687,6 +691,24 @@ int SubBox::set_ele_excess(const int** in_excess_pairs){
   return 0;
 }
 
+int SubBox::set_nb15off(const int* in_nb15off){
+  for(int atomid = 0; atomid < n_atoms; atomid++){
+    if(atomids_rev[atomid] > -1){
+      int n_off = 0;
+      for(int i = 0; i < max_n_nb15off; i++){
+	int dest_atomid = in_nb15off[atomid * max_n_nb15off + i];
+	if(atomids_rev[dest_atomid] > -1){
+	  nb15off[atomids_rev[atomid] * max_n_nb15off + n_off] = atomids_rev[dest_atomid];
+	  //cout << "nb15off " << atomids_rev[atomid] * max_n_nb15off + n_off << " - "
+	  //<<atomids_rev[dest] << " / " << n_atoms_exbox * max_n_nb15off << endl;;
+	  n_off++;
+	}
+      }
+    }
+  }
+  return 0;
+}
+
 int SubBox::set_lj_param(const int in_n_lj_types,
 			 real_pw* in_lj_6term,
 			 real_pw* in_lj_12term){
@@ -700,35 +722,42 @@ int SubBox::calc_energy(){
   init_energy();
   init_work();
 
+#if defined(F_WO_NS)
+  calc_energy_pairwise_wo_neighborsearch();
+#else
   calc_energy_pairwise();
+#endif
+
   calc_energy_bonds();
   calc_energy_angles();
   calc_energy_torsions();
   calc_energy_impros();
   calc_energy_14nb();
   calc_energy_ele_excess();
-  cout << "SubBox::celc_energy excess:" << pote_ele << endl;
+  //  cout << "SubBox::celc_energy excess:" << pote_ele << endl;
   add_work_from_minicell();
   pote_vdw += nsgrid.get_energy()[0];
   pote_ele += nsgrid.get_energy()[1];
-  cout << "SubBox::calc_energy " << pote_vdw << " " << pote_ele << endl;
+  // cout << "SubBox::calc_energy " << pote_vdw << " " << pote_ele << endl;
   return 0;
 }
 int SubBox::calc_energy_pairwise(){
-  cout << " E : " << pote_vdw << ", " << pote_ele << endl;
-  double sum_dist = 0.0;
-  double sum_dist_incut = 0.0;
-  int atomid1sum = 0;
-  int atomid2sum = 0;
-  int atomid12mult = 0;
-  double lj6mult = 0.0;
-  double lj12mult = 0.0;
-  double chgmult = 0.0;
-  int n_pairs=0;
-  int n_pairs_incutoff=0;
-  int n_pairs_15off = 0;
-  double p_vdw = 0.0;
-  double p_ele = 0.0;
+  /*
+    cout << " E : " << pote_vdw << ", " << pote_ele << endl;
+    double sum_dist = 0.0;
+    double sum_dist_incut = 0.0;
+    int atomid1sum = 0;
+    int atomid2sum = 0;
+    int atomid12mult = 0;
+    double lj6mult = 0.0;
+    double lj12mult = 0.0;
+    double chgmult = 0.0;
+    int n_pairs=0;
+    int n_pairs_incutoff=0;
+    int n_pairs_15off = 0;
+    double p_vdw = 0.0;
+    double p_ele = 0.0;
+  */
   nsgrid.init_energy_work();
   for(int cp=0; cp < nsgrid.get_n_cell_pairs(); cp++){
     CellPair cellpair = nsgrid.get_cell_pair(cp);
@@ -742,24 +771,25 @@ int SubBox::calc_energy_pairwise(){
     for (a2=0; a2 < N_ATOM_CELL; a2++){
       int atomid_grid2 = atoms_index_c2 + a2;
       
-      // this part should be modified
-      // in the current version,
+      // This part should be modified.
+      // In the current version,
       // MiniCell.atomids specifies atomids in MmSystem
       //// MiniCell.atomids[atomid in grid] = atomid in Mmsystem
       // But MiniCell does not require the atomids in MmSystem.
       // It should be replaced into the atomids in SubBox
       
-      int atomid2 = atomids_rev[nsgrid.get_atomid_from_gridorder(atomid_grid2)];
+      int atomid2 = nsgrid.get_atomid_from_gridorder(atomid_grid2);
       if(atomid2 < 0) continue;
       real crd2[3];
       nsgrid.get_crd(atomid_grid2, crd2[0], crd2[1], crd2[2]);
       pbc->fix_pbc_image(crd2, cellpair.image);
       for (int a1=0; a1 < N_ATOM_CELL; a1++){
 	int atomid_grid1 = atoms_index_c1 + a1;
-	int atomid1 = atomids_rev[nsgrid.get_atomid_from_gridorder(atomid_grid1)];
-	n_pairs ++;
+	int atomid1 = nsgrid.get_atomid_from_gridorder(atomid_grid1);
+	//n_pairs ++;
 	if (check_nb15off(a1, a2, cellpair.pair_mask) ){ 
-	  n_pairs_15off++; continue; }
+	  //n_pairs_15off++;
+	  continue; }
 	real crd1[3];
 	nsgrid.get_crd(atomid_grid1, crd1[0], crd1[1], crd1[2]);
 	
@@ -769,8 +799,8 @@ int SubBox::calc_energy_pairwise(){
 	real param_6term  = lj_6term[atom_type[atomid1]  * n_lj_types + atom_type[atomid2]];
 	real param_12term = lj_12term[atom_type[atomid1] * n_lj_types + atom_type[atomid2]];
 	real_pw r12 = sqrt(pow(crd2[0]-crd1[0],2)+pow(crd2[1]-crd1[1],2)+pow(crd2[2]-crd1[2],2));
-	sum_dist += r12;
-	if(sum_dist > 100000) sum_dist -= 100000;
+	//sum_dist += r12;
+	//if(sum_dist > 100000) sum_dist -= 100000;
 	
 	if(ff.calc_pairwise(tmp_ene_vdw, tmp_ene_ele, tmp_work,
 			    crd1, crd2,
@@ -789,12 +819,11 @@ int SubBox::calc_energy_pairwise(){
 	  nsgrid.add_work(atomid_grid1, tmp_work[0], tmp_work[1], tmp_work[2]);
 	  nsgrid.add_work(atomid_grid2, -tmp_work[0], -tmp_work[1], -tmp_work[2]);
 
-	  n_pairs_incutoff++;
+	  //n_pairs_incutoff++;
 	}
+	/*
 	p_vdw += tmp_ene_vdw;
 	p_ele += tmp_ene_ele;
-
-	// debug code
 	if (tmp_ene_vdw != 0.0 || tmp_ene_ele != 0.0){
 	  sum_dist_incut += r12;
 	  if(sum_dist_incut > 100000) sum_dist_incut -= 100000;	
@@ -816,11 +845,12 @@ int SubBox::calc_energy_pairwise(){
 	  atomid2sum = atomid2sum%100000;
 	  atomid12mult = atomid12mult%100000;
 	}
-	// /debug code
+	*/
 
       }
     }
   }
+  /*
   cout << "nb15off pairs " << n_pairs_15off << endl;
   cout << "15 pairs: " << n_pairs_incutoff << " / " << n_pairs << endl;
   cout << " E : " << pote_vdw << ", " << pote_ele << endl;
@@ -829,7 +859,116 @@ int SubBox::calc_energy_pairwise(){
   cout << " sum_dist: " <<  sum_dist << " - " << sum_dist_incut << endl;
   cout << " lj6: " << lj6mult << " lj12: "<<lj12mult <<endl;
   cout << " chg: " << chgmult << endl;
+  */
+  return 0;
+}
+int SubBox::calc_energy_pairwise_wo_neighborsearch(){
+  /*
+    cout << " E : " << pote_vdw << ", " << pote_ele << endl;
+    double sum_dist = 0.0;
+    double sum_dist_incut = 0.0;
+    int atomid1sum = 0;
+    int atomid2sum = 0;
+    int atomid12mult = 0;
+    double lj6mult = 0.0;
+    double lj12mult = 0.0;
+    double chgmult = 0.0;
+    int n_pairs=0;
+    int n_pairs_incutoff=0;
+    int n_pairs_15off = 0;
+    double p_vdw = 0.0;
+    double p_ele = 0.0;
+  */
+  for(int atomid1 = 0, atomid1_3=0; atomid1 < n_atoms_box; atomid1++, atomid1_3+=3){
+    real crd1[3] = {crd[atomid1_3], crd[atomid1_3+1], crd[atomid1_3+2]};
+    for(int atomid2 = 0, atomid2_3=0; atomid2 < atomid1; atomid2++, atomid2_3+=3){
+      real crd2[3] = {crd[atomid2_3], crd[atomid2_3+1], crd[atomid2_3+2]};
+      
+      bool flg=true;
+      for(int i = atomid1 * max_n_nb15off;
+	  i < atomid1 * max_n_nb15off + max_n_nb15off;
+	  i++){
+	if(nb15off[i] == atomid2){
+	  flg = false; break;
+	}
+      }
+      if(!flg) continue;
 
+      real_pw tmp_ene_vdw = 0.0;
+      real_pw tmp_ene_ele = 0.0;
+      real_fc tmp_work[3] = {0.0, 0.0, 0.0};
+      real param_6term  = lj_6term[atom_type[atomid1]  * n_lj_types + atom_type[atomid2]];
+      real param_12term = lj_12term[atom_type[atomid1] * n_lj_types + atom_type[atomid2]];
+      real_pw r12 = sqrt(pow(crd2[0]-crd1[0],2)+pow(crd2[1]-crd1[1],2)+pow(crd2[2]-crd1[2],2));
+      //sum_dist += r12;
+      //if(sum_dist > 100000) sum_dist -= 100000;
+      
+      if(ff.calc_pairwise(tmp_ene_vdw, tmp_ene_ele, tmp_work,
+			  crd1, crd2,
+			  param_6term, param_12term,
+			  charge[atomid1],
+			  charge[atomid2])==0){
+	pote_vdw += tmp_ene_vdw;
+	pote_ele += tmp_ene_ele;
+	work[atomid1_3] += tmp_work[0];
+	work[atomid1_3+1] += tmp_work[1];
+	work[atomid1_3+2] += tmp_work[2];
+	work[atomid2_3] -= tmp_work[0];
+	work[atomid2_3+1] -= tmp_work[1];
+	work[atomid2_3+2] -= tmp_work[2];
+
+	//nsgrid.add_energy(tmp_ene_vdw, tmp_ene_ele);
+	/*if(isnan(tmp_ene_vdw)){
+	  cout << "Error! nonbond " << atomid1 << " "  << atomid2 <<" "
+	       << " g:" << atomid_grid1 << " "  << atomid_grid2 <<" ";
+	  cout << tmp_ene_vdw << " " <<  tmp_ene_ele << " " << r12 << " "
+	       << crd1[0] << "," << crd1[1] << "," << crd1[2] <<" " 
+	       << crd2[0] << "," << crd2[1] << "," << crd2[2] <<" " 
+	       <<endl;
+	}
+	nsgrid.add_work(atomid_grid1, tmp_work[0], tmp_work[1], tmp_work[2]);
+	  nsgrid.add_work(atomid_grid2, -tmp_work[0], -tmp_work[1], -tmp_work[2]);
+	*/
+	  //n_pairs_incutoff++;
+      }
+	/*
+	p_vdw += tmp_ene_vdw;
+	p_ele += tmp_ene_ele;
+	if (tmp_ene_vdw != 0.0 || tmp_ene_ele != 0.0){
+	  sum_dist_incut += r12;
+	  if(sum_dist_incut > 100000) sum_dist_incut -= 100000;	
+	  if(atomid1 > atomid2){
+	    atomid1sum+=atomid2;
+	    atomid2sum+=atomid1;
+	  }else{
+	    atomid1sum+=atomid1;
+	    atomid2sum+=atomid2;
+	  }
+	  lj6mult += param_6term;
+	  while(lj6mult > 100000) lj6mult -= 100000;
+	  lj12mult += param_12term;
+	  while(lj12mult > 100000) lj12mult -= 100000;
+	  chgmult += charge[atomid1] * charge[atomid2];
+	  if(chgmult > 100000) chgmult -= 100000;
+	  atomid12mult+=atomid1*atomid2;
+	  atomid1sum = atomid1sum%100000;
+	  atomid2sum = atomid2sum%100000;
+	  atomid12mult = atomid12mult%100000;
+	}
+	*/
+      
+    }
+  }
+  /*
+  cout << "nb15off pairs " << n_pairs_15off << endl;
+  cout << "15 pairs: " << n_pairs_incutoff << " / " << n_pairs << endl;
+  cout << " E : " << pote_vdw << ", " << pote_ele << endl;
+  cout << " E2 : " << p_vdw << ", " << p_ele << endl;
+  cout << " atomidsum : " << atomid1sum << " " << atomid2sum << " " << atomid1sum + atomid2sum << " " << atomid12mult << endl;
+  cout << " sum_dist: " <<  sum_dist << " - " << sum_dist_incut << endl;
+  cout << " lj6: " << lj6mult << " lj12: "<<lj12mult <<endl;
+  cout << " chg: " << chgmult << endl;
+  */
   return 0;
 }
 
@@ -1123,7 +1262,7 @@ int SubBox::update_coordinates(const real time_step){
     for(int d=0; d<3; d++){
       real diff = vel_next[atomid_b3+d] * time_step;
       crd[atomid_b3+d] += diff;
-      nsgrid.move_atom(atomids[atomid_b], d, diff);
+      nsgrid.move_atom(atomid_b, d, diff);
     }
   }
   return 0;

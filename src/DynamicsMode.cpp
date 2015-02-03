@@ -241,17 +241,17 @@ int DynamicsMode::subbox_setup(){
   subbox.alloc_variables_for_impros(mmsys.n_impros);
   subbox.alloc_variables_for_nb14(mmsys.n_nb14);
   subbox.alloc_variables_for_excess(mmsys.n_excess);
+  subbox.alloc_variables_for_nb15off(mmsys.max_n_nb15off);
   cout << "initial_division" << endl;
   subbox.initial_division((const real**)mmsys.crd,
 			  (const real**)mmsys.vel_just,
 			  (const real*)mmsys.charge,
 			  (const int*)mmsys.atom_type);
-  subbox.set_nsgrid((const int*)mmsys.nb15off,
-		    (const int)mmsys.max_n_nb15off);
-  //subbox.set_ff(&ff);
   subbox_set_bonding_potentials();
+  cout << "set_nsgrid" << endl;
+  subbox.set_nsgrid();
+  //subbox.set_ff(&ff);
 
-  
   return 0;
 }
 int DynamicsMode::subbox_set_bonding_potentials(){
@@ -278,11 +278,10 @@ int DynamicsMode::subbox_set_bonding_potentials(){
 			     (const real*)mmsys.nb14_coeff_vdw,
 			     (const real*)mmsys.nb14_coeff_ele);
   subbox.set_ele_excess((const int**)mmsys.excess_pairs);
-  
+  subbox.set_nb15off((const int*)mmsys.nb15off);
   return 0;
 }
 int DynamicsMode::gather_energies(){
-  cout << "TEST" << endl;
   //enecal->calc_energy();
 
   mmsys.pote_bond = subbox.get_pote_bond();

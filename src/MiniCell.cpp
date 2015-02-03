@@ -296,7 +296,7 @@ int MiniCell::set_atoms_into_grid_xy(){
   cout << "reorder_atominfo_in_columns() " <<endl;
   reorder_atominfo_in_columns();
   set_atomids_rev();
-
+  cout << " // set_atomids_rev"<<endl;
   //debug_set_atoms_into_grid();
 
    // TEST
@@ -430,11 +430,9 @@ int MiniCell::reorder_atominfo_in_columns(){
   //  idx_atom_cell_xy
   //  idx_xy_head_atom
   //  idx_xy_head_cell
-  cout << "MiniCell::reorder_atominfo_in_columns"<<endl;
+
   //for(int i=0; i<n_columns; i++) n_atoms_xy[i]=0;
-  
   //memset(n_atoms_xy, 0, sizeof(int)*n_columns);
-  cout << "reorder_atominfo1 :" <<endl;
   
   // set atomids[atom_id_grid] = atomids_buf[atom_id_g]
   //for(int atom_id_g=0; atom_id_g < n_atoms_exbox; atom_id_g++){
@@ -459,24 +457,14 @@ int MiniCell::reorder_atominfo_in_columns(){
    //}
    //cout << endl;
   for(int column_id=0; column_id < n_columns; column_id++){  
-    //cout << "sort " << column_id<< " " << idx_xy_head_atom[column_id] << " " << idx_xy_head_atom[column_id]+n_atoms_xy[column_id]-1 << endl;
-    
     // sort atomids in column by order of z coordinates
     quick_sort_in_columns(idx_xy_head_atom[column_id],
  			  idx_xy_head_atom[column_id] + n_atoms_xy[column_id] - 1);
-     //int last_ = atomids[idx_xy_head_atom[column_id] + n_atoms_xy[column_id] - 1];
+    //int last_ = atomids[idx_xy_head_atom[column_id] + n_atoms_xy[column_id] - 1];
     //for(int i=0;i < n_atoms_xy[column_id]; i++){
     //int aid = idx_xy_head_atom[column_id] + i;
-    //cout << "test!: " << aid << " col:" << column_id << " i:" << i << " crd:" << crd[aid*3] << ", " << crd[aid*3+1] << ", " << crd[aid*3+2] << endl;
-    //}
     //exit(1);
     int last_id = idx_xy_head_atom[column_id] + n_atoms_xy[column_id] -1;
-
-    //cout <<"column:"<<column_id<< " headatom:"<<idx_xy_head_atom[column_id]
-    //<<" n_atoms_xy:"<<n_atoms_xy[column_id]
-    //<<" n_cells_z:"<<n_cells_z[column_id] 
-    //<< " last(grid):"<< idx_xy_head_atom[column_id]+n_atoms_xy[column_id]-1
-    //<< " last:"<<last_id<<endl;
     
     // set crd 
     for(int i = idx_xy_head_atom[column_id] + n_atoms_xy[column_id];
@@ -485,8 +473,6 @@ int MiniCell::reorder_atominfo_in_columns(){
       crd[i*3+1] = crd[last_id*3+1];
       crd[i*3+2] = crd[last_id*3+2];
       atomids[i] = -1;
-      //cout << " DUMMY ATOM: atomid:" << i << " " << crd[i*3+0]
-      //<< ", " << crd[i*3+1] << ", " << crd[i*3+2] << endl;
     }
       //int last = 0;
       //for(int i=0; i < n_cells_z[column_id] * N_ATOM_CELL; i++){// n_atoms_xy[column_id]; i++){
@@ -512,15 +498,9 @@ int MiniCell::reorder_atominfo_in_columns(){
       //crd[atom_id_grid*3] = (real)in_crd[atomids[atom_id_grid]][0];
       //crd[atom_id_grid*3+1] = (real)in_crd[atomids[atom_id_grid]][1];
       //crd[atom_id_grid*3+2] = (real)in_crd[atomids[atom_id_grid]][2];
-    //cout << "dbg column " << column_id << endl;
     for(int i=0; i < n_cells_z[column_id] * N_ATOM_CELL; i++){
       int atom_id_grid = idx_xy_head_atom[column_id] + i;
       idx_atom_cell[atom_id_grid] = idx_xy_head_cell[column_id] + i / N_ATOM_CELL;
-      //
-      //cout << " dbg ATOM: atomid:" << atom_id_grid << " " 
-      //<< atomids[atom_id_grid] << " " << crd[atom_id_grid*3+0]
-      //<< ", " << crd[atom_id_grid*3+1] << ", " << crd[atom_id_grid*3+2] << endl; 
-      //
     }
   }
   return 0;
@@ -752,6 +732,7 @@ int MiniCell::set_idx_xy_head_atom_from_n_atoms_xy(){
   //cout << "n_dummies_all: " << n_dummies_all << endl;
   return 0;
 }
+
 int MiniCell::set_atomids_rev(){
   for(int atom_id_grid = 0; 
       atom_id_grid < get_n_atom_array(); 
@@ -797,7 +778,7 @@ int MiniCell::enumerate_cell_pairs(){
   //   cell_crd
   //   idx_crd_cell
 
-  //cout << "enumerate_cell_pairs()"<<endl;
+  cout << "enumerate_cell_pairs()"<<endl;
 
   n_cell_pairs = 0;
   int cell1[3];
@@ -1021,8 +1002,6 @@ int MiniCell::set_cell_pair_bitmask(const int cell_id1, const int cell_id2, int*
 	for(int i = atomids[a1] * max_n_nb15off;
 	    i < tail && nb15off[i] != -1; i++){
 	  if(nb15off[i] == atomids[a2]){ 
-	    //cout << "nb15 flg : " << atomids[a1] << "-" << atomids[a2] 
-	    //<< " " <<a1 <<"-"<<a2<<endl;
 	    flg12=true;
 	    break;}
 	}
@@ -1071,8 +1050,8 @@ int MiniCell::get_cell_id_from_crd(int x, int y, int z){
 int MiniCell::set_grid_parameters(const int in_n_atoms,
 				  const real in_cutoff_pair,
 				  const PBC* in_pbc,
-				  const int* in_nb15off,
-				  const int in_max_n_nb15off){
+				  const int in_max_n_nb15off,
+				  int* in_nb15off){
   // set member variables
   //  n_atoms
   //  cutoff_pair
@@ -1082,7 +1061,8 @@ int MiniCell::set_grid_parameters(const int in_n_atoms,
   cutoff_pair_half = cutoff_pair * 0.5;
   cutoff_pair2 = cutoff_pair * cutoff_pair;
   pbc = (PBC*)in_pbc;
-  nb15off = (int*)in_nb15off;
+  nb15off = in_nb15off;
+
   max_n_nb15off = in_max_n_nb15off;
   return 0;
 }
@@ -1101,7 +1081,7 @@ real MiniCell::move_crd_in_cell(const int atomid, const int dim, const real val)
   return crd_in_cell[atomid][dim];
 }
 */
-
+/*
 int MiniCell::get_ene_forces(real_fc& in_ene_vdw,
 			     real_fc& in_ene_ele,
 			     real_fc**& in_force){
@@ -1117,7 +1097,7 @@ int MiniCell::get_ene_forces(real_fc& in_ene_vdw,
   in_ene_ele += energy[1];
   return 0;
 }
-
+*/
 int MiniCell::add_work(const int atomid_grid,
 			const real_fc in_w1, const real_fc in_w2, const real_fc in_w3){
   work[atomid_grid*3] += in_w1;
@@ -1126,10 +1106,12 @@ int MiniCell::add_work(const int atomid_grid,
   return 0;
 }
 
+
 int MiniCell::move_atom(const int& atomid, const int& d, const real& diff){
+  ///
+  /// Called by SubBox::update_coordinates()
+  ///
   crd[atomids_rev[atomid]*3+d] += diff;
-  //cout << "move_atom d:" << d << " atomid:" << atomid << " rev:" << atomids_rev[atomid]
-  //     << " diff:" << diff << " crd:" <<   crd[atomids_rev[atomid]*3+d] << endl;
   return 0;
 }
 
@@ -1152,27 +1134,20 @@ int MiniCell::set_box_info(int in_n_boxes_xyz[], real in_box_l[]){
   n_boxes = n_boxes_xyz[0] * n_boxes_xyz[1] * n_boxes_xyz[2];
 
   get_box_crd_from_id((const int&)box_id, box_crd);
-  //cout << "dbg1 " << box_crd[0] << " " << box_crd[1] << " " << box_crd[2]<<endl;
   for(int d=0; d < 3 ; d++){
     box_l[d] = in_box_l[d];
-    //cout << "dbg1a "<< box_l[d] << endl;
 
     box_lower_bound[d] = pbc->lower_bound[d] + box_l[d]*box_crd[d];
-    //cout << "dbg1b "<< box_lower_bound[d] << endl;
     box_upper_bound[d] = box_lower_bound[d] + box_l[d];
-    //cout << "dbg3" << endl;
     if(n_boxes_xyz[d] > 1){
-      //cout << "dbg4" << endl;
       exbox_lower_bound[d] = box_lower_bound[d] - cutoff_pair_half;
       exbox_upper_bound[d] = box_upper_bound[d] + cutoff_pair_half;
       exbox_l[d] = box_l[d] + cutoff_pair;
     }else{
-      //cout << "dbg6" << endl;
       exbox_lower_bound[d] = box_lower_bound[d];
       exbox_upper_bound[d] = box_upper_bound[d];
       exbox_l[d] = box_l[d];
     }
-    //cout << "dbg10" << endl;
   }
   print_box_info();
   return 0;
