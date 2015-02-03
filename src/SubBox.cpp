@@ -692,20 +692,32 @@ int SubBox::set_ele_excess(const int** in_excess_pairs){
 }
 
 int SubBox::set_nb15off(const int* in_nb15off){
+  int nball = 0;
+  for(int i=0; i < n_atoms* max_n_nb15off; i++)
+    if(in_nb15off[i] != -1) nball++;
+  for(int i=0; i < max_n_atoms_exbox * max_n_nb15off; i++)
+    nb15off[i] = -1;
+  int nb=0;
   for(int atomid = 0; atomid < n_atoms; atomid++){
     if(atomids_rev[atomid] > -1){
-      int n_off = 0;
       for(int i = 0; i < max_n_nb15off; i++){
 	int dest_atomid = in_nb15off[atomid * max_n_nb15off + i];
-	if(atomids_rev[dest_atomid] > -1){
-	  nb15off[atomids_rev[atomid] * max_n_nb15off + n_off] = atomids_rev[dest_atomid];
+	if(dest_atomid > -1 && atomids_rev[dest_atomid] > -1){
+	  int j;
+	  for(j=0; j<max_n_nb15off; j++)
+	    if(nb15off[atomids_rev[atomid] * max_n_nb15off + j] == -1) break;
+	  nb15off[atomids_rev[atomid] * max_n_nb15off + j] = atomids_rev[dest_atomid];
+	  //for(j=0; j<max_n_nb15off; j++)
+	    //if(nb15off[atomids_rev[dest_atomid] * max_n_nb15off + j] == -1) break;
+	  //nb15off[atomids_rev[dest_atomid] * max_n_nb15off + j] = atomids_rev[atomid];
 	  //cout << "nb15off " << atomids_rev[atomid] * max_n_nb15off + n_off << " - "
 	  //<<atomids_rev[dest] << " / " << n_atoms_exbox * max_n_nb15off << endl;;
-	  n_off++;
+	  nb+=1;
 	}
       }
     }
   }
+  cout << "set_nb15off " << nb <<  " / " << nball << endl;
   return 0;
 }
 
@@ -726,6 +738,9 @@ int SubBox::calc_energy(){
   calc_energy_pairwise_wo_neighborsearch();
 #else
   calc_energy_pairwise();
+  add_work_from_minicell();
+  pote_vdw += nsgrid.get_energy()[0];
+  pote_ele += nsgrid.get_energy()[1];
 #endif
 
   calc_energy_bonds();
@@ -735,14 +750,12 @@ int SubBox::calc_energy(){
   calc_energy_14nb();
   calc_energy_ele_excess();
   //  cout << "SubBox::celc_energy excess:" << pote_ele << endl;
-  add_work_from_minicell();
-  pote_vdw += nsgrid.get_energy()[0];
-  pote_ele += nsgrid.get_energy()[1];
+
   // cout << "SubBox::calc_energy " << pote_vdw << " " << pote_ele << endl;
   return 0;
 }
 int SubBox::calc_energy_pairwise(){
-  /*
+
     cout << " E : " << pote_vdw << ", " << pote_ele << endl;
     double sum_dist = 0.0;
     double sum_dist_incut = 0.0;
@@ -757,7 +770,7 @@ int SubBox::calc_energy_pairwise(){
     int n_pairs_15off = 0;
     double p_vdw = 0.0;
     double p_ele = 0.0;
-  */
+
   nsgrid.init_energy_work();
   for(int cp=0; cp < nsgrid.get_n_cell_pairs(); cp++){
     CellPair cellpair = nsgrid.get_cell_pair(cp);
@@ -786,9 +799,9 @@ int SubBox::calc_energy_pairwise(){
       for (int a1=0; a1 < N_ATOM_CELL; a1++){
 	int atomid_grid1 = atoms_index_c1 + a1;
 	int atomid1 = nsgrid.get_atomid_from_gridorder(atomid_grid1);
-	//n_pairs ++;
+	n_pairs ++;
 	if (check_nb15off(a1, a2, cellpair.pair_mask) ){ 
-	  //n_pairs_15off++;
+	  n_pairs_15off++;
 	  continue; }
 	real crd1[3];
 	nsgrid.get_crd(atomid_grid1, crd1[0], crd1[1], crd1[2]);
@@ -799,8 +812,8 @@ int SubBox::calc_energy_pairwise(){
 	real param_6term  = lj_6term[atom_type[atomid1]  * n_lj_types + atom_type[atomid2]];
 	real param_12term = lj_12term[atom_type[atomid1] * n_lj_types + atom_type[atomid2]];
 	real_pw r12 = sqrt(pow(crd2[0]-crd1[0],2)+pow(crd2[1]-crd1[1],2)+pow(crd2[2]-crd1[2],2));
-	//sum_dist += r12;
-	//if(sum_dist > 100000) sum_dist -= 100000;
+	sum_dist += r12;
+	if(sum_dist > 100000) sum_dist -= 100000;
 	
 	if(ff.calc_pairwise(tmp_ene_vdw, tmp_ene_ele, tmp_work,
 			    crd1, crd2,
@@ -819,9 +832,9 @@ int SubBox::calc_energy_pairwise(){
 	  nsgrid.add_work(atomid_grid1, tmp_work[0], tmp_work[1], tmp_work[2]);
 	  nsgrid.add_work(atomid_grid2, -tmp_work[0], -tmp_work[1], -tmp_work[2]);
 
-	  //n_pairs_incutoff++;
+	  n_pairs_incutoff++;
 	}
-	/*
+
 	p_vdw += tmp_ene_vdw;
 	p_ele += tmp_ene_ele;
 	if (tmp_ene_vdw != 0.0 || tmp_ene_ele != 0.0){
@@ -845,12 +858,12 @@ int SubBox::calc_energy_pairwise(){
 	  atomid2sum = atomid2sum%100000;
 	  atomid12mult = atomid12mult%100000;
 	}
-	*/
+
 
       }
     }
   }
-  /*
+
   cout << "nb15off pairs " << n_pairs_15off << endl;
   cout << "15 pairs: " << n_pairs_incutoff << " / " << n_pairs << endl;
   cout << " E : " << pote_vdw << ", " << pote_ele << endl;
@@ -859,11 +872,11 @@ int SubBox::calc_energy_pairwise(){
   cout << " sum_dist: " <<  sum_dist << " - " << sum_dist_incut << endl;
   cout << " lj6: " << lj6mult << " lj12: "<<lj12mult <<endl;
   cout << " chg: " << chgmult << endl;
-  */
+
   return 0;
 }
 int SubBox::calc_energy_pairwise_wo_neighborsearch(){
-  /*
+
     cout << " E : " << pote_vdw << ", " << pote_ele << endl;
     double sum_dist = 0.0;
     double sum_dist_incut = 0.0;
@@ -878,10 +891,11 @@ int SubBox::calc_energy_pairwise_wo_neighborsearch(){
     int n_pairs_15off = 0;
     double p_vdw = 0.0;
     double p_ele = 0.0;
-  */
+
   for(int atomid1 = 0, atomid1_3=0; atomid1 < n_atoms_box; atomid1++, atomid1_3+=3){
     real crd1[3] = {crd[atomid1_3], crd[atomid1_3+1], crd[atomid1_3+2]};
     for(int atomid2 = 0, atomid2_3=0; atomid2 < atomid1; atomid2++, atomid2_3+=3){
+      n_pairs++;
       real crd2[3] = {crd[atomid2_3], crd[atomid2_3+1], crd[atomid2_3+2]};
       
       bool flg=true;
@@ -889,7 +903,8 @@ int SubBox::calc_energy_pairwise_wo_neighborsearch(){
 	  i < atomid1 * max_n_nb15off + max_n_nb15off;
 	  i++){
 	if(nb15off[i] == atomid2){
-	  flg = false; break;
+	  n_pairs_15off++;
+	  flg = false; 
 	}
       }
       if(!flg) continue;
@@ -899,10 +914,22 @@ int SubBox::calc_energy_pairwise_wo_neighborsearch(){
       real_fc tmp_work[3] = {0.0, 0.0, 0.0};
       real param_6term  = lj_6term[atom_type[atomid1]  * n_lj_types + atom_type[atomid2]];
       real param_12term = lj_12term[atom_type[atomid1] * n_lj_types + atom_type[atomid2]];
-      real_pw r12 = sqrt(pow(crd2[0]-crd1[0],2)+pow(crd2[1]-crd1[1],2)+pow(crd2[2]-crd1[2],2));
-      //sum_dist += r12;
-      //if(sum_dist > 100000) sum_dist -= 100000;
       
+      //real_pw r12 = sqrt(pow(crd2[0]-crd1[0],2)+pow(crd2[1]-crd1[1],2)+pow(crd2[2]-crd1[2],2));
+      real diff_crd[3] = {0.0, 0.0, 0.0};
+      pbc->diff_crd_minim_image(diff_crd, crd2, crd1);
+      real_pw r12 = sqrt(pow(diff_crd[0],2)+pow(diff_crd[1],2)+pow(diff_crd[2],2));
+
+      sum_dist += r12;
+      if(sum_dist > 100000) sum_dist -= 100000;
+      
+      for(int d=0; d < 3; d++){
+	if(crd2[d]-crd1[d] >= pbc->L_half[d])
+	  crd2[d] -= pbc->L[d];
+	else if(crd2[d]-crd1[d] <= -pbc->L_half[d])
+	  crd2[d] += pbc->L[d];
+      }
+
       if(ff.calc_pairwise(tmp_ene_vdw, tmp_ene_ele, tmp_work,
 			  crd1, crd2,
 			  param_6term, param_12term,
@@ -916,7 +943,6 @@ int SubBox::calc_energy_pairwise_wo_neighborsearch(){
 	work[atomid2_3] -= tmp_work[0];
 	work[atomid2_3+1] -= tmp_work[1];
 	work[atomid2_3+2] -= tmp_work[2];
-
 	//nsgrid.add_energy(tmp_ene_vdw, tmp_ene_ele);
 	/*if(isnan(tmp_ene_vdw)){
 	  cout << "Error! nonbond " << atomid1 << " "  << atomid2 <<" "
@@ -929,9 +955,9 @@ int SubBox::calc_energy_pairwise_wo_neighborsearch(){
 	nsgrid.add_work(atomid_grid1, tmp_work[0], tmp_work[1], tmp_work[2]);
 	  nsgrid.add_work(atomid_grid2, -tmp_work[0], -tmp_work[1], -tmp_work[2]);
 	*/
-	  //n_pairs_incutoff++;
+	n_pairs_incutoff++;
       }
-	/*
+
 	p_vdw += tmp_ene_vdw;
 	p_ele += tmp_ene_ele;
 	if (tmp_ene_vdw != 0.0 || tmp_ene_ele != 0.0){
@@ -955,11 +981,11 @@ int SubBox::calc_energy_pairwise_wo_neighborsearch(){
 	  atomid2sum = atomid2sum%100000;
 	  atomid12mult = atomid12mult%100000;
 	}
-	*/
+
       
     }
   }
-  /*
+
   cout << "nb15off pairs " << n_pairs_15off << endl;
   cout << "15 pairs: " << n_pairs_incutoff << " / " << n_pairs << endl;
   cout << " E : " << pote_vdw << ", " << pote_ele << endl;
@@ -968,7 +994,7 @@ int SubBox::calc_energy_pairwise_wo_neighborsearch(){
   cout << " sum_dist: " <<  sum_dist << " - " << sum_dist_incut << endl;
   cout << " lj6: " << lj6mult << " lj12: "<<lj12mult <<endl;
   cout << " chg: " << chgmult << endl;
-  */
+
   return 0;
 }
 
@@ -1262,7 +1288,9 @@ int SubBox::update_coordinates(const real time_step){
     for(int d=0; d<3; d++){
       real diff = vel_next[atomid_b3+d] * time_step;
       crd[atomid_b3+d] += diff;
+#ifndef F_WO_NS      
       nsgrid.move_atom(atomid_b, d, diff);
+#endif
     }
   }
   return 0;

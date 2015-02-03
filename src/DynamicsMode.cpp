@@ -97,7 +97,7 @@ int DynamicsMode::calc_in_each_step(){
   
   cout << "update_velocities"<<endl;
   subbox.update_velocities(1.0,
-			   time_step,
+		   time_step,
 			   mmsys.mass);
   subbox.velocity_average();
   subbox.set_vel_just(mmsys.vel_just);
@@ -111,6 +111,8 @@ int DynamicsMode::calc_in_each_step(){
   subbox.update_coordinates(time_step);
   cout << "revise_coordinates"<<endl;  
   subbox.revise_coordinates_pbc();
+
+#ifndef F_WO_NS
   if(mmsys.cur_step%cfg->nsgrid_update_intvl==0){
     cout << "nsgrid_update"<<endl;
     subbox.nsgrid_update();
@@ -118,6 +120,7 @@ int DynamicsMode::calc_in_each_step(){
     subbox.nsgrid_crd_update();
     //revise_coordinates_pbc();
   }
+#endif
   
   return 0;
 }
@@ -249,7 +252,9 @@ int DynamicsMode::subbox_setup(){
 			  (const int*)mmsys.atom_type);
   subbox_set_bonding_potentials();
   cout << "set_nsgrid" << endl;
+#ifndef F_WO_NS
   subbox.set_nsgrid();
+#endif
   //subbox.set_ff(&ff);
 
   return 0;

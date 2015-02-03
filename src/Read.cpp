@@ -404,7 +404,7 @@ int Read::load_ls_tpl(MmSystem& mmsys){
     read_bin_values(&atomid1, 1);
     read_bin_values(&atomid2, 1);
     mmsys.set_nb15off(atomid1, atomid2);
-    mmsys.set_nb15off(atomid2, atomid1);
+    //mmsys.set_nb15off(atomid2, atomid1);
   }  
   mmsys.alloc_excess_pairs();
   mmsys.set_excess_pairs();

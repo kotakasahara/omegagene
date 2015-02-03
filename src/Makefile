@@ -16,7 +16,8 @@ CUDALOC = /opt/cuda/5.5/lib64
 ICCFLAGS = -ansi -O3 -w1 # -std=c++11
 ICCLIB = 
 ifeq ($(EXECUTABLE),celeste)
-	MODE_FLAG =
+##	MODE_FLAG =
+	MODE_FLAG = -DF_WO_NS
 	CUDALIB = 
 	CCEXE = $(CXX)
 endif

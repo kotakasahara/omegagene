@@ -440,8 +440,14 @@ int MmSystem::set_nb15off(int atomid1, int atomid2){
   //debug
   int i = 0;
   for(i=0; i<max_n_nb15off; i++)
-    if(nb15off[atomid1*max_n_nb15off+i]==-1) break;
+    if(nb15off[atomid1*max_n_nb15off+i]==-1 ||
+       nb15off[atomid1*max_n_nb15off+i]==atomid2 ) break;
   nb15off[atomid1 * max_n_nb15off + i] = atomid2;
+  for(i=0; i<max_n_nb15off; i++)
+    if(nb15off[atomid2*max_n_nb15off+i]==-1 ||
+       nb15off[atomid2*max_n_nb15off+i]==atomid1 ) break;
+  nb15off[atomid2 * max_n_nb15off + i] = atomid1;
+  n_nb15off+=2;
 
   if(atomid1 > atomid2){
     int tmp = atomid1;
@@ -470,7 +476,7 @@ int MmSystem::set_nb15off(int atomid1, int atomid2){
   nb15off1[atomid1] = tmp1 | add_bit1;
   nb15off2[atomid1] = tmp2 | add_bit2;
 
-  if(nb15off1[atomid1] != tmp1 || nb15off2[atomid1] != tmp2) n_nb15off++;
+  //if(nb15off1[atomid1] != tmp1 || nb15off2[atomid1] != tmp2) n_nb15off++;
   //  cout << "//set_nb15off"<< endl;
   return 0;
 }
