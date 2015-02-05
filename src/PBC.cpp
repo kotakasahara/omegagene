@@ -77,8 +77,7 @@ real PBC::cal_volume(){
 
 int PBC::fix_pbc_image(real* crd, const int image){
   if(image == 0) return 1;
-  if     ((image & 1)        == 1)
-    crd[0] -= L[0];
+  if     ((image & 1) == 1) crd[0] -= L[0];
   else if((image & 2) == 2) crd[0] += L[0];
   if     ((image & 4) == 4) crd[1] -= L[1];
   else if((image & 8) == 8) crd[1] += L[1];

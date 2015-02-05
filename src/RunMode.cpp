@@ -44,8 +44,8 @@ int RunMode::set_config_parameters(Config* in_cfg){
     break;
   }
   */
-  enecal->set_config_parameters(cfg);
-
+  //enecal->set_config_parameters(cfg);
+  
   n_steps = cfg->n_steps;
   
   print_intvl_crd = cfg->print_intvl_crd;

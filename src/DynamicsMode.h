@@ -7,7 +7,7 @@
 #include "RunMode.h"
 #include "MmSystem.h"
 #include "SubBox.h"
-#include "EnergyCalc.h"
+#include "ForceField.h"
 //#include "ForceFieldObject.h"
 //#include "ElectrostaticObject.h"
 //#include "EnergyCalc.h"

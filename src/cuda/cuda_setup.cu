@@ -23,7 +23,7 @@ extern "C" int cuda_alloc_atom_info(int n_atoms,
 				    int n_atom_array,
 				    int max_n_cells,
 				    int max_n_cell_pairs){
-  printf("cuda_alloc_device_atom_info\n");
+  //printf("cuda_alloc_atom_info\n");
   // max_n_atoms ... maximum number of atoms for each grid cell
   HANDLE_ERROR( cudaMalloc((void**)&d_crd_chg,
 			   n_atom_array * sizeof(real4)) );
@@ -35,8 +35,8 @@ extern "C" int cuda_alloc_atom_info(int n_atoms,
 			   n_atom_array * sizeof(int2) ));
   HANDLE_ERROR( cudaMalloc((void**)&d_atomids,
 			   n_atom_array * sizeof(int)) );
-  HANDLE_ERROR( cudaMalloc((void**)&d_atomids_rev,
-			   n_atoms * sizeof(int)) );
+  //  HANDLE_ERROR( cudaMalloc((void**)&d_atomids_rev,
+  //			   n_atoms * sizeof(int)) );
   HANDLE_ERROR( cudaMalloc((void**)&d_atomtype_orig,
 			   n_atoms * sizeof(int) ));
   HANDLE_ERROR( cudaMalloc((void**)&d_cell_pairs,
@@ -59,7 +59,7 @@ extern "C" int cuda_free_atom_info(){
   HANDLE_ERROR( cudaFree(d_crd_chg) );
   HANDLE_ERROR( cudaFree(d_crd) );
   HANDLE_ERROR( cudaFree(d_atomids) );
-  HANDLE_ERROR( cudaFree(d_atomids_rev) );
+  //  HANDLE_ERROR( cudaFree(d_atomids_rev) );
   HANDLE_ERROR( cudaFree(d_charge_orig) );
   HANDLE_ERROR( cudaFree(d_atominfo) );
   HANDLE_ERROR( cudaFree(d_atomtype_orig) );
@@ -75,6 +75,7 @@ extern "C" int cuda_memcpy_htod_cell_pairs(CellPair*& h_cell_pairs,
 					   int*& h_idx_head_cell_pairs,
 					   int n_cell_pairs,
 					   int n_cells){
+  printf("cuda_memcpy_htod_cell_pairs\n");
   HANDLE_ERROR(cudaMemcpy(d_cell_pairs, h_cell_pairs,
 			  n_cell_pairs * sizeof(CellPair),
 			  cudaMemcpyHostToDevice));
@@ -93,9 +94,7 @@ extern "C" int cuda_memcpy_htod_atomids(int*& h_atomids,
 }
 
 // cuda_memcpy_htod_atom_info
-//   This function is called only once, at the beggening of 
-//   calculation, from DynamicsMode::initial_preprocess.
-//   Arrays of charges and atomtypes of all atoms are sent to
+//   Arrays of charges and atomtypes of all atoms in the process are sent to
 //   the device.
 extern "C" int cuda_memcpy_htod_atom_info(real*& h_charge_orig,
 					  int*& h_atomtype_orig,
@@ -251,6 +250,19 @@ extern "C" int cuda_free_lj_params(){
   return 0;
 }
 
+// cuda_hostalloc_atom_type_charge
+extern "C" int cuda_hostalloc_atom_type_charge(int*& h_atom_type,
+					       real*& h_charge,
+					       int n_atoms){
+  HANDLE_ERROR( cudaHostAlloc( (void**)&h_atom_type,
+			       n_atoms * sizeof(int),
+			       cudaHostAllocDefault));
+  HANDLE_ERROR( cudaHostAlloc( (void**)&h_charge,
+			       n_atoms * sizeof(real),
+			       cudaHostAllocDefault));
+  return 0;
+}
+
 // cuda_hostalloc_atom_info
 //   Allocation for MiniCell members
 extern "C" int cuda_hostalloc_atom_info(real*& h_crd, int*& h_atomids,
@@ -284,6 +296,13 @@ extern "C" int cuda_hostalloc_cell_info(CellPair*& h_cell_pairs,
   return 0;
 }
 
+
+
+extern "C" int cuda_hostfree_atom_type_charge(int* h_atom_type, real* h_charge){
+  HANDLE_ERROR( cudaFreeHost(h_atom_type));
+  HANDLE_ERROR( cudaFreeHost(h_charge));
+  return 0;
+}
 
 extern "C" int cuda_hostfree_atom_info(real* h_crd, int* h_atomids,
 				       real_fc*& h_work, real*& h_energy){
@@ -322,14 +341,14 @@ __global__ void kernel_set_atominfo(const int* d_atomids,
   }
   
 }
-
+/*
 __global__ void kernel_set_atomids_rev(const int* d_atomids, int* d_atomids_rev){
   int atomid = threadIdx.x + blockIdx.x * blockDim.x;
   if(atomid < D_N_ATOMS){
     d_atomids_rev[d_atomids[atomid]] = atomid;
   }
 }
-
+*/
 extern "C" int cuda_set_atominfo(int n_atom_array){
   int blocks = (n_atom_array + REORDER_THREADS-1) / REORDER_THREADS;
   kernel_set_atominfo<<<blocks, REORDER_THREADS>>>(d_atomids,
@@ -484,7 +503,7 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
 				     const int2* d_atominfo,
 				     const real* __restrict__ d_lj_6term,
 				     const real* __restrict__ d_lj_12term,
-				     real_fc* d_energy, real_fc* d_work, int* d_pairs,
+				     real_fc* d_energy, real_fc* d_work, int* d_pairs, real* d_realbuf,
 				     const int offset_cells,
 				     const int n_cells){
   //int pairs[3] ={0, 0, 0};
@@ -496,56 +515,40 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
 
   const int c1 = global_threadIdx >> 5;
   const int warpIdx = threadIdx.x >> 5;  
-  ///// DEBUG 
-  //const int c1 = warpIdx;
   if(c1 >= n_cells){ return; }
-  //if(c1 != n_cells-1){ return; }
   const int laneIdx = global_threadIdx & 31;
   const int n_loops = (d_idx_head_cell_pairs[c1+1] - d_idx_head_cell_pairs[c1])*2;
   const int ene_index_offset = global_threadIdx%N_MULTI_WORK;  
 
   real_fc work_c1[3] = {0.0, 0.0, 0.0};
 
-  __shared__ real4 s_crdchg_c1[D_N_ATOM_CELL * (PW_THREADS >> 5)];
-  __shared__ int2  s_atominfo_c1[D_N_ATOM_CELL * (PW_THREADS >> 5)];
-
-  //printf("thread:%d, %d warp:%d lane:%d n_loops:%d\n", threadIdx.x, global_threadIdx, c1, laneIdx, n_loops);
+  //__shared__ real4 s_crdchg_c1[D_N_ATOM_CELL * (PW_THREADS >> 5)];
+  //__shared__ int2  s_atominfo_c1[D_N_ATOM_CELL * (PW_THREADS >> 5)];
 
   const int atom_idx1 = (laneIdx & 7);  // laneIdx%8
-  //printf("dbg3 ene:%10e %10e\n", ene_vdw, ene_ele);
   const int a1 = c1 * D_N_ATOM_CELL + atom_idx1;
     
   for(int loopIdx=0; loopIdx < n_loops; loopIdx++){
-    //const int cp = offset_cell_pair + d_idx_head_cell_pairs[]
-    const int cp = d_idx_head_cell_pairs[c1] + (loopIdx >> 1); // (loopIdx/2)
-    
-    //if(cp != 899097) continue ;
-    //if(loopIdx > 100) return;
-    //printf("dbg5 ene: %d/%d  %10e %10e\n", loopIdx,n_loops, ene_vdw, ene_ele);
+    const int cp = d_idx_head_cell_pairs[c1] + (loopIdx >> 1);
     
     if(cp >= D_N_CELL_PAIRS) break;
-    //atomicAdd(&d_pairs[2],1);
+    atomicAdd(&d_pairs[3],1);
     const int c2 = d_cell_pairs[cp].cell_id2;
-
-    //if(c1!=4173 || c2 !=4173) break;
-    //printf("loopIdx %d cp:%d c1:%d c2:%d\n",loopIdx, cp, c1, c2);
 
     // atom_idx ... index in cell, 0-7
     const int atom_idx2 = (laneIdx >> 3) + 4 * (loopIdx % 2);  // laneIdx/8 + 4*(warpIdx%2)
-    //if(atom_idx2 >= 8){printf("AAAAAA\n"); break;}
-    // remove 1-2, 1-3, 1-4 pairs
 
+    // remove 1-2, 1-3, 1-4 pairs
     const int a2 = c2 * D_N_ATOM_CELL + atom_idx2;
-    //printf("lane:%d loop:%d a1 %d a2 %d, idx %d-%d\n",laneIdx,loopIdx,a1,a2, atom_idx1, atom_idx2);
 
     real crd2x = d_crd_chg[a2].x;
     real crd2y = d_crd_chg[a2].y;
     real crd2z = d_crd_chg[a2].z;
-    if ( (d_cell_pairs[cp].image & 1) == 1 ) crd2x -= PBC_L[0];
-    else if ( (d_cell_pairs[cp].image & 2) == 2 ) crd2x += PBC_L[0];
-    if ( (d_cell_pairs[cp].image & 4) == 4 ) crd2y -= PBC_L[1];
-    else if ( (d_cell_pairs[cp].image & 8) == 8 ) crd2y += PBC_L[1];
-    if ( (d_cell_pairs[cp].image & 16) == 16 ) crd2z -= PBC_L[2];
+    if      ( (d_cell_pairs[cp].image & 1) == 1 )   crd2x -= PBC_L[0];
+    else if ( (d_cell_pairs[cp].image & 2) == 2 )   crd2x += PBC_L[0];
+    if      ( (d_cell_pairs[cp].image & 4) == 4 )   crd2y -= PBC_L[1];
+    else if ( (d_cell_pairs[cp].image & 8) == 8 )   crd2y += PBC_L[1];
+    if      ( (d_cell_pairs[cp].image & 16) == 16 ) crd2z -= PBC_L[2];
     else if ( (d_cell_pairs[cp].image & 32) == 32 ) crd2z += PBC_L[2];
 
     const real4 crd_chg2 = make_float4(crd2x, crd2y, crd2z, d_crd_chg[a2].w);
@@ -553,37 +556,55 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
     real w1=0.0, w2=0.0, w3=0.0;
     real cur_ene_ele=0.0;
     real cur_ene_vdw=0.0;
-    //printf("cal_pair %d %d / %d\n",a1,a2,D_N_ATOMS);
-    //printf("dbg4 ene:%10e %10e\n", ene_vdw, ene_ele);
+
+    //
+    //atomicAdd(&d_pairs[0], 1);
+
     if(!check_15off64(atom_idx1, atom_idx2, d_cell_pairs[cp].pair_mask)){
+      //if(d_atominfo[a1].x == -1 || d_atominfo[a2].x == -1) continue;
       cal_pair(w1, w2, w3, cur_ene_vdw, cur_ene_ele,
 	       d_crd_chg[a1], crd_chg2, d_atominfo[a1].y, d_atominfo[a2].y,
 	       d_lj_6term, d_lj_12term, d_atominfo[a1].x, d_atominfo[a2].x);
-    //atomicAdd(&d_pairs[1],1);
-    //printf("DEBUG_E1 %d-%d (%10e, %10e, %10e) (%10e, %10e, %10e) %10e %10e\n", 
-      //d_atominfo[a1].x, d_atominfo[a2].x,
-      //d_crd_chg[a1].x, d_crd_chg[a1].y,d_crd_chg[a1].z,
-      //d_crd_chg[a2].x, d_crd_chg[a2].y,d_crd_chg[a2].z,
-      //d_crd_chg[a1].w, d_crd_chg[a2].w,
-	     //d_atominfo[a1].y, d_atominfo[a2].y,
-      //cur_ene_vdw, cur_ene_ele);
-      //printf("DEBUG_W1 %d-%d (%15.12e, %15.12e, %15.12e)\n",
-      //d_atominfo[a1].x, d_atominfo[a2].x, w1, w2, w3);
+      atomicAdd(&d_pairs[1],1);
 
-    
-    //if(cur_ene_vdw!=0.0 || cur_ene_ele!=0.0) atomicAdd(&d_pairs[1],1);
-    //printf("dbg02ene %d a(%d-%d) c(%d-%d): %10e %10e %10e %10e\n",global_threadIdx, a1, a2,c1,c2,ene_vdw, ene_ele,cur_ene_vdw, cur_ene_ele);
-    //return;
+      //debug
+      const real d12[3] = {
+	d_crd_chg[a1].x - crd_chg2.x,
+	d_crd_chg[a1].y - crd_chg2.y,
+	d_crd_chg[a1].z - crd_chg2.z
+      };
+      const real r12_2 = d12[0]*d12[0] + d12[1]*d12[1] + d12[2]*d12[2];
+      const real r12 = sqrt(r12_2);
+      if(r12 < D_CUTOFF){
+	atomicAdd(&d_pairs[4],1);
+      }
+      //atomicAdd(&d_realbuf[0], r12);
+      //if(global_threadIdx == 1){
+      //while(d_realbuf[0] > 100000){
+      //atomicAdd(&d_realbuf[0], -100000);
+      //}
+      //}
+      atomicAdd(&d_realbuf[1], d_crd_chg[a1].w*d_crd_chg[a2].w);
+      if(global_threadIdx == 1){
+	while(d_realbuf[1] > 100000){
+	  atomicAdd(&d_realbuf[1], -100000);
+	}
+      }
+      //
+  
+      if(cur_ene_vdw!=0.0 || cur_ene_ele!=0.0) atomicAdd(&d_pairs[2],1);
+      //printf("dbg02ene %d a(%d-%d) c(%d-%d): %10e %10e %10e %10e\n",global_threadIdx, a1, a2,c1,c2,ene_vdw, ene_ele,cur_ene_vdw, cur_ene_ele);
+      //return;
 
-    ene_vdw += cur_ene_vdw;
-    ene_ele += cur_ene_ele;
-    //printf("dbg2 %d %d \n",atom_idx1, atom_idx2);
-
-    work_c1[0] += w1;
-    work_c1[1] += w2;
-    work_c1[2] += w3;
-    //work_c1[atom_idx1 * 3 + 0] += w1;
-    //work_c1[atom_idx1 * 3 + 1] += w2;
+      ene_vdw += cur_ene_vdw;
+      ene_ele += cur_ene_ele;
+      //printf("dbg2 %d %d \n",atom_idx1, atom_idx2);
+      
+      work_c1[0] += w1;
+      work_c1[1] += w2;
+      work_c1[2] += w3;
+      //work_c1[atom_idx1 * 3 + 0] += w1;
+      //work_c1[atom_idx1 * 3 + 1] += w2;
     //work_c1[atom_idx1 * 3 + 2] += w3;
     
     //work_c2[0] -= w1;
@@ -655,12 +676,19 @@ extern "C" int cuda_pairwise_ljzd(const int offset_cellpairs, const int n_cal_ce
   //d_lj_6term, d_lj_12term);
 
   cudaStreamCreate(&stream_pair_home);
+
   //test
   int *d_pairs;
-  HANDLE_ERROR(cudaMalloc((void**)&d_pairs, sizeof(int)*4));
-  HANDLE_ERROR(cudaMemset(d_pairs, 0, sizeof(int)*4));
-  int h_pairs[4] = {0,0,0,0};
-  HANDLE_ERROR(cudaMemcpy(d_pairs, h_pairs, sizeof(int)*4, cudaMemcpyHostToDevice));
+  HANDLE_ERROR(cudaMalloc((void**)&d_pairs, sizeof(int)*5));
+  HANDLE_ERROR(cudaMemset(d_pairs, 0, sizeof(int)*5));
+  int h_pairs[5] = {0,0,0,0,0};
+  real *d_realbuf;
+  HANDLE_ERROR(cudaMalloc((void**)&d_realbuf, sizeof(real)*4));
+  HANDLE_ERROR(cudaMemset(d_realbuf, 0.0, sizeof(real)*4));
+  real h_realbuf[4] = {0,0,0,0};
+  HANDLE_ERROR(cudaMemcpy(d_pairs, h_pairs, sizeof(int)*5, cudaMemcpyHostToDevice));
+  HANDLE_ERROR(cudaMemcpy(d_realbuf, h_realbuf, sizeof(real)*4, cudaMemcpyHostToDevice));
+  //
 
   int blocks = (n_cal_cells+PW_THREADS/32-1) / (PW_THREADS/32);
   kernel_pairwise_ljzd<<<blocks, PW_THREADS,
@@ -669,10 +697,12 @@ extern "C" int cuda_pairwise_ljzd(const int offset_cellpairs, const int n_cal_ce
 			   d_idx_head_cell_pairs,
 			   d_atominfo,
 			   d_lj_6term, d_lj_12term,
-			   d_energy, d_work, d_pairs,
+			   d_energy, d_work, d_pairs, d_realbuf,
 			   offset_cells, n_cal_cells);
-  HANDLE_ERROR(cudaMemcpy(h_pairs, d_pairs, sizeof(int)*4, cudaMemcpyDeviceToHost));
-  printf("n 15 pairs: nb:%d / interact:%d / all:%d / cellpairs:%d\n", h_pairs[0],h_pairs[1],h_pairs[2], h_pairs[3]); 
+  HANDLE_ERROR(cudaMemcpy(h_pairs, d_pairs, sizeof(int)*5, cudaMemcpyDeviceToHost));
+  HANDLE_ERROR(cudaMemcpy(h_realbuf, d_realbuf, sizeof(real)*4, cudaMemcpyDeviceToHost));
+  printf("n 15 pairs: nb:%d / interact:%d / all:%d / cellpairs:%d / incut:%d\n", h_pairs[0],h_pairs[1],h_pairs[2], h_pairs[3], h_pairs[4]); 
+  printf("sum_dist: %f  charge: %f\n",h_realbuf[0], h_realbuf[1]);
   HANDLE_ERROR(cudaFree(d_pairs));
 
   return 0;

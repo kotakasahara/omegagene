@@ -47,17 +47,17 @@ int Celeste::test_mode(){
 int Celeste::dynamics_mode(){
   cout<<"dynamics_mode\n";
   
-#if defined(F_CUDA) && defined(F_MPI)
-  cout << "F_CUDA + F_MPI flags = ON" << endl;
-  MpiGpuDynamicsMode* dynamics = new MpiGpuDynamicsMode;
+  // #if defined(F_CUDA) && defined(F_MPI)
+  //   cout << "F_CUDA + F_MPI flags = ON" << endl;
+  //  MpiGpuDynamicsMode* dynamics = new MpiGpuDynamicsMode;
   //GpuDynamicsMode* dynamics = new GpuDynamicsMode;
-  MPI_Init(NULL, NULL);
-#elif defined(F_CUDA)
-  cout << "F_CUDA flag = ON" << endl;
-  GpuDynamicsMode* dynamics = new GpuDynamicsMode;
-#else
+  //  MPI_Init(NULL, NULL);
+  //#if defined(F_CUDA)
+  //  cout << "F_CUDA flag = ON" << endl;
+  //  GpuDynamicsMode* dynamics = new GpuDynamicsMode;
+  //#else
   DynamicsMode* dynamics = new DynamicsMode;
-#endif
+  //#endif
   
   Read(cfg.fn_inp).load_launch_set(dynamics->mmsys);
   

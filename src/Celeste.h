@@ -18,14 +18,6 @@ using namespace std;
 #include "RunMode.h"
 #include "DynamicsMode.h"
 
-#if defined(F_CUDA) && defined(F_MPI) 
-  #include "MpiGpuDynamicsMode.h"
-#endif
-#if defined(F_CUDA)
-  #include "GpuDynamicsMode.h"
-#endif
-
-
 class Celeste : private CelesteObject{
  private:
   Config cfg;

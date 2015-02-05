@@ -1,7 +1,7 @@
 #include "MiniCell.h"
 #include <bitset>
-#ifdef F_CUDA
 
+#ifdef F_CUDA
 extern "C" int cuda_hostalloc_atom_info(real*& h_crd, int*& h_atomids,
 					real_fc*& h_work, real_fc*& h_energy,
 					int n_atom_array);

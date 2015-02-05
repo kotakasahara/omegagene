@@ -6,6 +6,7 @@
 #include "PBC.h"
 #include "Config.h"
 #include "ForceField.h"
+#include <ctime>
 using namespace std;
 
 #define COEF_MAX_N_ATOMS_BOX 1.2
@@ -131,6 +132,8 @@ class SubBox : public CelesteObject {
 
   clock_t ctime_setgrid;
   clock_t ctime_enumerate_cellpairs;
+  clock_t ctime_calc_energy_pair;
+  clock_t ctime_calc_energy_bonded;
 
  public:
   SubBox();
@@ -247,6 +250,12 @@ class SubBox : public CelesteObject {
   real_fc get_pote_14vdw(){return pote_14vdw;};
   real_fc get_pote_14ele(){return pote_14ele;};
   
+#ifdef F_CUDA
+  int gpu_device_setup();
+  int update_device_cell_info();
+  int calc_energy_pairwise_cuda();
+#endif
+
   //int set_box_region_info(const real** in_crd);  
   //int set_max_n_atoms_region();
   //int get_region_id_from_crd(int width, int rx, int ry, int rz);

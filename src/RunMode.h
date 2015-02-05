@@ -5,7 +5,6 @@
 #include "MmSystem.h"
 #include "Config.h"
 
-#include "EnergyCalcObject.h"
 #include "WriteTrr.h"
 
 class RunMode : public CelesteObject {
@@ -28,7 +27,6 @@ class RunMode : public CelesteObject {
   string fn_o_log;
   string fn_o_energy;
   string fn_o_energyflow;
-  EnergyCalcObject* enecal;
 
   WriteTrr writer_trr;
 

@@ -1,32 +1,5 @@
 #include "GpuDynamicsMode.h"
 
-extern "C" int cuda_print_device_info(int myrank=0, bool verbose=false);
-extern "C" int cuda_alloc_atom_info(int n_atoms,
-				    int n_atom_array,
-				    int max_n_cells,
-				    int max_n_cell_pairs);
-extern "C" int cuda_free_atom_info();
-extern "C" int cuda_memcpy_htod_cell_pairs(CellPair*& h_cell_pairs,
-					   int*& h_idx_head_cell_pairs,
-					   int n_cell_pairs,
-					   int n_cells);
-extern "C" int cuda_memcpy_htod_atom_info(real_pw*& h_charge_orig,
-					  int*& h_atomtype_orig,
-					  int n_atoms);
-extern "C" int cuda_set_cell_constant(int n_cells, int n_cell_pairs, int n_atom_array);
-extern "C" int cuda_set_constant(int n_atoms, real cutoff, int n_atomtypes);
-extern "C" int cuda_alloc_set_lj_params(real_pw* h_lj_6term,
-					real_pw* h_lj_12term,
-					int n_lj_types);
-extern "C" int cuda_free_lj_params();
-
-extern "C" int cuda_alloc_set_nb15off(int* h_nb15off1,
-				      int* h_nb15off2,
-				      int n_atoms);
-extern "C" int cuda_memcpy_htod_atomids(int*& h_atomids,
-					int n_atoms);
-extern "C" int cuda_set_pbc(real_pw* l);
-extern "C" int cuda_reset_work_ene(int n_atoms);
 //extern "C" int cuda_lj_test(int x, int y);
 //extern "C" int cuda_alloc_test(int*& test);
 //extern "C" int cuda_free_test(int*& test);

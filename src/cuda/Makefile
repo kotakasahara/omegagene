@@ -1,8 +1,8 @@
 CU = nvcc
 
 GEN_SM = -arch=sm_35
-
-TRST_INC = -I/opt/cuda/5.0/include
+CUDALOC = -I/usr/apps.sp3/cuda/6.0/include
+##TRST_INC = -I/opt/cuda/5.0/include
 
 CUINC = $(TRST_INC) $(B40C_INC)
 CUDBG =  --ptxas-options=-v -DNDEBUG # --host-compilation C -g 

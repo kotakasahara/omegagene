@@ -8,12 +8,14 @@
 
 //#include <random>
 #include <cstdio>
+#include <cstdlib>
 
 using namespace std;
 
 #include "CelesteObject.h"
+#include "Config.h"
 #include "PBC.h"
-#include "MiniCell.h"
+#include "ForceField.h"
 
 class MmSystem : public CelesteObject{
  private:
@@ -105,8 +107,9 @@ class MmSystem : public CelesteObject{
   unsigned long cur_step;
   real cur_time;
 
+  ForceField ff;
+
   //mt19937 random_mt;
-  MiniCell nsgrid;
 
   //time
 
@@ -191,6 +194,8 @@ class MmSystem : public CelesteObject{
   int set_random(int seed);
   int output_ctimes();
   int set_vel_from_box();
+
+  int ff_setup(const Config* cfg);
 };
 
 #endif

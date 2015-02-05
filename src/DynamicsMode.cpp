@@ -17,7 +17,7 @@ int DynamicsMode::set_config_parameters(Config* in_cfg){
    */
   //if(DBG>=1)
   //cout << "DBG1: DynamicsMode::set_config_parameters()"<<endl;
-  enecal = new EnergyCalc(&mmsys, &subbox);
+  //enecal = new EnergyCalc(&mmsys, &subbox);
   cfg = in_cfg;
   RunMode::set_config_parameters(cfg);
   thermostat = cfg->thermostat;
@@ -33,19 +33,13 @@ int DynamicsMode::initial_preprocess(){
   */
   //if (DBG >= 1)
   cout << "DBG1: DynamicsMode::initial_preprocess()" << endl;
-
+  mmsys.ff_setup(cfg);
   writer_trr.set_fn(cfg->fn_o_crd);
   writer_trr.open();
   temperature_coeff = 1.0 / (GAS_CONST * (real)mmsys.n_free) * JOULE_CAL * 1e3 * 2.0;
-  enecal->initial_preprocess();
+  //enecal->initial_preprocess();
   // set atom coordinates into PBC
   mmsys.revise_crd_inbox();
-  //for (int atomid=0; atomid < mmsys.n_atoms; atomid++){
-  //for(int d=0; d<3; d++){
-  //if(mmsys.crd[atomid][d] >= mmsys.pbc.upper_bound[d]) mmsys.crd[atomid][d] -= mmsys.pbc.L[d]; 
-  //else if(mmsys.crd[atomid][d] < mmsys.pbc.lower_bound[d]) mmsys.crd[atomid][d] += mmsys.pbc.L[d]; 
-  //}
-  //}
   cout << "subbox_setup() "<<cfg->box_div[0]<<" "
        << cfg->box_div[1] << " " << cfg->box_div[2] << endl;
   //grid
@@ -77,51 +71,64 @@ int DynamicsMode::main_stream(){
 }
 
 int DynamicsMode::calc_in_each_step(){
+  const clock_t startTimeStep = clock();
+
+  const clock_t startTimeReset = clock();
   mmsys.cur_time = mmsys.cur_step * time_step;
-  
-  //if (DBG>=1){
-  cout  << "DynamicsMode::main_stream() step:" << mmsys.cur_step << endl;
-  //}
   mmsys.reset_energy();
-  cout << "dbg8: crd_in_cell " << endl;
-  //mmsys.nsgrid.move_crd_in_cell(0,0,0.0);
+  const clock_t endTimeReset = clock();
+  mmsys.ctime_cuda_reset_work_ene += endTimeReset - startTimeReset;
 
-  //////enecal->calc_energy();
-  cout << "calc_energy()" << endl;
+  const clock_t startTimeEne = clock();
+  //cout << "calc_energy()" << endl;
   subbox.calc_energy();
-  cout << "gather_energies()"<<endl;
+  //cout << "gather_energies()"<<endl;
   gather_energies();
+  const clock_t endTimeEne = clock();
+  mmsys.ctime_calc_energy += endTimeEne - startTimeEne;
 
-  //cout << "dbg9: crd_in_cell " << endl;
-  //mmsys.nsgrid.move_crd_in_cell(0,0,0.0);
-  
-  cout << "update_velocities"<<endl;
+  const clock_t startTimeVel = clock();
+  //cout << "update_velocities"<<endl;
   subbox.update_velocities(1.0,
-		   time_step,
+			   time_step,
 			   mmsys.mass);
+  const clock_t endTimeVel = clock();
+  mmsys.ctime_update_velo += endTimeVel - startTimeVel;
+
+  const clock_t startTimeKine = clock();
   subbox.velocity_average();
   subbox.set_vel_just(mmsys.vel_just);
-
-  cout << "cal_kinetic_energy"<<endl;
   cal_kinetic_energy((const real**)mmsys.vel_just);
-  cout << "output"<<endl;
+  const clock_t endTimeKine = clock();
+  mmsys.ctime_calc_kinetic += endTimeKine - startTimeKine;
+
+  //cout << "output"<<endl;
   sub_output();
   sub_output_log();
-  cout << "update_coordinates"<<endl;  
+
+  const clock_t startTimeCoord = clock();
+  //cout << "update_coordinates"<<endl;  
   subbox.update_coordinates(time_step);
-  cout << "revise_coordinates"<<endl;  
+  //cout << "revise_coordinates"<<endl;  
   subbox.revise_coordinates_pbc();
+  const clock_t endTimeCoord = clock();
+  mmsys.ctime_update_coord += endTimeCoord - startTimeCoord;
 
 #ifndef F_WO_NS
+  const clock_t startTimeHtod = clock();
   if(mmsys.cur_step%cfg->nsgrid_update_intvl==0){
-    cout << "nsgrid_update"<<endl;
+    //cout << "nsgrid_update"<<endl;
     subbox.nsgrid_update();
   }else{
     subbox.nsgrid_crd_update();
     //revise_coordinates_pbc();
   }
+  const clock_t endTimeHtod = clock();
+  mmsys.ctime_cuda_htod_atomids += endTimeHtod - startTimeHtod;
 #endif
-  
+
+  const clock_t endTimeStep = clock();
+  mmsys.ctime_per_step += endTimeStep - startTimeStep;
   return 0;
 }
 
@@ -255,6 +262,9 @@ int DynamicsMode::subbox_setup(){
 #ifndef F_WO_NS
   subbox.set_nsgrid();
 #endif
+
+
+
   //subbox.set_ff(&ff);
 
   return 0;
@@ -287,8 +297,6 @@ int DynamicsMode::subbox_set_bonding_potentials(){
   return 0;
 }
 int DynamicsMode::gather_energies(){
-  //enecal->calc_energy();
-
   mmsys.pote_bond = subbox.get_pote_bond();
   mmsys.pote_angle = subbox.get_pote_angle();
   mmsys.pote_torsion = subbox.get_pote_torsion();
@@ -298,6 +306,6 @@ int DynamicsMode::gather_energies(){
   mmsys.pote_vdw = subbox.get_pote_vdw();
   mmsys.pote_ele = subbox.get_pote_ele();
   mmsys.pote_ele += mmsys.energy_self_sum;
-  
+  cout << "mmsys.energy_self_sum : " << mmsys.energy_self_sum << endl;
   return 0;
 }
