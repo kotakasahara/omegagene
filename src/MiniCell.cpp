@@ -187,12 +187,12 @@ int MiniCell::set_grid_xy(){
   //   L_cell_xy
   //   exbox_l
 
-  cout << "set_grid_xy()" << endl;
+  //cout << "set_grid_xy()" << endl;
   real volume = exbox_l[0] * exbox_l[1] * exbox_l[2];
 
   real min_cell_width_xy = pow((real)((real)N_ATOM_CELL / ((real)n_atoms/volume )), (real)(1.0/3.0));
-  cout << "min_cell_width_xy : " << min_cell_width_xy << endl;;
-  cout << " ... " << volume << ", "  << (real)n_atoms/volume << ", " << (real)N_ATOM_CELL / ((real)(n_atoms)/pbc->cal_volume()) << endl;
+  //cout << "min_cell_width_xy : " << min_cell_width_xy << endl;;
+  //cout << " ... " << volume << ", "  << (real)n_atoms/volume << ", " << (real)N_ATOM_CELL / ((real)(n_atoms)/pbc->cal_volume()) << endl;
   n_cells_xyz[0] = floor(exbox_l[0] / min_cell_width_xy);
   n_cells_xyz[1] = floor(exbox_l[1] / min_cell_width_xy);
   L_cell_xy[0] = exbox_l[0] / (real)n_cells_xyz[0];
@@ -206,23 +206,23 @@ int MiniCell::set_grid_xy(){
   //  this point should be tested.
   max_n_atoms_column = ceil((real)max_n_atoms_exbox/(real)n_columns * 1.3);
 
-  cout << "max_n_atoms_column " << max_n_atoms_column << " max_n_atoms_exbox: " << max_n_atoms_exbox << endl;
+  //cout << "max_n_atoms_column " << max_n_atoms_column << " max_n_atoms_exbox: " << max_n_atoms_exbox << endl;
   n_cells_xyz[2] = (max_n_atoms_column-N_ATOM_CELL+1)/N_ATOM_CELL;
 
   n_neighbors_xy[0] = ceil(cutoff_pair/L_cell_xy[0]);
   n_neighbors_xy[1] = ceil(cutoff_pair/L_cell_xy[1]);
 
-  cout << " N_columns: " << n_columns << "  max_n_atoms_column: " << max_n_atoms_column <<endl;
-  cout << " XY grid (n_cell): " << n_cells_xyz[0] << " - " << n_cells_xyz[1]<< " - " << n_cells_xyz[2] << endl;
-  cout << " XY grid (L_cell): " << L_cell_xy[0] << " - " << L_cell_xy[1] << endl;
-  cout << " neighbors: " << n_neighbors_xy[0] << " - " << n_neighbors_xy[1] << endl;
+  //cout << " N_columns: " << n_columns << "  max_n_atoms_column: " << max_n_atoms_column <<endl;
+  //cout << " XY grid (n_cell): " << n_cells_xyz[0] << " - " << n_cells_xyz[1]<< " - " << n_cells_xyz[2] << endl;
+  //cout << " XY grid (L_cell): " << L_cell_xy[0] << " - " << L_cell_xy[1] << endl;
+  //cout << " neighbors: " << n_neighbors_xy[0] << " - " << n_neighbors_xy[1] << endl;
   // 
   max_n_cells = n_cells_xyz[0] * n_cells_xyz[1] * n_cells_xyz[2];
   max_n_cell_pairs = ((n_neighbors_xy[0]*2+1) *
 		      (n_neighbors_xy[1]*2+1) * (n_neighbors_xy[0]+n_neighbors_xy[1]+2) ) / 2
 									       * max_n_cells;
   //max_n_cell_pairs = max_n_cells * max_n_cells;
-  cout << "max_n_cell_pairs : " << max_n_cell_pairs << endl;
+  //cout << "max_n_cell_pairs : " << max_n_cell_pairs << endl;
 
   n_cell_pairs = 0;
   return 0;
@@ -261,7 +261,7 @@ int MiniCell::set_atoms_into_grid_xy(){
       
       if(crd[atom_id_g*3+d] > exbox_upper_bound[d] ||
 	 crd[atom_id_g*3+d] < exbox_lower_bound[d]){
-	 cout << "CRDERROR! EXCEEDED PB: " << atom_id_g << "-" << d << " "
+	cout << "CRDERROR! EXCEEDED PB: " << atom_id_g << "-" << d << " "
 	     << crd[atom_id_g*3+d] << " , " << box_upper_bound[d] << " , " 
 	     << box_lower_bound[d] << endl;
       }
@@ -282,21 +282,21 @@ int MiniCell::set_atoms_into_grid_xy(){
     n_atoms_xy[column_id]++;
   }
 
-  cout << "set_idx_xy_head_atom_from_n_atoms_xy()" << endl;
+  //cout << "set_idx_xy_head_atom_from_n_atoms_xy()" << endl;
   set_idx_xy_head_atom_from_n_atoms_xy();  
   
   set_atomids_from_buf();
 
-  cout << "reorder_atominfo_for_columns()" << endl;
+  //cout << "reorder_atominfo_for_columns()" << endl;
   reorder_atominfo_for_columns();
 
-  cout << "set_dummy_atoms()" << endl;
+  //cout << "set_dummy_atoms()" << endl;
   set_dummy_atoms();
 
-  cout << "reorder_atominfo_in_columns() " <<endl;
+  //cout << "reorder_atominfo_in_columns() " <<endl;
   reorder_atominfo_in_columns();
   set_atomids_rev();
-  cout << " // set_atomids_rev"<<endl;
+  //cout << " // set_atomids_rev"<<endl;
   //debug_set_atoms_into_grid();
 
    // TEST
@@ -695,7 +695,7 @@ int MiniCell::set_idx_xy_head_atom_from_n_atoms_xy(){
   int atom_index=0;
   int cur_cell_id = 0;
   int n_dummies_all = 0;
-  cout << "set_idx_xy_head_atom_from_n_atoms_xy" <<endl;
+  //cout << "set_idx_xy_head_atom_from_n_atoms_xy" <<endl;
   for(int column_id = 0; column_id < n_columns; column_id++){
     //    cout << "column_id " << column_id << endl;
     int column_x = column_id%n_cells_xyz[0];
@@ -778,7 +778,7 @@ int MiniCell::enumerate_cell_pairs(){
   //   cell_crd
   //   idx_crd_cell
 
-  cout << "enumerate_cell_pairs()"<<endl;
+  //cout << "enumerate_cell_pairs()"<<endl;
 
   n_cell_pairs = 0;
   int cell1[3];
@@ -923,11 +923,11 @@ int MiniCell::enumerate_cell_pairs(){
     }
   }
   idx_head_cell_pairs[n_cells] = n_cell_pairs;
-  cout << "checked cells: " << tmp_cell1 << " / " << n_cells << endl ;
-  cout << "checked column_pairs: " << tmp_column_pairs << " / " 
-       << n_columns * (n_neighbors_xy[0]*2+1)*(n_neighbors_xy[1]*2+1)   <<" "
-       << n_neighbors_xy[0] <<":"<<n_neighbors_xy[1] <<":"<<n_columns<<endl;
-  cout << "n_cell_pairs : " << n_cell_pairs << " / " << tmp_n_cell_pair<<endl;
+  //cout << "checked cells: " << tmp_cell1 << " / " << n_cells << endl ;
+  //cout << "checked column_pairs: " << tmp_column_pairs << " / " 
+  //<< n_columns * (n_neighbors_xy[0]*2+1)*(n_neighbors_xy[1]*2+1)   <<" "
+  //<< n_neighbors_xy[0] <<":"<<n_neighbors_xy[1] <<":"<<n_columns<<endl;
+  //cout << "n_cell_pairs : " << n_cell_pairs << " / " << tmp_n_cell_pair<<endl;
   
   return 0;
 }

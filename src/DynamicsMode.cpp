@@ -225,9 +225,9 @@ int DynamicsMode::cal_kinetic_energy(const real** vel){
     //cout << "dbg_kine: " << mmsys.mass[atomid] << " " << vel[atomid][0];
     //cout << " " << vel[atomid][1] <<" " << vel[atomid][2] << endl;
   }
-  cout << "ke_pre " << kine_pre << endl;
+  //cout << "ke_pre " << kine_pre << endl;
   mmsys.kinetic_e = kine_pre * KINETIC_COEFF;
-  cout << "ke " << mmsys.kinetic_e << endl;;
+  //cout << "ke " << mmsys.kinetic_e << endl;;
   mmsys.temperature = mmsys.kinetic_e * temperature_coeff;
   return 0;
 }
@@ -306,6 +306,6 @@ int DynamicsMode::gather_energies(){
   mmsys.pote_vdw = subbox.get_pote_vdw();
   mmsys.pote_ele = subbox.get_pote_ele();
   mmsys.pote_ele += mmsys.energy_self_sum;
-  cout << "mmsys.energy_self_sum : " << mmsys.energy_self_sum << endl;
+  //cout << "mmsys.energy_self_sum : " << mmsys.energy_self_sum << endl;
   return 0;
 }

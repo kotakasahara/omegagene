@@ -55,7 +55,7 @@ extern "C" int cuda_alloc_atom_info(int n_atoms,
 }
 
 extern "C" int cuda_free_atom_info(){
-  printf("cuda_free_device_atom_info\n");
+  //printf("cuda_free_device_atom_info\n");
   HANDLE_ERROR( cudaFree(d_crd_chg) );
   HANDLE_ERROR( cudaFree(d_crd) );
   HANDLE_ERROR( cudaFree(d_atomids) );
@@ -75,7 +75,7 @@ extern "C" int cuda_memcpy_htod_cell_pairs(CellPair*& h_cell_pairs,
 					   int*& h_idx_head_cell_pairs,
 					   int n_cell_pairs,
 					   int n_cells){
-  printf("cuda_memcpy_htod_cell_pairs\n");
+  //printf("cuda_memcpy_htod_cell_pairs\n");
   HANDLE_ERROR(cudaMemcpy(d_cell_pairs, h_cell_pairs,
 			  n_cell_pairs * sizeof(CellPair),
 			  cudaMemcpyHostToDevice));
@@ -268,7 +268,7 @@ extern "C" int cuda_hostalloc_atom_type_charge(int*& h_atom_type,
 extern "C" int cuda_hostalloc_atom_info(real*& h_crd, int*& h_atomids,
 					real_fc*& h_work, real_fc*& h_energy,
 					int n_atom_array){
-  printf("hostalloc_atom_info : %d\n", n_atom_array);
+ printf("hostalloc_atom_info : %d\n", n_atom_array);
   HANDLE_ERROR( cudaHostAlloc( (void**)&h_crd,
 			       n_atom_array * 3 * sizeof(real),
 			       cudaHostAllocDefault));
@@ -385,7 +385,7 @@ __global__ void kernel_reduction_energy(real_fc* d_energy){
     if(tid==1){
       d_energy[0] += d_energy[i*2];
       d_energy[1] += d_energy[i*2+1];
-      printf("ene %f %f\n",d_energy[0],d_energy[1]);
+      //printf("ene %f %f\n",d_energy[0],d_energy[1]);
     }
   }
   /*
@@ -506,8 +506,6 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
 				     real_fc* d_energy, real_fc* d_work, int* d_pairs, real* d_realbuf,
 				     const int offset_cells,
 				     const int n_cells){
-  //int pairs[3] ={0, 0, 0};
-
   real_fc ene_vdw = 0.0;
   real_fc ene_ele = 0.0;
 
@@ -532,7 +530,7 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
     const int cp = d_idx_head_cell_pairs[c1] + (loopIdx >> 1);
     
     if(cp >= D_N_CELL_PAIRS) break;
-    atomicAdd(&d_pairs[3],1);
+    //atomicAdd(&d_pairs[3],1);
     const int c2 = d_cell_pairs[cp].cell_id2;
 
     // atom_idx ... index in cell, 0-7
@@ -557,17 +555,15 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
     real cur_ene_ele=0.0;
     real cur_ene_vdw=0.0;
 
-    //
-    //atomicAdd(&d_pairs[0], 1);
-
     if(!check_15off64(atom_idx1, atom_idx2, d_cell_pairs[cp].pair_mask)){
       //if(d_atominfo[a1].x == -1 || d_atominfo[a2].x == -1) continue;
       cal_pair(w1, w2, w3, cur_ene_vdw, cur_ene_ele,
 	       d_crd_chg[a1], crd_chg2, d_atominfo[a1].y, d_atominfo[a2].y,
 	       d_lj_6term, d_lj_12term, d_atominfo[a1].x, d_atominfo[a2].x);
-      atomicAdd(&d_pairs[1],1);
+      //atomicAdd(&d_pairs[1],1);
 
       //debug
+      /*
       const real d12[3] = {
 	d_crd_chg[a1].x - crd_chg2.x,
 	d_crd_chg[a1].y - crd_chg2.y,
@@ -590,9 +586,10 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
 	  atomicAdd(&d_realbuf[1], -100000);
 	}
       }
+      */
       //
   
-      if(cur_ene_vdw!=0.0 || cur_ene_ele!=0.0) atomicAdd(&d_pairs[2],1);
+      //if(cur_ene_vdw!=0.0 || cur_ene_ele!=0.0) atomicAdd(&d_pairs[2],1);
       //printf("dbg02ene %d a(%d-%d) c(%d-%d): %10e %10e %10e %10e\n",global_threadIdx, a1, a2,c1,c2,ene_vdw, ene_ele,cur_ene_vdw, cur_ene_ele);
       //return;
 
@@ -686,8 +683,8 @@ extern "C" int cuda_pairwise_ljzd(const int offset_cellpairs, const int n_cal_ce
   HANDLE_ERROR(cudaMalloc((void**)&d_realbuf, sizeof(real)*4));
   HANDLE_ERROR(cudaMemset(d_realbuf, 0.0, sizeof(real)*4));
   real h_realbuf[4] = {0,0,0,0};
-  HANDLE_ERROR(cudaMemcpy(d_pairs, h_pairs, sizeof(int)*5, cudaMemcpyHostToDevice));
-  HANDLE_ERROR(cudaMemcpy(d_realbuf, h_realbuf, sizeof(real)*4, cudaMemcpyHostToDevice));
+  //HANDLE_ERROR(cudaMemcpy(d_pairs, h_pairs, sizeof(int)*5, cudaMemcpyHostToDevice));
+  //HANDLE_ERROR(cudaMemcpy(d_realbuf, h_realbuf, sizeof(real)*4, cudaMemcpyHostToDevice));
   //
 
   int blocks = (n_cal_cells+PW_THREADS/32-1) / (PW_THREADS/32);
@@ -699,11 +696,12 @@ extern "C" int cuda_pairwise_ljzd(const int offset_cellpairs, const int n_cal_ce
 			   d_lj_6term, d_lj_12term,
 			   d_energy, d_work, d_pairs, d_realbuf,
 			   offset_cells, n_cal_cells);
-  HANDLE_ERROR(cudaMemcpy(h_pairs, d_pairs, sizeof(int)*5, cudaMemcpyDeviceToHost));
-  HANDLE_ERROR(cudaMemcpy(h_realbuf, d_realbuf, sizeof(real)*4, cudaMemcpyDeviceToHost));
-  printf("n 15 pairs: nb:%d / interact:%d / all:%d / cellpairs:%d / incut:%d\n", h_pairs[0],h_pairs[1],h_pairs[2], h_pairs[3], h_pairs[4]); 
-  printf("sum_dist: %f  charge: %f\n",h_realbuf[0], h_realbuf[1]);
+  //HANDLE_ERROR(cudaMemcpy(h_pairs, d_pairs, sizeof(int)*5, cudaMemcpyDeviceToHost));
+  //HANDLE_ERROR(cudaMemcpy(h_realbuf, d_realbuf, sizeof(real)*4, cudaMemcpyDeviceToHost));
+  //printf("n 15 pairs: nb:%d / interact:%d / all:%d / cellpairs:%d / incut:%d\n", h_pairs[0],h_pairs[1],h_pairs[2], h_pairs[3], h_pairs[4]); 
+  //printf("sum_dist: %f  charge: %f\n",h_realbuf[0], h_realbuf[1]);
   HANDLE_ERROR(cudaFree(d_pairs));
+  HANDLE_ERROR(cudaFree(d_realbuf));
 
   return 0;
 }
@@ -719,9 +717,9 @@ extern "C" int cuda_pair_sync(){
 
 extern "C" int cuda_memcpy_dtoh_work(real_fc*& h_work, real_fc*& h_energy,
 				     int n_atoms, int n_atom_array){
-  printf("! cuda_memcpy_dtoh_work\n");
+  //printf("! cuda_memcpy_dtoh_work\n");
   int blocks = (n_atom_array + REORDER_THREADS-1) / REORDER_THREADS;
-  printf("kernel_set_work_orig\n");
+  //printf("kernel_set_work_orig\n");
 
   cudaStream_t stream_reduction1;
   cudaStream_t stream_reduction2;
@@ -744,7 +742,7 @@ extern "C" int cuda_memcpy_dtoh_work(real_fc*& h_work, real_fc*& h_energy,
   HANDLE_ERROR(cudaMemcpy(h_energy, d_energy,
 			  sizeof(real_fc) * 2,
 			  cudaMemcpyDeviceToHost));
-  printf("memcpy ene %f %f\n", h_energy[0], h_energy[1]);
+  //printf("memcpy ene %f %f\n", h_energy[0], h_energy[1]);
   return 0;
 }
 extern "C" int cuda_reset_work_ene(int n_atoms){
