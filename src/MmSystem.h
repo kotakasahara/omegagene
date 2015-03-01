@@ -16,6 +16,7 @@ using namespace std;
 #include "Config.h"
 #include "PBC.h"
 #include "ForceField.h"
+#include "Constraint.h"
 
 class MmSystem : public CelesteObject{
  private:
@@ -78,6 +79,7 @@ class MmSystem : public CelesteObject{
   real pbc_val[9];
   PBC pbc;
 
+  real leapfrog_coef;
   int n_atoms;
   int n_free;
   real** crd;
@@ -108,6 +110,8 @@ class MmSystem : public CelesteObject{
   real cur_time;
 
   ForceField ff;
+
+  Constraint constraint;
 
   //mt19937 random_mt;
 

@@ -39,7 +39,12 @@ enum {
   THMSTT_HOOVER_EVANS,
   THMSTT_DUMMY
 };
-
+enum {
+  CONST_NONE = 0,
+  CONST_SHAKE,
+  CONST_SHAKE_SETTLE,
+  CONST_DUMMY
+};
 enum {
   COM_NONE = 0,
   COM_CANCEL

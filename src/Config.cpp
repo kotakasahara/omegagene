@@ -16,6 +16,7 @@ int Config::set_defaults(){
   fn_inp = "md_i.inp";
   processor = PRCS_SINGLE;
   integrator = INTGRTR_LEAPFLOG;
+  constraint = CONST_NONE;
   cutoff = 12.0;
   n_steps = 1;
   time_step = 0.0005;
@@ -78,6 +79,15 @@ void Config::setAll(vector<string> arg){
       if(*itr=="leapflog"){ integrator = INTGRTR_LEAPFLOG; }
       else { integrator = INTGRTR_DUMMY; }
     }
+    else if(*itr=="--constraint"){ 
+      itr++;
+      if(*itr=="none"){ constraint = CONST_NONE; }
+      else if(*itr=="shake"){ constraint = CONST_SHAKE; }
+      else if(*itr=="shake-settle"){ constraint = CONST_SHAKE_SETTLE; }
+      else { constraint = CONST_DUMMY; }
+    }
+    else if(*itr=="--const-max-loops"){ constraint_max_loops = atoi((*++itr).c_str()); }
+    else if(*itr=="--const-tolerance"){ constraint_tolerance = atof((*++itr).c_str()); }
     else if(*itr=="--cutoff"){ cutoff=atof((*++itr).c_str()); }
     else if(*itr=="--n-steps"){ n_steps=atoi((*++itr).c_str()); }
     else if(*itr=="--time-step"){ time_step=atof((*++itr).c_str()); }

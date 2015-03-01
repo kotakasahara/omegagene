@@ -7,10 +7,6 @@
 #include "RunMode.h"
 #include "MmSystem.h"
 #include "SubBox.h"
-#include "ForceField.h"
-//#include "ForceFieldObject.h"
-//#include "ElectrostaticObject.h"
-//#include "EnergyCalc.h"
 
 class DynamicsMode : public RunMode {
  private:

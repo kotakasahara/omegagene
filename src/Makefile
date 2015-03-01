@@ -2,21 +2,19 @@ EXECUTABLE = celeste
 #EXECUTABLE = celeste_wons
 #EXECUTABLE = celeste_gpu
 
-#EXECUTABLE = celeste_mpigpu
-#EXECUTABLE = celeste_mpi
 
 ### Environment variables for tsubame
-CXX = icpc 
-CC = icpc 
-MPICXX = mpic++
-#CXX = g++
-#MPICXX = openmpic++
+#CXX = icpc 
+#CC = icpc 
+#MPICXX = mpic++
+CXX = g++
+MPICXX = openmpic++
 #CUDALOC = /opt/cuda/5.5/lib64
-CUDALOC = /usr/apps.sp3/cuda/6.0/lib64
+#CUDALOC = /usr/apps.sp3/cuda/6.0/lib64
 # BOOST_INC = ${HOME}/include
 # BOOST_LIB = ${HOME}/lib
 
-ICCFLAGS = -ansi -O3 -w1 # -std=c++11
+ICCFLAGS = -ansi -O0 -g #-w1 # -std=c++11
 ICCLIB = 
 
 MODE_FLAG =
@@ -44,6 +42,7 @@ OBJS = CelesteObject.o Celeste.o     Config.o \
        ForceFieldObject.o     ForceField.o \
        ElectrostaticObject.o  ZeroMultipoleSum.o \
        MiniCell.o SubBox.o \
+       Constraint.o ConstraintShake.o \
        main.o
 
 ## endif

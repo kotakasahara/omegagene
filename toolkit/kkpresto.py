@@ -588,14 +588,14 @@ class TPL(object):
     def set_scale_14(self):
         for mol in self.mols:
             mol.set_scale_14(self.nonbonds)
+    def swap(self,a,b):
+        if a > b:
+            tmp = a
+            a = b
+            b = tmp
+        return (a,b)
     def enumerate_12_13_14(self):
     ## (atom_id1, atom_id2, atom_id1_in_mol, atom_id2_in_mol, mol_id)
-        def swap(a,b):
-            if a > b:
-                tmp = a
-                a = b
-                b = tmp
-            return (a,b)
         atom_id_12 = []
         atom_id_13 = []
         atom_id_14 = []
@@ -615,7 +615,7 @@ class TPL(object):
                     atom2 = head_atom_id-1 + trio[1]
                     atom3 = head_atom_id-1 + trio[2]
                     atom_id_13.append(((atom1,atom2,atom3), params))
-                    pair = swap(atom1,atom3)
+                    pair = self.swap(atom1,atom3)
                     atom_pair_non15.add(pair)
                 for mol_atom_id, params in mol_tpl.torsions:
                     atom1 = head_atom_id-1 + mol_atom_id[0]
@@ -624,7 +624,7 @@ class TPL(object):
                     atom4 = head_atom_id-1 + mol_atom_id[3]
                     atom_id_14.append(((atom1,atom2,atom3,atom4), params))
                     if params[4] != 1: continue
-                    pair = swap(atom1,atom4)
+                    pair = self.swap(atom1,atom4)
                     atom_pair_non15.add(pair)
                     #params_nb =self.nb_pair[(mol_tpl.atoms[mol_atom_id[0]].interaction_type,
                     #                          mol_tpl.atoms[mol_atom_id[0]].interaction_type)]
@@ -640,7 +640,7 @@ class TPL(object):
                     atom3 = head_atom_id-1 + quad[2]
                     atom4 = head_atom_id-1 + quad[3]
                     atom_id_14_imp.append(((atom1,atom2,atom3,atom4), params))
-                    pair = swap(atom1,atom4)
+                    pair = self.swap(atom1,atom4)
                     atom_pair_non15.add(pair)
                 #for atom in mol_tpl.atoms:
                 #    for dest in atom.atoms_1_2:
@@ -768,6 +768,36 @@ class TPL(object):
             new_nonbonds[new] = param
         self.nonbonds = new_nonbonds
         return 0
+    def remove_bond_angle_constraints(self, pairs):
+        print "remove_bond_angle_constraints"
+
+        n_bonds_orig = len(self.atom_id_12)
+        n_angles_orig = len(self.atom_id_13)
+
+        new_bonds = []
+        #new_non15 = set()
+        print "n pairs : " + str(len(pairs))
+        print pairs
+        for idx, at12 in enumerate(self.atom_id_12):
+            #print at12[0]
+            if not at12[0] in pairs:
+                
+                new_bonds.append(at12)
+                #new_non15.add(at12[0])
+        self.atom_id_12 = new_bonds
+                #print "idx " + str(idx)
+                #rmv_idx_bond.append(idx)
+        new_angles = []
+        for idx, at13 in enumerate(self.atom_id_13):
+            if not (at13[0][0], at13[0][2]) in pairs:
+                new_angles.append(at13)
+                #new_non15.add(self.swap(at13[0][0], at13[0][2]))
+        self.atom_id_13 = new_angles
+        #self.atom_pair_non15 = new_non15
+        print "n_bonds: " + str(n_bonds_orig) + " -> " + str(len(self.atom_id_12))
+        print "n_angles: " + str(n_angles_orig) + " -> " + str(len(self.atom_id_13))
+
+        return 
 
 class PrestoAsciiReader(kkkit.FileI):
     def __init__(self, fn):

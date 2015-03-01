@@ -6,7 +6,9 @@
 #include "PBC.h"
 #include "Config.h"
 #include "ForceField.h"
+#include "ConstraintShake.h"
 #include <ctime>
+
 using namespace std;
 
 #define COEF_MAX_N_ATOMS_BOX 1.2
@@ -47,11 +49,13 @@ class SubBox : public CelesteObject {
   // crd[max_n_atoms_box*3]
   int rank;
   real *crd;
+  real *crd_prev;
   real *vel;
   real *vel_next;
   real *vel_just;
   real *work;
   real *charge;
+  real *mass;
   int  *atom_type;
 
   int  *atomids;
@@ -130,6 +134,8 @@ class SubBox : public CelesteObject {
 
   MiniCell nsgrid;
 
+  Constraint* constraint;
+
   clock_t ctime_setgrid;
   clock_t ctime_enumerate_cellpairs;
   clock_t ctime_calc_energy_pair;
@@ -168,6 +174,7 @@ class SubBox : public CelesteObject {
   int initial_division(const real** in_crd,
 		       const real** in_vel,
 		       const real* in_charge,
+		       const real* in_mass,
 		       const int* in_atom_type);
   int rank0_div_box(const real** in_crd,
 		    const real** in_vel);
@@ -175,6 +182,7 @@ class SubBox : public CelesteObject {
   int rank0_send_init_data(const real** in_crd,
 			   const real** in_vel,
 			   const real* in_charge,
+			   const real* in_mass,
 			   const int* in_atom_type);
   int recv_init_data();
 
@@ -228,11 +236,12 @@ class SubBox : public CelesteObject {
   const int* get_atomids(){return (const int*)atomids;};
   int get_n_atoms_box(){return (const int)n_atoms_box;};
 
+  int cpy_crd_prev();
   int swap_velocity_buffer();
   int update_velocities(const real firstcoeff,
-			const real time_step,
-			const real* mass);
+			const real time_step);
   int velocity_average();
+  int set_velocity_from_crd(const real time_step);
   int revise_coordinates_pbc();
   int set_vel_just(real** vel);
   real cal_kinetic_energy();
@@ -240,6 +249,14 @@ class SubBox : public CelesteObject {
   bool is_in_box(real* in_crd);
   bool is_in_exbox(real* in_crd);
   int set_box_crd();
+  
+  int init_constraint(int in_constraint,
+		      int in_max_loops,
+		      real in_tolerance,
+		      int max_n_pair,
+		      int max_n_trio,
+		      int max_n_quad);
+  int set_subset_constraint(Constraint& in_cst);
 
   real_fc get_pote_vdw(){return pote_vdw;};
   real_fc get_pote_ele(){return pote_ele;};
@@ -249,12 +266,14 @@ class SubBox : public CelesteObject {
   real_fc get_pote_impro(){return pote_impro;};
   real_fc get_pote_14vdw(){return pote_14vdw;};
   real_fc get_pote_14ele(){return pote_14ele;};
-  
+
 #ifdef F_CUDA
   int gpu_device_setup();
   int update_device_cell_info();
   int calc_energy_pairwise_cuda();
 #endif
+  
+  int apply_constraint();
 
   //int set_box_region_info(const real** in_crd);  
   //int set_max_n_atoms_region();

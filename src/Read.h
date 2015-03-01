@@ -15,6 +15,8 @@ using namespace std;
 #include "CelesteObject.h"
 #include "MmSystem.h"
 #include "PBC.h"
+#include "Constraint.h"
+
 class Read : private CelesteObject {
  private:
   string filename;
@@ -25,7 +27,7 @@ class Read : private CelesteObject {
   int size_crd;
   int size_vel;
   int size_topol;
-  int size_shake;
+  int size_constraint;
  public:
   ifstream ifs;
   Read(string inFn);
@@ -47,7 +49,7 @@ class Read : private CelesteObject {
   int load_ls_crd(MmSystem& mmsys);
   int load_ls_vel(MmSystem& mmsys);
   int load_ls_tpl(MmSystem& mmsys);
-  int load_ls_shk(MmSystem& mmsys);
+  int load_ls_constraint(Constraint* cst);
   //int load_ls_pcluster(MmSystem& mmsys);
 };
 

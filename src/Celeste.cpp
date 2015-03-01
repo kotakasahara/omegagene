@@ -82,6 +82,7 @@ int Celeste::dynamics_mode(){
 #if defined(F_MPI)
   MPI_Finalize();
 #endif
+  delete dynamics;
   return 0;
 }
 

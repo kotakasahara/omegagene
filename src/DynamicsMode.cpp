@@ -90,10 +90,28 @@ int DynamicsMode::calc_in_each_step(){
   const clock_t startTimeVel = clock();
   //cout << "update_velocities"<<endl;
   subbox.update_velocities(1.0,
-			   time_step,
-			   mmsys.mass);
+			   time_step);
   const clock_t endTimeVel = clock();
   mmsys.ctime_update_velo += endTimeVel - startTimeVel;
+
+
+  const clock_t startTimeCoord = clock();
+  //cout << "update_coordinates"<<endl;  
+  subbox.cpy_crd_prev();
+  subbox.update_coordinates(time_step);
+
+  if(mmsys.leapfrog_coef != 1.0){
+    subbox.apply_constraint();
+    mmsys.leapfrog_coef = 1.0;
+  }else{
+    subbox.apply_constraint();
+    subbox.set_velocity_from_crd(time_step);
+  }
+
+  //cout << "revise_coordinates"<<endl;  
+  subbox.revise_coordinates_pbc();
+  const clock_t endTimeCoord = clock();
+  mmsys.ctime_update_coord += endTimeCoord - startTimeCoord;
 
   const clock_t startTimeKine = clock();
   subbox.velocity_average();
@@ -101,18 +119,6 @@ int DynamicsMode::calc_in_each_step(){
   cal_kinetic_energy((const real**)mmsys.vel_just);
   const clock_t endTimeKine = clock();
   mmsys.ctime_calc_kinetic += endTimeKine - startTimeKine;
-
-  //cout << "output"<<endl;
-  sub_output();
-  sub_output_log();
-
-  const clock_t startTimeCoord = clock();
-  //cout << "update_coordinates"<<endl;  
-  subbox.update_coordinates(time_step);
-  //cout << "revise_coordinates"<<endl;  
-  subbox.revise_coordinates_pbc();
-  const clock_t endTimeCoord = clock();
-  mmsys.ctime_update_coord += endTimeCoord - startTimeCoord;
 
 #ifndef F_WO_NS
   const clock_t startTimeHtod = clock();
@@ -129,7 +135,13 @@ int DynamicsMode::calc_in_each_step(){
 
   const clock_t endTimeStep = clock();
   mmsys.ctime_per_step += endTimeStep - startTimeStep;
+
+  sub_output();
+  sub_output_log();
+
   return 0;
+
+
 }
 
 int DynamicsMode::sub_output(){
@@ -256,9 +268,27 @@ int DynamicsMode::subbox_setup(){
   subbox.initial_division((const real**)mmsys.crd,
 			  (const real**)mmsys.vel_just,
 			  (const real*)mmsys.charge,
+			  (const real*)mmsys.mass,
 			  (const int*)mmsys.atom_type);
   subbox_set_bonding_potentials();
-  cout << "set_nsgrid" << endl;
+
+  if(cfg->constraint != CONST_NONE){
+    subbox.init_constraint(cfg->constraint,
+			   cfg->constraint_max_loops,
+			   cfg->constraint_tolerance,
+			   mmsys.constraint.get_n_pair(),
+			   mmsys.constraint.get_n_trio(),
+			   mmsys.constraint.get_n_quad());
+    
+    int n_shake_dist = mmsys.constraint.get_n_pair() + 
+      3 * mmsys.constraint.get_n_trio() + 
+      6 * mmsys.constraint.get_n_quad();
+    mmsys.n_free -= n_shake_dist;
+    
+    subbox.set_subset_constraint(mmsys.constraint);
+  }
+
+  //  cout << "set_nsgrid" << endl;
 #ifndef F_WO_NS
   subbox.set_nsgrid();
 #endif

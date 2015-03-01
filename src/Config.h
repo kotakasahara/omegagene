@@ -16,6 +16,9 @@ class Config : public CelesteObject {
   string fn_inp;
   int processor;
   int integrator;
+  int constraint;
+  int constraint_tolerance;
+  int constraint_max_loops;
   real cutoff;
   real cutoff_buf;
   int n_steps;

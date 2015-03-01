@@ -65,11 +65,13 @@ SubBox::~SubBox(){
   cuda_free_lj_params();
 #endif
   free_variables();
+  delete constraint;
 }
 
 int SubBox::alloc_variables(){
   //cout << "SubBox::alloc_variables"<<endl;
   crd = new real[max_n_atoms_exbox*3];
+  crd_prev = new real[max_n_atoms_exbox*3];
   vel = new real[max_n_atoms_exbox*3];
   vel_next = new real[max_n_atoms_exbox*3];
   vel_just = new real[max_n_atoms_exbox*3];
@@ -80,8 +82,10 @@ int SubBox::alloc_variables(){
 				  max_n_atoms_exbox);
 #else
   charge = new real[max_n_atoms_exbox];
+ 
   atom_type = new int[max_n_atoms_exbox];
 #endif
+  mass = new real[max_n_atoms_exbox];
   //crd_box = new real*[n_boxes];
   //for(int i = 0; i < n_boxes; i++){
   //crd_box[i] = new real[max_n_atoms_box*3];
@@ -237,6 +241,7 @@ int SubBox::init_variables(){
 }
 int SubBox::free_variables(){
   delete[] crd;
+  delete[] crd_prev;
   delete[] vel;
   delete[] vel_next;
   delete[] vel_just;
@@ -250,6 +255,7 @@ int SubBox::free_variables(){
   delete[] charge;
   delete[] atom_type;
 #endif
+  delete[] mass;
   free_variables_for_bonds();
   free_variables_for_angles();
   free_variables_for_torsions();
@@ -445,6 +451,7 @@ int SubBox::nsgrid_crd_update(){
   //nsgrid.update_crd((const real**)crd);
   return 0;
 }
+
 int SubBox::nsgrid_update(){
   nsgrid.init_energy_work();
   const clock_t startTimeSet = clock();
@@ -498,10 +505,11 @@ int SubBox::rank0_free_variables(){
 int SubBox::initial_division(const real** in_crd,
 			     const real** in_vel,
 			     const real* in_charge,
+			     const real* in_mass,
 			     const int* in_atom_type){
   if(rank==0){
     rank0_div_box(in_crd, in_vel);
-    rank0_send_init_data(in_crd, in_vel, in_charge, in_atom_type);
+    rank0_send_init_data(in_crd, in_vel, in_charge, in_mass, in_atom_type);
   }else{
     recv_init_data();
   }
@@ -535,6 +543,7 @@ int SubBox::rank0_div_box(const real** in_crd,
 int SubBox::rank0_send_init_data(const real** in_crd,
 				 const real** in_vel,
 				 const real* in_charge,
+				 const real* in_mass,
 				 const int* in_atom_type){
   // set
   //   crd
@@ -579,6 +588,7 @@ int SubBox::rank0_send_init_data(const real** in_crd,
     vel_next[i_atom3+1] = in_vel[all_atomids[0][i_atom]][1];
     vel_next[i_atom3+2] = in_vel[all_atomids[0][i_atom]][2];
     charge[i_atom] = in_charge[all_atomids[0][i_atom]];
+    mass[i_atom] = in_mass[all_atomids[0][i_atom]];
     atom_type[i_atom] = in_atom_type[all_atomids[0][i_atom]];
     atomids_rev[all_atomids[0][i_atom]] = i_atom;
   }
@@ -1311,6 +1321,11 @@ int SubBox::add_work_from_minicell(){
   return 0;
 }
 
+int SubBox::cpy_crd_prev(){
+  memcpy(crd_prev, crd, sizeof(real) * max_n_atoms_exbox*3);
+  return 0;
+}
+
 int SubBox::swap_velocity_buffer(){
   real* tmp = vel;
   vel = vel_next;
@@ -1319,8 +1334,7 @@ int SubBox::swap_velocity_buffer(){
 }
 
 int SubBox::update_velocities(const real firstcoeff,
-			      const real time_step,
-			      const real* mass){
+			      const real time_step){
   swap_velocity_buffer();
   for(int atomid_b=0, atomid_b3=0;
       atomid_b < all_n_atoms[rank];
@@ -1329,7 +1343,7 @@ int SubBox::update_velocities(const real firstcoeff,
       vel_next[atomid_b3+d] = vel[atomid_b3+d] - 
 	(firstcoeff * time_step * 
 	 FORCE_VEL * work[atomid_b3+d] 
-	 / mass[atomids[atomid_b]]);
+	 / mass[atomid_b]);
     }
   }
   return 0;
@@ -1345,7 +1359,17 @@ int SubBox::velocity_average(){
   }
   return 0;
 }
-
+int SubBox::set_velocity_from_crd(const real time_step){
+  real ts_inv = 1.0 / time_step;
+  for(int atomid_b = 0, atomid_b3 = 0;
+      atomid_b < all_n_atoms[rank];
+      atomid_b++, atomid_b3+=3){
+    for(int d=0; d<3; d++){
+      vel[atomid_b3+d] = (crd[atomid_b3+d] - crd_prev[atomid_b3+d]) * ts_inv;
+    }
+  }
+  return 0;
+}
 int SubBox::revise_coordinates_pbc(){
   for(int atomid_b=0, atomid_b3=0;
       atomid_b < all_n_atoms[rank];
@@ -1409,6 +1433,33 @@ int SubBox::set_box_crd(){
   return 0;
 }
 
+int SubBox::init_constraint(int in_constraint,
+			    int in_max_loops, real in_tolerance,
+			    int max_n_pair,
+			    int max_n_trio,
+			    int max_n_quad){
+  switch (in_constraint){
+  case CONST_SHAKE:
+    constraint = new ConstraintShake(); break;
+  default:
+    return in_constraint;
+  }
+  constraint->set_parameters(in_max_loops, in_tolerance);
+  constraint->set_max_n_constraints(max_n_pair, max_n_trio, max_n_quad);
+  cout << "max_n_const: " << max_n_pair << " " << max_n_trio << " " << max_n_quad  << endl;
+  constraint->alloc_constraint();
+  cout << "alloc" <<endl;
+  
+  return in_constraint;
+}
+int SubBox::set_subset_constraint(Constraint& in_cst){
+  if(cfg->constraint == CONST_NONE) return 1;
+
+  //cout << "set_subset_constraint" << endl;
+  constraint->set_subset_constraint(in_cst, atomids_rev);
+  return 0;
+}
+
 #ifdef F_CUDA
 int SubBox::gpu_device_setup(){
   cuda_print_device_info();
@@ -1467,6 +1518,11 @@ int SubBox::calc_energy_pairwise_cuda(){
 }
 
 #endif
+int SubBox::apply_constraint(){
+  constraint->apply_constraint(crd, crd_prev, mass, pbc);
+  return 0;
+}
+
 
 /*
 int SubBox::set_bonding_info
@@ -1519,7 +1575,7 @@ int SubBox::set_bonding_info
 }
 */
 /*
-int SubBox::assign_regions(){
+qint SubBox::assign_regions(){
   // set 
   //   region_atoms
   //   n_region_atoms

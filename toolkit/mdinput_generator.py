@@ -3,12 +3,13 @@
 ################################
 ##  myMD input
 ##    version 
-##    14013204
+##    15020801
 ################################
 MAGIC=66261
 #VERSION = 13111501
 #VERSION = 14013101 
-VERSION = 14013204  ## PBC origin, shake
+#VERSION = 14013204  ## PBC origin, shake
+VERSION = 15020801  ## shake, expand_shake_info()
 
 import sys
 from optparse import OptionParser
@@ -80,7 +81,12 @@ def _main():
     #system.store_self_energy(system.ff.energy_self)
     
     if config.get_val("fn-i-shake"):
-        system.shake = shk.SHKReader(config.get_val("fn-i-shake")).read_shk()
+        shkreader = shk.SHKReader(config.get_val("fn-i-shake"))
+        shkreader.read_shk()
+        tpl = shkreader.expand_shake_info(tpl)
+        system.shake = shkreader.shake_sys
+        shkreader.print_shake_info()
+
     dump_mdinput(system, tpl, opts.fn_out, config)
     return
 
@@ -285,7 +291,7 @@ def convert_shake_info(model, tpl, shake):
     tmp_one_atom_units = []
     atom_id = -1
     for atom in model.atoms:
-        aotm_id += 1
+        atom_id += 1
         mol_atom_id += 1
         if mol_atom_id == len(tpl.mols[mol_id].atoms)+1:
             mol_atom_id = 1
@@ -307,23 +313,35 @@ def convert_shake_info(model, tpl, shake):
     shk_distances_index.append(len(shk_distances))
     return shk_atoms_index, shk_atoms, shk_distances_index, shk_distances
     
-def dump_shake(model, tpl, shake):
-    shk_atoms_index, shk_atoms, \
-        shk_distances_index, shk_distances \
-        = convert_shake_info(model, tpl, shake)
+def dump_shake(model, tpl, shake_sys):
+    #shk_atoms_index, shk_atoms, \
+    #    shk_distances_index, shk_distances \
+    #    = convert_shake_info(model, tpl, shake)
     
+    #buf = ""
+    #buf += st.pack("@i", len(shk_atoms_index))
+    #buf += st.pack("@i", len(shk_atoms))
+    #buf += st.pack("@i", len(shk_distance))    
+    #for idx in shk_atoms_index:
+    #    buf += st.pack("@i", idx)
+    #for atom_id in shk_atoms:
+    #    buf += st.pack("@i", atom_id)
+    #for idx in shk_distances_index:
+    #    buf += st.pack("@d", dist)
+    #for dist in shk_distances:
+    #    buf += st.pack("@d", dist)
+
     buf = ""
-    buf += st.pack("@i", len(shk_atoms_index))
-    buf += st.pack("@i", len(shk_atoms))
-    buf += st.pack("@i", len(shk_distance))    
-    for idx in shk_atoms_index:
-        buf += st.pack("@i", idx)
-    for atom_id in shk_atoms:
-        buf += st.pack("@i", atom_id)
-    for idx in shk_distances_index:
-        buf += st.pack("@d", dist)
-    for dist in shk_distances:
-        buf += st.pack("@d", dist)
+    for shk_size in [2,3,4]:
+        buf += st.pack("@i", len(shake_sys[shk_size]))
+    for shk_size in [2,3,4]:
+        for shk_elem in shake_sys[shk_size]:
+            buf += st.pack("@i", shk_elem.atom_center) #
+            for dest_id in shk_elem.atom_ids:
+                buf += st.pack("@i", dest_id)
+            for dist in shk_elem.dists:
+                buf += st.pack("@f", dist) # (N * N - N)/2 
+                
     return buf
 
 def dump_pcluster_from_shake(model, tpl, shake):

@@ -82,9 +82,9 @@ int Read::load_launch_set(MmSystem& mmsys){
     cout << "--- Load topology data    : " << size_topol << " bytes." << endl;
     load_ls_tpl(mmsys);
   }
-  if(size_shake > 0){
-    cout << "--- Load shake definition : " << size_shake << " bytes." << endl;
-    load_ls_shk(mmsys);
+  if(size_constraint > 0){
+    cout << "--- Load constraint definition : " << size_constraint << " bytes." << endl;
+    load_ls_constraint(&mmsys.constraint);
   }
   //cout << "load_ls_pcluster()" << endl;
   //load_ls_pcluster(mmsys);
@@ -115,16 +115,16 @@ int Read::load_ls_header(MmSystem& mmsys){
   read_bin_values(&size_crd, 1);
   read_bin_values(&size_vel, 1);
   read_bin_values(&size_topol, 1);
-  read_bin_values(&size_shake, 1);
+  read_bin_values(&size_constraint, 1);
   //int size_pcluster;
   //read_bin_values(&size_pcluster, 1);
 
   if(DBG==1){
-    cout << "size_box: " << size_box << endl;
-    cout << "size_crd: " << size_crd << endl;
-    cout << "size_vel: " << size_vel << endl;
-    cout << "size_topol: " << size_topol << endl;
-    cout << "size_shake: " << size_shake << endl;
+    cout << "size_box:        " << size_box << endl;
+    cout << "size_crd:        " << size_crd << endl;
+    cout << "size_vel:        " << size_vel << endl;
+    cout << "size_topol:      " << size_topol << endl;
+    cout << "size_constraint: " << size_constraint << endl;
     //cout << "size_pcluster: " << size_pcluster << endl;
   }
   return 0;
@@ -411,27 +411,58 @@ int Read::load_ls_tpl(MmSystem& mmsys){
   return 0;
 }
 
-int Read::load_ls_shk(MmSystem& mmsys){
-  int n_clusters1;
-  int n_atoms;
-  int n_distances1;
-  int tmp_int;
-  double tmp_dbl;
-  read_bin_values(&n_clusters1, 1);
-  read_bin_values(&n_atoms, 1);
-  read_bin_values(&n_distances1, 1);
-  for (int i=0; i < n_clusters1; i++){
-    read_bin_values(&tmp_int, 1);
+int Read::load_ls_constraint(Constraint* cst){
+  int n_const_2;
+  int n_const_3;
+  int n_const_4;
+
+  int atom[4];
+  float dist[6];
+
+  read_bin_values(&n_const_2, 1);
+  read_bin_values(&n_const_3, 1);
+  read_bin_values(&n_const_4, 1);
+  
+  cst->set_max_n_constraints(n_const_2, n_const_3, n_const_4);
+  cst->alloc_constraint();
+
+  int atomid1, atomid2, atomid3, atomid4;
+  real dist1, dist2, dist3, dist4, dist5, dist6;
+  // 2 atoms
+  for(int i=0; i < n_const_2; i++){
+    read_bin_values(&atomid1, 1);    
+    read_bin_values(&atomid2, 1);    
+    read_bin_values(&dist1, 1);    
+    cst->add_pair(atomid1, atomid2, dist1);
   }
-  for (int i=0; i < n_atoms; i++){
-    read_bin_values(&tmp_int, 1);
+  // 3 atoms
+  for(int i=0; i < n_const_3; i++){
+    read_bin_values(&atomid1, 1);    
+    read_bin_values(&atomid2, 1);    
+    read_bin_values(&atomid3, 1);    
+    read_bin_values(&dist1, 1);    
+    read_bin_values(&dist2, 1);    
+    read_bin_values(&dist3, 1);    
+    cst->add_trio(atomid1, atomid2, atomid3,
+		  dist1, dist2, dist3);
   }
-  for (int i=0; i < n_clusters1; i++){
-    read_bin_values(&tmp_int, 1);
+  // 4 atoms
+  for(int i=0; i < n_const_4; i++){
+    read_bin_values(&atomid1, 1);    
+    read_bin_values(&atomid2, 1);    
+    read_bin_values(&atomid3, 1);    
+    read_bin_values(&atomid4, 1);    
+    read_bin_values(&dist1, 1);    
+    read_bin_values(&dist2, 1);    
+    read_bin_values(&dist3, 1);    
+    read_bin_values(&dist4, 1);    
+    read_bin_values(&dist5, 1);    
+    read_bin_values(&dist6, 1);    
+    cst->add_quad(atomid1, atomid2, atomid3, atomid4,
+		 dist1, dist2, dist3,
+		 dist4, dist5, dist6);
   }
-  for (int i=0; i < n_distances1; i++){
-    read_bin_values(&tmp_dbl, 1);
-  }
+
   return 0;
 }
 

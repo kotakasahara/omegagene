@@ -2,6 +2,7 @@
 
 MmSystem::MmSystem()
   : CelesteObject(){
+  leapfrog_coef = 0.5;
   max_n_nb15off = 64;
   ctime_per_step = 0;
   ctime_cuda_htod_atomids = 0;
@@ -39,6 +40,7 @@ int MmSystem::free_all(){
 
   if(DBG==1) cout << "free_nb15off()" << endl;
   if (n_nb15off > 0)  free_nb15off();
+
   return 0;
 }
 int MmSystem::alloc_atom_vars(){
@@ -280,11 +282,11 @@ int MmSystem::free_nb14(){
   return 0;
 }
 
-int MmSystem::free_nb15off(){
+ int MmSystem::free_nb15off(){
   delete[] nb15off;
   delete[] nb15off1;
   delete[] nb15off2;
-
+  
   return 0;
 }
 
