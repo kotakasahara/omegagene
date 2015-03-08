@@ -1523,6 +1523,33 @@ int SubBox::apply_constraint(){
   return 0;
 }
 
+int SubBox::thermo_hoover_evans(const real time_step,
+				const int n_free,
+				const real target_temperature){
+  real kine_pre = 0.0;
+  
+  for(int i=0, i_3=0; i < n_atoms_box; i++, i_3+=3){
+    real vel_norm = 0;
+    for(int d=0; d < 3; d++){
+      real vel_tmp = vel[i_3+d] - 0.5 * 
+	(time_step * FORCE_VEL * work[i_3+d] / mass[i]);
+      vel_norm += vel_tmp * vel_tmp;
+    }
+    kine_pre += mass[i] * vel_norm;
+  }
+  real kine = kine_pre * KINETIC_COEFF;
+  real dt_temperature = 2.0 * (JOULE_CAL * 1e+3) * kine
+    / (GAS_CONST * n_free);
+  real scale = sqrt(target_temperature / dt_temperature);
+  for(int i=0, i_3=0; i < n_atoms_box; i++, i_3+=3){
+    for(int d=0; d < 3; d++){
+      real vel_diff = time_step * FORCE_VEL * work[i_3+d] / mass[i];
+      vel_next[i_3+d] = (2.0 * scale - 1.0) * vel[i_3+d] - scale * vel_diff;
+    }
+  }
+
+  return 0;
+}
 
 /*
 int SubBox::set_bonding_info

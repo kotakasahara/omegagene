@@ -274,6 +274,9 @@ class SubBox : public CelesteObject {
 #endif
   
   int apply_constraint();
+  int thermo_hoover_evans(const real time_step,
+			  const int n_free,
+			  const real target_temperature);
 
   //int set_box_region_info(const real** in_crd);  
   //int set_max_n_atoms_region();

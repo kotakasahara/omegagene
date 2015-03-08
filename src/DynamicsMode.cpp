@@ -94,18 +94,25 @@ int DynamicsMode::calc_in_each_step(){
   const clock_t endTimeVel = clock();
   mmsys.ctime_update_velo += endTimeVel - startTimeVel;
 
+  if(cfg->thermostat==THMSTT_HOOVER_EVANS){
+    subbox.thermo_hoover_evans(cfg->time_step,
+			       mmsys.n_free,
+			       cfg->temperature);
+  }
 
   const clock_t startTimeCoord = clock();
   //cout << "update_coordinates"<<endl;  
   subbox.cpy_crd_prev();
   subbox.update_coordinates(time_step);
 
-  if(mmsys.leapfrog_coef != 1.0){
-    subbox.apply_constraint();
-    mmsys.leapfrog_coef = 1.0;
-  }else{
-    subbox.apply_constraint();
-    subbox.set_velocity_from_crd(time_step);
+  if(cfg->constraint != CONST_NONE){
+    if(mmsys.leapfrog_coef != 1.0){
+      subbox.apply_constraint();
+      mmsys.leapfrog_coef = 1.0;
+    }else{
+      subbox.apply_constraint();
+      subbox.set_velocity_from_crd(time_step);
+    }
   }
 
   //cout << "revise_coordinates"<<endl;  
@@ -184,6 +191,8 @@ int DynamicsMode::sub_output_log(){
     ss << string(buf);    
     sprintf(buf, "VDW:       %14.10e    Ele:      %14.10e\n", mmsys.pote_vdw, mmsys.pote_ele);
     ss << string(buf);    
+    sprintf(buf, "Temperature:       %14.10e\n", mmsys.temperature);
+    ss << string(buf);    
     /*
       ss << "Step: " << mmsys.cur_step  << "\t";
     ss << "Time: " << mmsys.cur_time << " [ps]" << endl;
@@ -243,6 +252,7 @@ int DynamicsMode::cal_kinetic_energy(const real** vel){
   mmsys.temperature = mmsys.kinetic_e * temperature_coeff;
   return 0;
 }
+
 
 int DynamicsMode::subbox_setup(){
   cout << "subbox.set_parameters" << endl;

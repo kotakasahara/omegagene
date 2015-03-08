@@ -103,7 +103,7 @@ void Config::setAll(vector<string> arg){
       itr++;
       if(*itr=="none"){ thermostat = THMSTT_NONE; }
       else if(*itr=="berendsen"){ thermostat = THMSTT_BERENDSEN; }
-      else if(*itr=="hoover_evans"){ thermostat = THMSTT_HOOVER_EVANS; }
+      else if(*itr=="hoover-evans"){ thermostat = THMSTT_HOOVER_EVANS; }
       else { thermostat = THMSTT_DUMMY; }
     }
     else if(*itr=="--temperature"){ temperature = atof((*++itr).c_str()); }
