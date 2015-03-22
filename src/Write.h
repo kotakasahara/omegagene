@@ -11,9 +11,7 @@ using namespace std;
 
 #include "CelesteObject.h"
 
-
-
-class Write : private CelesteObject {
+class Write : public CelesteObject {
  private:
   string filename;
   bool op;

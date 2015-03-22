@@ -29,6 +29,7 @@ class Config : public CelesteObject {
   real temperature;
   int center_of_motion;
   int random_seed;
+  int expanded_ensemble;
 
   int box_div[3];
   
@@ -38,10 +39,13 @@ class Config : public CelesteObject {
   int print_intvl_force;
   int print_intvl_energy;
   int print_intvl_energyflow;
+  int print_intvl_expand_lambda;
 
   string fn_o_crd;
   string fn_o_log;
   string fn_o_energy;
+  string fn_o_vmcmd_log;
+  string fn_o_expand_lambda;
   string fn_o_energyflow;
 
   real nsgrid_cutoff;

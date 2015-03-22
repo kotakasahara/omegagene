@@ -17,6 +17,7 @@ using namespace std;
 #include "PBC.h"
 #include "ForceField.h"
 #include "Constraint.h"
+#include "ExpandVMcMD.h"
 
 class MmSystem : public CelesteObject{
  private:
@@ -112,7 +113,7 @@ class MmSystem : public CelesteObject{
   ForceField ff;
 
   Constraint constraint;
-
+  ExpandVMcMD vmcmd;
   //mt19937 random_mt;
 
   //time

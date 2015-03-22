@@ -46,7 +46,12 @@ class Config(object):
             "pressure":ConfigReader.FLOAT,
 
             "center-of-motion":ConfigReader.STR,
-            "particle-cluster-shake":ConfigReader.INT,
+            #"particle-cluster-shake":ConfigReader.INT,
+            
+            "ttp-v-mcmd-inp":ConfigReader.STR,
+            "ttp-v-mcmd-initial":ConfigReader.STR,
+            "ttp-v-mcmd-initial-vs":ConfigReader.INT,
+            "ttp-v-mcmd-seed":ConfigReader.INT
             }
         return
     def get_val(self, key):

@@ -36,12 +36,16 @@ using namespace std;
 
 class CelesteObject {
  private:
+
  protected:
+
  public:
   CelesteObject();
   
+  // 
   static const int MAX_N_ATOMTYPE;
-  
+  //
+
   static const string EXE;
   static const string ABOUT_ME;
   static const real PI;

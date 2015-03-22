@@ -106,6 +106,12 @@ void Config::setAll(vector<string> arg){
       else if(*itr=="hoover-evans"){ thermostat = THMSTT_HOOVER_EVANS; }
       else { thermostat = THMSTT_DUMMY; }
     }
+    else if(*itr=="--expanded-ensemble"){
+      itr++;
+      if(*itr == "none"){ expanded_ensemble = EXPAND_NONE; }
+      else if(*itr == "v-mcmd"){ expanded_ensemble = EXPAND_VMCMD; }
+      else{ expanded_ensemble = EXPAND_DUMMY; } 
+    }
     else if(*itr=="--temperature"){ temperature = atof((*++itr).c_str()); }
     else if(*itr=="--center-of-motion"){
       itr++;
@@ -131,9 +137,12 @@ void Config::setAll(vector<string> arg){
     else if(*itr=="--print-interval-log"){ print_intvl_log = atoi((*++itr).c_str()); }
     else if(*itr=="--print-interval-energy"){ print_intvl_energy = atoi((*++itr).c_str()); }
     else if(*itr=="--print-interval-energyflow"){ print_intvl_energyflow = atoi((*++itr).c_str()); }
+    else if(*itr=="--print-interval-expand-lambda"){ print_intvl_expand_lambda = atoi((*++itr).c_str()); }
     else if(*itr=="--fn-o-coord"){ fn_o_crd = *++itr; }
     else if(*itr=="--fn-o-log"){ fn_o_log = *++itr; }
     else if(*itr=="--fn-o-energy"){ fn_o_energy = *++itr; }
+    else if(*itr=="--fn-o-vmcmd-log"){ fn_o_vmcmd_log = *++itr; }
+    else if(*itr=="--fn-o-expand-lambda"){ fn_o_expand_lambda = *++itr; }
     else if(*itr=="--fn-o-energyflow"){ fn_o_energyflow = *++itr; }
     else{
       cerr<<"unknown keyword <"<<(*itr)<<">"<<endl;

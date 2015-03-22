@@ -75,7 +75,14 @@ int SubBox::alloc_variables(){
   vel = new real[max_n_atoms_exbox*3];
   vel_next = new real[max_n_atoms_exbox*3];
   vel_just = new real[max_n_atoms_exbox*3];
-  work = new real[max_n_atoms_exbox*3];
+  work = new real_fc[max_n_atoms_exbox*3];
+
+  //
+  if(cfg->thermostat!=THMSTT_NONE &&
+     cfg->constraint!=CONST_NONE){
+    buf_crd1 = new real[max_n_atoms_box*3];
+    buf_crd2 = new real[max_n_atoms_box*3];
+  }
 
 #if defined(F_CUDA)
   cuda_hostalloc_atom_type_charge(atom_type, charge,
@@ -248,6 +255,12 @@ int SubBox::free_variables(){
   delete[] work;
   //delete[] frc;
   delete[] atomids;
+
+  if(cfg->thermostat!=THMSTT_NONE &&
+     cfg->constraint!=CONST_NONE){
+    delete[] buf_crd1;
+    delete[] buf_crd2;
+  }
 
 #if defined(F_CUDA)
   cuda_hostfree_atom_type_charge(atom_type, charge);
@@ -1526,7 +1539,7 @@ int SubBox::apply_constraint(){
 int SubBox::thermo_hoover_evans(const real time_step,
 				const int n_free,
 				const real target_temperature){
-  real kine_pre = 0.0;
+  real_fc kine_pre = 0.0;
   
   for(int i=0, i_3=0; i < n_atoms_box; i++, i_3+=3){
     real vel_norm = 0;
@@ -1550,7 +1563,78 @@ int SubBox::thermo_hoover_evans(const real time_step,
 
   return 0;
 }
+int SubBox::thermo_hoover_evans_with_shake(const real time_step,
+					   const int n_free,
+					   const real target_temperature,
+					   const int max_loops,
+					   const real tolerance){
+  for(int i_atom = 0;
+      i_atom < n_atoms_box*3; i_atom++){
+    buf_crd2[i_atom] = 0.0;
+  }
 
+  for(int i_loop=0; i_loop < max_loops; i_loop++){
+    for(int idx = 0; idx < n_atoms_box*3; idx++)
+      buf_crd1[idx] =  crd[idx];
+
+    apply_constraint();
+
+    real_fc kine_pre = 0.0;
+    for(int i_atom = 0, i_atom_3 = 0;
+	i_atom < n_atoms_box; i_atom++, i_atom_3+=3){
+      real vel_norm = 0.0;
+      for(int d=0; d < 3; d++){
+	vel_next[i_atom_3+d] = (crd[i_atom_3+d] - crd_prev[i_atom_3+d]) / time_step;
+	real vel_tmp = (vel_next[i_atom_3+d] + vel[i_atom_3+d]) * 0.5;
+	vel_norm += (vel_tmp * vel_tmp);
+      }
+      kine_pre += vel_norm * mass[i_atom];
+    }
+    real kine = kine_pre * KINETIC_COEFF;
+    real cur_temperature = 2.0 * (JOULE_CAL * 1e+3) * kine / (GAS_CONST * n_free);
+    
+    if((cur_temperature - target_temperature) / target_temperature < tolerance){
+      break;
+    }
+
+    kine_pre = 0.0;
+    for(int i_atom = 0, i_atom_3 = 0;
+	i_atom < n_atoms_box; i_atom++, i_atom_3+=3){
+      real vel_norm = 0.0;
+      for(int d=0; d < 3; d++){
+	buf_crd2[i_atom_3+d] += (crd[i_atom_3+d] - buf_crd1[i_atom_3+d]) / (time_step * time_step);
+	real vel_diff = -FORCE_VEL * work[i_atom_3+d] / mass[i_atom] + buf_crd2[i_atom_3+d];
+	vel_next[i_atom_3+d] = vel[i_atom_3+d] + 0.5 * time_step * vel_diff;
+	vel_norm += vel_next[i_atom_3+d] * vel_next[i_atom_3+d];
+      }
+      kine_pre += mass[i_atom] * vel_norm;
+    }
+    kine = kine_pre * KINETIC_COEFF;
+    cur_temperature = 2.0 * (JOULE_CAL * 1e+3) * kine / (GAS_CONST * n_free);
+    real scale = sqrt(target_temperature / cur_temperature);
+    
+    for(int i_atom = 0, i_atom_3 = 0;
+	i_atom < n_atoms_box; i_atom++, i_atom_3+=3){
+      for(int d=0; d < 3; d++){
+	real vel_diff = -FORCE_VEL * work[i_atom_3+d] / mass[i_atom] + buf_crd2[i_atom_3+d];
+	vel_next[i_atom_3+d] = (2.0 * scale - 1.0) * vel[i_atom_3+d]
+	  + scale * time_step * vel_diff;
+	crd[i_atom_3+d] = crd_prev[i_atom_3+d] + time_step * vel_next[i_atom_3+d];
+      }
+    }
+  }  
+  return 0;
+}
+int SubBox::expand_init(){
+  expand.set_files(cfg->fn_o_vmcmd_log,
+		   cfg->fn_o_expand_lambda);
+  return 0;
+}
+int SubBox::expand_apply_bias(unsigned long cur_step,  real in_lambda){
+  expand.apply_biase(cur_step, in_lambda, work, n_atoms_box);
+  
+  return 0;
+}
 /*
 int SubBox::set_bonding_info
 ( int** in_bond_atomid_pairs,

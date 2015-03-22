@@ -7,6 +7,7 @@
 #include "Config.h"
 #include "ForceField.h"
 #include "ConstraintShake.h"
+#include "ExpandVMcMD.h"
 #include <ctime>
 
 using namespace std;
@@ -53,10 +54,15 @@ class SubBox : public CelesteObject {
   real *vel;
   real *vel_next;
   real *vel_just;
-  real *work;
+  real_fc *work;
   real *charge;
   real *mass;
   int  *atom_type;
+
+  // buffer for thermostat with shake 
+  real *buf_crd1;
+  real *buf_crd2;
+  //
 
   int  *atomids;
   // atomids_rev[atomid] = -1: it is not in the box
@@ -135,7 +141,8 @@ class SubBox : public CelesteObject {
   MiniCell nsgrid;
 
   Constraint* constraint;
-
+  ExpandVMcMD expand;
+  
   clock_t ctime_setgrid;
   clock_t ctime_enumerate_cellpairs;
   clock_t ctime_calc_energy_pair;
@@ -277,6 +284,13 @@ class SubBox : public CelesteObject {
   int thermo_hoover_evans(const real time_step,
 			  const int n_free,
 			  const real target_temperature);
+  int thermo_hoover_evans_with_shake(const real time_step,
+				     const int n_free,
+				     const real target_temperature,
+				     const int max_loop,
+				     const real tolerance);
+  int expand_init();
+  int expand_apply_bias(unsigned long cur_step, real in_lambda);
 
   //int set_box_region_info(const real** in_crd);  
   //int set_max_n_atoms_region();

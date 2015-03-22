@@ -86,6 +86,10 @@ int Read::load_launch_set(MmSystem& mmsys){
     cout << "--- Load constraint definition : " << size_constraint << " bytes." << endl;
     load_ls_constraint(&mmsys.constraint);
   }
+  if(size_expand > 0){
+    cout << "--- Load expand ensemble definition : " << size_expand << " bytes." << endl;
+    load_ls_vmcmd(&mmsys.vmcmd);
+  }
   //cout << "load_ls_pcluster()" << endl;
   //load_ls_pcluster(mmsys);
   close();
@@ -116,6 +120,7 @@ int Read::load_ls_header(MmSystem& mmsys){
   read_bin_values(&size_vel, 1);
   read_bin_values(&size_topol, 1);
   read_bin_values(&size_constraint, 1);
+  read_bin_values(&size_expand, 1);
   //int size_pcluster;
   //read_bin_values(&size_pcluster, 1);
 
@@ -127,6 +132,7 @@ int Read::load_ls_header(MmSystem& mmsys){
     cout << "size_constraint: " << size_constraint << endl;
     //cout << "size_pcluster: " << size_pcluster << endl;
   }
+
   return 0;
 };
 
@@ -465,7 +471,50 @@ int Read::load_ls_constraint(Constraint* cst){
 
   return 0;
 }
+int Read::load_ls_vmcmd(ExpandVMcMD* vmcmd){
+  int n_vs;
+  read_bin_values(&n_vs, 1);
+  int interval;
+  read_bin_values(&interval, 1);
+  float temperature;
+  read_bin_values(&temperature, 1);
 
+  vmcmd->set_n_vstates(n_vs);
+  vmcmd->set_trans_interval(interval);
+  vmcmd->set_temperature(temperature);
+
+  for(int i = 0; i < n_vs; i++){
+    VirtualState vs;
+    int ord;
+    read_bin_values(&ord, 1);
+    vs.set_order(ord);
+    float lambda_low, lambda_high;
+    float prob_low, prob_high;
+    read_bin_values(&lambda_low, 1);
+    read_bin_values(&lambda_high, 1);
+    read_bin_values(&prob_low, 1);
+    read_bin_values(&prob_high, 1);
+    vs.set_params(lambda_low, lambda_high,
+		  prob_low, prob_high);
+    for(int j = 0; j < ord+1; j++){
+      float buf;
+      read_bin_values(&buf, 1);
+      vs.set_poly_param(j, buf);
+    }
+    float alpha_low, alpha_high;
+    read_bin_values(&alpha_low, 1);
+    read_bin_values(&alpha_high, 1);
+    vs.set_alpha(alpha_low, alpha_high);
+    vmcmd->set_vstate(i, vs);
+  }
+  int init, seed;
+  read_bin_values(&init, 1);
+  read_bin_values(&seed, 1);
+  vmcmd->set_init_vs(init);
+  vmcmd->set_random_seed(seed);
+  
+  return 0;
+}
 /*
 int Read::load_ls_pcluster(MmSystem& mmsys){
   int n_clusters1;

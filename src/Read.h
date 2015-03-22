@@ -16,6 +16,7 @@ using namespace std;
 #include "MmSystem.h"
 #include "PBC.h"
 #include "Constraint.h"
+#include "ExpandVMcMD.h"
 
 class Read : private CelesteObject {
  private:
@@ -28,6 +29,8 @@ class Read : private CelesteObject {
   int size_vel;
   int size_topol;
   int size_constraint;
+  int size_expand;
+
  public:
   ifstream ifs;
   Read(string inFn);
@@ -50,6 +53,7 @@ class Read : private CelesteObject {
   int load_ls_vel(MmSystem& mmsys);
   int load_ls_tpl(MmSystem& mmsys);
   int load_ls_constraint(Constraint* cst);
+  int load_ls_vmcmd(ExpandVMcMD* vmcmd);
   //int load_ls_pcluster(MmSystem& mmsys);
 };
 

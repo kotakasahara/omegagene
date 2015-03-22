@@ -46,7 +46,7 @@ int DynamicsMode::initial_preprocess(){
   subbox_setup();
   //cout << "nsgrid_setup" << endl;
   //subbox.nsgrid_set(nsgrid_cutoff);
-
+  
   cout << "DBG MmSystem.n_bonds: " << mmsys.n_bonds << endl;
 
   return 0;
@@ -86,6 +86,14 @@ int DynamicsMode::calc_in_each_step(){
   gather_energies();
   const clock_t endTimeEne = clock();
   mmsys.ctime_calc_energy += endTimeEne - startTimeEne;
+
+  if(cfg->expanded_ensemble == EXPAND_VMCMD){
+    real potential_e = mmsys.pote_bond + mmsys.pote_angle
+      + mmsys.pote_torsion + mmsys.pote_impro
+      + mmsys.pote_14vdw + mmsys.pote_14ele
+      + mmsys.pote_vdw + mmsys.pote_ele;
+    subbox.expand_apply_bias(mmsys.cur_step, potential_e);
+  }
 
   const clock_t startTimeVel = clock();
   //cout << "update_velocities"<<endl;
@@ -160,7 +168,11 @@ int DynamicsMode::sub_output(){
   bool out_vel = cfg->print_intvl_vel > 0 && mmsys.cur_step % cfg->print_intvl_vel == 0;
   bool out_force = cfg->print_intvl_force > 0 && mmsys.cur_step % cfg->print_intvl_force == 0;
   
-  writer_trr.write_trr(mmsys, true,
+  writer_trr.write_trr(mmsys.n_atoms,
+		       mmsys.cur_step, mmsys.cur_time,
+		       mmsys.pbc.L[0], mmsys.pbc.L[1], mmsys.pbc.L[2],
+		       mmsys.crd, mmsys.vel_just, mmsys.force,
+		       true,
 		       out_crd, out_vel, out_force);
   return 0;
 }
@@ -296,6 +308,9 @@ int DynamicsMode::subbox_setup(){
     mmsys.n_free -= n_shake_dist;
     
     subbox.set_subset_constraint(mmsys.constraint);
+  }
+  if(cfg->expanded_ensemble == EXPAND_VMCMD){
+    subbox.expand_init();
   }
 
   //  cout << "set_nsgrid" << endl;

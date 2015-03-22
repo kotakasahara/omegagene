@@ -49,7 +49,11 @@ enum {
   COM_NONE = 0,
   COM_CANCEL
 };
-
+enum {
+  EXPAND_NONE = 0,
+  EXPAND_VMCMD,
+  EXPAND_DUMMY
+};
 
 #endif
   
