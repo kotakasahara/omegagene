@@ -9,7 +9,8 @@
 //#include <random>
 #include <cstdio>
 #include <cstdlib>
-
+#include <string>
+#include <vector>
 using namespace std;
 
 #include "CelesteObject.h"
@@ -114,6 +115,11 @@ class MmSystem : public CelesteObject{
 
   Constraint constraint;
   ExpandVMcMD vmcmd;
+  int n_groups;
+  int* n_atoms_in_groups;
+  int** atom_groups;
+  vector<string> atom_groups_names;
+  
   //mt19937 random_mt;
 
   //time
@@ -143,6 +149,8 @@ class MmSystem : public CelesteObject{
   int alloc_nb14();
   int alloc_nb15off();
   int alloc_excess_pairs();
+  int alloc_atom_groups(int in_n_groups,
+			int* in_n_atoms_in_groups);
   //int alloc_pcluster_vars();
 
   int free_all();
@@ -155,6 +163,8 @@ class MmSystem : public CelesteObject{
   int free_nb14();
   int free_nb15off();
   int free_excess_pairs();
+  int free_atom_groups();
+
   //int free_pcluster_vars();
   // parameter setter
   int set_lj_pair_param(int type1, int type2, real_pw param6, real_pw param12);

@@ -1,7 +1,7 @@
 #!/usr/bin/python2.7
 
 ################################
-##  myMD input
+##  Celeste input
 ##    version 
 ##    15030901
 ################################
@@ -10,7 +10,8 @@ MAGIC=66261
 #VERSION = 14013101 
 #VERSION = 14013204  ## PBC origin, shake
 #VERSION = 15020801  ## shake, expand_shake_info()
-VERSION = 15030901  ## vmcmd 
+#VERSION = 15030901  ## vmcmd 
+VERSION = 15032221  ## atom_groups
 
 import sys
 from optparse import OptionParser
@@ -25,6 +26,7 @@ import kkmmff as mmff
 import kkmmconfig 
 import kkpresto_shake as shk
 import kkmcmdconf
+import define_atom_groups as atgrp
 
 def get_options():
     p = OptionParser()
@@ -43,7 +45,9 @@ def get_options():
 def _main():
     opts, args = get_options()
     mdinputgen = MDInputGen(opts.fn_config, opts.fn_out)
+    print "read_files()"
     mdinputgen.read_files()
+    print "dump_mdinput()"    
     mdinputgen.dump_mdinput()
     return 
 
@@ -57,6 +61,7 @@ class MDInputGen(object):
         self.restart = None
         self.tpl = None
         self.expand = None
+        self.atom_groups = {}
         return 
 
     def read_files(self):
@@ -99,14 +104,24 @@ class MDInputGen(object):
     #                        tpl.atom_id_13,
     #                        tpl.atom_id_14nb)
     #system.store_self_energy(system.ff.energy_self)
-    
+        self.read_shake()
+        self.read_expand()
+
+        atom_groups_reader = atgrp.AtomGroupsReader(self.config.get_val("fn-i-atom-groups"))
+        self.atom_groups = atom_groups_reader.read_groups()
+        
+        return
+        
+    def read_shake(self):
         if self.config.get_val("fn-i-shake"):
             shkreader = shk.SHKReader(self.config.get_val("fn-i-shake"))
             shkreader.read_shk()
-            self.tpl = shkreader.expand_shake_info(tpl)
+            self.tpl = shkreader.expand_shake_info(self.tpl)
             self.system.shake = shkreader.shake_sys
             shkreader.print_shake_info()
-
+        return
+        
+    def read_expand(self):
         self.expand = None
         if self.config.get_val("ttp-v-mcmd-inp"):
             self.expand = kkmm_expand.ExpandConf()
@@ -148,6 +163,8 @@ class MDInputGen(object):
         if self.expand:
             buf_expand = self.dump_expand(self.expand)
 
+        buf_atom_groups = self.dump_atom_groups(self.atom_groups)
+
         #if config.get_val("particle-cluster-shake"):
         f.write(st.pack("@i", len(buf_box)))
         f.write(st.pack("@i", len(buf_coordinates)))
@@ -155,6 +172,15 @@ class MDInputGen(object):
         f.write(st.pack("@i", len(buf_topol)))
         f.write(st.pack("@i", len(buf_shake)))
         f.write(st.pack("@i", len(buf_expand)))
+        f.write(st.pack("@i", len(buf_atom_groups)))
+        print "size: buf_box        : " + str(len(buf_box))
+        print "size: buf_coordinates: " + str(len(buf_coordinates))
+        print "size: buf_velocities : " + str(len(buf_velocities))
+        print "size: buf_topol      : " + str(len(buf_topol))
+        print "size: buf_shake      : " + str(len(buf_shake))
+        print "size: buf_expand     : " + str(len(buf_expand))
+        print "size: buf_atom_groups: " + str(len(buf_atom_groups))
+
         #f.write(st.pack("@i", len(buf_pcluster)))
         f.write(buf_box)
         f.write(buf_coordinates)
@@ -163,6 +189,7 @@ class MDInputGen(object):
         f.write(buf_shake)
         f.write(buf_expand)
     #f.write(buf_pcluster)
+        f.write(buf_atom_groups)
         f.close()
         return
 
@@ -186,6 +213,7 @@ class MDInputGen(object):
     def pack_14(self, params_14):
         buf14 = ""
         buf14 += st.pack("@i", len(params_14))
+
         for params in params_14:
             atom_id1 = params[0][0]
             atom_id2 = params[0][1]
@@ -218,8 +246,8 @@ class MDInputGen(object):
         for type_pair in tpl.nb_pair.keys():
             nb_types.add(type_pair[0])
             nb_types.add(type_pair[1])
-            buf_nbpair += st.pack("@i", len(nb_types))
-            buf_nbpair += st.pack("@i", len(tpl.nb_pair.keys()))
+        buf_nbpair += st.pack("@i", len(nb_types))
+        buf_nbpair += st.pack("@i", len(tpl.nb_pair.keys()))
         for type_pair, params in tpl.nb_pair.items():
             buf_nbpair += st.pack("@ii", type_pair[0], type_pair[1]) ## atom_type1, 2
             buf_nbpair += st.pack("@dd", params[0], params[1])
@@ -227,6 +255,7 @@ class MDInputGen(object):
 
         buf_12 = ""
         buf_12 += st.pack("@i", len(tpl.atom_id_12))
+        print "# bonds : "+ str(len(tpl.atom_id_12))
         for params in tpl.atom_id_12:
             atom_id1 = params[0][0]
             atom_id2 = params[0][1]
@@ -237,6 +266,7 @@ class MDInputGen(object):
 
         buf_13 = ""
         buf_13 += st.pack("@i", len(tpl.atom_id_13))
+        print "# angles : "+ str(len(tpl.atom_id_13))
         for params in tpl.atom_id_13:
             atom_id1 = params[0][0]
             atom_id2 = params[0][1]
@@ -247,7 +277,10 @@ class MDInputGen(object):
             buf_13 += st.pack("@dd", epsiron, theta0)
 
         buf_14 = self.pack_14(tpl.atom_id_14)
+        print "# torsions : "+ str(len(tpl.atom_id_14))
+
         buf_14imp = self.pack_14(tpl.atom_id_14_imp)
+        print "# improper : "+ str(len(tpl.atom_id_14_imp))
 
         buf_14nb = ""
         buf_14nb += st.pack("@i", len(tpl.atom_id_14nb))
@@ -271,6 +304,7 @@ class MDInputGen(object):
 
         buf += st.pack("@i", len(buf_nbpair))
         buf += buf_nbpair
+
         buf += st.pack("@i", len(buf_12))
         buf += buf_12
         buf += st.pack("@i", len(buf_13))
@@ -378,7 +412,7 @@ class MDInputGen(object):
                 for dest_id in shk_elem.atom_ids:
                     buf += st.pack("@i", dest_id)
                 for dist in shk_elem.dists:
-                    buf += st.pack("@f", dist) # (N * N - N)/2 
+                    buf += st.pack("@d", dist) # (N * N - N)/2 
                 
         return buf
 
@@ -389,7 +423,7 @@ class MDInputGen(object):
         buf += st.pack("@if", expand.interval, expand.temperature)
         for i in range(1,n_vs+1):
             buf += st.pack("@i", len(expand.vmcmd_params[i])-3)
-            buf += st.pack("@ffff",
+            buf += st.pack("@dddd",
                            expand.vmcmd_range[i][0], # lambda_min
                            expand.vmcmd_range[i][1], # lambda_max
                            expand.vmcmd_range[i][2], # prob
@@ -397,8 +431,17 @@ class MDInputGen(object):
         #for i in range(1,n_vs+1):
 
             for prm in expand.vmcmd_params[i]:
-                buf += st.pack("@f", float(prm))
+                buf += st.pack("@d", float(prm))
         buf += st.pack("@ii", expand.init_vs, expand.seed)
+        return buf
+    def dump_atom_groups(self, atom_groups):
+        buf = ""
+        buf += st.pack("@i", len(atom_groups.keys()))
+        for name, atoms in atom_groups.items():
+            buf += st.pack("@isi", len(name), name, len(atoms))
+        for name, atoms in atom_groups.items():
+            for atomid in atoms:
+                buf += st.pack("@i", atomid)
         return buf
 
 if __name__ == "__main__":

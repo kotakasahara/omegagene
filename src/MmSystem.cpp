@@ -41,6 +41,8 @@ int MmSystem::free_all(){
   if(DBG==1) cout << "free_nb15off()" << endl;
   if (n_nb15off > 0)  free_nb15off();
 
+  if (n_groups > 0)  free_atom_groups();
+
   return 0;
 }
 int MmSystem::alloc_atom_vars(){
@@ -282,14 +284,21 @@ int MmSystem::free_nb14(){
   return 0;
 }
 
- int MmSystem::free_nb15off(){
+int MmSystem::free_nb15off(){
   delete[] nb15off;
   delete[] nb15off1;
   delete[] nb15off2;
   
   return 0;
 }
-
+int MmSystem::free_atom_groups(){
+  for(int i = 0; i < n_groups; i++){
+    delete[] atom_groups[i];
+  }
+  delete[] atom_groups;
+  delete[] n_atoms_in_groups;
+  return 0;
+}
 // Parameter Setter
 int MmSystem::set_lj_pair_param(int type1, int type2, real_pw param6, real_pw param12){
   lj_6term[type1 * n_lj_types + type2] = param6;
@@ -513,6 +522,19 @@ int MmSystem::alloc_excess_pairs(){
   }
   return 0;
 }
+
+int MmSystem::alloc_atom_groups(int in_n_groups,
+				int* in_n_atoms_in_groups){
+  n_groups = in_n_groups;
+  n_atoms_in_groups = new int[n_groups];
+  atom_groups = new int*[n_groups];
+  for(int i = 0; i < n_groups; i++){
+    n_atoms_in_groups[i] = in_n_atoms_in_groups[i];
+    atom_groups[i] = new int[n_atoms_in_groups[i]];
+  }
+  return 0;
+}
+
 int MmSystem::free_excess_pairs(){
   for(int i=0; i < max_n_excess; i++){
     delete[] excess_pairs[i];
@@ -520,6 +542,7 @@ int MmSystem::free_excess_pairs(){
   delete[] excess_pairs;
   return 0;
 }
+
 int MmSystem::add_excess_pairs(int atomid1, int atomid2){
   bool flg=true;
   for(int j=0; j < n_excess; j++){

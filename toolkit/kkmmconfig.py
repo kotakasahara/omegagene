@@ -51,7 +51,9 @@ class Config(object):
             "ttp-v-mcmd-inp":ConfigReader.STR,
             "ttp-v-mcmd-initial":ConfigReader.STR,
             "ttp-v-mcmd-initial-vs":ConfigReader.INT,
-            "ttp-v-mcmd-seed":ConfigReader.INT
+            "ttp-v-mcmd-seed":ConfigReader.INT,
+
+            "fn-i-atom-groups":ConfigReader.STR
             }
         return
     def get_val(self, key):

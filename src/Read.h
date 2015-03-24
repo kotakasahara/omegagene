@@ -20,6 +20,7 @@ using namespace std;
 
 class Read : private CelesteObject {
  private:
+  static const int MAX_LEN_NAME;
   string filename;
   bool op;
   bool conv_endian;
@@ -30,6 +31,7 @@ class Read : private CelesteObject {
   int size_topol;
   int size_constraint;
   int size_expand;
+  int size_groups;
 
  public:
   ifstream ifs;
@@ -55,6 +57,7 @@ class Read : private CelesteObject {
   int load_ls_constraint(Constraint* cst);
   int load_ls_vmcmd(ExpandVMcMD* vmcmd);
   //int load_ls_pcluster(MmSystem& mmsys);
+  int load_ls_atom_groups(MmSystem& mmsys);
 };
 
 inline int reverse_endian(int value){

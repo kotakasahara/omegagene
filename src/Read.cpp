@@ -1,5 +1,7 @@
 #include "Read.h"
 
+const int Read::MAX_LEN_NAME = 256;
+
 Read::Read(string inFn)
   : CelesteObject(){
   op=false;
@@ -90,6 +92,10 @@ int Read::load_launch_set(MmSystem& mmsys){
     cout << "--- Load expand ensemble definition : " << size_expand << " bytes." << endl;
     load_ls_vmcmd(&mmsys.vmcmd);
   }
+  if(size_groups > 0){
+    cout << "--- Load atom group definition : " << size_groups << endl;
+    load_ls_atom_groups(mmsys);
+  }
   //cout << "load_ls_pcluster()" << endl;
   //load_ls_pcluster(mmsys);
   close();
@@ -121,6 +127,7 @@ int Read::load_ls_header(MmSystem& mmsys){
   read_bin_values(&size_topol, 1);
   read_bin_values(&size_constraint, 1);
   read_bin_values(&size_expand, 1);
+  read_bin_values(&size_groups, 1);
   //int size_pcluster;
   //read_bin_values(&size_pcluster, 1);
 
@@ -130,6 +137,8 @@ int Read::load_ls_header(MmSystem& mmsys){
     cout << "size_vel:        " << size_vel << endl;
     cout << "size_topol:      " << size_topol << endl;
     cout << "size_constraint: " << size_constraint << endl;
+    cout << "size_expand:     " << size_expand << endl;
+    cout << "size_groups:     " << size_groups << endl;
     //cout << "size_pcluster: " << size_pcluster << endl;
   }
 
@@ -267,7 +276,7 @@ int Read::load_ls_tpl(MmSystem& mmsys){
   read_bin_values(&mmsys.n_lj_types, 1);
   read_bin_values(&mmsys.n_lj_type_pairs, 1);
   //if(DBG==1)
-    //cout << "ljpair " << mmsys.n_lj_types << " " << mmsys.n_lj_type_pairs << endl;
+  //cout << "ljpair " << mmsys.n_lj_types << " " << mmsys.n_lj_type_pairs << endl;
 
   mmsys.alloc_lj_params();
 
@@ -278,6 +287,7 @@ int Read::load_ls_tpl(MmSystem& mmsys){
     read_bin_values(&type2, 1);
     read_bin_values(&lj6, 1);
     read_bin_values(&lj12, 1);
+    //if(DBG==1)
     //cout << "nbpair " << type1 << " " << type2 << " " << lj6 << " " << lj12 << endl;
     mmsys.set_lj_pair_param(type1-1, type2-1, (real_pw)lj6, (real_pw)lj12);
   }
@@ -433,13 +443,13 @@ int Read::load_ls_constraint(Constraint* cst){
   cst->alloc_constraint();
 
   int atomid1, atomid2, atomid3, atomid4;
-  real dist1, dist2, dist3, dist4, dist5, dist6;
+  double dist1, dist2, dist3, dist4, dist5, dist6;
   // 2 atoms
   for(int i=0; i < n_const_2; i++){
     read_bin_values(&atomid1, 1);    
     read_bin_values(&atomid2, 1);    
     read_bin_values(&dist1, 1);    
-    cst->add_pair(atomid1, atomid2, dist1);
+    cst->add_pair(atomid1, atomid2, (real)dist1);
   }
   // 3 atoms
   for(int i=0; i < n_const_3; i++){
@@ -450,7 +460,7 @@ int Read::load_ls_constraint(Constraint* cst){
     read_bin_values(&dist2, 1);    
     read_bin_values(&dist3, 1);    
     cst->add_trio(atomid1, atomid2, atomid3,
-		  dist1, dist2, dist3);
+		  (real)dist1, (real)dist2, (real)dist3);
   }
   // 4 atoms
   for(int i=0; i < n_const_4; i++){
@@ -465,8 +475,8 @@ int Read::load_ls_constraint(Constraint* cst){
     read_bin_values(&dist5, 1);    
     read_bin_values(&dist6, 1);    
     cst->add_quad(atomid1, atomid2, atomid3, atomid4,
-		 dist1, dist2, dist3,
-		 dist4, dist5, dist6);
+		  (real)dist1, (real)dist2, (real)dist3,
+		 (real)dist4, (real)dist5, (real)dist6);
   }
 
   return 0;
@@ -476,35 +486,35 @@ int Read::load_ls_vmcmd(ExpandVMcMD* vmcmd){
   read_bin_values(&n_vs, 1);
   int interval;
   read_bin_values(&interval, 1);
-  float temperature;
+  double temperature;
   read_bin_values(&temperature, 1);
 
   vmcmd->set_n_vstates(n_vs);
   vmcmd->set_trans_interval(interval);
-  vmcmd->set_temperature(temperature);
+  vmcmd->set_temperature((real)temperature);
 
   for(int i = 0; i < n_vs; i++){
     VirtualState vs;
     int ord;
     read_bin_values(&ord, 1);
     vs.set_order(ord);
-    float lambda_low, lambda_high;
-    float prob_low, prob_high;
+    double lambda_low, lambda_high;
+    double prob_low, prob_high;
     read_bin_values(&lambda_low, 1);
     read_bin_values(&lambda_high, 1);
     read_bin_values(&prob_low, 1);
     read_bin_values(&prob_high, 1);
-    vs.set_params(lambda_low, lambda_high,
-		  prob_low, prob_high);
+    vs.set_params((real)lambda_low, (real)lambda_high,
+		  (real)prob_low, (real)prob_high);
     for(int j = 0; j < ord+1; j++){
-      float buf;
+      double buf;
       read_bin_values(&buf, 1);
-      vs.set_poly_param(j, buf);
+      vs.set_poly_param(j, (real)buf);
     }
-    float alpha_low, alpha_high;
+    double alpha_low, alpha_high;
     read_bin_values(&alpha_low, 1);
     read_bin_values(&alpha_high, 1);
-    vs.set_alpha(alpha_low, alpha_high);
+    vs.set_alpha((real)alpha_low, (real)alpha_high);
     vmcmd->set_vstate(i, vs);
   }
   int init, seed;
@@ -515,6 +525,31 @@ int Read::load_ls_vmcmd(ExpandVMcMD* vmcmd){
   
   return 0;
 }
+int Read::load_ls_atom_groups(MmSystem& mmsys){
+  int n_groups;
+  int* n_atoms_in_group;
+  read_bin_values(&n_groups, 1);
+  n_atoms_in_group = new int[n_groups];
+
+  for(int i=0; i < n_groups; i++){
+    int len_name;
+    char name[MAX_LEN_NAME];
+    read_bin_values(&len_name, 1);
+    ifs.read(name, len_name);
+    int n_atoms;
+    read_bin_values(&n_atoms_in_group[i], 1);
+  }
+  mmsys.alloc_atom_groups(n_groups, n_atoms_in_group);
+  
+  for(int i=0; i < n_groups; i++){  
+    for(int j = 0; j < n_atoms_in_group[i]; j++){
+      read_bin_values(&mmsys.atom_groups[i][j], 1);      
+    }
+  }  
+  delete[] n_atoms_in_group;
+  return 0;
+}
+
 /*
 int Read::load_ls_pcluster(MmSystem& mmsys){
   int n_clusters1;
