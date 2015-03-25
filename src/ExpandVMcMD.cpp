@@ -42,6 +42,7 @@ bool VirtualState::is_in_range(real lambda){
 ExpandVMcMD::ExpandVMcMD()
   : Expand(){
   n_vstates = 0;
+  flg_vs_transition = false;
 }
 
 ExpandVMcMD::~ExpandVMcMD(){
@@ -78,7 +79,7 @@ int ExpandVMcMD::apply_biase(unsigned long cur_step,
 			     real_fc* work,
 			     int n_atoms_box){
   if(cur_step%trans_interval == 0){
-    set_current_vstate(in_lambda);
+    if(flg_vs_transition) set_current_vstate(in_lambda);
     write_vslog(cur_step);
   }
   scale_force(in_lambda, work, n_atoms_box);

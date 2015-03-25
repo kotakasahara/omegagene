@@ -297,6 +297,8 @@ int MmSystem::free_atom_groups(){
   }
   delete[] atom_groups;
   delete[] n_atoms_in_groups;
+  delete[] mass_groups;
+  delete[] mass_inv_groups;
   return 0;
 }
 // Parameter Setter
@@ -528,9 +530,21 @@ int MmSystem::alloc_atom_groups(int in_n_groups,
   n_groups = in_n_groups;
   n_atoms_in_groups = new int[n_groups];
   atom_groups = new int*[n_groups];
+  mass_groups = new real[n_groups];
+  mass_inv_groups = new real[n_groups];
   for(int i = 0; i < n_groups; i++){
     n_atoms_in_groups[i] = in_n_atoms_in_groups[i];
     atom_groups[i] = new int[n_atoms_in_groups[i]];
+  }
+  return 0;
+}
+int MmSystem::set_atom_group_info(){
+  for(int i_grp=0; i_grp < n_groups; i_grp++){
+    mass_groups[i_grp] = 0.0;
+    for(int i_atom = 0; i_atom < n_atoms_in_groups[i_grp]; i_atom++){
+      mass_groups[i_grp] += mass[atom_groups[i_grp][i_atom]];
+    }
+    mass_inv_groups[i_grp] = 1.0 / mass_groups[i_grp];
   }
   return 0;
 }

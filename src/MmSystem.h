@@ -118,6 +118,8 @@ class MmSystem : public CelesteObject{
   int n_groups;
   int* n_atoms_in_groups;
   int** atom_groups;
+  real* mass_groups;
+  real* mass_inv_groups;
   vector<string> atom_groups_names;
   
   //mt19937 random_mt;
@@ -151,6 +153,7 @@ class MmSystem : public CelesteObject{
   int alloc_excess_pairs();
   int alloc_atom_groups(int in_n_groups,
 			int* in_n_atoms_in_groups);
+
   //int alloc_pcluster_vars();
 
   int free_all();
@@ -193,6 +196,7 @@ class MmSystem : public CelesteObject{
 
   int add_excess_pairs(int atomid1, int atomid2);
   int set_excess_pairs();
+  int set_atom_group_info();
   // calc
   
   int reset_energy();

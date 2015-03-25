@@ -11,6 +11,7 @@ using namespace std;
 class Config : public CelesteObject {
  private:
  public:
+  enum { MAX_N_COM_GROUPS = 32 };
   int mode;
   string fn_cfg;
   string fn_inp;
@@ -19,6 +20,9 @@ class Config : public CelesteObject {
   int constraint;
   int constraint_tolerance;
   int constraint_max_loops;
+  int thermo_const_tolerance;
+  int thermo_const_max_loops;
+
   real cutoff;
   real cutoff_buf;
   int n_steps;
@@ -28,6 +32,10 @@ class Config : public CelesteObject {
   int thermostat;
   real temperature;
   int center_of_motion;
+  int n_com_cancel_groups;
+  int com_cancel_groups[MAX_N_COM_GROUPS];
+  int n_com_cancel_groups_name;
+  string com_cancel_groups_name[MAX_N_COM_GROUPS];
   int random_seed;
   int expanded_ensemble;
 

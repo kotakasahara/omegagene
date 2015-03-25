@@ -41,6 +41,7 @@ class ExpandVMcMD : public Expand {
   VirtualState *vstates;
   int init_vs;
   int random_seed;
+  bool flg_vs_transition;
 
   int cur_vs;
 
@@ -81,6 +82,7 @@ class ExpandVMcMD : public Expand {
   int write_vslog(int cur_steps);
   int write_lambda(real lambda);
 
+  void enable_vs_transition(){flg_vs_transition = true;}
 };
 
 #endif

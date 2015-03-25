@@ -3,6 +3,7 @@
 #include <iostream>
 using namespace std;
 
+
 Config::Config(){
   mode=M_TEST;
   fn_cfg="";
@@ -24,8 +25,11 @@ int Config::set_defaults(){
   ele_alpha = 0.0;
   thermostat = THMSTT_NONE;
   temperature = 300;
-  center_of_motion = COM_NONE;
 
+  center_of_motion = COM_NONE;
+  n_com_cancel_groups = 0;
+  n_com_cancel_groups_name = 0;
+  
   box_div[0] = 1;
   box_div[1] = 1;
   box_div[2] = 1;
@@ -41,6 +45,12 @@ int Config::set_defaults(){
   //nsgrid_min_width = cutoff * 0.5;
   //nsgrid_max_n_atoms = 100;
   nsgrid_update_intvl = 1;
+
+  constraint_tolerance = 1000;
+  constraint_max_loops = 0.000001;
+  thermo_const_tolerance = 1000;
+  thermo_const_max_loops = 0.000001;
+
 
   return 0;
 }
@@ -88,6 +98,8 @@ void Config::setAll(vector<string> arg){
     }
     else if(*itr=="--const-max-loops"){ constraint_max_loops = atoi((*++itr).c_str()); }
     else if(*itr=="--const-tolerance"){ constraint_tolerance = atof((*++itr).c_str()); }
+    else if(*itr=="--thermo-const-max-loops"){ thermo_const_max_loops = atoi((*++itr).c_str()); }
+    else if(*itr=="--thermo-const-tolerance"){ thermo_const_tolerance = atof((*++itr).c_str()); }
     else if(*itr=="--cutoff"){ cutoff=atof((*++itr).c_str()); }
     else if(*itr=="--n-steps"){ n_steps=atoi((*++itr).c_str()); }
     else if(*itr=="--time-step"){ time_step=atof((*++itr).c_str()); }
@@ -119,6 +131,14 @@ void Config::setAll(vector<string> arg){
       else if(*itr=="cancel"){ center_of_motion = COM_CANCEL; }
       //itr++;
       //if(*itr=="all"){ center_of_motion = ; }
+    }
+    else if(*itr=="--com-cancel-group-id"){
+      com_cancel_groups_name[n_com_cancel_groups] = ((*++itr).c_str());
+      n_com_cancel_groups_name++;
+    }
+    else if(*itr=="--com-cancel-group-id"){
+      com_cancel_groups[n_com_cancel_groups] = atoi((*++itr).c_str());
+      n_com_cancel_groups++;
     }
     else if(*itr=="--random-seed"){ random_seed = atoi((*++itr).c_str()); }
     else if(*itr=="--box-division"){ 

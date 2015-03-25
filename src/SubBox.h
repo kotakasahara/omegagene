@@ -291,6 +291,12 @@ class SubBox : public CelesteObject {
 				     const real tolerance);
   int expand_init();
   int expand_apply_bias(unsigned long cur_step, real in_lambda);
+  void expand_enable_vs_transition();
+
+  int cancel_com_motion(int n_groups, int* group_ids,
+			int*  n_atoms_in_groups, 
+			int** groups,
+			real* mass_inv_groups);
 
   //int set_box_region_info(const real** in_crd);  
   //int set_max_n_atoms_region();

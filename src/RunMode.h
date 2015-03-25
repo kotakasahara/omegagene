@@ -11,8 +11,6 @@ class RunMode : public CelesteObject {
  private:
  protected:
   Config* cfg;
-  int n_steps;
-  
   int integrator;
   int electrostatic;
 

@@ -20,11 +20,6 @@ int DynamicsMode::set_config_parameters(Config* in_cfg){
   //enecal = new EnergyCalc(&mmsys, &subbox);
   cfg = in_cfg;
   RunMode::set_config_parameters(cfg);
-  thermostat = cfg->thermostat;
-  temperature = cfg->temperature;
-  integrator = cfg->integrator;
-  time_step = cfg->time_step;
-  nsgrid_cutoff = cfg->nsgrid_cutoff;
   return 0;
 }
 int DynamicsMode::initial_preprocess(){
@@ -40,6 +35,7 @@ int DynamicsMode::initial_preprocess(){
   //enecal->initial_preprocess();
   // set atom coordinates into PBC
   mmsys.revise_crd_inbox();
+  mmsys.set_atom_group_info();
   cout << "subbox_setup() "<<cfg->box_div[0]<<" "
        << cfg->box_div[1] << " " << cfg->box_div[2] << endl;
   //grid
@@ -61,7 +57,7 @@ int DynamicsMode::terminal_process(){
 int DynamicsMode::main_stream(){
   //mmsys.nsgrid.move_crd_in_cell(0,0,0.0);
   for(mmsys.cur_step = 0;
-      mmsys.cur_step <= n_steps;
+      mmsys.cur_step <= cfg->n_steps;
       mmsys.cur_step++){
     //cout << "DBG 1 " << mmsys.cur_step << endl;
     calc_in_each_step();
@@ -74,7 +70,7 @@ int DynamicsMode::calc_in_each_step(){
   const clock_t startTimeStep = clock();
 
   const clock_t startTimeReset = clock();
-  mmsys.cur_time = mmsys.cur_step * time_step;
+  mmsys.cur_time = mmsys.cur_step * cfg->time_step;
   mmsys.reset_energy();
   const clock_t endTimeReset = clock();
   mmsys.ctime_cuda_reset_work_ene += endTimeReset - startTimeReset;
@@ -97,31 +93,30 @@ int DynamicsMode::calc_in_each_step(){
 
   const clock_t startTimeVel = clock();
   //cout << "update_velocities"<<endl;
-  subbox.update_velocities(1.0,
-			   time_step);
+  subbox.update_velocities(mmsys.leapfrog_coef, cfg->time_step);
   const clock_t endTimeVel = clock();
   mmsys.ctime_update_velo += endTimeVel - startTimeVel;
 
-  if(cfg->thermostat==THMSTT_HOOVER_EVANS){
-    subbox.thermo_hoover_evans(cfg->time_step,
-			       mmsys.n_free,
-			       cfg->temperature);
+  if(mmsys.leapfrog_coef == 1.0){
+    if(cfg->thermostat==THMSTT_HOOVER_EVANS){
+      subbox.thermo_hoover_evans(cfg->time_step,
+				 mmsys.n_free,
+				 cfg->temperature);
+    }
   }
+  
+  subbox.cancel_com_motion(cfg->n_com_cancel_groups,
+			   cfg->com_cancel_groups,
+			   mmsys.n_atoms_in_groups,
+			   mmsys.atom_groups,
+			   mmsys.mass_inv_groups);
 
   const clock_t startTimeCoord = clock();
   //cout << "update_coordinates"<<endl;  
   subbox.cpy_crd_prev();
-  subbox.update_coordinates(time_step);
+  subbox.update_coordinates(cfg->time_step);
 
-  if(cfg->constraint != CONST_NONE){
-    if(mmsys.leapfrog_coef != 1.0){
-      subbox.apply_constraint();
-      mmsys.leapfrog_coef = 1.0;
-    }else{
-      subbox.apply_constraint();
-      subbox.set_velocity_from_crd(time_step);
-    }
-  }
+  apply_constraint();
 
   //cout << "revise_coordinates"<<endl;  
   subbox.revise_coordinates_pbc();
@@ -158,7 +153,30 @@ int DynamicsMode::calc_in_each_step(){
 
 
 }
+int DynamicsMode::apply_constraint(){
 
+  if(mmsys.leapfrog_coef != 1.0){
+    if(cfg->constraint != CONST_NONE){
+      subbox.apply_constraint();
+    }
+    mmsys.leapfrog_coef = 1.0;
+  }else{
+    if(cfg->constraint != CONST_NONE){
+      if(cfg->thermostat==THMSTT_HOOVER_EVANS){
+	subbox.thermo_hoover_evans_with_shake(cfg->time_step,
+					      mmsys.n_free,
+					      cfg->temperature,
+					      cfg->thermo_const_max_loops,
+					      cfg->thermo_const_tolerance);
+      }else{
+	subbox.apply_constraint();
+	subbox.set_velocity_from_crd(cfg->time_step);
+      }
+    }
+  }
+
+  return 0;
+}
 int DynamicsMode::sub_output(){
   // Output
   //cout << "cur_step: " << mmsys.cur_step << " ";
@@ -269,7 +287,7 @@ int DynamicsMode::cal_kinetic_energy(const real** vel){
 int DynamicsMode::subbox_setup(){
   cout << "subbox.set_parameters" << endl;
   subbox.set_parameters(mmsys.n_atoms, &(mmsys.pbc), cfg,
-			nsgrid_cutoff,
+			cfg->nsgrid_cutoff,
 			cfg->box_div[0],
 			cfg->box_div[1],
 			cfg->box_div[2]);

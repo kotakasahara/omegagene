@@ -48,6 +48,7 @@ class DynamicsMode : public RunMode {
   int terminal_process();
   int main_stream();
   int calc_in_each_step();
+  int apply_constraint();
   int sub_output();
   int sub_output_log();
   int update_velocities(real firstcoeff);
