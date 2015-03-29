@@ -59,8 +59,9 @@ int MiniCell::alloc_variables(){
 #ifdef F_CUDA
   cout << "cuda_hostalloc_atom_info"<<endl;
   cuda_hostalloc_atom_info(crd, atomids, work, energy, get_max_n_atom_array());
+  cout << "cuda_hostalloc_cell_info"<<endl;
   cuda_hostalloc_cell_info(cell_pairs, idx_head_cell_pairs,
-			   max_n_cell_pairs, max_n_cells);
+			   max_n_cell_pairs, max_n_cells+1);
 #else
   crd = new real[get_max_n_atom_array()*3];
   atomids = new int[get_max_n_atom_array()];
@@ -111,16 +112,16 @@ int MiniCell::init_variables(){
   for(int i=0; i < max_n_cells; i++)
     idx_cell_n_atoms[i] = 0;
   
-#ifdef F_CUDA
-  //cout << "cuda_hostalloc_atom_info"<<endl;
-  //cuda_hostalloc_atom_info(crd, atomids, work, energy, n_atoms);
-#else
+  //#ifdef F_CUDA
+  //  cout << "cuda_hostalloc_atom_info"<<endl;
+  //  cuda_hostalloc_atom_info(crd, atomids, work, energy, n_atoms);
+  //#else
   //  for(int i=0; i < (n_atoms + n_columns * N_ATOM_CELL) * 3; i++)
   //crd[i] = 0.0;
   //for(int i=0; i < (n_atoms + n_columns * N_ATOM_CELL); i++)
   //atomids[i] = 0;
   //init_energy_work();
-#endif
+  //#endif
   return 0;
 }
 int MiniCell::init_energy_work(){
@@ -1173,9 +1174,9 @@ int MiniCell::print_box_info(){
   return 0;
 }
 
-int MiniCell::set_crds_to_homebox(const real* in_crd,
-				  const int* in_atomids,
-				  const int in_n_atoms_box){
+int MiniCell::set_crds_to_homebox(real* in_crd,
+				  int* in_atomids,
+				  int in_n_atoms_box){
   // set 
   //   n_atoms_box, n_atoms_exbox
   //   a part of crd, atomids_buf

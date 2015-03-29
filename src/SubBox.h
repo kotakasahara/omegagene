@@ -239,9 +239,9 @@ class SubBox : public CelesteObject {
   
   real* get_box_l(){return box_l;};
   int* get_n_boxes_xyz(){return n_boxes_xyz;};
-  const real* get_crds(){return (const real*)crd;};
-  const int* get_atomids(){return (const int*)atomids;};
-  int get_n_atoms_box(){return (const int)n_atoms_box;};
+  real* get_crds(){return crd;};
+  int* get_atomids(){return atomids;};
+  int get_n_atoms_box(){return n_atoms_box;};
 
   int cpy_crd_prev();
   int swap_velocity_buffer();
@@ -250,7 +250,11 @@ class SubBox : public CelesteObject {
   int velocity_average();
   int set_velocity_from_crd(const real time_step);
   int revise_coordinates_pbc();
-  int set_vel_just(real** vel);
+  int copy_crd(real** p_crd);
+  int copy_vel_just(real** p_vel);
+  int copy_vel(real** p_vel);
+  int copy_vel_next(real** p_vel);
+  int copy_crdvel(real* src, real** dst);
   real cal_kinetic_energy();
   int  update_coordinates(const real time_step);
   bool is_in_box(real* in_crd);

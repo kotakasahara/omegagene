@@ -27,6 +27,7 @@ class RunMode : public CelesteObject {
   string fn_o_energyflow;
 
   WriteTrr writer_trr;
+  WriteRestart writer_restart;
 
  public:
   MmSystem mmsys;

@@ -2,7 +2,7 @@
 
 MmSystem::MmSystem()
   : CelesteObject(){
-  leapfrog_coef = 0.5;
+  leapfrog_coef = 1.0;
   max_n_nb15off = 64;
   ctime_per_step = 0;
   ctime_cuda_htod_atomids = 0;

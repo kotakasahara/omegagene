@@ -56,5 +56,6 @@ class DynamicsMode : public RunMode {
   int subbox_setup();
   int subbox_set_bonding_potentials();
   int gather_energies();
+  int output_restart();
 };
 #endif

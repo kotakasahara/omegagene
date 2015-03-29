@@ -242,9 +242,9 @@ class MiniCell : public CelesteObject{
 
   int set_box_info(int* in_n_boxes_xyz, real* in_box_l);
   int print_box_info();
-  int set_crds_to_homebox(const real* in_crd,
-			  const int* in_atomids,
-			  const int in_n_atoms_box);
+  int set_crds_to_homebox(real* in_crd,
+			  int* in_atomids,
+			  int in_n_atoms_box);
   int set_max_n_atoms_region();
   int get_region_id_from_crd(int width, int rx, int ry, int rz);
   int get_region_crd_from_id(int width, int regid,

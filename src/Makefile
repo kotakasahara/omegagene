@@ -7,14 +7,16 @@ EXECUTABLE = celeste
 #CXX = icpc 
 #CC = icpc 
 #MPICXX = mpic++
-CXX = g++
+CXX = icpc
 MPICXX = openmpic++
 #CUDALOC = /opt/cuda/5.5/lib64
 #CUDALOC = /usr/apps.sp3/cuda/6.0/lib64
+CUDALOC = /usr/local/cuda-6.0/lib64
 # BOOST_INC = ${HOME}/include
 # BOOST_LIB = ${HOME}/lib
 
-ICCFLAGS = -ansi -O0 -g #-w1 # -std=c++11
+ICCFLAGS = -ansi -fast -w1 #-I/home/kotakasahara/include -L/home/kotakasahara/lib 
+#ICCFLAGS = -ansi -O0 -g #-w1 # -std=c++11
 ICCLIB = 
 
 MODE_FLAG =

@@ -23,7 +23,7 @@
 #define PW_THREADS_DIAG PW_THREADS
 #define REORDER_THREADS 512
 
-#define N_MULTI_WORK 8
+#define N_MULTI_WORK 1
 
 cudaStream_t stream_pair_home;
 

@@ -254,6 +254,7 @@ extern "C" int cuda_free_lj_params(){
 extern "C" int cuda_hostalloc_atom_type_charge(int*& h_atom_type,
 					       real*& h_charge,
 					       int n_atoms){
+  printf("hostalloc atom_type_charge cu\n");
   HANDLE_ERROR( cudaHostAlloc( (void**)&h_atom_type,
 			       n_atoms * sizeof(int),
 			       cudaHostAllocDefault));
@@ -268,7 +269,8 @@ extern "C" int cuda_hostalloc_atom_type_charge(int*& h_atom_type,
 extern "C" int cuda_hostalloc_atom_info(real*& h_crd, int*& h_atomids,
 					real_fc*& h_work, real_fc*& h_energy,
 					int n_atom_array){
- printf("hostalloc_atom_info : %d\n", n_atom_array);
+  printf("hostalloc_atom_info : \n");
+  printf("hostalloc_atom_info %d\n", n_atom_array);
   HANDLE_ERROR( cudaHostAlloc( (void**)&h_crd,
 			       n_atom_array * 3 * sizeof(real),
 			       cudaHostAllocDefault));
@@ -281,17 +283,20 @@ extern "C" int cuda_hostalloc_atom_info(real*& h_crd, int*& h_atomids,
   HANDLE_ERROR( cudaHostAlloc( (void**)&h_energy,
 			       2 * sizeof(real_fc),
 			       cudaHostAllocDefault));
-  return 0;
+  printf("test\n");
+ return 0;
 }
+
 extern "C" int cuda_hostalloc_cell_info(CellPair*& h_cell_pairs, 
 					int*& h_idx_head_cell_pairs,
 					int max_n_cell_pairs,
 					int max_n_cells){
+  printf("cuda_hostalloc_cell_info cu\n");
   HANDLE_ERROR( cudaHostAlloc( (void**)&h_cell_pairs,
 			       max_n_cell_pairs * sizeof(CellPair),
 			       cudaHostAllocDefault));
   HANDLE_ERROR( cudaHostAlloc( (void**)&h_idx_head_cell_pairs,
-			       (max_n_cells+1) * sizeof(int),
+			       (max_n_cells) * sizeof(int),
 			       cudaHostAllocDefault));
   return 0;
 }

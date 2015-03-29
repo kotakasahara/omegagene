@@ -8,7 +8,7 @@ WriteTrr::~WriteTrr(){
 }
 
 int WriteTrr::write_trr(int n_atoms,
-			unsigned long cur_step, real cur_time,
+			int cur_step, real cur_time,
 			real lx, real ly, real lz, 
 			real** crd, real** vel_just, real_fc** force,
 			bool out_box,
@@ -51,10 +51,10 @@ int WriteTrr::write_trr(int n_atoms,
   ofs.write((const char*)&x_size, sizeof x_size);
   ofs.write((const char*)&v_size, sizeof v_size);
   ofs.write((const char*)&f_size, sizeof f_size);
-  ofs.write((const char*)&n_atoms, sizeof n_atoms);
-  ofs.write((const char*)&cur_step, sizeof cur_step);
+  ofs.write((const char*)&n_atoms, sizeof(int));
+  ofs.write((const char*)&cur_step, sizeof(int));
   ofs.write((const char*)&dummy, sizeof(int));
-  ofs.write((const char*)&cur_time, sizeof cur_time);
+  ofs.write((const char*)&cur_time, sizeof(real));
   ofs.write((const char*)&dummy_real, sizeof(real));
 
   if(out_box){
@@ -132,5 +132,64 @@ int WriteTableLog::write_header(){
 }
 int WriteTableLog::write_row(real* values){
   ofs.write((const char*)values, sizeof(real)*n_cols);
+  return 0;
+}
+
+WriteRestart::WriteRestart()
+  : Write(){
+}
+WriteRestart::~WriteRestart(){
+}
+int WriteRestart::write_restart(int n_atoms, int n_steps,
+				double time, double e_potential, double e_kinetic,
+				real** crd, real** vel){
+  int buf_int;
+  double buf_dbl;
+  open();
+  // title
+  buf_int = 80;
+  char title[80];
+  int i;
+  strcpy(title, ABOUT_ME.c_str());
+  
+  ofs.write((const char*)&buf_int, sizeof(int));
+  ofs.write(title, 80);
+  ofs.write((const char*)&buf_int, sizeof(int));
+  // #atoms, #velocities
+  buf_int = 8;
+  ofs.write((const char*)&buf_int, sizeof(int));
+  ofs.write((const char*)&n_atoms, sizeof(int));
+  ofs.write((const char*)&n_atoms, sizeof(int));
+  ofs.write((const char*)&buf_int, sizeof(int));
+  //
+  buf_int = 36;
+  ofs.write((const char*)&buf_int, sizeof(int));
+  ofs.write((const char*)&n_steps, sizeof(int));
+  ofs.write((const char*)&time, sizeof(double));
+  buf_dbl = e_kinetic + e_potential;
+  ofs.write((const char*)&buf_dbl, sizeof(double));
+  ofs.write((const char*)&e_kinetic, sizeof(double));
+  ofs.write((const char*)&e_potential, sizeof(double));
+  ofs.write((const char*)&buf_int, sizeof(int));  
+
+  buf_int = n_atoms*3*8;
+  ofs.write((const char*)&buf_int, sizeof(int));
+  for(int i=0; i < n_atoms; i++){
+    for(int d=0; d < 3; d++){
+      buf_dbl = (double)crd[i][d];
+      ofs.write((const char*)&buf_dbl, sizeof(double));
+    }
+  }
+  ofs.write((const char*)&buf_int, sizeof(int));  
+
+  ofs.write((const char*)&buf_int, sizeof(int));
+  for(int i=0; i < n_atoms; i++){
+    for(int d=0; d < 3; d++){
+      buf_dbl = (double)vel[i][d];
+      ofs.write((const char*)&buf_dbl, sizeof(double));
+    }
+  }
+  ofs.write((const char*)&buf_int,sizeof(int));  
+  close();
   return 0;
 }

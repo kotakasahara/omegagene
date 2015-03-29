@@ -55,14 +55,28 @@ int DynamicsMode::terminal_process(){
 }
 
 int DynamicsMode::main_stream(){
-  //mmsys.nsgrid.move_crd_in_cell(0,0,0.0);
-  for(mmsys.cur_step = 0;
+  for(mmsys.cur_step = 1;
       mmsys.cur_step <= cfg->n_steps;
       mmsys.cur_step++){
-    //cout << "DBG 1 " << mmsys.cur_step << endl;
     calc_in_each_step();
+    sub_output();
+    sub_output_log();
   }
-  //mmsys.output_ctimes();
+  output_restart();
+  return 0;
+}
+int DynamicsMode::output_restart(){
+  subbox.copy_crd(mmsys.crd);
+  subbox.copy_vel_next(mmsys.vel_just);
+  writer_restart.set_fn(cfg->fn_o_restart);
+  writer_restart.write_restart(mmsys.n_atoms,
+			       (int)mmsys.cur_step, (double)mmsys.cur_time,
+			       (double)(mmsys.pote_bond + mmsys.pote_angle + 
+					mmsys.pote_torsion + mmsys.pote_impro +
+					mmsys.pote_14vdw + mmsys.pote_14ele +
+					mmsys.pote_vdw + mmsys.pote_ele),
+			       (double)mmsys.kinetic_e,
+			       mmsys.crd, mmsys.vel_just);
   return 0;
 }
 
@@ -97,13 +111,15 @@ int DynamicsMode::calc_in_each_step(){
   const clock_t endTimeVel = clock();
   mmsys.ctime_update_velo += endTimeVel - startTimeVel;
 
-  if(mmsys.leapfrog_coef == 1.0){
+  const clock_t startTimeCoord = clock();
+
+  //if(mmsys.leapfrog_coef == 1.0){
     if(cfg->thermostat==THMSTT_HOOVER_EVANS){
       subbox.thermo_hoover_evans(cfg->time_step,
 				 mmsys.n_free,
 				 cfg->temperature);
     }
-  }
+    //}
   
   subbox.cancel_com_motion(cfg->n_com_cancel_groups,
 			   cfg->com_cancel_groups,
@@ -111,21 +127,21 @@ int DynamicsMode::calc_in_each_step(){
 			   mmsys.atom_groups,
 			   mmsys.mass_inv_groups);
 
-  const clock_t startTimeCoord = clock();
-  //cout << "update_coordinates"<<endl;  
-  subbox.cpy_crd_prev();
-  subbox.update_coordinates(cfg->time_step);
 
+  //cout << "update_coordinates"<<endl;  
+  subbox.update_coordinates(cfg->time_step);
   apply_constraint();
 
   //cout << "revise_coordinates"<<endl;  
   subbox.revise_coordinates_pbc();
+
   const clock_t endTimeCoord = clock();
   mmsys.ctime_update_coord += endTimeCoord - startTimeCoord;
 
   const clock_t startTimeKine = clock();
-  subbox.velocity_average();
-  subbox.set_vel_just(mmsys.vel_just);
+  //subbox.velocity_average();
+
+  subbox.copy_vel_just(mmsys.vel_just);
   cal_kinetic_energy((const real**)mmsys.vel_just);
   const clock_t endTimeKine = clock();
   mmsys.ctime_calc_kinetic += endTimeKine - startTimeKine;
@@ -146,8 +162,6 @@ int DynamicsMode::calc_in_each_step(){
   const clock_t endTimeStep = clock();
   mmsys.ctime_per_step += endTimeStep - startTimeStep;
 
-  sub_output();
-  sub_output_log();
 
   return 0;
 
@@ -155,12 +169,12 @@ int DynamicsMode::calc_in_each_step(){
 }
 int DynamicsMode::apply_constraint(){
 
-  if(mmsys.leapfrog_coef != 1.0){
-    if(cfg->constraint != CONST_NONE){
-      subbox.apply_constraint();
-    }
-    mmsys.leapfrog_coef = 1.0;
-  }else{
+  //if(mmsys.leapfrog_coef != 1.0){
+  //if(cfg->constraint != CONST_NONE){
+  //subbox.apply_constraint();
+  //}
+  //mmsys.leapfrog_coef = 1.0;
+  //}else{
     if(cfg->constraint != CONST_NONE){
       if(cfg->thermostat==THMSTT_HOOVER_EVANS){
 	subbox.thermo_hoover_evans_with_shake(cfg->time_step,
@@ -173,8 +187,7 @@ int DynamicsMode::apply_constraint(){
 	subbox.set_velocity_from_crd(cfg->time_step);
       }
     }
-  }
-
+    //}
   return 0;
 }
 int DynamicsMode::sub_output(){
@@ -185,13 +198,16 @@ int DynamicsMode::sub_output(){
   bool out_crd = cfg->print_intvl_crd > 0 && mmsys.cur_step % cfg->print_intvl_crd == 0;
   bool out_vel = cfg->print_intvl_vel > 0 && mmsys.cur_step % cfg->print_intvl_vel == 0;
   bool out_force = cfg->print_intvl_force > 0 && mmsys.cur_step % cfg->print_intvl_force == 0;
-  
-  writer_trr.write_trr(mmsys.n_atoms,
-		       mmsys.cur_step, mmsys.cur_time,
-		       mmsys.pbc.L[0], mmsys.pbc.L[1], mmsys.pbc.L[2],
-		       mmsys.crd, mmsys.vel_just, mmsys.force,
-		       true,
-		       out_crd, out_vel, out_force);
+  if(out_crd) subbox.copy_crd(mmsys.crd);
+  if(out_vel) subbox.copy_vel(mmsys.vel_just);
+  if(out_crd || out_vel || out_force){
+    writer_trr.write_trr(mmsys.n_atoms,
+			 (int)mmsys.cur_step, mmsys.cur_time,
+			 mmsys.pbc.L[0], mmsys.pbc.L[1], mmsys.pbc.L[2],
+			 mmsys.crd, mmsys.vel_just, mmsys.force,
+			 true,
+			 out_crd, out_vel, out_force);
+  }
   return 0;
 }
 
@@ -335,9 +351,6 @@ int DynamicsMode::subbox_setup(){
 #ifndef F_WO_NS
   subbox.set_nsgrid();
 #endif
-
-
-
   //subbox.set_ff(&ff);
 
   return 0;

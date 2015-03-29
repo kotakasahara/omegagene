@@ -1,6 +1,6 @@
 #ifndef __WRITE_TRR_H__
 #define __WRITE_TRR_H__
-
+#include <cstring>
 #include "Write.h"
 
 class WriteTrr : public Write {
@@ -9,7 +9,7 @@ class WriteTrr : public Write {
   WriteTrr();
   ~WriteTrr();
   int write_trr(int n_atoms,
-		unsigned long cur_step, real cur_time,
+		int cur_step, real cur_time,
 		real lx, real ly, real lz, 
 		real** crd, real** vel_just, real_fc** force,
 		bool out_box,
@@ -35,6 +35,17 @@ class WriteTableLog : public Write {
   void set_ncolumns(int in_n_cols){ n_cols = in_n_cols; };
   int write_header();
   int write_row(real* values);
+};
+
+class WriteRestart : public Write{
+ private:
+ protected:
+ public:
+  WriteRestart();
+  ~WriteRestart();
+  int write_restart(int n_atoms, int n_steps,
+		    double time, double e_potential, double e_kinetic,
+		    real** crd, real** vel);
 };
 
 #endif

@@ -37,6 +37,7 @@ int Config::set_defaults(){
   print_intvl_crd = 10000;
   print_intvl_vel = 0;
   print_intvl_force = 0;
+  fn_o_restart = "md_o.restart";
   fn_o_crd = "md_o.crd";
   fn_o_log = "md_o.log";
   fn_o_energy = "md_o.erg";
@@ -158,7 +159,14 @@ void Config::setAll(vector<string> arg){
     else if(*itr=="--print-interval-energy"){ print_intvl_energy = atoi((*++itr).c_str()); }
     else if(*itr=="--print-interval-energyflow"){ print_intvl_energyflow = atoi((*++itr).c_str()); }
     else if(*itr=="--print-interval-expand-lambda"){ print_intvl_expand_lambda = atoi((*++itr).c_str()); }
+    else if(*itr=="--fn-o-restart"){ fn_o_restart = *++itr; }
     else if(*itr=="--fn-o-coord"){ fn_o_crd = *++itr; }
+    else if(*itr=="--format-o-coord"){
+      itr++;
+      if(*itr == "gromacs"){ format_o_crd = CRDOUT_GROMACS; }
+      else if(*itr == "presto"){  format_o_crd = CRDOUT_PRESTO; }
+      else{ format_o_crd = CRDOUT_DUMMY; }
+    }
     else if(*itr=="--fn-o-log"){ fn_o_log = *++itr; }
     else if(*itr=="--fn-o-energy"){ fn_o_energy = *++itr; }
     else if(*itr=="--fn-o-vmcmd-log"){ fn_o_vmcmd_log = *++itr; }

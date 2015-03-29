@@ -1,7 +1,7 @@
 #include "SubBox.h"
 
 #ifdef F_CUDA
-extern "C" int cuda_print_device_info(int myrank=0, bool verbose=false);
+
 extern "C" int cuda_alloc_atom_info(int n_atoms,
 				    int n_atom_array,
 				    int max_n_cells,
@@ -85,8 +85,10 @@ int SubBox::alloc_variables(){
   }
 
 #if defined(F_CUDA)
+  cout << "cuda_hostalloc_atom_type_charge " << max_n_atoms_exbox << endl;
   cuda_hostalloc_atom_type_charge(atom_type, charge,
 				  max_n_atoms_exbox);
+  cout << "//" << endl;
 #else
   charge = new real[max_n_atoms_exbox];
  
@@ -431,6 +433,10 @@ int SubBox::set_parameters(int in_n_atoms, PBC* in_pbc,
 }
 
 int SubBox::set_nsgrid(){
+  // #ifdef F_CUDA  
+  //  cuda_print_device_info(0, true);
+  //#endif
+
   //cout << "set_grid_parameters" << endl;
   nsgrid.set_grid_parameters(n_atoms, cfg->nsgrid_cutoff, 
 			     pbc, max_n_nb15off, nb15off);
@@ -446,19 +452,24 @@ int SubBox::set_nsgrid(){
   nsgrid.set_crds_to_homebox(get_crds(),
 			     get_atomids(),
 			     get_n_atoms_box());
+
+
   //nsgrid.setup_replica_regions();
   //nsgrid.alloc_variables_box();
+
   nsgrid.set_atoms_into_grid_xy();
   nsgrid.set_atomids_buf();
+
   nsgrid.enumerate_cell_pairs();
 
 #ifdef F_CUDA
-  //cout << "gpu_device_setup()"<<endl;
+  cout << "gpu_device_setup()"<<endl;
   gpu_device_setup();
 #endif
 
   return 0;
 }
+
 int SubBox::nsgrid_crd_update(){
   nsgrid.init_energy_work();
   //nsgrid.update_crd((const real**)crd);
@@ -469,9 +480,9 @@ int SubBox::nsgrid_update(){
   nsgrid.init_energy_work();
   const clock_t startTimeSet = clock();
   //nsgrid.init_variables_box();
-  nsgrid.set_crds_to_homebox((const real*)crd,
-			     (const int*)atomids,
-			     (const int)n_atoms_box);
+  nsgrid.set_crds_to_homebox(crd,
+			     atomids,
+			     n_atoms_box);
   nsgrid.set_atoms_into_grid_xy();
   const clock_t endTimeSet = clock();
   nsgrid.enumerate_cell_pairs();
@@ -1378,7 +1389,7 @@ int SubBox::set_velocity_from_crd(const real time_step){
       atomid_b < all_n_atoms[rank];
       atomid_b++, atomid_b3+=3){
     for(int d=0; d<3; d++){
-      vel[atomid_b3+d] = (crd[atomid_b3+d] - crd_prev[atomid_b3+d]) * ts_inv;
+      vel_next[atomid_b3+d] = (crd[atomid_b3+d] - crd_prev[atomid_b3+d]) * ts_inv;
     }
   }
   return 0;
@@ -1397,23 +1408,43 @@ int SubBox::revise_coordinates_pbc(){
   return 0;
 }
 
-int SubBox::set_vel_just(real** p_vel){
-  /// copy velocities from this object to the mmsys
-  //  this.vel_just => mmsys.p_vel
-  //  it called from DynamicsMoce.cpp
-  //     subbox.set_vel_just(mmsys.vel)
-
+int SubBox::copy_vel_just(real** p_vel){
   for(int atomid_b=0, atomid_b3=0;
       atomid_b < all_n_atoms[rank];
       atomid_b++, atomid_b3+=3){
     for(int d=0; d<3; d++){
-      p_vel[atomids[atomid_b]][d] = vel_just[atomid_b3+d];
+      p_vel[atomids[atomid_b]][d] = (vel[atomid_b3+d] + vel_next[atomid_b3+d])*0.5;
+    }
+  }
+  return 0;
+  /// copy velocities from this object to the mmsys
+  //  this.vel_just => mmsys.p_vel
+  //  it called from DynamicsMoce.cpp
+  //     subbox.set_vel_just(mmsys.vel)
+  //return get_vel(vel_just, p_vel);
+}
+int SubBox::copy_crd(real** p_crd){
+  return copy_crdvel(crd, p_crd);
+}
+int SubBox::copy_vel(real** p_vel){
+  return copy_crdvel(vel, p_vel);
+}
+int SubBox::copy_vel_next(real** p_vel){
+  return copy_crdvel(vel_next, p_vel);
+}
+int SubBox::copy_crdvel(real* src, real** dst){
+  for(int atomid_b=0, atomid_b3=0;
+      atomid_b < all_n_atoms[rank];
+      atomid_b++, atomid_b3+=3){
+    for(int d=0; d<3; d++){
+      dst[atomids[atomid_b]][d] = src[atomid_b3+d];
     }
   }
   return 0;
 }
 
 int SubBox::update_coordinates(const real time_step){
+  cpy_crd_prev();
   for(int atomid_b=0, atomid_b3=0;
       atomid_b < all_n_atoms[rank];
       atomid_b++, atomid_b3+=3){
@@ -1475,7 +1506,8 @@ int SubBox::set_subset_constraint(Constraint& in_cst){
 
 #ifdef F_CUDA
 int SubBox::gpu_device_setup(){
-  cuda_print_device_info();
+  
+  //cuda_print_device_info();
   //cuda_memcpy_htod_grid_pairs(mmsys.nsgrid.grid_pairs,
   //mmsys.nsgrid.n_grid_pairs);
   cuda_alloc_atom_info(max_n_atoms_exbox,

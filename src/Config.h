@@ -49,7 +49,9 @@ class Config : public CelesteObject {
   int print_intvl_energyflow;
   int print_intvl_expand_lambda;
 
+  string fn_o_restart;
   string fn_o_crd;
+  int format_o_crd;
   string fn_o_log;
   string fn_o_energy;
   string fn_o_vmcmd_log;
