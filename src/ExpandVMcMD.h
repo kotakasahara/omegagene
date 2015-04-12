@@ -58,11 +58,10 @@ class ExpandVMcMD : public Expand {
   void set_temperature(real in_tmp);
   int get_trans_interval();
   int get_temperature();
-  int set_vstate(int vs_id, VirtualState in_vs);
-  int apply_biase(unsigned long cur_step,
-		  real in_lambda,
-		  real_fc* work,
-		  int n_atoms_box);
+  int apply_bias(unsigned long cur_step,
+		 real in_lambda,
+		 real_fc* work,
+		 int n_atoms_box);
 
   VirtualState& get_vstate(int vs_id){ return vstates[vs_id]; };
 
@@ -83,6 +82,12 @@ class ExpandVMcMD : public Expand {
   int write_lambda(real lambda);
 
   void enable_vs_transition(){flg_vs_transition = true;}
+  int set_vs_order(int vs_id, int ord);
+  int set_vs_params(int vs_id,
+		    real lambda_low, real lambda_high,
+		    real prob_low, real prob_high,
+		    real alpha_low, real alpha_high);
+  int set_vs_poly_param(int vs_id, int ord, real param);
 };
 
 #endif

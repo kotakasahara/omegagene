@@ -533,6 +533,7 @@ class TPL(object):
         self.atom_id_14_imp = {}
         self.atom_id_14nb = {}
         self.atom_pair_non15 = set()
+        self.zm_excess_pairs = set()
     def get_mol_by_name(name):
         for m in self.mols:
             if m.mol_name == name: return m
@@ -798,6 +799,7 @@ class TPL(object):
         print "n_angles: " + str(n_angles_orig) + " -> " + str(len(self.atom_id_13))
 
         return 
+
 
 class PrestoAsciiReader(kkkit.FileI):
     def __init__(self, fn):

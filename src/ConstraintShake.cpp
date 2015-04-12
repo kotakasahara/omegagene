@@ -191,10 +191,10 @@ int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real* mass,
 			quad_atomids[i_cst][2] * 3,
 			quad_atomids[i_cst][3] * 3};
 
-    real mass_inv[4] = {1.0 / mass[quad_atomids[i_cst][0]],
-			1.0 / mass[quad_atomids[i_cst][1]],
-			1.0 / mass[quad_atomids[i_cst][2]],
-			1.0 / mass[quad_atomids[i_cst][3]]};
+    real mass_inv[4] = {(real)1.0 / mass[quad_atomids[i_cst][0]],
+			(real)1.0 / mass[quad_atomids[i_cst][1]],
+			(real)1.0 / mass[quad_atomids[i_cst][2]],
+			(real)1.0 / mass[quad_atomids[i_cst][3]]};
 
     real crd_cur[4][3];
     real crd_prev[4][3];
@@ -215,10 +215,13 @@ int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real* mass,
     real d_cur[6][3];
     real d_prev[6][3];
     for(int i_pair=0; i_pair < 6; i_pair++){
+      int id1 = quad_atomids[i_cst][Pairs_idx[i_pair][0]];
       int id2 = quad_atomids[i_cst][Pairs_idx[i_pair][1]];
+
       pbc->diff_crd_minim_image(d_cur[i_pair],
 				crd_cur[Pairs_idx[i_pair][0]],
 				crd_cur[Pairs_idx[i_pair][1]]);
+
       pbc->diff_crd_minim_image(d_prev[i_pair],
 				crd_prev[Pairs_idx[i_pair][0]],
 				crd_prev[Pairs_idx[i_pair][1]]);
@@ -233,10 +236,13 @@ int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real* mass,
       //1-3-1 calculate virtual vector
       // d_virtual = vec + sum(weight * d_prev * coef)
       for(int i=0; i<6; i++) coef[i] = coef_post[i];
+
       for(int i_pair=0; i_pair < 6; i_pair++){
+	for(int d=0; d<3; d++)
+	  d_virtual[i_pair][d] = d_cur[i_pair][d];
 	for(int j_pair=0; j_pair < 6; j_pair++){
 	  for(int d=0; d<3; d++)
-	    d_virtual[i_pair][d] += weight[i_pair][j_pair] * 
+	    d_virtual[i_pair][d] += weight[j_pair][i_pair] * 
 	      d_prev[j_pair][d] * coef[j_pair];
 	}
       }
@@ -268,7 +274,7 @@ int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real* mass,
 	}
       }
       // 1-3-5 solve linear equation (grad * coef_post = result)
-      calc_linear_eq((real**)grad, (real*)coef_post, (real*)result, 6);
+      calc_linear_eq(grad, (real*)coef_post, (real*)result, 6);
     }
 
     if(!converge){

@@ -48,8 +48,8 @@ class Config(object):
             "center-of-motion":ConfigReader.STR,
             #"particle-cluster-shake":ConfigReader.INT,
             
-            "ttp-v-mcmd-inp":ConfigReader.STR,
-            "ttp-v-mcmd-initial":ConfigReader.STR,
+            "fn-i-ttp-v-mcmd-inp":ConfigReader.STR,
+            "fn-i-ttp-v-mcmd-initial":ConfigReader.STR,
             "ttp-v-mcmd-initial-vs":ConfigReader.INT,
             "ttp-v-mcmd-seed":ConfigReader.INT,
 

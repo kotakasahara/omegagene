@@ -70,14 +70,10 @@ int ExpandVMcMD::get_temperature(){
   return temperature;
 }
 
-int ExpandVMcMD::set_vstate(int vs_id, VirtualState in_vs){
-  vstates[vs_id] = in_vs;
-  return 0;
-}
-int ExpandVMcMD::apply_biase(unsigned long cur_step,
-			     real in_lambda,
-			     real_fc* work,
-			     int n_atoms_box){
+int ExpandVMcMD::apply_bias(unsigned long cur_step,
+			    real in_lambda,
+			    real_fc* work,
+			    int n_atoms_box){
   if(cur_step%trans_interval == 0){
     if(flg_vs_transition) set_current_vstate(in_lambda);
     write_vslog(cur_step);
@@ -170,4 +166,20 @@ int ExpandVMcMD::write_vslog(int cur_steps){
 int ExpandVMcMD::write_lambda(real lambda){
   writer_lambda.write_row(&lambda);
   return 0;
+}
+int ExpandVMcMD::set_vs_order(int vs_id, int ord){
+  return vstates[vs_id].set_order(ord);
+}
+
+int ExpandVMcMD::set_vs_params(int vs_id,
+			       real lambda_low, real lambda_high,
+			       real prob_low, real prob_high,
+			       real alpha_low, real alpha_high){
+  vstates[vs_id].set_params(lambda_low, lambda_high,
+			    prob_low, prob_high);
+  vstates[vs_id].set_alpha(alpha_low, alpha_high);
+  return 0;
+}
+int ExpandVMcMD::set_vs_poly_param(int vs_id, int ord, real param){
+  return vstates[vs_id].set_poly_param(ord, param);
 }

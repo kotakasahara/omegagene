@@ -33,6 +33,9 @@ class SubBox : public CelesteObject {
   Config* cfg;
   int box_crd[3];
 
+  real time_step_sq;
+  real temperature_coef;
+
   ForceField ff;
 
   // the maximum number of atoms in 27 region (-1 ~ +1)
@@ -141,7 +144,7 @@ class SubBox : public CelesteObject {
   MiniCell nsgrid;
 
   Constraint* constraint;
-  ExpandVMcMD expand;
+  ExpandVMcMD* expand;
   
   clock_t ctime_setgrid;
   clock_t ctime_enumerate_cellpairs;
@@ -171,7 +174,8 @@ class SubBox : public CelesteObject {
   
   int set_parameters(int in_n_atomds, PBC* in_pbc, Config* in_cfg,
 		     real in_cutoff_pair,
-		     int in_n_boxes_x, int in_n_boxes_y, int in_n_boxes_z);
+		     int in_n_boxes_x, int in_n_boxes_y, int in_n_boxes_z,
+		     int n_free);
   int set_nsgrid();
   int nsgrid_crd_update();
   int nsgrid_update();
@@ -267,7 +271,7 @@ class SubBox : public CelesteObject {
 		      int max_n_pair,
 		      int max_n_trio,
 		      int max_n_quad);
-  int set_subset_constraint(Constraint& in_cst);
+  int set_subset_constraint(Constraint& in_cst, int n_free);
 
   real_fc get_pote_vdw(){return pote_vdw;};
   real_fc get_pote_ele(){return pote_ele;};
@@ -288,12 +292,11 @@ class SubBox : public CelesteObject {
   int thermo_hoover_evans(const real time_step,
 			  const int n_free,
 			  const real target_temperature);
-  int thermo_hoover_evans_with_shake(const real time_step,
-				     const int n_free,
+  int thermo_hoover_evans_with_shake(const real n_free,
 				     const real target_temperature,
 				     const int max_loop,
 				     const real tolerance);
-  int expand_init();
+  int set_expand(ExpandVMcMD* in_exp){ expand =in_exp; };
   int expand_apply_bias(unsigned long cur_step, real in_lambda);
   void expand_enable_vs_transition();
 

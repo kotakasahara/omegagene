@@ -48,8 +48,6 @@ class PrestoRestartReader(kkkit.FileBI):
         for i in range(0,rest.n_atoms):
             crd = struct.unpack("@ddd",self.f.read(24))
             tmp_crd.append(numpy.array(crd))
-            ## debug
-            print crd
         buf,buf = struct.unpack("@ii",self.f.read(8))
         tmp_vel = []
         for i in range(0,rest.n_atoms):

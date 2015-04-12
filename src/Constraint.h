@@ -42,7 +42,7 @@ class Constraint : public CelesteObject {
 	       real dist4, real dist5, real dist6);
   int apply_constraint(real* in_crd, real* in_crd_prev, real* mass,
 		       PBC* pbc);
-  int calc_linear_eq(real** a, real* x, real* b, int size);
+  int calc_linear_eq(real a[6][6], real x[6], real b[6], int size);
   int set_subset_constraint(Constraint& super,
 			    int* atomids_rev);
   

@@ -93,7 +93,7 @@ int Read::load_launch_set(MmSystem& mmsys){
     load_ls_vmcmd(&mmsys.vmcmd);
   }
   if(size_groups > 0){
-    cout << "--- Load atom group definition : " << size_groups << endl;
+    cout << "--- Load atom group definition : " << size_groups << " bytes." << endl;
     load_ls_atom_groups(mmsys);
   }
   //cout << "load_ls_pcluster()" << endl;
@@ -494,35 +494,33 @@ int Read::load_ls_vmcmd(ExpandVMcMD* vmcmd){
   vmcmd->set_temperature((real)temperature);
 
   for(int i = 0; i < n_vs; i++){
-    VirtualState vs;
     int ord;
     read_bin_values(&ord, 1);
-    vs.set_order(ord);
+    vmcmd->set_vs_order(i, ord);
     double lambda_low, lambda_high;
     double prob_low, prob_high;
     read_bin_values(&lambda_low, 1);
     read_bin_values(&lambda_high, 1);
     read_bin_values(&prob_low, 1);
     read_bin_values(&prob_high, 1);
-    vs.set_params((real)lambda_low, (real)lambda_high,
-		  (real)prob_low, (real)prob_high);
     for(int j = 0; j < ord+1; j++){
       double buf;
       read_bin_values(&buf, 1);
-      vs.set_poly_param(j, (real)buf);
+      vmcmd->set_vs_poly_param(i, j, (real)buf);
     }
     double alpha_low, alpha_high;
     read_bin_values(&alpha_low, 1);
     read_bin_values(&alpha_high, 1);
-    vs.set_alpha((real)alpha_low, (real)alpha_high);
-    vmcmd->set_vstate(i, vs);
+    vmcmd->set_vs_params(i,
+			 (real)lambda_low, (real)lambda_high,
+			 (real)prob_low, (real)prob_high,
+			 (real)alpha_low, (real)alpha_high);
   }
   int init, seed;
   read_bin_values(&init, 1);
   read_bin_values(&seed, 1);
   vmcmd->set_init_vs(init);
   vmcmd->set_random_seed(seed);
-  
   return 0;
 }
 int Read::load_ls_atom_groups(MmSystem& mmsys){

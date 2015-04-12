@@ -42,7 +42,11 @@ int DynamicsMode::initial_preprocess(){
   subbox_setup();
   //cout << "nsgrid_setup" << endl;
   //subbox.nsgrid_set(nsgrid_cutoff);
-  
+
+  if(cfg->expanded_ensemble != EXPAND_NONE)
+    mmsys.vmcmd.set_files(cfg->fn_o_vmcmd_log,
+			   cfg->fn_o_expand_lambda);
+
   cout << "DBG MmSystem.n_bonds: " << mmsys.n_bonds << endl;
 
   return 0;
@@ -51,6 +55,8 @@ int DynamicsMode::initial_preprocess(){
 int DynamicsMode::terminal_process(){
   cout << "DynamicsMode::terminal_process()"<<endl;  
   writer_trr.close();
+  if(cfg->expanded_ensemble != EXPAND_NONE)
+    mmsys.vmcmd.close_files();
   return 0;
 }
 
@@ -130,6 +136,7 @@ int DynamicsMode::calc_in_each_step(){
 
   //cout << "update_coordinates"<<endl;  
   subbox.update_coordinates(cfg->time_step);
+
   apply_constraint();
 
   //cout << "revise_coordinates"<<endl;  
@@ -175,19 +182,18 @@ int DynamicsMode::apply_constraint(){
   //}
   //mmsys.leapfrog_coef = 1.0;
   //}else{
-    if(cfg->constraint != CONST_NONE){
-      if(cfg->thermostat==THMSTT_HOOVER_EVANS){
-	subbox.thermo_hoover_evans_with_shake(cfg->time_step,
-					      mmsys.n_free,
-					      cfg->temperature,
-					      cfg->thermo_const_max_loops,
-					      cfg->thermo_const_tolerance);
-      }else{
-	subbox.apply_constraint();
-	subbox.set_velocity_from_crd(cfg->time_step);
-      }
+  if(cfg->constraint != CONST_NONE){
+    if(cfg->thermostat==THMSTT_HOOVER_EVANS){
+      subbox.thermo_hoover_evans_with_shake((real)mmsys.n_free,
+					    cfg->temperature,
+					    cfg->thermo_const_max_loops,
+					    cfg->thermo_const_tolerance);
+    }else{
+      subbox.apply_constraint();
+      subbox.set_velocity_from_crd(cfg->time_step);
     }
-    //}
+  }
+  //}
   return 0;
 }
 int DynamicsMode::sub_output(){
@@ -306,7 +312,7 @@ int DynamicsMode::subbox_setup(){
 			cfg->nsgrid_cutoff,
 			cfg->box_div[0],
 			cfg->box_div[1],
-			cfg->box_div[2]);
+			cfg->box_div[2], mmsys.n_free);
   subbox.set_lj_param(mmsys.n_lj_types,
 		      mmsys.lj_6term,
 		      mmsys.lj_12term);
@@ -341,10 +347,10 @@ int DynamicsMode::subbox_setup(){
       6 * mmsys.constraint.get_n_quad();
     mmsys.n_free -= n_shake_dist;
     
-    subbox.set_subset_constraint(mmsys.constraint);
+    subbox.set_subset_constraint(mmsys.constraint, mmsys.n_free);
   }
   if(cfg->expanded_ensemble == EXPAND_VMCMD){
-    subbox.expand_init();
+    subbox.set_expand(&mmsys.vmcmd);
   }
 
   //  cout << "set_nsgrid" << endl;
@@ -391,7 +397,9 @@ int DynamicsMode::gather_energies(){
   mmsys.pote_14ele = subbox.get_pote_14ele();
   mmsys.pote_vdw = subbox.get_pote_vdw();
   mmsys.pote_ele = subbox.get_pote_ele();
+  real tmp = mmsys.pote_ele;
   mmsys.pote_ele += mmsys.energy_self_sum;
-  //cout << "mmsys.energy_self_sum : " << mmsys.energy_self_sum << endl;
+  cout << "tmp ele: " << tmp << " " << mmsys.energy_self_sum << " " << mmsys.pote_ele << endl;
+
   return 0;
 }

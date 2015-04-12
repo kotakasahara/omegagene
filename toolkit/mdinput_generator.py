@@ -3,7 +3,7 @@
 ################################
 ##  Celeste input
 ##    version 
-##    15030901
+##    15032221
 ################################
 MAGIC=66261
 #VERSION = 13111501
@@ -25,7 +25,7 @@ import kkmmsystem as mmsys
 import kkmmff as mmff
 import kkmmconfig 
 import kkpresto_shake as shk
-import kkmcmdconf
+import kkmm_expand
 import define_atom_groups as atgrp
 
 def get_options():
@@ -108,10 +108,12 @@ class MDInputGen(object):
         self.read_expand()
 
         atom_groups_reader = atgrp.AtomGroupsReader(self.config.get_val("fn-i-atom-groups"))
+        print self.config.get_val("fn-i-atom-groups")
+        print atom_groups_reader.fn
         self.atom_groups = atom_groups_reader.read_groups()
         
         return
-        
+
     def read_shake(self):
         if self.config.get_val("fn-i-shake"):
             shkreader = shk.SHKReader(self.config.get_val("fn-i-shake"))
@@ -123,14 +125,14 @@ class MDInputGen(object):
         
     def read_expand(self):
         self.expand = None
-        if self.config.get_val("ttp-v-mcmd-inp"):
+        if self.config.get_val("fn-i-ttp-v-mcmd-inp"):
             self.expand = kkmm_expand.ExpandConf()
-            self.expand.read_mcmdparams(self.config.get_val("ttp-v-mcmd-inp"))
-            if self.config.get_val("ttp-v-mcmd-initial"):
-                self.expand.read_init(self.config.get_val("ttp-v-mcmd-initial"))
-                if self.config.get_val("ttp-v-mcmd-initial-vs"):
+            self.expand.read_mcmdparams(self.config.get_val("fn-i-ttp-v-mcmd-inp"))
+            if self.config.get_val("fn-i-ttp-v-mcmd-initial"):
+                self.expand.read_init(self.config.get_val("fn-i-ttp-v-mcmd-initial"))
+                if self.config.get_val("fn-i-ttp-v-mcmd-initial-vs"):
                     print "Definition conflicts:"
-                    print "The options \"--ttp-v-mcmd-initial\" and \"--ttp-v-mcmd-initial-vs\" are mutually exclusive."
+                    print "The options \"--fn-i-ttp-v-mcmd-initial\" and \"--fn-i-ttp-v-mcmd-initial-vs\" are mutually exclusive."
                     sys.exit(1)
             elif self.config.get_val("ttp-v-mcmd-initial-vs") and \
                     self.config.get_val("ttp-v-mcmd-seed"):
@@ -420,9 +422,13 @@ class MDInputGen(object):
         buf = ""
         n_vs = len(expand.vmcmd_range.keys())
         buf += st.pack("@i", n_vs)
-        buf += st.pack("@if", expand.interval, expand.temperature)
+        #print "DBG2: "+ str(expand.temperature)
+        buf += st.pack("@i", expand.interval)
+        buf += st.pack("@d", expand.temperature)
         for i in range(1,n_vs+1):
             buf += st.pack("@i", len(expand.vmcmd_params[i])-3)
+            #print "Expand: " + str(i)
+            #print expand.vmcmd_range[i]
             buf += st.pack("@dddd",
                            expand.vmcmd_range[i][0], # lambda_min
                            expand.vmcmd_range[i][1], # lambda_max
@@ -438,11 +444,14 @@ class MDInputGen(object):
         buf = ""
         buf += st.pack("@i", len(atom_groups.keys()))
         for name, atoms in atom_groups.items():
-            buf += st.pack("@isi", len(name), name, len(atoms))
+            buf += st.pack("@i", len(name))
+            buf += name
+            buf += st.pack("@i", len(atoms))
         for name, atoms in atom_groups.items():
             for atomid in atoms:
                 buf += st.pack("@i", atomid)
         return buf
+
 
 if __name__ == "__main__":
     _main()

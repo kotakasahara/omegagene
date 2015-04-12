@@ -513,8 +513,8 @@ int MmSystem::write_data(){
 }
 
 int MmSystem::alloc_excess_pairs(){
-  max_n_excess = n_bonds + n_angles + n_torsions;// + n_impros;
-
+  //max_n_excess = n_bonds + n_angles + n_torsions;// + n_impros;
+  max_n_excess = n_nb15off/2;
   if(DBG>=1) cout << "alloc_excess_pairs " << max_n_excess << endl;
   excess_pairs = new int*[max_n_excess];
   for(int i=0; i < max_n_excess; i++){
@@ -575,6 +575,15 @@ int MmSystem::add_excess_pairs(int atomid1, int atomid2){
 }
 int MmSystem::set_excess_pairs(){
   n_excess = 0;
+  for(int atom_id1=0; atom_id1 < n_atoms; atom_id1++){
+    for(int j=0; j < max_n_nb15off; j++){
+      int atom_id2 = nb15off[atom_id1*max_n_nb15off + j];
+      if(atom_id2 == -1) break;
+      if(atom_id1 >= atom_id2) continue;
+      add_excess_pairs(atom_id1, atom_id2);
+    }
+  }
+  /*
   for(int i=0; i < n_bonds; i++){
     int atomid1 = bond_atomid_pairs[i][0];
     int atomid2 = bond_atomid_pairs[i][1];
@@ -590,13 +599,15 @@ int MmSystem::set_excess_pairs(){
     int atomid2 = torsion_atomid_quads[i][3];
     add_excess_pairs(atomid1, atomid2);
   }
+  */
   //for(int i=0; i < n_impros; i++,j++){
   //int atomid1 = impro_atomid_quads[i][0];
   //int atomid2 = impro_atomid_quads[i][3];
   //excess_pairs[j][0] = atomid1;
   //excess_pairs[j][1] = atomid2;
   //  }
-  //cout << "excess set " << n_excess << " / "  << n_max_excess << endl;
+  cout << "excess set " << n_excess << " / "  << max_n_excess << endl;
+
   return 0;  
 }
 
@@ -673,8 +684,7 @@ int MmSystem::ff_setup(const Config* cfg){
 		     (const int&)n_angles,
 		     (const int**&)angle_atomid_triads,
 		     (const int&)n_torsions,
-		     (const int**&)torsion_atomid_quads,
-		     (const int*&)torsion_nb14,
+		     (const int**&)torsion_atomid_quads,		     (const int*&)torsion_nb14,
 		     (const real_pw*&)charge,
 		     energy_self,
 		     energy_self_sum);

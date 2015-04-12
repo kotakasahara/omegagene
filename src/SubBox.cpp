@@ -380,7 +380,8 @@ int SubBox::free_variables_for_nb15off(){
 int SubBox::set_parameters(int in_n_atoms, PBC* in_pbc, 
 			   Config* in_cfg,
 			   real in_cutoff_pair,
-			   int in_n_boxes_x, int in_n_boxes_y, int in_n_boxes_z){
+			   int in_n_boxes_x, int in_n_boxes_y, int in_n_boxes_z,
+			   int n_free){
   // set
   //   n_atoms, pbc, cutoff_pair
   //   n_boxes_xyz,  n_boxes
@@ -394,6 +395,8 @@ int SubBox::set_parameters(int in_n_atoms, PBC* in_pbc,
   n_atoms = in_n_atoms;
   pbc = in_pbc;
   cfg = in_cfg;
+  time_step_sq = cfg->time_step * cfg->time_step;
+  temperature_coef = (2.0 * JOULE_CAL * 1e+3) / (GAS_CONST * n_free);
   cutoff_pair = in_cutoff_pair;
   n_boxes_xyz[0] = in_n_boxes_x;
   n_boxes_xyz[1] = in_n_boxes_y;
@@ -884,11 +887,11 @@ int SubBox::calc_energy(){
   pote_vdw += nsgrid.get_energy()[0];
   pote_ele += nsgrid.get_energy()[1];
 #endif
-
+  cout << "nsgrid.get_energy()[1]" << nsgrid.get_energy()[1] << endl;
 
 
   //  cout << "SubBox::celc_energy excess:" << pote_ele << endl;
-  // cout << "SubBox::calc_energy " << pote_vdw << " " << pote_ele << endl;
+  //cout << "SubBox::calc_energy " << pote_vdw << " " << pote_ele << endl;
   return 0;
 }
 int SubBox::calc_energy_pairwise(){
@@ -1275,6 +1278,7 @@ int SubBox::calc_energy_14nb(){
   return 0;
 }
 int SubBox::calc_energy_ele_excess(){
+  real tmp = pote_ele;
   for (int i=0; i < n_excess; i++){
     real_pw tmp_ene;
     real_pw tmp_work[3];
@@ -1292,6 +1296,7 @@ int SubBox::calc_energy_ele_excess(){
       work[atomidx2+d] -= tmp_work[d];
     }
   }
+  cout << "Excess : "  << pote_ele - tmp <<  " " << pote_ele << " " << tmp << endl;
   return 0;
 }
 
@@ -1496,11 +1501,13 @@ int SubBox::init_constraint(int in_constraint,
   
   return in_constraint;
 }
-int SubBox::set_subset_constraint(Constraint& in_cst){
+int SubBox::set_subset_constraint(Constraint& in_cst, int n_free){
   if(cfg->constraint == CONST_NONE) return 1;
 
   //cout << "set_subset_constraint" << endl;
   constraint->set_subset_constraint(in_cst, atomids_rev);
+  
+  temperature_coef = (2.0 * JOULE_CAL * 1e+3) / (GAS_CONST * n_free);
   return 0;
 }
 
@@ -1583,8 +1590,7 @@ int SubBox::thermo_hoover_evans(const real time_step,
     kine_pre += mass[i] * vel_norm;
   }
   real kine = kine_pre * KINETIC_COEFF;
-  real dt_temperature = 2.0 * (JOULE_CAL * 1e+3) * kine
-    / (GAS_CONST * n_free);
+  real dt_temperature = kine * temperature_coef; 
   real scale = sqrt(target_temperature / dt_temperature);
   for(int i=0, i_3=0; i < n_atoms_box; i++, i_3+=3){
     for(int d=0; d < 3; d++){
@@ -1595,8 +1601,7 @@ int SubBox::thermo_hoover_evans(const real time_step,
 
   return 0;
 }
-int SubBox::thermo_hoover_evans_with_shake(const real time_step,
-					   const int n_free,
+int SubBox::thermo_hoover_evans_with_shake(const real n_free,
 					   const real target_temperature,
 					   const int max_loops,
 					   const real tolerance){
@@ -1605,7 +1610,7 @@ int SubBox::thermo_hoover_evans_with_shake(const real time_step,
     buf_crd2[i_atom] = 0.0;
   }
 
-  for(int i_loop=0; i_loop < max_loops; i_loop++){
+  for(int i_loop=0; i_loop <= max_loops; i_loop++){
     for(int idx = 0; idx < n_atoms_box*3; idx++)
       buf_crd1[idx] =  crd[idx];
 
@@ -1616,15 +1621,16 @@ int SubBox::thermo_hoover_evans_with_shake(const real time_step,
 	i_atom < n_atoms_box; i_atom++, i_atom_3+=3){
       real vel_norm = 0.0;
       for(int d=0; d < 3; d++){
-	vel_next[i_atom_3+d] = (crd[i_atom_3+d] - crd_prev[i_atom_3+d]) / time_step;
+	vel_next[i_atom_3+d] = (crd[i_atom_3+d] - crd_prev[i_atom_3+d]) / cfg->time_step;
 	real vel_tmp = (vel_next[i_atom_3+d] + vel[i_atom_3+d]) * 0.5;
 	vel_norm += (vel_tmp * vel_tmp);
       }
       kine_pre += vel_norm * mass[i_atom];
     }
     real kine = kine_pre * KINETIC_COEFF;
-    real cur_temperature = 2.0 * (JOULE_CAL * 1e+3) * kine / (GAS_CONST * n_free);
+    real cur_temperature = kine * temperature_coef;
     
+    if(i_loop == max_loops) break;
     if((cur_temperature - target_temperature) / target_temperature < tolerance){
       break;
     }
@@ -1634,15 +1640,15 @@ int SubBox::thermo_hoover_evans_with_shake(const real time_step,
 	i_atom < n_atoms_box; i_atom++, i_atom_3+=3){
       real vel_norm = 0.0;
       for(int d=0; d < 3; d++){
-	buf_crd2[i_atom_3+d] += (crd[i_atom_3+d] - buf_crd1[i_atom_3+d]) / (time_step * time_step);
+	buf_crd2[i_atom_3+d] += (crd[i_atom_3+d] - buf_crd1[i_atom_3+d]) / time_step_sq;
 	real vel_diff = -FORCE_VEL * work[i_atom_3+d] / mass[i_atom] + buf_crd2[i_atom_3+d];
-	vel_next[i_atom_3+d] = vel[i_atom_3+d] + 0.5 * time_step * vel_diff;
+	vel_next[i_atom_3+d] = vel[i_atom_3+d] + 0.5 * cfg->time_step * vel_diff;
 	vel_norm += vel_next[i_atom_3+d] * vel_next[i_atom_3+d];
       }
       kine_pre += mass[i_atom] * vel_norm;
     }
     kine = kine_pre * KINETIC_COEFF;
-    cur_temperature = 2.0 * (JOULE_CAL * 1e+3) * kine / (GAS_CONST * n_free);
+    cur_temperature = kine * temperature_coef;
     real scale = sqrt(target_temperature / cur_temperature);
     
     for(int i_atom = 0, i_atom_3 = 0;
@@ -1650,24 +1656,26 @@ int SubBox::thermo_hoover_evans_with_shake(const real time_step,
       for(int d=0; d < 3; d++){
 	real vel_diff = -FORCE_VEL * work[i_atom_3+d] / mass[i_atom] + buf_crd2[i_atom_3+d];
 	vel_next[i_atom_3+d] = (2.0 * scale - 1.0) * vel[i_atom_3+d]
-	  + scale * time_step * vel_diff;
-	crd[i_atom_3+d] = crd_prev[i_atom_3+d] + time_step * vel_next[i_atom_3+d];
+	  + scale * cfg->time_step * vel_diff;
       }
     }
+    for(int i_atom = 0, i_atom_3 = 0;
+	i_atom < n_atoms_box; i_atom++, i_atom_3+=3){
+      for(int d=0; d < 3; d++){
+	crd[i_atom_3+d] = crd_prev[i_atom_3+d] + cfg->time_step * vel_next[i_atom_3+d];
+      }
+    }
+    
   }  
   return 0;
 }
-int SubBox::expand_init(){
-  expand.set_files(cfg->fn_o_vmcmd_log,
-		   cfg->fn_o_expand_lambda);
-  return 0;
-}
+
 int SubBox::expand_apply_bias(unsigned long cur_step,  real in_lambda){
-  expand.apply_biase(cur_step, in_lambda, work, n_atoms_box);
+  expand->apply_bias(cur_step, in_lambda, work, n_atoms_box);
   return 0;
 }
 void SubBox::expand_enable_vs_transition(){
-  expand.enable_vs_transition();
+  expand->enable_vs_transition();
 }
 
 int SubBox::cancel_com_motion(int n_groups, int* group_ids,

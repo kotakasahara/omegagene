@@ -31,18 +31,27 @@ class FileI(FileIO):
         super(FileI, self).__init__(fn)
     def open(self):
         return super(FileI,self).open("r")
+    def readline_comment(self):
+        try:
+            line = self.f.readline()
+            if line=="":  return None
+        except: return None
+        i = len(line)
+        try:
+            i = line.index(';')
+        except ValueError:
+            i = len(line) 
+        line = line[0:i] + '\n'
+        if len(line.strip()) == 0:
+            return self.readline_comment()
+        return line
     def read_line_com(self, marks=[";","#"]):
         line = self.f.readline();
         if not line: return None
-        idx = -1;
-        for m in marks:
-            tmp = line.find(m)
-            if tmp != -1 and tmp > idx:
-                idx = tmp;
-        if idx == -1: return line
-        else:
-            return line[:idx]+"\n"
-            
+        line = eliminate_comment(line)
+        ##print "DD: " + line
+        if len(line)==0: line = " "
+        return line
 
 class FileO(FileIO):
     def __init__(self, fn):

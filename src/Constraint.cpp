@@ -133,9 +133,9 @@ int Constraint::apply_constraint(real* in_crd, real* in_crd_prev, real* mass,
 				 PBC* pbc){
   return 0;
 }
-int Constraint::calc_linear_eq(real** a,
-			       real* x,
-			       real* b,
+int Constraint::calc_linear_eq(real a[6][6],
+			       real x[6],
+			       real b[6],
 			       int size){
   int* pivot = new int[size];
   for( int i=0; i < size; i++){
