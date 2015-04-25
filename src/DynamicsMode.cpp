@@ -190,7 +190,7 @@ int DynamicsMode::apply_constraint(){
 					    cfg->thermo_const_tolerance);
     }else{
       subbox.apply_constraint();
-      subbox.set_velocity_from_crd(cfg->time_step);
+      subbox.set_velocity_from_crd();
     }
   }
   //}
@@ -307,7 +307,7 @@ int DynamicsMode::cal_kinetic_energy(const real** vel){
 
 
 int DynamicsMode::subbox_setup(){
-  cout << "subbox.set_parameters" << endl;
+  //cout << "subbox.set_parameters" << endl;
   subbox.set_parameters(mmsys.n_atoms, &(mmsys.pbc), cfg,
 			cfg->nsgrid_cutoff,
 			cfg->box_div[0],
@@ -317,7 +317,7 @@ int DynamicsMode::subbox_setup(){
 		      mmsys.lj_6term,
 		      mmsys.lj_12term);
   //subbox.set_max_n_atoms_region();
-  cout << "alloc_variables" << endl;
+  //cout << "alloc_variables" << endl;
   subbox.alloc_variables();
   subbox.alloc_variables_for_bonds(mmsys.n_bonds);
   subbox.alloc_variables_for_angles(mmsys.n_angles);
@@ -326,7 +326,7 @@ int DynamicsMode::subbox_setup(){
   subbox.alloc_variables_for_nb14(mmsys.n_nb14);
   subbox.alloc_variables_for_excess(mmsys.n_excess);
   subbox.alloc_variables_for_nb15off(mmsys.max_n_nb15off);
-  cout << "initial_division" << endl;
+  //cout << "initial_division" << endl;
   subbox.initial_division((const real**)mmsys.crd,
 			  (const real**)mmsys.vel_just,
 			  (const real*)mmsys.charge,
@@ -399,7 +399,7 @@ int DynamicsMode::gather_energies(){
   mmsys.pote_ele = subbox.get_pote_ele();
   real tmp = mmsys.pote_ele;
   mmsys.pote_ele += mmsys.energy_self_sum;
-  cout << "tmp ele: " << tmp << " " << mmsys.energy_self_sum << " " << mmsys.pote_ele << endl;
+  //cout << "tmp ele: " << tmp << " " << mmsys.energy_self_sum << " " << mmsys.pote_ele << endl;
 
   return 0;
 }

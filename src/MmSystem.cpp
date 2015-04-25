@@ -679,12 +679,16 @@ int MmSystem::ff_setup(const Config* cfg){
   ff.set_config_parameters(cfg);
   ff.initial_preprocess((const PBC*)&pbc);
   ff.cal_self_energy((const int&)n_atoms,
+		     (const int&)n_excess,
+		     (const int**&)excess_pairs,
+		     /*
+		     
 		     (const int&)n_bonds,
 		     (const int**&)bond_atomid_pairs,
 		     (const int&)n_angles,
 		     (const int**&)angle_atomid_triads,
 		     (const int&)n_torsions,
-		     (const int**&)torsion_atomid_quads,		     (const int*&)torsion_nb14,
+		     (const int**&)torsion_atomid_quads,		     (const int*&)torsion_nb14,*/
 		     (const real_pw*&)charge,
 		     energy_self,
 		     energy_self_sum);

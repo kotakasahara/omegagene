@@ -9,13 +9,13 @@ class ConstraintShake : public Constraint {
  public:
   ConstraintShake();
   ~ConstraintShake();
-  int apply_constraint(real* in_crd, real* in_crd_prev, real* mass,
+  virtual int apply_constraint(real* in_crd, real* in_crd_prev, real* in_mass_inv,
 		       PBC* pbc);
-  int shake_pair(real* in_crd, real* in_crd_prev, real* mass,
+  int shake_pair(real* in_crd, real* in_crd_prev, real* in_mass_inv,
 		 PBC* pbc);
-  int shake_trio(real* in_crd, real* in_crd_prev, real* mass,
+  int shake_trio(real* in_crd, real* in_crd_prev, real* in_mass_inv,
 		 PBC* pbc);
-  int shake_quad(real* in_crd, real* in_crd_prev, real* mass,
+  int shake_quad(real* in_crd, real* in_crd_prev, real* in_mass_inv,
 		 PBC* pbc);
 
 

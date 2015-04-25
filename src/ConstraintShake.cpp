@@ -2,20 +2,24 @@
 
 ConstraintShake::ConstraintShake()
   : Constraint(){
+  
 }
+
 ConstraintShake::~ConstraintShake(){
   free_constraint();
 }
 
-int ConstraintShake::apply_constraint(real* in_crd, real* in_crd_prev, real* mass,
+int ConstraintShake::apply_constraint(real* in_crd, real* in_crd_prev, real* in_mass_inv,
 				 PBC* pbc){
-  shake_pair(in_crd, in_crd_prev, mass, pbc);
-  shake_trio(in_crd, in_crd_prev, mass, pbc);
-  shake_quad(in_crd, in_crd_prev, mass, pbc);
+
+  shake_pair(in_crd, in_crd_prev, in_mass_inv, pbc);
+  shake_trio(in_crd, in_crd_prev, in_mass_inv, pbc);
+  shake_quad(in_crd, in_crd_prev, in_mass_inv, pbc);
+
   return 0;
 }
 
-int ConstraintShake::shake_pair(real* in_crd, real* in_crd_prev, real* mass,
+int ConstraintShake::shake_pair(real* in_crd, real* in_crd_prev, real* in_mass_inv,
 			   PBC* pbc){
   
   for(int i_cst = 0; i_cst < n_pair; i_cst++){
@@ -28,9 +32,9 @@ int ConstraintShake::shake_pair(real* in_crd, real* in_crd_prev, real* mass,
     real d12[3];
     real d12_prev[3];
     pbc->diff_crd_minim_image(d12, crd2, crd1);
-    pbc->diff_crd_minim_image(d12_prev, crd1_prev, crd2_prev);
-    real mass1_inv = 1.0 / mass[pair_atomids[i_cst][0]];
-    real mass2_inv = 1.0 / mass[pair_atomids[i_cst][1]];
+    pbc->diff_crd_minim_image(d12_prev, crd2_prev, crd1_prev);
+    real mass1_inv = in_mass_inv[pair_atomids[i_cst][0]];
+    real mass2_inv = in_mass_inv[pair_atomids[i_cst][1]];
     real mass12_inv = mass1_inv + mass2_inv;
     real diff_sq = d12[0]*d12[0] + d12[1]*d12[1] + d12[2]*d12[2];
     real diff_sq_prev = d12_prev[0]*d12_prev[0] + d12_prev[1]*d12_prev[1] + d12_prev[2]*d12_prev[2];
@@ -50,7 +54,7 @@ int ConstraintShake::shake_pair(real* in_crd, real* in_crd_prev, real* mass,
   return 0;
 }
 
-int ConstraintShake::shake_trio(real* in_crd, real* in_crd_prev, real* mass,
+int ConstraintShake::shake_trio(real* in_crd, real* in_crd_prev, real* in_mass_inv,
 			   PBC* pbc){
   for(int i_cst = 0; i_cst < n_trio; i_cst++){
     int atomid1_3 = trio_atomids[i_cst][0] * 3;
@@ -74,22 +78,21 @@ int ConstraintShake::shake_trio(real* in_crd, real* in_crd_prev, real* mass,
     pbc->diff_crd_minim_image(d31, crd3, crd1);
     pbc->diff_crd_minim_image(d31_prev, crd3_prev, crd1_prev);
 
-    real mass1_inv = 1.0 / mass[trio_atomids[i_cst][0]];
-    real mass2_inv = 1.0 / mass[trio_atomids[i_cst][1]];
-    real mass3_inv = 1.0 / mass[trio_atomids[i_cst][2]];
+    real mass1_inv = in_mass_inv[trio_atomids[i_cst][0]];
+    real mass2_inv = in_mass_inv[trio_atomids[i_cst][1]];
+    real mass3_inv = in_mass_inv[trio_atomids[i_cst][2]];
 
     real coef11 = mass1_inv + mass2_inv;
     real coef12 = -mass2_inv;
     real coef13 = -mass1_inv;
-    real coef21 = -mass3_inv;
+    real coef21 = -mass2_inv;
     real coef22 = mass2_inv + mass3_inv;
     real coef23 = -mass3_inv;
     real coef31 = -mass1_inv;
     real coef32 = -mass3_inv;
     real coef33 = mass3_inv + mass1_inv;
 
-    real mass12_inv = mass1_inv + mass2_inv;
-
+    bool converge = false;
     for ( int i_loop = 0; i_loop < max_loops; i_loop++){
       for(int d=0; d<3; d++){
 	d12[d] += (coef11 * d12_prev[d] * g[0] +
@@ -138,13 +141,17 @@ int ConstraintShake::shake_trio(real* in_crd, real* in_crd_prev, real* mass,
 	(d31[0] * d31_prev[0] + 
 	 d31[1] * d31_prev[1] + 
 	 d31[2] * d31_prev[2]);
+
       real diff[3] = {trio_dist[i_cst][0] - (d12[0]*d12[0] + d12[1]*d12[1] + d12[2]*d12[2]),
 		      trio_dist[i_cst][1] - (d23[0]*d23[0] + d23[1]*d23[1] + d23[2]*d23[2]),
 		      trio_dist[i_cst][2] - (d31[0]*d31[0] + d31[1]*d31[1] + d31[2]*d31[2])};
+
       if(fabs(diff[0]/trio_dist[i_cst][0]) < tolerance &&
 	 fabs(diff[1]/trio_dist[i_cst][1]) < tolerance &&
-	 fabs(diff[2]/trio_dist[i_cst][2]) < tolerance)
+	 fabs(diff[2]/trio_dist[i_cst][2]) < tolerance){
+	converge = true;
 	break;
+      }
       real determin = 1.0 / (gradf11 * gradf22 * gradf33
 			     + gradf12 * gradf23 * gradf31
 			     + gradf13 * gradf21 * gradf32
@@ -170,6 +177,14 @@ int ConstraintShake::shake_trio(real* in_crd, real* in_crd_prev, real* mass,
       g[5] += g[2];
     }
 
+    if(!converge){
+      cout << "Shake not converged, tri: " << i_cst << endl;
+      cout << trio_atomids[i_cst][0] << " - " 
+	   << trio_atomids[i_cst][1] << " - " 
+	   << trio_atomids[i_cst][2] <<endl;
+    }
+    
+
     for(int d=0; d < 3; d++){
       in_crd[atomid1_3+d] += mass1_inv *
 	(g[3] * d12_prev[d] - g[5] * d31_prev[d]);
@@ -178,12 +193,13 @@ int ConstraintShake::shake_trio(real* in_crd, real* in_crd_prev, real* mass,
       in_crd[atomid3_3+d] += mass3_inv *
 	(- g[4] * d23_prev[d] + g[5] * d31_prev[d]);
     }    
+
   }
   
   return 0;
 }
 
-int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real* mass,
+int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real* in_mass_inv,
 			   PBC* pbc){
   for(int i_cst = 0; i_cst < n_quad; i_cst++){
     int atomid_3[4] = {quad_atomids[i_cst][0] * 3,
@@ -191,15 +207,15 @@ int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real* mass,
 			quad_atomids[i_cst][2] * 3,
 			quad_atomids[i_cst][3] * 3};
 
-    real mass_inv[4] = {(real)1.0 / mass[quad_atomids[i_cst][0]],
-			(real)1.0 / mass[quad_atomids[i_cst][1]],
-			(real)1.0 / mass[quad_atomids[i_cst][2]],
-			(real)1.0 / mass[quad_atomids[i_cst][3]]};
+    real mass_inv[4] = { in_mass_inv[quad_atomids[i_cst][0]],
+			 in_mass_inv[quad_atomids[i_cst][1]],
+			 in_mass_inv[quad_atomids[i_cst][2]],
+			 in_mass_inv[quad_atomids[i_cst][3]]};
 
     real crd_cur[4][3];
     real crd_prev[4][3];
-    for(int i; i<4; i++){
-      for(int d; d < 3; d++){
+    for(int i=0; i<4; i++){
+      for(int d=0; d < 3; d++){
 	crd_cur[i][d] = in_crd[atomid_3[i]+d];
 	crd_prev[i][d] = in_crd_prev[atomid_3[i]+d];
       }
@@ -215,8 +231,10 @@ int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real* mass,
     real d_cur[6][3];
     real d_prev[6][3];
     for(int i_pair=0; i_pair < 6; i_pair++){
-      int id1 = quad_atomids[i_cst][Pairs_idx[i_pair][0]];
-      int id2 = quad_atomids[i_cst][Pairs_idx[i_pair][1]];
+      //int id1 = quad_atomids[i_cst][Pairs_idx[i_pair][0]];
+      //int id2 = quad_atomids[i_cst][Pairs_idx[i_pair][1]];
+      //int id1 = Pairs_idx[i_pair][0];
+      //int id2 = Pairs_idx[i_pair][1];
 
       pbc->diff_crd_minim_image(d_cur[i_pair],
 				crd_cur[Pairs_idx[i_pair][0]],
@@ -258,11 +276,14 @@ int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real* mass,
       converge = true;
       real sqrt_dist[6];
       for(int i_pair=0; i_pair < 6; i_pair++){
-	sqrt_dist[i_pair] = quad_dist[i_cst][i_pair] -
-	  d_virtual[i_pair][0] * d_virtual[i_pair][0] +
-	  d_virtual[i_pair][1] * d_virtual[i_pair][1] +
-	  d_virtual[i_pair][2] * d_virtual[i_pair][2];
-	converge &= fabs(sqrt_dist[i_pair] / quad_dist[i_cst][i_pair]) < tolerance;
+	real norm = 
+	  (d_virtual[i_pair][0] * d_virtual[i_pair][0] +
+	   d_virtual[i_pair][1] * d_virtual[i_pair][1] +
+	   d_virtual[i_pair][2] * d_virtual[i_pair][2]);
+	sqrt_dist[i_pair] = quad_dist[i_cst][i_pair] - norm;
+	real diff = fabs(sqrt_dist[i_pair] / quad_dist[i_cst][i_pair]);
+
+	converge = converge && (diff < tolerance);
       }
       if(converge) break;
       // 1-3-4 calculate right hand vector
@@ -274,11 +295,15 @@ int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real* mass,
 	}
       }
       // 1-3-5 solve linear equation (grad * coef_post = result)
-      calc_linear_eq(grad, (real*)coef_post, (real*)result, 6);
+      calc_linear_eq(grad, coef_post, result, 6);
     }
 
     if(!converge){
-      
+      cout << "Shake not converged, quad: " << i_cst << endl;
+      cout << quad_atomids[i_cst][0] << " - " 
+	   << quad_atomids[i_cst][1] << " - " 
+	   << quad_atomids[i_cst][2] << " - " 
+	   << quad_atomids[i_cst][3] << endl;	
     }
     for(int d=0; d < 3; d++){
       in_crd[atomid_3[0]+d] += mass_inv[0] * (coef[0] * d_prev[0][d] -

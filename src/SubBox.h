@@ -60,6 +60,7 @@ class SubBox : public CelesteObject {
   real_fc *work;
   real *charge;
   real *mass;
+  real *mass_inv;
   int  *atom_type;
 
   // buffer for thermostat with shake 
@@ -252,7 +253,7 @@ class SubBox : public CelesteObject {
   int update_velocities(const real firstcoeff,
 			const real time_step);
   int velocity_average();
-  int set_velocity_from_crd(const real time_step);
+  int set_velocity_from_crd();
   int revise_coordinates_pbc();
   int copy_crd(real** p_crd);
   int copy_vel_just(real** p_vel);

@@ -337,6 +337,9 @@ int ForceField::calc_zms_excess(real_pw& ene, real_pw work[],
 }
 
 int ForceField::cal_self_energy(const int& n_atoms,
+				const int& n_excess,
+				const int**& excess_pairs,
+				/*const int& n_atoms,
 				const int& n_bonds,
 				const int**& bond_atomid_pairs,
 				const int& n_angles,
@@ -344,14 +347,16 @@ int ForceField::cal_self_energy(const int& n_atoms,
 				const int& n_torsions,
 				const int**& torsion_atomid_quads,
 				const int*& torsion_nb14,
+				*/
 				const real_pw*& charge,
 				real*& energy_self,
 				real& energy_self_sum){
-  ele->cal_self_energy(n_atoms, 
+  ele->cal_self_energy(n_atoms, n_excess, excess_pairs,
+		       /*n_atoms, 
 		       n_bonds,    bond_atomid_pairs,
 		       n_angles,   angle_atomid_triads,
 		       n_torsions, torsion_atomid_quads,
-		       torsion_nb14,
+		       torsion_nb14,*/
 		       charge,
 		       energy_self, energy_self_sum);
   return 0;

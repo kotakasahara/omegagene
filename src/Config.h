@@ -18,7 +18,7 @@ class Config : public CelesteObject {
   int processor;
   int integrator;
   int constraint;
-  int constraint_tolerance;
+  real constraint_tolerance;
   int constraint_max_loops;
   int thermo_const_tolerance;
   int thermo_const_max_loops;

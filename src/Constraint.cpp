@@ -145,7 +145,7 @@ int Constraint::calc_linear_eq(real a[6][6],
   for( int i=0; i < size; i++){
     index = i;
     real max_a = fabs(a[i][pivot[i]]);
-    for( int j=0; j < size; j++){
+    for( int j=i+1; j < size; j++){
       real tmp_a = fabs(a[i][pivot[j]]);
 	if(  tmp_a > max_a ){
 	  index = j;

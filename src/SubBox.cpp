@@ -95,6 +95,7 @@ int SubBox::alloc_variables(){
   atom_type = new int[max_n_atoms_exbox];
 #endif
   mass = new real[max_n_atoms_exbox];
+  mass_inv = new real[max_n_atoms_exbox];
   //crd_box = new real*[n_boxes];
   //for(int i = 0; i < n_boxes; i++){
   //crd_box[i] = new real[max_n_atoms_box*3];
@@ -271,6 +272,7 @@ int SubBox::free_variables(){
   delete[] atom_type;
 #endif
   delete[] mass;
+  delete[] mass_inv;
   free_variables_for_bonds();
   free_variables_for_angles();
   free_variables_for_torsions();
@@ -616,6 +618,7 @@ int SubBox::rank0_send_init_data(const real** in_crd,
     vel_next[i_atom3+2] = in_vel[all_atomids[0][i_atom]][2];
     charge[i_atom] = in_charge[all_atomids[0][i_atom]];
     mass[i_atom] = in_mass[all_atomids[0][i_atom]];
+    mass_inv[i_atom] = 1.0 / mass[i_atom];
     atom_type[i_atom] = in_atom_type[all_atomids[0][i_atom]];
     atomids_rev[all_atomids[0][i_atom]] = i_atom;
   }
@@ -887,7 +890,7 @@ int SubBox::calc_energy(){
   pote_vdw += nsgrid.get_energy()[0];
   pote_ele += nsgrid.get_energy()[1];
 #endif
-  cout << "nsgrid.get_energy()[1]" << nsgrid.get_energy()[1] << endl;
+  //cout << "nsgrid.get_energy()[1]" << nsgrid.get_energy()[1] << endl;
 
 
   //  cout << "SubBox::celc_energy excess:" << pote_ele << endl;
@@ -1296,7 +1299,7 @@ int SubBox::calc_energy_ele_excess(){
       work[atomidx2+d] -= tmp_work[d];
     }
   }
-  cout << "Excess : "  << pote_ele - tmp <<  " " << pote_ele << " " << tmp << endl;
+  //cout << "Excess : "  << pote_ele - tmp <<  " " << pote_ele << " " << tmp << endl;
   return 0;
 }
 
@@ -1388,8 +1391,8 @@ int SubBox::velocity_average(){
   }
   return 0;
 }
-int SubBox::set_velocity_from_crd(const real time_step){
-  real ts_inv = 1.0 / time_step;
+int SubBox::set_velocity_from_crd(){
+  real ts_inv = 1.0 / cfg->time_step;
   for(int atomid_b = 0, atomid_b3 = 0;
       atomid_b < all_n_atoms[rank];
       atomid_b++, atomid_b3+=3){
@@ -1489,7 +1492,9 @@ int SubBox::init_constraint(int in_constraint,
 			    int max_n_quad){
   switch (in_constraint){
   case CONST_SHAKE:
+    
     constraint = new ConstraintShake(); break;
+
   default:
     return in_constraint;
   }
@@ -1571,7 +1576,9 @@ int SubBox::calc_energy_pairwise_cuda(){
 
 #endif
 int SubBox::apply_constraint(){
-  constraint->apply_constraint(crd, crd_prev, mass, pbc);
+  
+  constraint->apply_constraint(crd, crd_prev, mass_inv, pbc);
+  set_velocity_from_crd();
   return 0;
 }
 

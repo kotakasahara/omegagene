@@ -47,8 +47,8 @@ int Config::set_defaults(){
   //nsgrid_max_n_atoms = 100;
   nsgrid_update_intvl = 1;
 
-  constraint_tolerance = 1000;
-  constraint_max_loops = 0.000001;
+  constraint_tolerance = 0.000001;
+  constraint_max_loops = 1000;
   thermo_const_tolerance = 1000;
   thermo_const_max_loops = 0.000001;
 

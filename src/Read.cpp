@@ -449,6 +449,7 @@ int Read::load_ls_constraint(Constraint* cst){
     read_bin_values(&atomid1, 1);    
     read_bin_values(&atomid2, 1);    
     read_bin_values(&dist1, 1);    
+    dist1 = dist1 * dist1;
     cst->add_pair(atomid1, atomid2, (real)dist1);
   }
   // 3 atoms
@@ -459,6 +460,9 @@ int Read::load_ls_constraint(Constraint* cst){
     read_bin_values(&dist1, 1);    
     read_bin_values(&dist2, 1);    
     read_bin_values(&dist3, 1);    
+    dist1 = dist1 * dist1;
+    dist2 = dist2 * dist2;
+    dist3 = dist3 * dist3;
     cst->add_trio(atomid1, atomid2, atomid3,
 		  (real)dist1, (real)dist2, (real)dist3);
   }
@@ -474,9 +478,15 @@ int Read::load_ls_constraint(Constraint* cst){
     read_bin_values(&dist4, 1);    
     read_bin_values(&dist5, 1);    
     read_bin_values(&dist6, 1);    
+    dist1 = dist1 * dist1;
+    dist2 = dist2 * dist2;
+    dist3 = dist3 * dist3;
+    dist4 = dist4 * dist4;
+    dist5 = dist5 * dist5;
+    dist6 = dist6 * dist6;
     cst->add_quad(atomid1, atomid2, atomid3, atomid4,
 		  (real)dist1, (real)dist2, (real)dist3,
-		 (real)dist4, (real)dist5, (real)dist6);
+		  (real)dist4, (real)dist5, (real)dist6);
   }
 
   return 0;

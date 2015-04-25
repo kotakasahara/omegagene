@@ -21,6 +21,13 @@ int ZeroMultipoleSum::initial_preprocess(){
 }
 
 int ZeroMultipoleSum::cal_self_energy(const int& n_atoms,
+				      const int& n_excess,
+				      const int**& excess_pairs,
+				      const real_pw*& charge,
+				      real*& energy_self,
+				      real& energy_self_sum){
+
+				      /*int ZeroMultipoleSum::cal_self_energy(const int& n_atoms,
 				      const int& n_bonds,
 				      const int**& bond_atomid_pairs,
 				      const int& n_angles,
@@ -30,13 +37,19 @@ int ZeroMultipoleSum::cal_self_energy(const int& n_atoms,
 				      const int*& torsion_nb14,
 				      const real_pw*& charge,
 				      real*& energy_self,
-				      real& energy_self_sum){
+				      real& energy_self_sum){*/
+
   if (DBG >= 1)
     cout << "DBG1: ZeroMultipoleSum::cal_self_energy()"<<endl;
   real* dwork;
   dwork = new real[n_atoms];
   for (int i=0; i < n_atoms; i++)
     dwork[i] = 0.0;
+  for (int i=0; i < n_excess; i++){
+    dwork[excess_pairs[i][0]] += charge[excess_pairs[i][1]];
+    dwork[excess_pairs[i][1]] += charge[excess_pairs[i][0]];
+  }
+  /*
   for (int i=0; i < n_bonds; i++){
     const int* pair = bond_atomid_pairs[i];
     dwork[pair[0]] += charge[pair[1]];
@@ -60,6 +73,7 @@ int ZeroMultipoleSum::cal_self_energy(const int& n_atoms,
       //cout << dwork[quad[0]] << " , " << dwork[quad[3]] << endl;
     }
   }
+  */
   /*
     for (int i=0; i < mmsys->n_nb14; i++){
     int* pair = mmsys->nb14_atomid_pairs[i];
