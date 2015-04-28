@@ -257,7 +257,8 @@ int ForceField::calc_14pair(real_pw& ene_vdw,
   
   return 0;
 }
-int ForceField::calc_pairwise(real& ene_vdw, real& ene_ele,
+
+int ForceField::calc_pairwise(real_pw& ene_vdw, real_pw& ene_ele,
 			      real_fc work[],
 			      const real* crd1, const real* crd2,
 			      const real& param_6term,

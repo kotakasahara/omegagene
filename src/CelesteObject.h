@@ -7,10 +7,10 @@
 
 // type of real values
 //typedef float real;
-typedef float real;
+typedef double real;
 // type of real values for pairwise energy calculation in GPU
 //typedef float real_pw; 
-typedef float real_pw; 
+typedef double real_pw; 
 // type of real values for summation of force,energy
 typedef double real_fc; 
 // type of real values for bonding potentials

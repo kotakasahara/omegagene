@@ -153,7 +153,7 @@ int ZeroMultipoleSum::set_zms_params(){
 
   return 0;
 }
-int ZeroMultipoleSum::calc_zms_alpha0(real_pw& ene_ele, real_pw& grad_coeff,
+int ZeroMultipoleSum::calc_zms_alpha0(real_pw& ene_ele, real& grad_coeff,
 				      const real& r12,      const real& r12_2,
 				      const real& r12_inv,   const real& r12_2_inv,
 				      const real& r12_3_inv, const real& cc){
@@ -180,7 +180,7 @@ int ZeroMultipoleSum::calc_zms_alpha0(real_pw& ene_ele, real_pw& grad_coeff,
   //#pragma optimize("", on)
   return 0;
 }
-int ZeroMultipoleSum::calc_zms_excess_alpha0(real_pw& ene_ele, real_pw& grad_coeff,
+int ZeroMultipoleSum::calc_zms_excess_alpha0(real_pw& ene_ele, real& grad_coeff,
 					     const real& r12,      const real& r12_2,
 					     const real& r12_3_inv, const real& cc){
   ene_ele = cc * bcoeff * r12_2;
@@ -188,7 +188,7 @@ int ZeroMultipoleSum::calc_zms_excess_alpha0(real_pw& ene_ele, real_pw& grad_coe
   //cout << "DBG0203excess: " << cc << " " << bcoeff << " "  << r12_2 << endl;  
   return 0;
 }
-int ZeroMultipoleSum::calc_zms(real_pw& ene_ele, real_pw& grad_coeff,
+int ZeroMultipoleSum::calc_zms(real_pw& ene_ele, real& grad_coeff,
 			       const real& r12,      const real& r12_2,
 			       const real& r12_inv,   const real& r12_2_inv,
 			       const real& r12_3_inv, const real& cc){
@@ -198,7 +198,7 @@ int ZeroMultipoleSum::calc_zms(real_pw& ene_ele, real_pw& grad_coeff,
   grad_coeff = -cc * (errorfc * r12_3_inv + piewald * exp(tmp*tmp) * r12_2_inv - fcoeff);
   return 0;
 }
-int ZeroMultipoleSum::calc_zms_excess(real_pw& ene_ele, real_pw& grad_coeff,
+int ZeroMultipoleSum::calc_zms_excess(real_pw& ene_ele, real& grad_coeff,
 				       const real& r12,      const real& r12_2,
 				       const real& r12_3_inv, const real& cc){
   

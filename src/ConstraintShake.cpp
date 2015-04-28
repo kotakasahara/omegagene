@@ -282,7 +282,6 @@ int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real* in_mass_i
 	   d_virtual[i_pair][2] * d_virtual[i_pair][2]);
 	sqrt_dist[i_pair] = quad_dist[i_cst][i_pair] - norm;
 	real diff = fabs(sqrt_dist[i_pair] / quad_dist[i_cst][i_pair]);
-
 	converge = converge && (diff < tolerance);
       }
       if(converge) break;

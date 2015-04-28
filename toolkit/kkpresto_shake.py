@@ -153,7 +153,7 @@ class SHKReader(kkpresto.PrestoAsciiReader):
                         
                     #tpl = self.remove_bond_angle_constraint(new_shk, tpl)
         print "tpl.remove_bond_angle_constraint"
-        tpl.remove_bond_angle_constraints(self.const_pairs)
+        #tpl.remove_bond_angle_constraints(self.const_pairs)
         return tpl
 
     def print_shake_info(self):

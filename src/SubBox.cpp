@@ -1616,8 +1616,8 @@ int SubBox::thermo_hoover_evans_with_shake(const real n_free,
       i_atom < n_atoms_box*3; i_atom++){
     buf_crd2[i_atom] = 0.0;
   }
-
-  for(int i_loop=0; i_loop <= max_loops; i_loop++){
+  bool converge = false;
+  for(int i_loop=0; i_loop < max_loops; i_loop++){
     for(int idx = 0; idx < n_atoms_box*3; idx++)
       buf_crd1[idx] =  crd[idx];
 
@@ -1628,7 +1628,7 @@ int SubBox::thermo_hoover_evans_with_shake(const real n_free,
 	i_atom < n_atoms_box; i_atom++, i_atom_3+=3){
       real vel_norm = 0.0;
       for(int d=0; d < 3; d++){
-	vel_next[i_atom_3+d] = (crd[i_atom_3+d] - crd_prev[i_atom_3+d]) / cfg->time_step;
+	//vel_next[i_atom_3+d] = (crd[i_atom_3+d] - crd_prev[i_atom_3+d]) / cfg->time_step;
 	real vel_tmp = (vel_next[i_atom_3+d] + vel[i_atom_3+d]) * 0.5;
 	vel_norm += (vel_tmp * vel_tmp);
       }
@@ -1637,8 +1637,10 @@ int SubBox::thermo_hoover_evans_with_shake(const real n_free,
     real kine = kine_pre * KINETIC_COEFF;
     real cur_temperature = kine * temperature_coef;
     
-    if(i_loop == max_loops) break;
-    if((cur_temperature - target_temperature) / target_temperature < tolerance){
+    if(i_loop == max_loops-1) break;
+    real diff = fabs(cur_temperature - target_temperature) / target_temperature;
+    if(diff < tolerance){
+      converge = true;
       break;
     }
 
@@ -1674,6 +1676,9 @@ int SubBox::thermo_hoover_evans_with_shake(const real n_free,
     }
     
   }  
+  if(!converge){
+    cout << "Thermostat was not converged." << endl;
+  }
   return 0;
 }
 

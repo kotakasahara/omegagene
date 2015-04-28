@@ -27,8 +27,8 @@ class ZeroMultipoleSum : public ElectrostaticObject {
  public:
 
   ZeroMultipoleSum();
-  int (ZeroMultipoleSum::*func_calc_zms)(real&, real&, const real&, const real&, const real&, const real&, const real&, const real&);
-  int (ZeroMultipoleSum::*func_calc_zms_excess)(real&, real&, const real&, const real&, const real&, const real&);
+  int (ZeroMultipoleSum::*func_calc_zms)(real_pw&, real&, const real&, const real&, const real&, const real&, const real&, const real&);
+  int (ZeroMultipoleSum::*func_calc_zms_excess)(real_pw&, real&, const real&, const real&, const real&, const real&);
 
   virtual int set_config_parameters(const Config* in_cfg);
   virtual int initial_preprocess();
@@ -51,18 +51,18 @@ class ZeroMultipoleSum : public ElectrostaticObject {
   inline real get_fcoeff(){ return fcoeff; }
   inline real get_scoeff(){ return scoeff; }
   inline real get_zcore(){ return zcore; }
-  int calc_zms_alpha0(real_pw& ene_ele, real_pw& grad_coeff,
+  int calc_zms_alpha0(real_pw& ene_ele, real& grad_coeff,
 		      const real& r12,      const real& r12sq,
 		      const real& r12inv,   const real& r12inv_2,
 		      const real& r12inv_3, const real& cc);
-  int calc_zms_excess_alpha0(real_pw& ene_ele, real_pw& grad_coeff,
+  int calc_zms_excess_alpha0(real_pw& ene_ele, real& grad_coeff,
 			     const real& r12,      const real& r12_2,
 			     const real& r12_3_inv, const real& cc);
-  int calc_zms(real_pw& ene_ele, real_pw& grad_coeff,
+  int calc_zms(real_pw& ene_ele, real& grad_coeff,
 	       const real& r12,      const real& r12_2,
 	       const real& r12_inv,   const real& r12_2_inv,
 	       const real& r12_3_inv, const real& cc);
-  int calc_zms_excess(real_pw& ene_ele, real_pw& grad_coeff,
+  int calc_zms_excess(real_pw& ene_ele, real& grad_coeff,
 		      const real& r12,      const real& r12_2,
 		      const real& r12_3_inv, const real& cc);
   

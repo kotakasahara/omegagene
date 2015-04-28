@@ -120,12 +120,12 @@ int DynamicsMode::calc_in_each_step(){
   const clock_t startTimeCoord = clock();
 
   //if(mmsys.leapfrog_coef == 1.0){
-    if(cfg->thermostat==THMSTT_HOOVER_EVANS){
-      subbox.thermo_hoover_evans(cfg->time_step,
-				 mmsys.n_free,
-				 cfg->temperature);
-    }
-    //}
+  if(cfg->thermostat==THMSTT_HOOVER_EVANS){
+    subbox.thermo_hoover_evans(cfg->time_step,
+			       mmsys.n_free,
+			       cfg->temperature);
+  }
+  //}
   
   subbox.cancel_com_motion(cfg->n_com_cancel_groups,
 			   cfg->com_cancel_groups,
