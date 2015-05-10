@@ -107,11 +107,11 @@ class MDInputGen(object):
         self.read_shake()
         self.read_expand()
 
-        atom_groups_reader = atgrp.AtomGroupsReader(self.config.get_val("fn-i-atom-groups"))
-        print self.config.get_val("fn-i-atom-groups")
-        print atom_groups_reader.fn
-        self.atom_groups = atom_groups_reader.read_groups()
-        
+        if self.config.get_val("fn-i-atom-groups"):
+            atom_groups_reader = atgrp.AtomGroupsReader(self.config.get_val("fn-i-atom-groups"))
+            print self.config.get_val("fn-i-atom-groups")
+            print atom_groups_reader.fn
+            self.atom_groups = atom_groups_reader.read_groups()
         return
 
     def read_shake(self):

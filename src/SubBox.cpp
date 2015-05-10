@@ -397,8 +397,11 @@ int SubBox::set_parameters(int in_n_atoms, PBC* in_pbc,
   n_atoms = in_n_atoms;
   pbc = in_pbc;
   cfg = in_cfg;
-  time_step_sq = cfg->time_step * cfg->time_step;
-  temperature_coef = (2.0 * JOULE_CAL * 1e+3) / (GAS_CONST * n_free);
+  time_step_inv_sq = 1.0 /( cfg->time_step * cfg->time_step);
+  //temperature_coeff = 1.0 / (GAS_CONST * (real)n_free) * JOULE_CAL * 1e3 * 2.0;
+  temperature_coef = (2.0 * JOULE_CAL * 1e+3) / (GAS_CONST * (real)n_free);
+  cout << "DBG coef1: " << temperature_coef << " " << n_free << endl;
+
   cutoff_pair = in_cutoff_pair;
   n_boxes_xyz[0] = in_n_boxes_x;
   n_boxes_xyz[1] = in_n_boxes_y;
@@ -475,7 +478,7 @@ int SubBox::set_nsgrid(){
   return 0;
 }
 
-int SubBox::nsgrid_crd_update(){
+int SubBox::nsgrid_init(){
   nsgrid.init_energy_work();
   //nsgrid.update_crd((const real**)crd);
   return 0;
@@ -1392,13 +1395,22 @@ int SubBox::velocity_average(){
   return 0;
 }
 int SubBox::set_velocity_from_crd(){
-  real ts_inv = 1.0 / cfg->time_step;
+  const real ts_inv = 1.0 / cfg->time_step;
+  //DBG
+  
   for(int atomid_b = 0, atomid_b3 = 0;
       atomid_b < all_n_atoms[rank];
       atomid_b++, atomid_b3+=3){
+    real norm1 = 0.0;
+    real norm2 = 0.0;
     for(int d=0; d<3; d++){
+      norm1 += vel_next[atomid_b3+d] * vel_next[atomid_b3+d];
       vel_next[atomid_b3+d] = (crd[atomid_b3+d] - crd_prev[atomid_b3+d]) * ts_inv;
+      norm2 += vel_next[atomid_b3+d] * vel_next[atomid_b3+d];
     }
+    real diff = fabs(norm1 - norm2)*mass[atomid_b];
+    if(diff > 0.01)
+      cout << "diff " << atomid_b << " " << diff << endl;
   }
   return 0;
 }
@@ -1459,11 +1471,26 @@ int SubBox::update_coordinates(const real time_step){
     for(int d=0; d<3; d++){
       real diff = vel_next[atomid_b3+d] * time_step;
       crd[atomid_b3+d] += diff;
-#ifndef F_WO_NS      
-      nsgrid.move_atom(atomid_b, d, diff);
-#endif
+      //#ifndef F_WO_NS      
+      //      nsgrid.move_atom(atomid_b, d, diff);
+      //#endif
     }
   }
+
+  return 0;
+}
+int SubBox::update_coordinates_nsgrid(){
+  // this method should be called 
+  //   after update_coordinates(), before revise_coordinates_pbc()
+  for(int atomid_b=0, atomid_b3=0;
+      atomid_b < all_n_atoms[rank];
+      atomid_b++, atomid_b3+=3){
+    for(int d=0; d<3; d++){
+      real diff = crd[atomid_b3+d] - crd_prev[atomid_b3+d];
+      nsgrid.move_atom(atomid_b, d, diff);
+    }
+  }
+
   return 0;
 }
 bool SubBox::is_in_box(real* in_crd){
@@ -1506,7 +1533,7 @@ int SubBox::init_constraint(int in_constraint,
   
   return in_constraint;
 }
-int SubBox::set_subset_constraint(Constraint& in_cst, int n_free){
+int SubBox::set_subset_constraint(Constraint& in_cst, real n_free){
   if(cfg->constraint == CONST_NONE) return 1;
 
   //cout << "set_subset_constraint" << endl;
@@ -1576,15 +1603,15 @@ int SubBox::calc_energy_pairwise_cuda(){
 
 #endif
 int SubBox::apply_constraint(){
-  
   constraint->apply_constraint(crd, crd_prev, mass_inv, pbc);
+
   set_velocity_from_crd();
   return 0;
 }
 
-int SubBox::thermo_hoover_evans(const real time_step,
-				const int n_free,
-				const real target_temperature){
+int SubBox::thermo_scaling(const real time_step,
+			   const int n_free,
+			   const real target_temperature){
   real_fc kine_pre = 0.0;
   
   for(int i=0, i_3=0; i < n_atoms_box; i++, i_3+=3){
@@ -1608,18 +1635,19 @@ int SubBox::thermo_hoover_evans(const real time_step,
 
   return 0;
 }
-int SubBox::thermo_hoover_evans_with_shake(const real n_free,
-					   const real target_temperature,
-					   const int max_loops,
-					   const real tolerance){
+int SubBox::thermo_scaling_with_shake(const real n_free,
+				      const real target_temperature,
+				      const int max_loops,
+				      const real tolerance){
   for(int i_atom = 0;
       i_atom < n_atoms_box*3; i_atom++){
     buf_crd2[i_atom] = 0.0;
   }
+  //DBG
   bool converge = false;
+  for(int idx = 0; idx < n_atoms_box*3; idx++)
+    buf_crd1[idx] =  crd[idx];
   for(int i_loop=0; i_loop < max_loops; i_loop++){
-    for(int idx = 0; idx < n_atoms_box*3; idx++)
-      buf_crd1[idx] =  crd[idx];
 
     apply_constraint();
 
@@ -1644,37 +1672,49 @@ int SubBox::thermo_hoover_evans_with_shake(const real n_free,
       break;
     }
 
+
     kine_pre = 0.0;
     for(int i_atom = 0, i_atom_3 = 0;
 	i_atom < n_atoms_box; i_atom++, i_atom_3+=3){
       real vel_norm = 0.0;
       for(int d=0; d < 3; d++){
-	buf_crd2[i_atom_3+d] += (crd[i_atom_3+d] - buf_crd1[i_atom_3+d]) / time_step_sq;
-	real vel_diff = -FORCE_VEL * work[i_atom_3+d] / mass[i_atom] + buf_crd2[i_atom_3+d];
+	//buf_crd2[i_atom_3+d] += (crd[i_atom_3+d] - buf_crd1[i_atom_3+d]) * time_step_inv_sq;
+	real vel_diff = -FORCE_VEL * work[i_atom_3+d] * mass_inv[i_atom] + (crd[i_atom_3+d]-buf_crd1[i_atom_3+d])*time_step_inv_sq;
+	//real vel_tmp = vel[i_atom_3+d] + 0.5 * cfg->time_step * vel_diff;
 	vel_next[i_atom_3+d] = vel[i_atom_3+d] + 0.5 * cfg->time_step * vel_diff;
-	vel_norm += vel_next[i_atom_3+d] * vel_next[i_atom_3+d];
+	real vel_tmp = vel_next[i_atom_3+d];
+	vel_norm += vel_tmp * vel_tmp;
       }
       kine_pre += mass[i_atom] * vel_norm;
     }
     kine = kine_pre * KINETIC_COEFF;
+
     cur_temperature = kine * temperature_coef;
+
     real scale = sqrt(target_temperature / cur_temperature);
-    
+
+    kine_pre = 0.0;
     for(int i_atom = 0, i_atom_3 = 0;
 	i_atom < n_atoms_box; i_atom++, i_atom_3+=3){
+      real vel_norm = 0.0;
       for(int d=0; d < 3; d++){
-	real vel_diff = -FORCE_VEL * work[i_atom_3+d] / mass[i_atom] + buf_crd2[i_atom_3+d];
+	real vel_diff = -FORCE_VEL * work[i_atom_3+d] * mass_inv[i_atom] + buf_crd2[i_atom_3+d];
 	vel_next[i_atom_3+d] = (2.0 * scale - 1.0) * vel[i_atom_3+d]
-	  + scale * cfg->time_step * vel_diff;
+	+ scale * cfg->time_step * vel_diff;
+	real tmp_vel = (vel_next[i_atom_3+d] + vel[i_atom_3+d]) * 0.5;
+	vel_norm += tmp_vel*tmp_vel;
       }
+      kine_pre += vel_norm * mass[i_atom];
     }
+    
+    kine = kine_pre * KINETIC_COEFF;
+
     for(int i_atom = 0, i_atom_3 = 0;
 	i_atom < n_atoms_box; i_atom++, i_atom_3+=3){
       for(int d=0; d < 3; d++){
 	crd[i_atom_3+d] = crd_prev[i_atom_3+d] + cfg->time_step * vel_next[i_atom_3+d];
       }
     }
-    
   }  
   if(!converge){
     cout << "Thermostat was not converged." << endl;

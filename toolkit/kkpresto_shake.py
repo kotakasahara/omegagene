@@ -150,9 +150,8 @@ class SHKReader(kkpresto.PrestoAsciiReader):
                         self.const_pairs.add((new_shk.atom_ids[2], new_shk.atom_ids[1]))
                     else:
                         pass
-                        
-                    #tpl = self.remove_bond_angle_constraint(new_shk, tpl)
-        print "tpl.remove_bond_angle_constraint"
+
+        #print "tpl.remove_bond_angle_constraint"
         #tpl.remove_bond_angle_constraints(self.const_pairs)
         return tpl
 

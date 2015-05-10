@@ -770,7 +770,7 @@ class TPL(object):
         self.nonbonds = new_nonbonds
         return 0
     def remove_bond_angle_constraints(self, pairs):
-        print "remove_bond_angle_constraints"
+        #print "remove_bond_angle_constraints"
 
         n_bonds_orig = len(self.atom_id_12)
         n_angles_orig = len(self.atom_id_13)
@@ -778,7 +778,7 @@ class TPL(object):
         new_bonds = []
         #new_non15 = set()
         print "n pairs : " + str(len(pairs))
-        print pairs
+        #print pairs
         for idx, at12 in enumerate(self.atom_id_12):
             #print at12[0]
             if not at12[0] in pairs:

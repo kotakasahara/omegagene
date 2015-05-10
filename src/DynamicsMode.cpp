@@ -31,6 +31,14 @@ int DynamicsMode::initial_preprocess(){
   mmsys.ff_setup(cfg);
   writer_trr.set_fn(cfg->fn_o_crd);
   writer_trr.open();
+
+  if(cfg->constraint != CONST_NONE){
+    int n_shake_dist = mmsys.constraint.get_n_pair() + 
+      3 * mmsys.constraint.get_n_trio() + 
+      6 * mmsys.constraint.get_n_quad();
+    mmsys.n_free -= n_shake_dist;
+  }
+
   temperature_coeff = 1.0 / (GAS_CONST * (real)mmsys.n_free) * JOULE_CAL * 1e3 * 2.0;
   //enecal->initial_preprocess();
   // set atom coordinates into PBC
@@ -120,10 +128,10 @@ int DynamicsMode::calc_in_each_step(){
   const clock_t startTimeCoord = clock();
 
   //if(mmsys.leapfrog_coef == 1.0){
-  if(cfg->thermostat==THMSTT_HOOVER_EVANS){
-    subbox.thermo_hoover_evans(cfg->time_step,
-			       mmsys.n_free,
-			       cfg->temperature);
+  if(cfg->thermostat==THMSTT_SCALING && cfg->constraint == CONST_NONE){
+    subbox.thermo_scaling(cfg->time_step,
+			  mmsys.n_free,
+			  cfg->temperature);
   }
   //}
   
@@ -140,6 +148,9 @@ int DynamicsMode::calc_in_each_step(){
   apply_constraint();
 
   //cout << "revise_coordinates"<<endl;  
+  #ifndef F_WO_NS
+  subbox.update_coordinates_nsgrid();
+  #endif
   subbox.revise_coordinates_pbc();
 
   const clock_t endTimeCoord = clock();
@@ -149,6 +160,10 @@ int DynamicsMode::calc_in_each_step(){
   //subbox.velocity_average();
 
   subbox.copy_vel_just(mmsys.vel_just);
+  cout << "DBG-DM03 vel_just "  << " " << mmsys.vel_just[0][0] << " "
+       << mmsys.vel_just[0][1] << " "<< mmsys.vel_just[0][2] << endl;
+  cout << "DBG-DM03 mass " << mmsys.mass[0] << endl; 
+  cout << "DBG-DM03 temperature_coef " << temperature_coeff << " " << mmsys.n_free << endl; 
   cal_kinetic_energy((const real**)mmsys.vel_just);
   const clock_t endTimeKine = clock();
   mmsys.ctime_calc_kinetic += endTimeKine - startTimeKine;
@@ -159,8 +174,7 @@ int DynamicsMode::calc_in_each_step(){
     //cout << "nsgrid_update"<<endl;
     subbox.nsgrid_update();
   }else{
-    subbox.nsgrid_crd_update();
-    //revise_coordinates_pbc();
+    subbox.nsgrid_init();
   }
   const clock_t endTimeHtod = clock();
   mmsys.ctime_cuda_htod_atomids += endTimeHtod - startTimeHtod;
@@ -183,14 +197,15 @@ int DynamicsMode::apply_constraint(){
   //mmsys.leapfrog_coef = 1.0;
   //}else{
   if(cfg->constraint != CONST_NONE){
-    if(cfg->thermostat==THMSTT_HOOVER_EVANS){
-      subbox.thermo_hoover_evans_with_shake((real)mmsys.n_free,
+    if(cfg->thermostat==THMSTT_SCALING){
+      subbox.thermo_scaling_with_shake((real)mmsys.n_free,
 					    cfg->temperature,
 					    cfg->thermo_const_max_loops,
 					    cfg->thermo_const_tolerance);
+      
     }else{
       subbox.apply_constraint();
-      subbox.set_velocity_from_crd();
+      
     }
   }
   //}
@@ -342,12 +357,8 @@ int DynamicsMode::subbox_setup(){
 			   mmsys.constraint.get_n_trio(),
 			   mmsys.constraint.get_n_quad());
     
-    int n_shake_dist = mmsys.constraint.get_n_pair() + 
-      3 * mmsys.constraint.get_n_trio() + 
-      6 * mmsys.constraint.get_n_quad();
-    mmsys.n_free -= n_shake_dist;
     
-    subbox.set_subset_constraint(mmsys.constraint, mmsys.n_free);
+    subbox.set_subset_constraint(mmsys.constraint, (real)mmsys.n_free);
   }
   if(cfg->expanded_ensemble == EXPAND_VMCMD){
     subbox.set_expand(&mmsys.vmcmd);

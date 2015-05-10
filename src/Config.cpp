@@ -115,7 +115,7 @@ void Config::setAll(vector<string> arg){
     else if(*itr=="--thermostat"){
       itr++;
       if(*itr=="none"){ thermostat = THMSTT_NONE; }
-      else if(*itr=="berendsen"){ thermostat = THMSTT_BERENDSEN; }
+      else if(*itr=="scaling"){ thermostat = THMSTT_SCALING; }
       else if(*itr=="hoover-evans"){ thermostat = THMSTT_HOOVER_EVANS; }
       else { thermostat = THMSTT_DUMMY; }
     }

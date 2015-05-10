@@ -33,7 +33,7 @@ class SubBox : public CelesteObject {
   Config* cfg;
   int box_crd[3];
 
-  real time_step_sq;
+  real time_step_inv_sq;
   real temperature_coef;
 
   ForceField ff;
@@ -178,7 +178,7 @@ class SubBox : public CelesteObject {
 		     int in_n_boxes_x, int in_n_boxes_y, int in_n_boxes_z,
 		     int n_free);
   int set_nsgrid();
-  int nsgrid_crd_update();
+  int nsgrid_init();
   int nsgrid_update();
   int nsgrid_update_receiver();
   int rank0_alloc_variables();
@@ -262,6 +262,7 @@ class SubBox : public CelesteObject {
   int copy_crdvel(real* src, real** dst);
   real cal_kinetic_energy();
   int  update_coordinates(const real time_step);
+  int update_coordinates_nsgrid();
   bool is_in_box(real* in_crd);
   bool is_in_exbox(real* in_crd);
   int set_box_crd();
@@ -272,7 +273,7 @@ class SubBox : public CelesteObject {
 		      int max_n_pair,
 		      int max_n_trio,
 		      int max_n_quad);
-  int set_subset_constraint(Constraint& in_cst, int n_free);
+  int set_subset_constraint(Constraint& in_cst, real n_free);
 
   real_fc get_pote_vdw(){return pote_vdw;};
   real_fc get_pote_ele(){return pote_ele;};
@@ -290,14 +291,14 @@ class SubBox : public CelesteObject {
 #endif
   
   int apply_constraint();
-  int thermo_hoover_evans(const real time_step,
+  int thermo_scaling(const real time_step,
 			  const int n_free,
 			  const real target_temperature);
-  int thermo_hoover_evans_with_shake(const real n_free,
+  int thermo_scaling_with_shake(const real n_free,
 				     const real target_temperature,
 				     const int max_loop,
 				     const real tolerance);
-  int set_expand(ExpandVMcMD* in_exp){ expand =in_exp; };
+  void set_expand(ExpandVMcMD* in_exp){ expand =in_exp; };
   int expand_apply_bias(unsigned long cur_step, real in_lambda);
   void expand_enable_vs_transition();
 

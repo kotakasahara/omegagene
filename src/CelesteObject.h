@@ -65,7 +65,7 @@ class CelesteObject {
   };
   enum {
     THMSTT_NONE = 0,
-    THMSTT_BERENDSEN,
+    THMSTT_SCALING,
     THMSTT_HOOVER_EVANS,
     THMSTT_DUMMY
   };
@@ -99,6 +99,7 @@ class CelesteObject {
   static const real PI;
   static const int MAGIC_NUMBER;
   static const real EPS;
+  static const real EPS3;
   
   static const real ELEM_CHARGE; // 
   static const real AVOGADRO; // [mol^-1]

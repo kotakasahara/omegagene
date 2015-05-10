@@ -235,14 +235,22 @@ int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real* in_mass_i
       //int id2 = quad_atomids[i_cst][Pairs_idx[i_pair][1]];
       //int id1 = Pairs_idx[i_pair][0];
       //int id2 = Pairs_idx[i_pair][1];
-
+      /*
+      for (int d=0; d < 3; d++)
+      d_cur[i_pair][d] = crd_cur[Pairs_idx[i_pair][0]][d] -
+	crd_cur[Pairs_idx[i_pair][1]][d];
+      for (int d=0; d < 3; d++)
+      d_prev[i_pair][d] = crd_prev[Pairs_idx[i_pair][0]][d] -
+	crd_prev[Pairs_idx[i_pair][1]][d];
+      */
       pbc->diff_crd_minim_image(d_cur[i_pair],
 				crd_cur[Pairs_idx[i_pair][0]],
 				crd_cur[Pairs_idx[i_pair][1]]);
-
+      
       pbc->diff_crd_minim_image(d_prev[i_pair],
 				crd_prev[Pairs_idx[i_pair][0]],
 				crd_prev[Pairs_idx[i_pair][1]]);
+
     }      
     real coef[6];
     real coef_post[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
@@ -250,10 +258,17 @@ int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real* in_mass_i
     // 1-3 convergence loop
     bool converge = false;
     real d_virtual[6][3];
+    int dbgatom = 151;
     for(int i_loop=0; i_loop < max_loops; i_loop++){
       //1-3-1 calculate virtual vector
       // d_virtual = vec + sum(weight * d_prev * coef)
       for(int i=0; i<6; i++) coef[i] = coef_post[i];
+
+      //if(atomid_3[0] == dbgatom*3){
+      //cout << "DBG1 coef: ";
+      //for(int i=0; i<6; i++) cout << coef[i] << " ";
+      //cout << endl;
+	//}
 
       for(int i_pair=0; i_pair < 6; i_pair++){
 	for(int d=0; d<3; d++)
@@ -271,6 +286,8 @@ int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real* in_mass_i
 	    * (d_virtual[j_pair][0] * d_prev[i_pair][0] +
 	       d_virtual[j_pair][1] * d_prev[i_pair][1] +
 	       d_virtual[j_pair][2] * d_prev[i_pair][2]);
+	  //	  if(atomid_3[0] == dbgatom*3)
+	  //cout << "grad["<<i_pair<<"]["<<j_pair<<"] " << grad[i_pair][j_pair]<<endl;
 	}
       }	  
       converge = true;
@@ -281,18 +298,26 @@ int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real* in_mass_i
 	   d_virtual[i_pair][1] * d_virtual[i_pair][1] +
 	   d_virtual[i_pair][2] * d_virtual[i_pair][2]);
 	sqrt_dist[i_pair] = quad_dist[i_cst][i_pair] - norm;
+	//cout << "shkdist " << i_cst << " "<<i_pair << " " << quad_dist[i_cst][i_pair] << " " << norm << endl;
 	real diff = fabs(sqrt_dist[i_pair] / quad_dist[i_cst][i_pair]);
 	converge = converge && (diff < tolerance);
       }
       if(converge) break;
       // 1-3-4 calculate right hand vector
       real result[6];
+      //	if(atomid_3[0] == dbgatom*3)
+      //cout << "DBG result: ";
       for(int i_pair=0; i_pair < 6; i_pair++){
 	result[i_pair] = sqrt_dist[i_pair];
 	for(int j_pair=0; j_pair < 6; j_pair++){	
 	  result[i_pair] += grad[j_pair][i_pair] * coef[j_pair];
+
 	}
+	//if(atomid_3[0] == dbgatom*3)
+	//cout << result[i_pair] << " ";
       }
+      //if(atomid_3[0] == dbgatom*3)
+      //cout << endl;
       // 1-3-5 solve linear equation (grad * coef_post = result)
       calc_linear_eq(grad, coef_post, result, 6);
     }
@@ -305,18 +330,18 @@ int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real* in_mass_i
 	   << quad_atomids[i_cst][3] << endl;	
     }
     for(int d=0; d < 3; d++){
-      in_crd[atomid_3[0]+d] += mass_inv[0] * (coef[0] * d_prev[0][d] -
-					   coef[2] * d_prev[2][d] -
-					   coef[3] * d_prev[3][d]);
-      in_crd[atomid_3[1]+d] += mass_inv[1] * (coef[0] * d_prev[0][d] -
-					   coef[1] * d_prev[1][d] -
-					   coef[5] * d_prev[5][d]);
-      in_crd[atomid_3[2]+d] += mass_inv[2] * (coef[1] * d_prev[1][d] -
-					   coef[2] * d_prev[2][d] -
-					   coef[4] * d_prev[4][d]);
-      in_crd[atomid_3[3]+d] += mass_inv[3] * (coef[3] * d_prev[3][d] -
-					   coef[4] * d_prev[4][d] -
-					   coef[5] * d_prev[5][d]);
+      in_crd[atomid_3[0]+d] += mass_inv[0] * (coef[0] * d_prev[0][d]
+					      - coef[2] * d_prev[2][d]
+					      - coef[3] * d_prev[3][d]);
+      in_crd[atomid_3[1]+d] += mass_inv[1] * (- coef[0] * d_prev[0][d]
+					      + coef[1] * d_prev[1][d]
+					      + coef[5] * d_prev[5][d]);
+      in_crd[atomid_3[2]+d] += mass_inv[2] * (- coef[1] * d_prev[1][d]
+					      + coef[2] * d_prev[2][d]
+					      + coef[4] * d_prev[4][d]);
+      in_crd[atomid_3[3]+d] += mass_inv[3] * (coef[3] * d_prev[3][d]
+					      - coef[4] * d_prev[4][d]
+					      - coef[5] * d_prev[5][d]);
     }
   }
   

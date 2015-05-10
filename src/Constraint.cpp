@@ -159,7 +159,7 @@ int Constraint::calc_linear_eq(real a[6][6],
       pivot[index] = tmp;
     }
     
-    if (fabs(a[i][pivot[i]]) < EPS){
+    if (fabs(a[i][pivot[i]]) < EPS3){
       cerr << "matrix is singular" << endl;
       return 1;
     }
@@ -171,23 +171,39 @@ int Constraint::calc_linear_eq(real a[6][6],
       }
     }
   }
+  /*cout  << "DBG C3: "<<endl;
+  for( int i = 0; i < size; i++){
+    cout << "i=" << i << " ";
+    for( int j = 0; j < size; j++){
+      cout <<a[i][j]<< " ";
+    }
+    cout << endl;
+  }
+  */
   // 3 forward substitution
+
+  //cout << "DBG C4: ";
   for( int i = 0; i < size; i++){
     real new_x = b[pivot[i]];
     for( int j = 0; j < i; j++){
       new_x -= a[j][pivot[i]] * x[j];
     } 
     x[i] = new_x;
+    //cout << x[i] << " ";
   }
+  //  cout << endl;
+
   // 4 backward substitution
+  //  cout << "DBG C5: ";
   for( int i = size-1; i >= 0; i--){
     real new_x = x[i];
     for( int j = i+1; j < size; j++){
       new_x -= a[j][pivot[i]] * x[j];
     } 
     x[i] = new_x * a[i][pivot[i]];
+    //    cout << x[i] << " " ;
   }
-
+  //  cout << endl;
   delete[] pivot;
   return 0;
 }
