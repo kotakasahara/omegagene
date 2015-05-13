@@ -5,6 +5,15 @@
 #include <cmath>
 #include <iostream>
 
+/*
+References:
+
+Minimum image convention:
+
+Hloucha M, Deiters UK (1998) Fast coding of the minimum image convention. Molecular Simulation 20: 239–244.
+
+ */
+
 class PBC : public CelesteObject{
  private:
  protected:

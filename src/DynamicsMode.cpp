@@ -145,7 +145,9 @@ int DynamicsMode::calc_in_each_step(){
   //cout << "update_coordinates"<<endl;  
   subbox.update_coordinates(cfg->time_step);
 
-  apply_constraint();
+  if(cfg->constraint != CONST_NONE){
+    apply_constraint();
+  }
 
   //cout << "revise_coordinates"<<endl;  
   #ifndef F_WO_NS
@@ -160,10 +162,6 @@ int DynamicsMode::calc_in_each_step(){
   //subbox.velocity_average();
 
   subbox.copy_vel_just(mmsys.vel_just);
-  cout << "DBG-DM03 vel_just "  << " " << mmsys.vel_just[0][0] << " "
-       << mmsys.vel_just[0][1] << " "<< mmsys.vel_just[0][2] << endl;
-  cout << "DBG-DM03 mass " << mmsys.mass[0] << endl; 
-  cout << "DBG-DM03 temperature_coef " << temperature_coeff << " " << mmsys.n_free << endl; 
   cal_kinetic_energy((const real**)mmsys.vel_just);
   const clock_t endTimeKine = clock();
   mmsys.ctime_calc_kinetic += endTimeKine - startTimeKine;
@@ -196,7 +194,7 @@ int DynamicsMode::apply_constraint(){
   //}
   //mmsys.leapfrog_coef = 1.0;
   //}else{
-  if(cfg->constraint != CONST_NONE){
+
     if(cfg->thermostat==THMSTT_SCALING){
       subbox.thermo_scaling_with_shake((real)mmsys.n_free,
 					    cfg->temperature,
@@ -207,7 +205,7 @@ int DynamicsMode::apply_constraint(){
       subbox.apply_constraint();
       
     }
-  }
+  
   //}
   return 0;
 }

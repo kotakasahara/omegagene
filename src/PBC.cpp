@@ -42,15 +42,31 @@ int PBC::set_pbc(real val[]){
 }
 //template <typename TYPE> int PBC::diff_crd_minim_image(TYPE d[], const real crd1[], const real crd2[]) const{
 int PBC::diff_crd_minim_image(float d[], const real crd1[], const real crd2[]) const{
+  int m=3;
   for (int i=0; i<3; i++){
     d[i] = crd1[i] - crd2[i];
+    //if (d[i] > L_half[i]) d[i] -= L[i];
+    //else if (d[i] < -L_half[i]) d[i] += L[i];
+    /*    d[i] *= L_inv[i];
+    int k = d[i] + m + 0.5;
+    d[i] -= L[i] * k;
+    */
+    d[i] = d[i] - L[i] * (int)(d[i] * L_half_inv[i]);
     d[i] = d[i] - L[i] * (int)(d[i] * L_half_inv[i]);
   }
   return 0;
 }
 int PBC::diff_crd_minim_image(double d[], const real crd1[], const real crd2[]) const{
+  int m=3;
   for (int i=0; i<3; i++){
     d[i] = crd1[i] - crd2[i];
+    //if (d[i] > L_half[i]) d[i] -= L[i];
+    //else if (d[i] < -L_half[i]) d[i] += L[i];
+
+    //d[i] *= L_inv[i] + m;
+    //int k = int(d[i] + 0.5);
+    //d[i] -= L[i] * k;
+    d[i] = d[i] - L[i] * (int)(d[i] * L_half_inv[i]);
     d[i] = d[i] - L[i] * (int)(d[i] * L_half_inv[i]);
   }
   return 0;

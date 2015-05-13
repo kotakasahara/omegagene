@@ -258,7 +258,7 @@ int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real* in_mass_i
     // 1-3 convergence loop
     bool converge = false;
     real d_virtual[6][3];
-    int dbgatom = 151;
+    //int dbgatom = 151;
     for(int i_loop=0; i_loop < max_loops; i_loop++){
       //1-3-1 calculate virtual vector
       // d_virtual = vec + sum(weight * d_prev * coef)
