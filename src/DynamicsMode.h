@@ -51,7 +51,6 @@ class DynamicsMode : public RunMode {
   int apply_constraint();
   int sub_output();
   int sub_output_log();
-  int update_velocities(real firstcoeff);
   int cal_kinetic_energy(const real** vel);
   int subbox_setup();
   int subbox_set_bonding_potentials();

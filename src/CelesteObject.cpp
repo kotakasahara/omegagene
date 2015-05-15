@@ -7,6 +7,8 @@ CelesteObject::CelesteObject(){
 
 const string CelesteObject::EXE = "celeste";
 const string CelesteObject::ABOUT_ME = "celeste ver.0.30.a 28-mar-2015";
+const int CelesteObject::REAL_BYTE = 4;
+//const int CelesteObject::REAL_BYTE = 8;
 const real CelesteObject::PI = 3.14159265;
 const int CelesteObject::MAGIC_NUMBER = 66261;
 const real CelesteObject::EPS = 1e-10;
@@ -26,7 +28,9 @@ int CelesteObject::cross(const double* a, const double* b, double* ret){
   ret[2] = a[0]*b[1] - a[1]*b[0];
   return 0;
 }
-int CelesteObject::cross(const float* a, const float* b, double* ret){
-  cross((double*)a, (double*)b, ret);
+int CelesteObject::cross(const float* a, const float* b, float* ret){
+  ret[0] = a[1]*b[2] - a[2]*b[1];
+  ret[1] = a[2]*b[0] - a[0]*b[2];
+  ret[2] = a[0]*b[1] - a[1]*b[0];
   return 0;
 }

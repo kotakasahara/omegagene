@@ -631,6 +631,9 @@ int SubBox::rank0_send_init_data(const real** in_crd,
 
   //temporary
   n_atoms_exbox = all_n_atoms[0];
+
+  cpy_crd_prev();
+
   return 0;
 }
 int SubBox::recv_init_data(){
@@ -1404,20 +1407,19 @@ int SubBox::set_velocity_from_crd(){
     real norm1 = 0.0;
     real norm2 = 0.0;
     real d_crd[3];
-    real crd1[3] = {crd[atomid_b3], crd[atomid_b3+1], crd[atomid_b3+2]};
-    real crd2[3] = {crd_prev[atomid_b3], crd_prev[atomid_b3+1], crd_prev[atomid_b3+2]};
-    pbc->diff_crd_minim_image(d_crd,crd1,crd2);
+    //real crd1[3] = {crd[atomid_b3], crd[atomid_b3+1], crd[atomid_b3+2]};
+   //real crd2[3] = {crd_prev[atomid_b3], crd_prev[atomid_b3+1], crd_prev[atomid_b3+2]};
+    //pbc->diff_crd_minim_image(d_crd,crd1,crd2);
 
     for(int d=0; d<3; d++){
       norm1 += vel_next[atomid_b3+d] * vel_next[atomid_b3+d];
-      //vel_next[atomid_b3+d] = (crd[atomid_b3+d] - crd_prev[atomid_b3+d]) * ts_inv;
-      vel_next[atomid_b3+d] = d_crd[d] * ts_inv;
+      vel_next[atomid_b3+d] = (crd[atomid_b3+d] - crd_prev[atomid_b3+d]) * ts_inv;
+      //vel_next[atomid_b3+d] = d_crd[d] * ts_inv;
       norm2 += vel_next[atomid_b3+d] * vel_next[atomid_b3+d];
     }
     real diff = fabs(norm1 - norm2)*mass[atomid_b];
     if(diff > 0.01)
       cout << "diff " << atomid_b << " " << diff
-	   <<" d[" << d_crd[0] << ", " << d_crd[1] << ", " << d_crd[2] << "] " 
 	   << "(" << crd[atomid_b3] << ", " << crd[atomid_b3+1] << ", " << crd[atomid_b3+2] << ") "
 	   << "(" << crd_prev[atomid_b3] << ", " << crd_prev[atomid_b3+1] << ", " << crd_prev[atomid_b3+2] << ") "
 	   << endl;
@@ -1475,7 +1477,7 @@ int SubBox::copy_crdvel(real* src, real** dst){
 }
 
 int SubBox::update_coordinates(const real time_step){
-  cpy_crd_prev();
+  //subbox.cpy_crd_prev();
   for(int atomid_b=0, atomid_b3=0;
       atomid_b < all_n_atoms[rank];
       atomid_b++, atomid_b3+=3){
@@ -1497,12 +1499,13 @@ int SubBox::update_coordinates_nsgrid(){
   for(int atomid_b=0, atomid_b3=0;
       atomid_b < all_n_atoms[rank];
       atomid_b++, atomid_b3+=3){
-  real d_crd[3];
-  real crd1[3] = {crd[atomid_b3], crd[atomid_b3+1], crd[atomid_b3+2]};
-  real crd2[3] = {crd_prev[atomid_b3], crd_prev[atomid_b3+1], crd_prev[atomid_b3+2]};
-  pbc->diff_crd_minim_image(d_crd,crd1,crd2);
+    //real d_crd[3];
+    //real crd1[3] = {crd[atomid_b3], crd[atomid_b3+1], crd[atomid_b3+2]};
+    //real crd2[3] = {crd_prev[atomid_b3], crd_prev[atomid_b3+1], crd_prev[atomid_b3+2]};
+    //pbc->diff_crd_minim_image(d_crd,crd1,crd2);
     for(int d=0; d<3; d++){
-      nsgrid.move_atom(atomid_b, d, d_crd[d]);
+      nsgrid.move_atom(atomid_b, d, crd[atomid_b3+d]-crd_prev[atomid_b3+d]);      
+      //nsgrid.move_atom(atomid_b, d, d_crd[d]);
     }
   }
 

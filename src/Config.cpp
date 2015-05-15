@@ -53,6 +53,8 @@ int Config::set_defaults(){
   thermo_const_max_loops = 0.000001;
 
 
+  init_vel_just = 0;
+
   return 0;
 }
 void Config::setAll(int argn, char* argv[]){
@@ -133,7 +135,7 @@ void Config::setAll(vector<string> arg){
       //itr++;
       //if(*itr=="all"){ center_of_motion = ; }
     }
-    else if(*itr=="--com-cancel-group-id"){
+    else if(*itr=="--com-cancel-group-name"){
       com_cancel_groups_name[n_com_cancel_groups] = ((*++itr).c_str());
       n_com_cancel_groups_name++;
     }

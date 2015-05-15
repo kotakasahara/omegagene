@@ -51,10 +51,14 @@ int DynamicsMode::initial_preprocess(){
   //cout << "nsgrid_setup" << endl;
   //subbox.nsgrid_set(nsgrid_cutoff);
 
-  if(cfg->expanded_ensemble != EXPAND_NONE)
+  if(cfg->expanded_ensemble != EXPAND_NONE){
+    cout << "V_McMD: " << endl;
+    cout << "  VS log output ... " << cfg->fn_o_vmcmd_log << endl;
+    cout << "  Lambda output ... " << cfg->fn_o_expand_lambda << endl;
     mmsys.vmcmd.set_files(cfg->fn_o_vmcmd_log,
-			   cfg->fn_o_expand_lambda);
-
+			  cfg->fn_o_expand_lambda);
+    mmsys.vmcmd.set_lambda_interval(cfg->print_intvl_expand_lambda);
+  }
   cout << "DBG MmSystem.n_bonds: " << mmsys.n_bonds << endl;
 
   return 0;
@@ -69,7 +73,7 @@ int DynamicsMode::terminal_process(){
 }
 
 int DynamicsMode::main_stream(){
-  for(mmsys.cur_step = 1;
+  for(mmsys.cur_step = 0;
       mmsys.cur_step <= cfg->n_steps;
       mmsys.cur_step++){
     calc_in_each_step();
@@ -128,7 +132,9 @@ int DynamicsMode::calc_in_each_step(){
   const clock_t startTimeCoord = clock();
 
   //if(mmsys.leapfrog_coef == 1.0){
-  if(cfg->thermostat==THMSTT_SCALING && cfg->constraint == CONST_NONE){
+  if(cfg->thermostat==THMSTT_SCALING && 
+     cfg->constraint == CONST_NONE){
+     //mmsys.leapfrog_coef == 1.0){
     subbox.thermo_scaling(cfg->time_step,
 			  mmsys.n_free,
 			  cfg->temperature);
@@ -143,12 +149,12 @@ int DynamicsMode::calc_in_each_step(){
 
 
   //cout << "update_coordinates"<<endl;  
+  subbox.cpy_crd_prev();
   subbox.update_coordinates(cfg->time_step);
 
   if(cfg->constraint != CONST_NONE){
     apply_constraint();
   }
-
   //cout << "revise_coordinates"<<endl;  
   #ifndef F_WO_NS
   subbox.update_coordinates_nsgrid();
@@ -188,23 +194,18 @@ int DynamicsMode::calc_in_each_step(){
 }
 int DynamicsMode::apply_constraint(){
 
-  //if(mmsys.leapfrog_coef != 1.0){
-  //if(cfg->constraint != CONST_NONE){
-  //subbox.apply_constraint();
-  //}
-  //mmsys.leapfrog_coef = 1.0;
-  //}else{
-
-    if(cfg->thermostat==THMSTT_SCALING){
-      subbox.thermo_scaling_with_shake((real)mmsys.n_free,
-					    cfg->temperature,
-					    cfg->thermo_const_max_loops,
-					    cfg->thermo_const_tolerance);
-      
-    }else{
-      subbox.apply_constraint();
-      
-    }
+  //if(mmsys.leapfrog_coeff == 1.0){
+    
+  if(cfg->thermostat==THMSTT_SCALING){
+    
+    subbox.thermo_scaling_with_shake((real)mmsys.n_free,
+				     cfg->temperature,
+				     cfg->thermo_const_max_loops,
+				     cfg->thermo_const_tolerance);
+    //mmsys.leapfrog_coef = 1.0 ;
+  }else{
+    subbox.apply_constraint();
+  }
   
   //}
   return 0;
@@ -231,7 +232,7 @@ int DynamicsMode::sub_output(){
 }
 
 int DynamicsMode::sub_output_log(){
-  bool out_log = cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0;
+  bool out_log = (cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0;
   stringstream ss;
 
   if(out_log){

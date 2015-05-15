@@ -58,6 +58,10 @@ class Config : public CelesteObject {
   string fn_o_expand_lambda;
   string fn_o_energyflow;
 
+  int init_vel_just;
+  // 0: initial velocity is 0-dt
+  // 1: initial velocity is 0
+
   real nsgrid_cutoff;
   //real nsgrid_min_width;
   //real nsgrid_max_n_atoms;

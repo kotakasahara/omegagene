@@ -130,9 +130,9 @@ class MDInputGen(object):
             self.expand.read_mcmdparams(self.config.get_val("fn-i-ttp-v-mcmd-inp"))
             if self.config.get_val("fn-i-ttp-v-mcmd-initial"):
                 self.expand.read_init(self.config.get_val("fn-i-ttp-v-mcmd-initial"))
-                if self.config.get_val("fn-i-ttp-v-mcmd-initial-vs"):
+                if self.config.get_val("ttp-v-mcmd-initial-vs"):
                     print "Definition conflicts:"
-                    print "The options \"--fn-i-ttp-v-mcmd-initial\" and \"--fn-i-ttp-v-mcmd-initial-vs\" are mutually exclusive."
+                    print "The options \"--fn-i-ttp-v-mcmd-initial\" and \"--ttp-v-mcmd-initial-vs\" are mutually exclusive."
                     sys.exit(1)
             elif self.config.get_val("ttp-v-mcmd-initial-vs") and \
                     self.config.get_val("ttp-v-mcmd-seed"):

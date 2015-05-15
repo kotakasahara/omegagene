@@ -127,10 +127,23 @@ WriteTableLog::~WriteTableLog(){
 
 int WriteTableLog::write_header(){
   ofs.write((const char*)&MAGIC_NUMBER, sizeof(int));
+  ofs.write((const char*)&REAL_BYTE, sizeof(int));
   ofs.write((const char*)&n_cols, sizeof(int));
   return 0;
 }
+int WriteTableLog::write_row(int* values){
+  //for(int i=0; i<n_cols; i++){
+  //int val = values[i];
+  //ofs.write((const char*)&val, sizeof(int));
+  //}
+  ofs.write((const char*)values, sizeof(int)*n_cols);
+  return 0;
+}
 int WriteTableLog::write_row(real* values){
+  //  for(int i=0; i<n_cols; i++){
+  //real val = values[i];
+  //    ofs.write((const char*)&val, sizeof(real));
+  //  }
   ofs.write((const char*)values, sizeof(real)*n_cols);
   return 0;
 }

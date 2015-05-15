@@ -6,15 +6,20 @@
 //#include <pair>
 
 // type of real values
-//typedef float real;
-typedef double real;
+
+typedef float real;
+//typedef double real;
+
 // type of real values for pairwise energy calculation in GPU
-//typedef float real_pw; 
-typedef double real_pw; 
+typedef float real_pw; 
+//typedef double real_pw; 
+
 // type of real values for summation of force,energy
 typedef double real_fc; 
+
 // type of real values for bonding potentials
-typedef double real_bp; 
+typedef float real_bp; 
+//typedef double real_bp; 
 
 #ifdef F_MPI
 #include <mpi.h>
@@ -96,6 +101,7 @@ class CelesteObject {
 
   static const string EXE;
   static const string ABOUT_ME;
+  static const int REAL_BYTE;
   static const real PI;
   static const int MAGIC_NUMBER;
   static const real EPS;
@@ -118,7 +124,7 @@ class CelesteObject {
   template <typename TYPE> inline const TYPE& max(const TYPE& a, const TYPE& b){ return a < b ? b : a; }
   template <typename TYPE> inline const TYPE& min(const TYPE& a, const TYPE& b){ return a > b ? b : a; }
   int cross(const double* a, const double* b, double* ret);
-  int cross(const float* a, const float* b, double* ret);
+  int cross(const float* a, const float* b, float* ret);
 };
 
 #endif

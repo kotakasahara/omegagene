@@ -79,6 +79,9 @@ int ExpandVMcMD::apply_bias(unsigned long cur_step,
     write_vslog(cur_step);
   }
   scale_force(in_lambda, work, n_atoms_box);
+  if(cur_step%write_lambda_interval == 0){
+    write_lambda(in_lambda);
+  }
   return 0;
 }
 int ExpandVMcMD::set_current_vstate(real lambda){
@@ -149,9 +152,12 @@ int ExpandVMcMD::scale_force(real lambda, real_fc* work, int n_atoms){
 
 int ExpandVMcMD::set_files(string fn_vslog, string fn_lambda){
   writer_vslog.set_fn(fn_vslog);
+  writer_vslog.open();
   writer_lambda.set_fn(fn_lambda);
+  writer_lambda.open();
   writer_lambda.set_ncolumns(1);
   writer_lambda.write_header();
+  write_vslog(0);
   return 0;
 }
 int ExpandVMcMD::close_files(){

@@ -41,23 +41,17 @@ int PBC::set_pbc(real val[]){
   return 0;
 }
 //template <typename TYPE> int PBC::diff_crd_minim_image(TYPE d[], const real crd1[], const real crd2[]) const{
+
 int PBC::diff_crd_minim_image(float d[], const real crd1[], const real crd2[]) const{
-  int m=3;
   for (int i=0; i<3; i++){
     d[i] = crd1[i] - crd2[i];
-    //if (d[i] > L_half[i]) d[i] -= L[i];
-    //else if (d[i] < -L_half[i]) d[i] += L[i];
-    /*    d[i] *= L_inv[i];
-    int k = d[i] + m + 0.5;
-    d[i] -= L[i] * k;
-    */
     d[i] = d[i] - L[i] * (int)(d[i] * L_half_inv[i]);
     d[i] = d[i] - L[i] * (int)(d[i] * L_half_inv[i]);
   }
   return 0;
 }
+
 int PBC::diff_crd_minim_image(double d[], const real crd1[], const real crd2[]) const{
-  int m=3;
   for (int i=0; i<3; i++){
     d[i] = crd1[i] - crd2[i];
     //if (d[i] > L_half[i]) d[i] -= L[i];
@@ -81,6 +75,7 @@ int PBC::mid_crd_minim_image(float d[], const real crd1[], const real crd2[]) co
   }
   return 0;
 }
+
 int PBC::print_pbc(){
   cout << "PBC: " << L[0] << " , "  <<  L[1] << " , " << L[2] <<endl;
   cout << "PBC-lower_bound: " << lower_bound[0] <<" , " << lower_bound[1] << " , " << lower_bound[2] << endl;

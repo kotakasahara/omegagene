@@ -1,6 +1,6 @@
-EXECUTABLE = celeste
+#EXECUTABLE = celeste
 #EXECUTABLE = celeste_wons
-#EXECUTABLE = celeste_gpu
+EXECUTABLE = celeste_gpu
 
 
 ### Environment variables for tsubame

@@ -66,7 +66,7 @@ class ExpandVMcMD : public Expand {
   VirtualState& get_vstate(int vs_id){ return vstates[vs_id]; };
 
   int get_init_vs(){ return init_vs; };
-  void set_init_vs(int in_init_vs){ init_vs = in_init_vs; };
+  void set_init_vs(int in_init_vs){ init_vs = in_init_vs; cur_vs = init_vs;};
   int get_random_seed(){ return random_seed; };
   void set_random_seed(int in_seed){ random_seed = in_seed; };
   int trial_transition(int source, int rel_dest,

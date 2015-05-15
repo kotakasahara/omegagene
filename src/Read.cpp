@@ -529,7 +529,7 @@ int Read::load_ls_vmcmd(ExpandVMcMD* vmcmd){
   int init, seed;
   read_bin_values(&init, 1);
   read_bin_values(&seed, 1);
-  vmcmd->set_init_vs(init);
+  vmcmd->set_init_vs(init-1);
   vmcmd->set_random_seed(seed);
   return 0;
 }

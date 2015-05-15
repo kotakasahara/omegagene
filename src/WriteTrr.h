@@ -34,6 +34,7 @@ class WriteTableLog : public Write {
   ~WriteTableLog();  
   void set_ncolumns(int in_n_cols){ n_cols = in_n_cols; };
   int write_header();
+  int write_row(int* values);
   int write_row(real* values);
 };
 
