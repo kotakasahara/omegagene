@@ -42,7 +42,23 @@ int PBC::set_pbc(real val[]){
 }
 //template <typename TYPE> int PBC::diff_crd_minim_image(TYPE d[], const real crd1[], const real crd2[]) const{
 
-int PBC::diff_crd_minim_image(float d[], const real crd1[], const real crd2[]) const{
+int PBC::diff_crd_minim_image(float d[], const float  crd1[], const float crd2[]) const{
+  for (int i=0; i<3; i++){
+    d[i] = crd1[i] - crd2[i];
+    d[i] = d[i] - L[i] * (int)(d[i] * L_half_inv[i]);
+    d[i] = d[i] - L[i] * (int)(d[i] * L_half_inv[i]);
+  }
+  return 0;
+}
+int PBC::diff_crd_minim_image(double d[], const float crd1[], const float crd2[]) const{
+  for (int i=0; i<3; i++){
+    d[i] = crd1[i] - crd2[i];
+    d[i] = d[i] - L[i] * (int)(d[i] * L_half_inv[i]);
+    d[i] = d[i] - L[i] * (int)(d[i] * L_half_inv[i]);
+  }
+  return 0;
+}
+int PBC::diff_crd_minim_image(float d[], const double crd1[], const double crd2[]) const{
   for (int i=0; i<3; i++){
     d[i] = crd1[i] - crd2[i];
     d[i] = d[i] - L[i] * (int)(d[i] * L_half_inv[i]);
@@ -51,7 +67,7 @@ int PBC::diff_crd_minim_image(float d[], const real crd1[], const real crd2[]) c
   return 0;
 }
 
-int PBC::diff_crd_minim_image(double d[], const real crd1[], const real crd2[]) const{
+int PBC::diff_crd_minim_image(double d[], const double crd1[], const double crd2[]) const{
   for (int i=0; i<3; i++){
     d[i] = crd1[i] - crd2[i];
     //if (d[i] > L_half[i]) d[i] -= L[i];
@@ -86,7 +102,18 @@ real PBC::cal_volume(){
   return L[0]*L[1]*L[2];
 }
 
-int PBC::fix_pbc_image(real* crd, const int image){
+int PBC::fix_pbc_image(float* crd, const int image){
+  if(image == 0) return 1;
+  if     ((image & 1) == 1) crd[0] -= L[0];
+  else if((image & 2) == 2) crd[0] += L[0];
+  if     ((image & 4) == 4) crd[1] -= L[1];
+  else if((image & 8) == 8) crd[1] += L[1];
+  if     ((image & 16) == 16) crd[2] -= L[2];
+  else if((image & 32) == 32) crd[2] += L[2];
+  return 0;
+
+}
+int PBC::fix_pbc_image(double* crd, const int image){
   if(image == 0) return 1;
   if     ((image & 1) == 1) crd[0] -= L[0];
   else if((image & 2) == 2) crd[0] += L[0];

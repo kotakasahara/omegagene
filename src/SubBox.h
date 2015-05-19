@@ -58,9 +58,9 @@ class SubBox : public CelesteObject {
   real *vel_next;
   real *vel_just;
   real_fc *work;
-  real *charge;
-  real *mass;
-  real *mass_inv;
+  real_pw *charge;
+  real_pw *mass;
+  real_pw *mass_inv;
   int  *atom_type;
 
   // buffer for thermostat with shake 
@@ -183,19 +183,19 @@ class SubBox : public CelesteObject {
   int nsgrid_update_receiver();
   int rank0_alloc_variables();
   int rank0_free_variables();
-  int initial_division(const real** in_crd,
-		       const real** in_vel,
-		       const real* in_charge,
-		       const real* in_mass,
-		       const int* in_atom_type);
-  int rank0_div_box(const real** in_crd,
-		    const real** in_vel);
+  int initial_division(real** in_crd,
+		       real** in_vel,
+		       real_pw* in_charge,
+		       real_pw* in_mass,
+		       int* in_atom_type);
+  int rank0_div_box(real** in_crd,
+		    real** in_vel);
 		    
-  int rank0_send_init_data(const real** in_crd,
-			   const real** in_vel,
-			   const real* in_charge,
-			   const real* in_mass,
-			   const int* in_atom_type);
+  int rank0_send_init_data(real** in_crd,
+			   real** in_vel,
+			   real_pw* in_charge,
+			   real_pw* in_mass,
+			   int* in_atom_type);
   int recv_init_data();
 
   int set_bond_potentials(const int** in_bond_atomid_pairs,

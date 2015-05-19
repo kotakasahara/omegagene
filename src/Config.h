@@ -23,8 +23,8 @@ class Config : public CelesteObject {
   real thermo_const_tolerance;
   int thermo_const_max_loops;
 
-  real cutoff;
-  real cutoff_buf;
+  real_pw cutoff;
+  real_pw cutoff_buf;
   int n_steps;
   real time_step;
   int electrostatic;
@@ -62,7 +62,7 @@ class Config : public CelesteObject {
   // 0: initial velocity is 0-dt
   // 1: initial velocity is 0
 
-  real nsgrid_cutoff;
+  real_pw nsgrid_cutoff;
   //real nsgrid_min_width;
   //real nsgrid_max_n_atoms;
   int nsgrid_update_intvl;

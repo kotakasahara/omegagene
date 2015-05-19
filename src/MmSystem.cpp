@@ -74,7 +74,7 @@ int MmSystem::alloc_atom_vars(){
   //}
 
   charge = new real_pw[n_atoms];
-  mass = new real[n_atoms];
+  mass = new real_pw[n_atoms];
   atom_type = new int[n_atoms];
   energy_self = new real[n_atoms];
   for(int i=0; i < n_atoms; i++){
@@ -689,7 +689,7 @@ int MmSystem::ff_setup(const Config* cfg){
 		     (const int**&)angle_atomid_triads,
 		     (const int&)n_torsions,
 		     (const int**&)torsion_atomid_quads,		     (const int*&)torsion_nb14,*/
-		     (const real_pw*&)charge,
+		     charge,
 		     energy_self,
 		     energy_self_sum);
   return 0;

@@ -7,19 +7,23 @@
 
 // type of real values
 
-typedef float real;
-//typedef double real;
+//typedef float real;
+typedef double real;
 
 // type of real values for pairwise energy calculation in GPU
-typedef float real_pw; 
-//typedef double real_pw; 
+//typedef float real_pw; 
+typedef double real_pw; 
 
 // type of real values for summation of force,energy
 typedef double real_fc; 
 
 // type of real values for bonding potentials
-typedef float real_bp; 
-//typedef double real_bp; 
+//typedef float real_bp; 
+typedef double real_bp; 
+
+// type of real values for constraint
+typedef double real_cst; 
+
 
 #ifdef F_MPI
 #include <mpi.h>

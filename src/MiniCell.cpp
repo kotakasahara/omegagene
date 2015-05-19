@@ -2,14 +2,14 @@
 #include <bitset>
 
 #ifdef F_CUDA
-extern "C" int cuda_hostalloc_atom_info(real*& h_crd, int*& h_atomids,
+extern "C" int cuda_hostalloc_atom_info(real_pw*& h_crd, int*& h_atomids,
 					real_fc*& h_work, real_fc*& h_energy,
 					int n_atom_array);
 extern "C" int cuda_hostalloc_cell_info(CellPair*& h_cell_pairs, 
 					int*& h_idx_head_cell_pairs,
 					int max_n_cell_pairs,
 					int max_n_cells);
-extern "C" int cuda_hostfree_atom_info(real* h_crd, int* h_atomids,
+extern "C" int cuda_hostfree_atom_info(real_pw* h_crd, int* h_atomids,
 				       real_fc*& h_work, real_fc*& h_energy);
 extern "C" int cuda_hostfree_cell_info(CellPair* h_cell_pairs, int* h_idx_head_cell_pairs);
 #endif
@@ -63,7 +63,7 @@ int MiniCell::alloc_variables(){
   cuda_hostalloc_cell_info(cell_pairs, idx_head_cell_pairs,
 			   max_n_cell_pairs, max_n_cells+1);
 #else
-  crd = new real[get_max_n_atom_array()*3];
+  crd = new real_pw[get_max_n_atom_array()*3];
   atomids = new int[get_max_n_atom_array()];
   work = new real_fc[get_max_n_atom_array()*3];
   energy = new real_fc[2];
@@ -189,15 +189,15 @@ int MiniCell::set_grid_xy(){
   //   exbox_l
 
   //cout << "set_grid_xy()" << endl;
-  real volume = exbox_l[0] * exbox_l[1] * exbox_l[2];
+  real_pw volume = exbox_l[0] * exbox_l[1] * exbox_l[2];
 
-  real min_cell_width_xy = pow((real)((real)N_ATOM_CELL / ((real)n_atoms/volume )), (real)(1.0/3.0));
+  real_pw min_cell_width_xy = pow((real_pw)((real_pw)N_ATOM_CELL / ((real_pw)n_atoms/volume )), (real_pw)(1.0/3.0));
   //cout << "min_cell_width_xy : " << min_cell_width_xy << endl;;
   //cout << " ... " << volume << ", "  << (real)n_atoms/volume << ", " << (real)N_ATOM_CELL / ((real)(n_atoms)/pbc->cal_volume()) << endl;
   n_cells_xyz[0] = floor(exbox_l[0] / min_cell_width_xy);
   n_cells_xyz[1] = floor(exbox_l[1] / min_cell_width_xy);
-  L_cell_xy[0] = exbox_l[0] / (real)n_cells_xyz[0];
-  L_cell_xy[1] = exbox_l[1] / (real)n_cells_xyz[1];
+  L_cell_xy[0] = exbox_l[0] / (real_pw)n_cells_xyz[0];
+  L_cell_xy[1] = exbox_l[1] / (real_pw)n_cells_xyz[1];
 
   n_columns = (n_cells_xyz[0] * n_cells_xyz[1]);
 
@@ -205,7 +205,7 @@ int MiniCell::set_grid_xy(){
   //  1.3 times larger than the expected number. 
   //  there is no data the factor 1.3 is good or not.
   //  this point should be tested.
-  max_n_atoms_column = ceil((real)max_n_atoms_exbox/(real)n_columns * 1.3);
+  max_n_atoms_column = ceil((real_pw)max_n_atoms_exbox/(real_pw)n_columns * 1.3);
 
   //cout << "max_n_atoms_column " << max_n_atoms_column << " max_n_atoms_exbox: " << max_n_atoms_exbox << endl;
   n_cells_xyz[2] = (max_n_atoms_column-N_ATOM_CELL+1)/N_ATOM_CELL;
@@ -267,7 +267,7 @@ int MiniCell::set_atoms_into_grid_xy(){
 	     << box_lower_bound[d] << endl;
       }
 
-      real x = crd[atom_id_g*3+d] - exbox_lower_bound[d];
+      real_pw x = crd[atom_id_g*3+d] - exbox_lower_bound[d];
       while(x < 0.0) x += exbox_l[d];
       while(x >= exbox_l[d]) x -= exbox_l[d];
 
@@ -333,8 +333,8 @@ int MiniCell::reorder_atominfo_for_columns(){
   for (int i_col = 0; i_col < n_columns; i_col++){
     n_atoms_xy[i_col] = 0;
   }
-  real tmp1_x[3];
-  real tmp2_x[3];
+  real_pw tmp1_x[3];
+  real_pw tmp2_x[3];
   int tmp1_atomid;
   int tmp2_atomid;
   int tmp1_column;
@@ -513,7 +513,7 @@ int MiniCell::reset_cell_assignment(){
 int MiniCell::swap_atomid_crd(const int i, const int j){
   //  cout << "swap " << i << "-" << j << endl;
   int t;
-  real x0, x1, x2;
+  real_pw x0, x1, x2;
   t = atomids[i];
   atomids[i] = atomids[j];
   atomids[j] = t;
@@ -531,7 +531,7 @@ int MiniCell::swap_atomid_crd(const int i, const int j){
 }
 int MiniCell::quick_sort_in_columns(const int l, const int r){
   if (r > l){
-    real v = crd[r*3+2];
+    real_pw v = crd[r*3+2];
     int i = l-1;
     int j = r+1;
     int t;
@@ -614,7 +614,7 @@ int MiniCell::debug_set_atoms_into_grid(){
   return 0;
 }
 
-int MiniCell::update_crd(const real** in_crd){
+int MiniCell::update_crd(real** in_crd){
   /*
 
   for(int column_id=0; column_id < n_columns; column_id++){  
@@ -759,11 +759,11 @@ int MiniCell::set_atomids_from_buf(){
   return 0;
 }
 
-real MiniCell::get_cell_z_min(int cell_id){  
+real_pw MiniCell::get_cell_z_min(int cell_id){  
   //return crd[(idx_cell_head_atom[cell_id])*3+2];
   return crd[cell_id * N_ATOM_CELL * 3 + 2];
 }
-real MiniCell::get_cell_z_max(int cell_id){
+real_pw MiniCell::get_cell_z_max(int cell_id){
   //cout << "get_cell_z_max " << cell_id <<" "<< cell_id*N_ATOM_CELL+N_ATOM_CELL-1
   //<<" " << (cell_id*N_ATOM_CELL+N_ATOM_CELL-1)*3+2<<" "<<n_atoms*3+n_columns*N_ATOM_CELL*3 << endl;
   //cout << "  "<< crd[(cell_id*N_ATOM_CELL+N_ATOM_CELL-1)*3+2] << endl;
@@ -795,8 +795,8 @@ int MiniCell::enumerate_cell_pairs(){
     idx_head_cell_pairs[cell1_id] = n_cell_pairs;
     //cout << "dbg idx_head["<< cell1_id<< "] ("<<cell1[0]<<","<<cell1[1]
     //<<","<<cell1[2]<<") = " << n_cell_pairs << endl;
-    real cell1_z_min = get_cell_z_min(cell1_id);
-    real cell1_z_max = get_cell_z_max(cell1_id);
+    real_pw cell1_z_min = get_cell_z_min(cell1_id);
+    real_pw cell1_z_max = get_cell_z_max(cell1_id);
     bool cell1_odd = cell1_id%2!=0;
     
     int d_cell[3];
@@ -809,10 +809,10 @@ int MiniCell::enumerate_cell_pairs(){
       cell_rel[0] = cell1[0] + d_cell[0];
       //cout << "dbg 5 " << d_cell[0] << endl;
       ////  val
-      real dx = 0.0;
+      real_pw dx = 0.0;
       if (d_cell[0] > 1)        dx = (d_cell[0] - 1) * L_cell_xy[0];
       else if (d_cell[0] < -1)  dx = (d_cell[0] + 1) * L_cell_xy[0];
-      real dx2 = dx * dx;
+      real_pw dx2 = dx * dx;
       image[0] = 0; cell2[0] = cell_rel[0];
       if(cell_rel[0] < 0){
 	image[0] = -1; cell2[0] = n_cells_xyz[0] + cell_rel[0];
@@ -825,10 +825,10 @@ int MiniCell::enumerate_cell_pairs(){
 	cell_rel[1] = cell1[1] + d_cell[1];
 	//cout << "dbg 30 " << d_cell[1] << endl;
 	////  val
-	real dy = 0.0;
+	real_pw dy = 0.0;
 	if (d_cell[1] > 1)        dy = (d_cell[1] - 1) * L_cell_xy[1];
 	else if (d_cell[1] < -1)  dy = (d_cell[1] + 1) * L_cell_xy[1];
-	real dy2 = dy * dy;
+	real_pw dy2 = dy * dy;
 	image[1] = 0; cell2[1] = cell_rel[1];
 	if(cell_rel[1] < 0){
 	  image[1] = -1; cell2[1] = n_cells_xyz[1] + cell_rel[1];
@@ -857,15 +857,15 @@ int MiniCell::enumerate_cell_pairs(){
 	  bool cell2_odd = cell2_id%2!=0;
 	  if(!check_valid_pair(cell1_id, cell2_id, cell1_odd, cell2_odd)) continue;
 	  
-	  real cell2_z_max = get_cell_z_max(cell2_id) + image[2] * pbc->L[2];
-	  real cell2_z_min = get_cell_z_min(cell2_id) + image[2] * pbc->L[2];
-	  real dz = cell2_z_max - cell1_z_min;
+	  real_pw cell2_z_max = get_cell_z_max(cell2_id) + image[2] * pbc->L[2];
+	  real_pw cell2_z_min = get_cell_z_min(cell2_id) + image[2] * pbc->L[2];
+	  real_pw dz = cell2_z_max - cell1_z_min;
 	  if((cell2_z_max <= cell1_z_max && cell2_z_max >= cell1_z_min) ||
 	     (cell2_z_min <= cell1_z_max && cell2_z_min >= cell1_z_min))
 	    dz = 0;
-	  real dz2 = dz*dz;
-	  real dz_bt_up = cell2_z_min - cell1_z_max;
-	  real dz_bt_up2 = dz_bt_up*dz_bt_up;
+	  real_pw dz2 = dz*dz;
+	  real_pw dz_bt_up = cell2_z_min - cell1_z_max;
+	  real_pw dz_bt_up2 = dz_bt_up*dz_bt_up;
 	  bool flg_rev = true;
 	  //if (flg_rev) cout << "REV " << dz2 << " " << dz_bt_up2 << endl;
 	  //else cout << "!REV " << dz2 << " " << dz_bt_up2 << endl;
@@ -902,15 +902,15 @@ int MiniCell::enumerate_cell_pairs(){
 	  bool cell2_odd = cell2_id%2!=0;
 	  if(!check_valid_pair(cell1_id, cell2_id, cell1_odd, cell2_odd)) continue;
 	  
-	  real cell2_z_max = get_cell_z_max(cell2_id) + image[2] * pbc->L[2];
-	  real cell2_z_min = get_cell_z_min(cell2_id) + image[2] * pbc->L[2];
-	  real dz = cell2_z_max - cell1_z_min;
+	  real_pw cell2_z_max = get_cell_z_max(cell2_id) + image[2] * pbc->L[2];
+	  real_pw cell2_z_min = get_cell_z_min(cell2_id) + image[2] * pbc->L[2];
+	  real_pw dz = cell2_z_max - cell1_z_min;
 	  if((cell2_z_max <= cell1_z_max && cell2_z_max >= cell1_z_min) ||
 	     (cell2_z_min <= cell1_z_max && cell2_z_min >= cell1_z_min))
 	    dz = 0;
-	  real dz2 = dz * dz;
-	  real dz_bt_up = cell2_z_min - cell1_z_max;
-	  real dz_bt_up2 = dz_bt_up*dz_bt_up;
+	  real_pw dz2 = dz * dz;
+	  real_pw dz_bt_up = cell2_z_min - cell1_z_max;
+	  real_pw dz_bt_up2 = dz_bt_up*dz_bt_up;
 	  bool flg_rev = false;
 	  if(dz2 > dz_bt_up2) { flg_rev=true; dz2=dz_bt_up2; }
 	  if(dx2+dy2+dz2 > cutoff_pair2){
@@ -1017,7 +1017,7 @@ int MiniCell::set_cell_pair_bitmask(const int cell_id1, const int cell_id2, int*
   return 0;
 }
 
-void MiniCell::get_crd(int atomid_grid, real& x, real& y, real& z){
+void MiniCell::get_crd(int atomid_grid, real_pw& x, real_pw& y, real_pw& z){
   x = crd[atomid_grid*3];
   y = crd[atomid_grid*3+1];
   z = crd[atomid_grid*3+2];
@@ -1205,7 +1205,7 @@ int MiniCell::set_max_n_atoms_region(){
   cout << "MiniCell::set_max_n_atoms_region()"<<endl;
   max_n_atoms_box = 0;
   int tmp_max_n_atoms_box = (n_atoms + n_boxes-1)/n_boxes * COEF_MAX_N_ATOMS_CELL;
-  real vol_box = box_l[0] * box_l[1] * box_l[2];
+  real_pw vol_box = box_l[0] * box_l[1] * box_l[2];
   for(int i=0; i<125; i++){
     //cout << "i " << i<<endl;
     int rx[3];
@@ -1217,7 +1217,7 @@ int MiniCell::set_max_n_atoms_region(){
       else
 	nx[j] = cutoff_pair*0.5;
     }
-    real vol = nx[0] * nx[1] * nx[2];
+    real_pw vol = nx[0] * nx[1] * nx[2];
     max_n_atoms_region[i] = vol/vol_box * tmp_max_n_atoms_box;
     max_n_atoms_exbox += max_n_atoms_region[i];
     if(rx[0] != 2 and rx[1] != 2 and rx[2] != 2 and 

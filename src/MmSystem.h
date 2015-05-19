@@ -90,7 +90,7 @@ class MmSystem : public CelesteObject{
   real** vel_just;
   //real** vel_next;
   real_pw* charge;
-  real* mass;
+  real_pw* mass;
   int* atom_type;
   // self energy for ZD
   real* energy_self;  

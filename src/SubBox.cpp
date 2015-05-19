@@ -11,13 +11,13 @@ extern "C" int cuda_memcpy_htod_cell_pairs(CellPair*& h_cell_pairs,
 					   int*& h_idx_head_cell_pairs,
 					   int n_cell_pairs,
 					   int n_cells);
-extern "C" int cuda_memcpy_htod_atom_info(real*& h_charge_orig,
+extern "C" int cuda_memcpy_htod_atom_info(real_pw*& h_charge_orig,
 					  int*& h_atomtype_orig,
 					  int n_atoms);
 extern "C" int cuda_set_cell_constant(int n_cells, int n_cell_pairs, int n_atom_array);
-extern "C" int cuda_set_constant(int n_atoms, real cutoff, int n_atomtypes);
-extern "C" int cuda_alloc_set_lj_params(real* h_lj_6term,
-					real* h_lj_12term,
+extern "C" int cuda_set_constant(int n_atoms, real_pw cutoff, int n_atomtypes);
+extern "C" int cuda_alloc_set_lj_params(real_pw* h_lj_6term,
+					real_pw* h_lj_12term,
 					int n_lj_types);
 extern "C" int cuda_free_lj_params();
 
@@ -26,9 +26,9 @@ extern "C" int cuda_alloc_set_nb15off(int* h_nb15off1,
 				      int n_atoms);
 extern "C" int cuda_memcpy_htod_atomids(int*& h_atomids,
 					int n_atoms);
-extern "C" int cuda_set_pbc(real* l);
+extern "C" int cuda_set_pbc(real_pw* l);
 extern "C" int cuda_reset_work_ene(int n_atoms);
-extern "C" int cuda_memcpy_htod_crd(real*& h_crd,
+extern "C" int cuda_memcpy_htod_crd(real_pw*& h_crd,
 				    int n_atom_array);
 extern "C" int cuda_set_atominfo(int n_atom_array);
 
@@ -40,15 +40,15 @@ extern "C" int cuda_memcpy_dtoh_work(real_fc*& h_work, real_fc*& h_energy,
 
 extern "C" int cuda_pair_sync();
 extern "C" int cuda_thread_sync();
-extern "C" int cuda_test(real*& h_work, real_pw*& h_energy,
-			 int n_atoms);
+//extern "C" int cuda_test(real_pw*& h_work, real_pw*& h_energy,
+//			 int n_atoms);
 extern "C" int cuda_zerodipole_constant(real_pw zcore,
 					real_pw bcoeff,
 					real_pw fcoeff);
 
-extern "C" int cuda_hostfree_atom_type_charge(int* h_atom_type, real* h_charge);
+extern "C" int cuda_hostfree_atom_type_charge(int* h_atom_type, real_pw* h_charge);
 extern "C" int cuda_hostalloc_atom_type_charge(int*& h_atom_type,
-					       real*& h_charge,
+					       real_pw*& h_charge,
 					       int n_atoms);
 
 #endif
@@ -90,12 +90,12 @@ int SubBox::alloc_variables(){
 				  max_n_atoms_exbox);
   cout << "//" << endl;
 #else
-  charge = new real[max_n_atoms_exbox];
+  charge = new real_pw[max_n_atoms_exbox];
  
   atom_type = new int[max_n_atoms_exbox];
 #endif
-  mass = new real[max_n_atoms_exbox];
-  mass_inv = new real[max_n_atoms_exbox];
+  mass = new real_pw[max_n_atoms_exbox];
+  mass_inv = new real_pw[max_n_atoms_exbox];
   //crd_box = new real*[n_boxes];
   //for(int i = 0; i < n_boxes; i++){
   //crd_box[i] = new real[max_n_atoms_box*3];
@@ -534,11 +534,11 @@ int SubBox::rank0_free_variables(){
   return 0;
 }
 
-int SubBox::initial_division(const real** in_crd,
-			     const real** in_vel,
-			     const real* in_charge,
-			     const real* in_mass,
-			     const int* in_atom_type){
+int SubBox::initial_division(real** in_crd,
+			     real** in_vel,
+			     real_pw* in_charge,
+			     real_pw* in_mass,
+			     int* in_atom_type){
   if(rank==0){
     rank0_div_box(in_crd, in_vel);
     rank0_send_init_data(in_crd, in_vel, in_charge, in_mass, in_atom_type);
@@ -548,8 +548,8 @@ int SubBox::initial_division(const real** in_crd,
   return 0;
 }
 
-int SubBox::rank0_div_box(const real** in_crd,
-			  const real** in_vel){
+int SubBox::rank0_div_box(real** in_crd,
+			  real** in_vel){
   // called only the begining of the simulation
   // divide
   // set
@@ -572,11 +572,11 @@ int SubBox::rank0_div_box(const real** in_crd,
   return 0;
 }
 
-int SubBox::rank0_send_init_data(const real** in_crd,
-				 const real** in_vel,
-				 const real* in_charge,
-				 const real* in_mass,
-				 const int* in_atom_type){
+int SubBox::rank0_send_init_data(real** in_crd,
+				 real** in_vel,
+				 real_pw* in_charge,
+				 real_pw* in_mass,
+				 int* in_atom_type){
   // set
   //   crd
   //   vel_next
@@ -934,7 +934,7 @@ int SubBox::calc_energy_pairwise(){
     for (a2=0; a2 < N_ATOM_CELL; a2++){
       int atomid_grid2 = atoms_index_c2 + a2;
       int atomid2 = nsgrid.get_atomid_from_gridorder(atomid_grid2);
-      real crd2[3];
+      real_pw crd2[3];
       nsgrid.get_crd(atomid_grid2, crd2[0], crd2[1], crd2[2]);
       pbc->fix_pbc_image(crd2, cellpair.image);
       for (int a1=0; a1 < N_ATOM_CELL; a1++){
@@ -944,14 +944,14 @@ int SubBox::calc_energy_pairwise(){
 	if (check_nb15off(a1, a2, cellpair.pair_mask) ){ 
 	  //n_pairs_15off++;
 	  continue; }
-	real crd1[3];
+	real_pw crd1[3];
 	nsgrid.get_crd(atomid_grid1, crd1[0], crd1[1], crd1[2]);
 	
 	real_pw tmp_ene_vdw = 0.0;
 	real_pw tmp_ene_ele = 0.0;
 	real_fc tmp_work[3] = {0.0, 0.0, 0.0};
-	real param_6term  = lj_6term[atom_type[atomid1]  * n_lj_types + atom_type[atomid2]];
-	real param_12term = lj_12term[atom_type[atomid1] * n_lj_types + atom_type[atomid2]];
+	real_pw param_6term  = lj_6term[atom_type[atomid1]  * n_lj_types + atom_type[atomid2]];
+	real_pw param_12term = lj_12term[atom_type[atomid1] * n_lj_types + atom_type[atomid2]];
 
 	//real_pw r12 = sqrt(pow(crd2[0]-crd1[0],2)+pow(crd2[1]-crd1[1],2)+pow(crd2[2]-crd1[2],2));
 	//sum_dist += r12;
@@ -1037,10 +1037,10 @@ int SubBox::calc_energy_pairwise_wo_neighborsearch(){
     double p_ele = 0.0;
   */
   for(int atomid1 = 0, atomid1_3=0; atomid1 < n_atoms_exbox; atomid1++, atomid1_3+=3){
-    real crd1[3] = {crd[atomid1_3], crd[atomid1_3+1], crd[atomid1_3+2]};
+    real_pw crd1[3] = {(real_pw)crd[atomid1_3], (real_pw)crd[atomid1_3+1], (real_pw)crd[atomid1_3+2]};
     for(int atomid2 = 0, atomid2_3=0; atomid2 < atomid1; atomid2++, atomid2_3+=3){
       //n_pairs++;
-      real crd2[3] = {crd[atomid2_3], crd[atomid2_3+1], crd[atomid2_3+2]};
+      real_pw crd2[3] = {(real_pw)crd[atomid2_3], (real_pw)crd[atomid2_3+1], (real_pw)crd[atomid2_3+2]};
       
       bool flg=true;
       for(int i = atomid1 * max_n_nb15off;
@@ -1056,8 +1056,8 @@ int SubBox::calc_energy_pairwise_wo_neighborsearch(){
       real_pw tmp_ene_vdw = 0.0;
       real_pw tmp_ene_ele = 0.0;
       real_fc tmp_work[3] = {0.0, 0.0, 0.0};
-      real param_6term  = lj_6term[atom_type[atomid1]  * n_lj_types + atom_type[atomid2]];
-      real param_12term = lj_12term[atom_type[atomid1] * n_lj_types + atom_type[atomid2]];
+      real_pw param_6term  = lj_6term[atom_type[atomid1]  * n_lj_types + atom_type[atomid2]];
+      real_pw param_12term = lj_12term[atom_type[atomid1] * n_lj_types + atom_type[atomid2]];
       
       for(int d=0; d < 3; d++){
 	if(crd2[d]-crd1[d] >= pbc->L_half[d])
@@ -1150,8 +1150,8 @@ bool SubBox::check_nb15off(const int& a1, const int& a2, const int* bitmask){
 int SubBox::calc_energy_bonds(){
   for(int i=0; i < n_bonds; i++){
     //int i = bp_bonds[i];
-    real_pw tmp_ene;
-    real_pw tmp_work[3];
+    real_bp tmp_ene;
+    real_bp tmp_work[3];
     int atomidx1 = bond_atomid_pairs[i][0]*3;
     int atomidx2 = bond_atomid_pairs[i][1]*3;
     real c1[3] = {crd[atomidx1], crd[atomidx1+1], crd[atomidx1+2]};
@@ -1166,8 +1166,8 @@ int SubBox::calc_energy_bonds(){
       work[atomidx2+d] -= tmp_work[d];
     }
     //cout << "BOND " << atomidx1 << "(" << atomids[atomidx1/3] << ") "
-    //<< atomidx2 << "(" << atomids[atomidx2/3] << ") "
-    //<< pote_bond << endl;
+      //    << atomidx2 << "(" << atomids[atomidx2/3] << ") "
+      //    << pote_bond << endl;
   }
   return 0;
 }
@@ -1293,17 +1293,18 @@ int SubBox::calc_energy_ele_excess(){
     real_pw tmp_work[3];
     int atomidx1 = excess_pairs[i][0]*3;
     int atomidx2 = excess_pairs[i][1]*3;
-    real c1[3] = {crd[atomidx1], crd[atomidx1+1], crd[atomidx1+2]};
-    real c2[3] = {crd[atomidx2], crd[atomidx2+1], crd[atomidx2+2]};
+    real_pw c1[3] = {(real_pw)crd[atomidx1], (real_pw)crd[atomidx1+1], (real_pw)crd[atomidx1+2]};
+    real_pw c2[3] = {(real_pw)crd[atomidx2], (real_pw)crd[atomidx2+1], (real_pw)crd[atomidx2+2]};
     ff.calc_zms_excess(tmp_ene, tmp_work,
-		       (const real*)c1, (const real*)c2,
-		       (const real)charge[excess_pairs[i][0]],
-		       (const real)charge[excess_pairs[i][1]]);
+		       c1, c2,
+		       charge[excess_pairs[i][0]],
+		       charge[excess_pairs[i][1]]);
     pote_ele += tmp_ene;
     for(int d=0; d<3; d++){
       work[atomidx1+d] += tmp_work[d];
       work[atomidx2+d] -= tmp_work[d];
     }
+    //cout << "Excess : " << i << " "<<  pote_ele - tmp <<  " " << pote_ele << " " << tmp << endl;
   }
   //cout << "Excess : "  << pote_ele - tmp <<  " " << pote_ele << " " << tmp << endl;
   return 0;
@@ -1381,7 +1382,7 @@ int SubBox::update_velocities(const real firstcoeff,
       vel_next[atomid_b3+d] = vel[atomid_b3+d] - 
 	(firstcoeff * time_step * 
 	 FORCE_VEL * work[atomid_b3+d] 
-	 / mass[atomid_b]);
+	 * mass_inv[atomid_b]);
     }
   }
   return 0;
@@ -1572,11 +1573,15 @@ int SubBox::gpu_device_setup(){
 		       nsgrid.get_max_n_cells(),
 		       nsgrid.get_max_n_cell_pairs());
 
-  cuda_alloc_set_lj_params(lj_6term, lj_12term,
+  cuda_alloc_set_lj_params(lj_6term,
+			   lj_12term,
 			   n_lj_types);
 
-  cuda_set_pbc(pbc->L);
-
+  real_pw tmp_l[3] = {(real_pw)pbc->L[0], (real_pw)pbc->L[1], (real_pw)pbc->L[2]};
+  //cuda_set_pbc((const real_pw*)pbc->L);
+  cuda_set_pbc(tmp_l);
+  //cout << "dbg 01 : l[0] "<< pbc->L[0]<<endl;   
+  
   cuda_zerodipole_constant(ff.ele->get_zcore(),
 			   ff.ele->get_bcoeff(),
 			   ff.ele->get_fcoeff());
@@ -1588,7 +1593,7 @@ int SubBox::gpu_device_setup(){
 
 int SubBox::update_device_cell_info(){
   cuda_set_constant(n_atoms_exbox,
-		    cfg->cutoff, n_lj_types);
+		    (real_pw)cfg->cutoff, n_lj_types);
   //cout << "cuda_memcpy_htod_atom_info"<<endl;
   cuda_memcpy_htod_atom_info(charge, atom_type,
 			     max_n_atoms_exbox);
@@ -1635,7 +1640,7 @@ int SubBox::thermo_scaling(const real time_step,
     real vel_norm = 0;
     for(int d=0; d < 3; d++){
       real vel_tmp = vel[i_3+d] - 0.5 * 
-	(time_step * FORCE_VEL * work[i_3+d] / mass[i]);
+	(time_step * FORCE_VEL * work[i_3+d] * mass_inv[i]);
       vel_norm += vel_tmp * vel_tmp;
     }
     kine_pre += mass[i] * vel_norm;
@@ -1645,7 +1650,7 @@ int SubBox::thermo_scaling(const real time_step,
   real scale = sqrt(target_temperature / dt_temperature);
   for(int i=0, i_3=0; i < n_atoms_box; i++, i_3+=3){
     for(int d=0; d < 3; d++){
-      real vel_diff = time_step * FORCE_VEL * work[i_3+d] / mass[i];
+      real vel_diff = time_step * FORCE_VEL * work[i_3+d] * mass_inv[i];
       vel_next[i_3+d] = (2.0 * scale - 1.0) * vel[i_3+d] - scale * vel_diff;
     }
   }

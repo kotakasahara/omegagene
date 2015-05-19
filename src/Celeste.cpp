@@ -28,11 +28,11 @@ int Celeste::main_stream(){
   case M_TEST: test_mode();           break;
   case M_DYNAMICS: dynamics_mode();   break;
   default:
-    cout <<"mode ga shitei sareteimasen.\n";
+    cout <<"Invalid Mode is specified.\n";
     test_mode();
     break;
   }
-  cout <<"owari\n";
+  cout <<"Terminated.\n";
   return 0;
 }
 

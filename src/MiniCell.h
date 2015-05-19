@@ -37,7 +37,7 @@ class MiniCell : public CelesteObject{
 
   int max_n_cells;
   // L_cell_x, L_cell_y
-  real L_cell_xy[2];
+  real_pw L_cell_xy[2];
 
   // n_neighbors_x, _y
   //   the number of neighboring cells in X and Y axes
@@ -47,9 +47,9 @@ class MiniCell : public CelesteObject{
 
   // cutoff_pair
   //   cutoff length for pair interactions
-  real cutoff_pair_half;
-  real cutoff_pair;
-  real cutoff_pair2;
+  real_pw cutoff_pair_half;
+  real_pw cutoff_pair;
+  real_pw cutoff_pair2;
 
 
   // cell_crd
@@ -106,12 +106,12 @@ class MiniCell : public CelesteObject{
   int  box_crd[3];
   int  n_boxes;
   int  n_boxes_xyz[3];
-  real box_lower_bound[3];
-  real box_upper_bound[3];
-  real box_l[3];
-  real exbox_lower_bound[3];
-  real exbox_upper_bound[3];
-  real exbox_l[3];
+  real_pw box_lower_bound[3];
+  real_pw box_upper_bound[3];
+  real_pw box_l[3];
+  real_pw exbox_lower_bound[3];
+  real_pw exbox_upper_bound[3];
+  real_pw exbox_l[3];
 
   int n_atoms_region[125];
   int** region_atoms; //atomid_g
@@ -121,15 +121,15 @@ class MiniCell : public CelesteObject{
   
   // for mpi
   int mpi_n_atoms;
-  real* mpi_sendbuf_crd;
-  real* mpi_recvbuf_crd;
+  real_pw* mpi_sendbuf_crd;
+  real_pw* mpi_recvbuf_crd;
   real_fc* mpi_sendbuf_frc;
   real_fc* mpi_recvbuf_frc;
   int* mpi_sendbuf_atomids;
   int* mpi_recvbuf_atomids;
   
   // atominfo
-  real **crd_in_cell;
+  real_pw **crd_in_cell;
 
   int *atomids_rev;
   int *atomids;
@@ -140,7 +140,7 @@ class MiniCell : public CelesteObject{
   //        set_crds_to_homebox
   int *atomids_buf;
 
-  real *crd;
+  real_pw *crd;
   real_fc *work;
   real_fc *energy;
 
@@ -173,7 +173,7 @@ class MiniCell : public CelesteObject{
   int quick_sort_in_columns(const int l, const int r);
   int debug_set_atoms_into_grid();
   //int update_cell_assign(const real** in_crd);
-  int update_crd(const real** in_crd);
+  int update_crd(real** in_crd);
   int set_idx_xy_head_atom_from_n_atoms_xy();
   int set_atomids_rev();
 
@@ -181,8 +181,8 @@ class MiniCell : public CelesteObject{
   int set_atomids_from_buf();
 
   // pair
-  real get_cell_z_min(int cell_id);
-  real get_cell_z_max(int cell_id);
+  real_pw get_cell_z_min(int cell_id);
+  real_pw get_cell_z_max(int cell_id);
   int enumerate_cell_pairs();
   bool check_valid_pair(const int cell1_id, const int cell2_id,
 			const bool cell1_odd, const bool cell2_odd);
@@ -190,13 +190,13 @@ class MiniCell : public CelesteObject{
   int set_cell_pair_bitmask(const int cell_id1, const int cell_id2, int* bitmask);
 
   // getter
-  const real* get_L_cell_xy() {return L_cell_xy;};
+  const real_pw* get_L_cell_xy() {return L_cell_xy;};
   int get_n_cell_pairs(){return n_cell_pairs; };
   const CellPair get_cell_pair(const int cpid){return cell_pairs[cpid]; };
   CellPair*& get_cell_pairs(){return cell_pairs; };
   int*& get_idx_head_cell_pairs(){return idx_head_cell_pairs;};
-  real*& get_crd(){return crd;};
-  void get_crd(int atomid_grid, real& x, real& y, real& z);
+  real_pw*& get_crd(){return crd;};
+  void get_crd(int atomid_grid, real_pw& x, real_pw& y, real_pw& z);
   real_fc*& get_work(){return work;};
   real_fc*& get_energy(){return energy;};
   
@@ -209,8 +209,8 @@ class MiniCell : public CelesteObject{
   int*& get_atomids(){return atomids;}
   int*& get_atomids_rev(){return atomids_rev;}
   int get_atomid_from_gridorder(const int aid){return atomids[aid];}
-  void get_crd_from_gridorder(const int aid, real* ret_crd){
-    memcpy(ret_crd, crd+aid*3, sizeof(real)*3);};
+  //  void get_crd_from_gridorder(const int aid, real_pw* ret_crd){
+  //memcpy(ret_crd, crd+aid*3, sizeof(real_pw)*3);};
   int get_column_id_from_crd(int x, int y);
   int get_cell_id_from_crd(int x, int y, int z);
   

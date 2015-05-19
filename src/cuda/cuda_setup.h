@@ -23,15 +23,15 @@
 #define PW_THREADS_DIAG PW_THREADS
 #define REORDER_THREADS 512
 
-#define N_MULTI_WORK 1
+#define N_MULTI_WORK 8
 
 cudaStream_t stream_pair_home;
 
 #define D_N_ATOM_CELL  8
 #define D_N_ATOM_CELL_3  24
 
-__constant__ real  D_CHARGE_COEFF;
-__constant__ real  PBC_L[3];
+__constant__ real_pw  D_CHARGE_COEFF;
+__constant__ real_pw  PBC_L[3];
 __constant__ int      D_N_CELL_PAIRS;
 __constant__ int      D_N_CELLS;
 __constant__ int      D_N_ATOMS;
@@ -39,17 +39,17 @@ __constant__ int      D_N_ATOM_ARRAY;
 __constant__ int      D_N_ATOMTYPES;
 //__constant__ int      D_MAX_N_NB15OFF;
 //__constant__ int      D_MAX_N_ATOMS_GRID;
-__constant__ real  D_CUTOFF;
+__constant__ real_pw  D_CUTOFF;
 
-__constant__ real  D_ZCORE;
-__constant__ real  D_BCOEFF;
-__constant__ real  D_FCOEFF;
+__constant__ real_pw  D_ZCORE;
+__constant__ real_pw  D_BCOEFF;
+__constant__ real_pw  D_FCOEFF;
 
 // x,y,z: Cartesian coordinate,
 // w: charge
 real4* d_crd_chg;
 
-real* d_crd;
+real_pw* d_crd;
 
 CellPair* d_cell_pairs;
 int* d_idx_head_cell_pairs;
@@ -68,14 +68,14 @@ int* d_atomids_rev;
 int2* d_atominfo;
 
 // info in original atomid order
-real* d_charge_orig;
+real_pw* d_charge_orig;
 int* d_atomtype_orig;
 
 //int* d_nb15off1_orig;
 //int* d_nb15off2_orig;
 
-real* d_lj_6term;
-real* d_lj_12term;
+real_pw* d_lj_6term;
+real_pw* d_lj_12term;
 
 real_fc* d_energy;
 real_fc* d_work;

@@ -19,7 +19,7 @@ class ForceField : public ForceFieldObject{
   virtual int set_config_parameters(const Config* cfg);
   virtual int initial_preprocess(const PBC* in_pbc);
   
-  int calc_bond(real_pw& ene, real_pw work[],
+  int calc_bond(real& ene, real work[],
 		const real* crd1, const real* crd2,
 		const real& param_e, const real& param_r0);
   int calc_angle(real_pw& ene, real_pw work1[], real_pw work2[],
@@ -44,15 +44,15 @@ class ForceField : public ForceFieldObject{
 		  const real& param_coeff_ele);
   int calc_pairwise(real_pw& ene_vdw, real_pw& ene_ele,
 		    real_fc work[],
-		    const real* crd1, const real* crd2,
-		    const real& param_6term,
-		    const real& param_12term,
-		    const real& charge1,
-		    const real& charge2);
+		    real_pw* crd1, real_pw* crd2,
+		    real_pw& param_6term,
+		    real_pw& param_12term,
+		    real_pw& charge1,
+		    real_pw& charge2);
   int calc_zms_excess(real_pw& ene, real_pw work[],
-		      const real* crd1, const real* crd2,
-		      const real& charge1,
-		      const real& charge2);
+		       real_pw* crd1,  real_pw* crd2,
+		       real_pw& charge1,
+		       real_pw& charge2);
   
   int cal_self_energy(const int& n_atoms,
 		      const int& n_excess,
@@ -65,7 +65,7 @@ class ForceField : public ForceFieldObject{
 		      const int& n_torsions,
 		      const int**& torsion_atomid_quads,
 		      const int*& torsion_nb14,*/
-		      const real_pw*& charge,
+		      real_pw*& charge,
 		      real*& energy_self,
 		      real& energy_self_sum);
 };

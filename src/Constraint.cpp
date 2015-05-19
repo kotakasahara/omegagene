@@ -21,7 +21,7 @@ Constraint::~Constraint(){
 int Constraint::alloc_constraint(){
   if(max_n_pair > 0){
     pair_atomids = new int*[max_n_pair];
-    pair_dist    = new real[max_n_pair];
+    pair_dist    = new real_cst[max_n_pair];
     for(int i=0; i < max_n_pair; i++){
       pair_atomids[i] = new int[2];
       pair_atomids[i][0] = -1;
@@ -30,10 +30,10 @@ int Constraint::alloc_constraint(){
   }
   if(max_n_trio > 0){
     trio_atomids = new int*[max_n_trio];
-    trio_dist    = new real*[max_n_trio];
+    trio_dist    = new real_cst*[max_n_trio];
     for(int i=0; i < max_n_trio; i++){
       trio_atomids[i] = new int[3];
-      trio_dist[i]    = new real[3];
+      trio_dist[i]    = new real_cst[3];
       trio_atomids[i][0] = -1;
       trio_atomids[i][1] = -1;
       trio_atomids[i][2] = -1;
@@ -41,10 +41,10 @@ int Constraint::alloc_constraint(){
   }
   if(max_n_quad > 0){
     quad_atomids = new int*[max_n_quad];
-    quad_dist    = new real*[max_n_quad];
+    quad_dist    = new real_cst*[max_n_quad];
     for(int i=0; i < max_n_quad; i++){
       quad_atomids[i] = new int[4];
-      quad_dist[i]    = new real[6];
+      quad_dist[i]    = new real_cst[6];
       quad_atomids[i][0] = -1;
       quad_atomids[i][1] = -1;
       quad_atomids[i][2] = -1;
@@ -80,7 +80,7 @@ int Constraint::free_constraint(){
   }
   return 0;
 }
-int Constraint::set_parameters(int in_max_loops, real in_tolerance){
+int Constraint::set_parameters(int in_max_loops, real_cst in_tolerance){
   max_loops = in_max_loops;
   tolerance = in_tolerance;
   return 0;
@@ -89,10 +89,11 @@ int Constraint::set_max_n_constraints(int in_n_pair, int in_n_trio, int in_n_qua
   max_n_pair = in_n_pair;
   max_n_trio = in_n_trio;
   max_n_quad = in_n_quad;
+  //cout << "set_max_n_constraint " << max_n_pair << " " << max_n_trio << " " << max_n_quad << endl;
   return 0;
 }
 
-int Constraint::add_pair(int atom1, int atom2, real dist1){
+int Constraint::add_pair(int atom1, int atom2, real_cst dist1){
   pair_atomids[n_pair][0] = atom1;
   pair_atomids[n_pair][1] = atom2;
   pair_dist[n_pair] = dist1;
@@ -101,7 +102,7 @@ int Constraint::add_pair(int atom1, int atom2, real dist1){
 }
 
 int Constraint::add_trio(int atom1, int atom2, int atom3,
-			 real dist1, real dist2, real dist3){
+			 real_cst dist1, real_cst dist2, real_cst dist3){
   trio_atomids[n_trio][0] = atom1;
   trio_atomids[n_trio][1] = atom2;
   trio_atomids[n_trio][2] = atom3;
@@ -113,8 +114,8 @@ int Constraint::add_trio(int atom1, int atom2, int atom3,
 }
 
 int Constraint::add_quad(int atom1, int atom2, int atom3, int atom4,
-			 real dist1, real dist2, real dist3,
-			 real dist4, real dist5, real dist6){
+			 real_cst dist1, real_cst dist2, real_cst dist3,
+			 real_cst dist4, real_cst dist5, real_cst dist6){
   quad_atomids[n_quad][0] = atom1;
   quad_atomids[n_quad][1] = atom2;
   quad_atomids[n_quad][2] = atom3;
@@ -129,13 +130,13 @@ int Constraint::add_quad(int atom1, int atom2, int atom3, int atom4,
   return 0;
 }
 
-int Constraint::apply_constraint(real* in_crd, real* in_crd_prev, real* mass,
+int Constraint::apply_constraint(real* in_crd, real* in_crd_prev, real_pw* mass,
 				 PBC* pbc){
   return 0;
 }
-int Constraint::calc_linear_eq(real a[6][6],
-			       real x[6],
-			       real b[6],
+int Constraint::calc_linear_eq(real_cst a[6][6],
+			       real_cst x[6],
+			       real_cst b[6],
 			       int size){
   int* pivot = new int[size];
   for( int i=0; i < size; i++){
@@ -144,9 +145,9 @@ int Constraint::calc_linear_eq(real a[6][6],
   int index;
   for( int i=0; i < size; i++){
     index = i;
-    real max_a = fabs(a[i][pivot[i]]);
+    real_cst max_a = fabs(a[i][pivot[i]]);
     for( int j=i+1; j < size; j++){
-      real tmp_a = fabs(a[i][pivot[j]]);
+      real_cst tmp_a = fabs(a[i][pivot[j]]);
 	if(  tmp_a > max_a ){
 	  index = j;
 	  max_a = tmp_a;
@@ -184,7 +185,7 @@ int Constraint::calc_linear_eq(real a[6][6],
 
   //cout << "DBG C4: ";
   for( int i = 0; i < size; i++){
-    real new_x = b[pivot[i]];
+    real_cst new_x = b[pivot[i]];
     for( int j = 0; j < i; j++){
       new_x -= a[j][pivot[i]] * x[j];
     } 
@@ -196,7 +197,7 @@ int Constraint::calc_linear_eq(real a[6][6],
   // 4 backward substitution
   //  cout << "DBG C5: ";
   for( int i = size-1; i >= 0; i--){
-    real new_x = x[i];
+    real_cst new_x = x[i];
     for( int j = i+1; j < size; j++){
       new_x -= a[j][pivot[i]] * x[j];
     } 

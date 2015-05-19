@@ -29,9 +29,10 @@ int DynamicsMode::initial_preprocess(){
   //if (DBG >= 1)
   cout << "DBG1: DynamicsMode::initial_preprocess()" << endl;
   mmsys.ff_setup(cfg);
-  writer_trr.set_fn(cfg->fn_o_crd);
-  writer_trr.open();
-
+  if(cfg->fn_o_crd!=""){
+    writer_trr.set_fn(cfg->fn_o_crd);
+    writer_trr.open();
+  }
   if(cfg->constraint != CONST_NONE){
     int n_shake_dist = mmsys.constraint.get_n_pair() + 
       3 * mmsys.constraint.get_n_trio() + 
@@ -73,14 +74,21 @@ int DynamicsMode::terminal_process(){
 }
 
 int DynamicsMode::main_stream(){
-  for(mmsys.cur_step = 0;
+  for(mmsys.cur_step = 1;
       mmsys.cur_step <= cfg->n_steps;
       mmsys.cur_step++){
     calc_in_each_step();
+    if((cfg->print_intvl_log > 0 &&
+	mmsys.cur_step % cfg->print_intvl_log == 0) ||
+       mmsys.cur_step == 1 ||
+       mmsys.cur_step == cfg->n_steps){
+      sub_output_log();
+    }
     sub_output();
-    sub_output_log();
   }
   output_restart();
+  calc_in_each_step();
+  sub_output_log();
   return 0;
 }
 int DynamicsMode::output_restart(){
@@ -232,12 +240,9 @@ int DynamicsMode::sub_output(){
 }
 
 int DynamicsMode::sub_output_log(){
-  bool out_log = (cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0;
   stringstream ss;
-
-  if(out_log){
-    string strbuf;
-    char buf[1024];
+  string strbuf;
+  char buf[1024];
     sprintf(buf, "Step: %8lu    Time: %10.4f\n", mmsys.cur_step, mmsys.cur_time);
     ss << string(buf);
     real potential_e = mmsys.pote_bond + mmsys.pote_angle
@@ -259,6 +264,8 @@ int DynamicsMode::sub_output_log(){
     ss << string(buf);    
     sprintf(buf, "Temperature:       %14.10e\n", mmsys.temperature);
     ss << string(buf);    
+    sprintf(buf, "Comput Time:       %14.10e\n", (float)mmsys.ctime_per_step/ (float)CLOCKS_PER_SEC);
+    ss << string(buf);    
     /*
       ss << "Step: " << mmsys.cur_step  << "\t";
     ss << "Time: " << mmsys.cur_time << " [ps]" << endl;
@@ -273,8 +280,7 @@ int DynamicsMode::sub_output_log(){
     ss << "Kine:" << mmsys.kinetic_e << "\t";
     ss << "Temp:" << mmsys.temperature << endl;
     */
-  }
-  cout << ss.str();
+    cout << ss.str();
   return 0;
 }
 /*
@@ -303,7 +309,7 @@ int DynamicsMode::update_velocities(real firstcoeff){
 }
 */
 int DynamicsMode::cal_kinetic_energy(const real** vel){
-  real kine_pre = 0.0;
+  real_fc kine_pre = 0.0;
   for(int atomid=0; atomid < mmsys.n_atoms; atomid++){
     real kine_atom = 0.0;
     for(int d=0; d < 3; d++)
@@ -341,11 +347,11 @@ int DynamicsMode::subbox_setup(){
   subbox.alloc_variables_for_excess(mmsys.n_excess);
   subbox.alloc_variables_for_nb15off(mmsys.max_n_nb15off);
   //cout << "initial_division" << endl;
-  subbox.initial_division((const real**)mmsys.crd,
-			  (const real**)mmsys.vel_just,
-			  (const real*)mmsys.charge,
-			  (const real*)mmsys.mass,
-			  (const int*)mmsys.atom_type);
+  subbox.initial_division(mmsys.crd,
+			  mmsys.vel_just,
+			  mmsys.charge,
+			  mmsys.mass,
+			  mmsys.atom_type);
   subbox_set_bonding_potentials();
 
   if(cfg->constraint != CONST_NONE){

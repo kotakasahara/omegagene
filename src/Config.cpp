@@ -54,6 +54,7 @@ int Config::set_defaults(){
 
 
   init_vel_just = 0;
+  expanded_ensemble = EXPAND_NONE;
 
   return 0;
 }

@@ -44,7 +44,7 @@ int ForceField::initial_preprocess(const PBC* in_pbc){
   return 0;
 }
 
-int ForceField::calc_bond(real_pw& ene, real_pw work[],
+int ForceField::calc_bond(real_bp& ene, real_bp work[],
 			  const real* crd1, const real* crd2,
 			  const real& param_e, const real& param_r0){
   
@@ -260,13 +260,13 @@ int ForceField::calc_14pair(real_pw& ene_vdw,
 
 int ForceField::calc_pairwise(real_pw& ene_vdw, real_pw& ene_ele,
 			      real_fc work[],
-			      const real* crd1, const real* crd2,
-			      const real& param_6term,
-			      const real& param_12term,
-			      const real& charge1,
-			      const real& charge2){
+			       real_pw* crd1,  real_pw* crd2,
+			       real_pw& param_6term,
+			       real_pw& param_12term,
+			       real_pw& charge1,
+			       real_pw& charge2){
   
-  real d12[3] = {0.0, 0.0, 0.0};
+  real_pw d12[3] = {0.0, 0.0, 0.0};
 
   //pbc->diff_crd_minim_image(d12, crd1, crd2);
   
@@ -274,32 +274,32 @@ int ForceField::calc_pairwise(real_pw& ene_vdw, real_pw& ene_ele,
     d12[d] = crd1[d] - crd2[d];
   }
 
-  real r12_2 = d12[0]*d12[0] + d12[1]*d12[1] + d12[2]*d12[2];
+  real_pw r12_2 = d12[0]*d12[0] + d12[1]*d12[1] + d12[2]*d12[2];
   
-  real r12 = sqrt(r12_2);
+  real_pw r12 = sqrt(r12_2);
   //  cout << "r12 : " << r12 << endl;
   ene_vdw = 0.0;
   ene_ele = 0.0;
-  real work_vdw[3] = {0.0, 0.0, 0.0};
-  real work_ele[3] = {0.0, 0.0, 0.0};
+  real_pw work_vdw[3] = {0.0, 0.0, 0.0};
+  real_pw work_ele[3] = {0.0, 0.0, 0.0};
   //if( r12 < 0.1) 
   //cout << "  r12 " << r12 << endl;
   if (r12 >= cutoff) return 1;
-  real r12_inv = 1.0 / r12;
-  real r12_2_inv = 1.0 / r12_2;
-  real r12_3_inv = r12_inv * r12_2_inv;
-  real r12_6_inv = r12_3_inv * r12_3_inv;
-  real r12_12_inv = r12_6_inv * r12_6_inv;
-  real term6 = param_6term * r12_6_inv;
-  real term12 = param_12term * r12_12_inv;
+  real_pw r12_inv = 1.0 / r12;
+  real_pw r12_2_inv = 1.0 / r12_2;
+  real_pw r12_3_inv = r12_inv * r12_2_inv;
+  real_pw r12_6_inv = r12_3_inv * r12_3_inv;
+  real_pw r12_12_inv = r12_6_inv * r12_6_inv;
+  real_pw term6 = param_6term * r12_6_inv;
+  real_pw term12 = param_12term * r12_12_inv;
   ene_vdw = -term6 + term12;
   real_pw work_coef = r12_2_inv * (-12.0 * term12 + 6.0 * term6);
   for (int d=0; d<3; d++)
     work_vdw[d] = work_coef * d12[d];
 
-  real cc = charge1 * charge2 * CHARGE_COEFF;
+  real_pw cc = charge1 * charge2 * CHARGE_COEFF;
 
-  real work_coef_ele;
+  real_pw work_coef_ele;
   //cout << "dbg0204: cc " << cc << " " <<  charge1 << " " << charge2 << " " << r12_2 << " " << r12_inv << endl;
   //printf("dbgcrd %12.8e %12.8e %12.8e %12.8e %12.8e %12.8e\n",
   //crd1[0],crd1[1],crd1[2],crd2[0],crd2[1],crd2[2]);
@@ -307,6 +307,9 @@ int ForceField::calc_pairwise(real_pw& ene_vdw, real_pw& ene_ele,
 			       r12, r12_2, r12_inv,
 			       r12_2_inv, r12_3_inv, cc);
   //printf("dbgpair %10e %10e %15e\n", r12, cc, CHARGE_COEFF);
+  //  if (ene_ele >1){
+    //cout << "dbg 01 2 :"  << r12 << " "  << ene_ele << " " << charge1 << " "<<charge2<<endl;
+  //  }
   for(int d=0; d<3; d++)
     work_ele[d] = work_coef_ele * d12[d];
 
@@ -316,19 +319,19 @@ int ForceField::calc_pairwise(real_pw& ene_vdw, real_pw& ene_ele,
   return 0;
 }
 int ForceField::calc_zms_excess(real_pw& ene, real_pw work[],
-				const real* crd1,
-				const real* crd2,
-				const real& charge1,
-				const real& charge2){
+				real_pw* crd1,
+				real_pw* crd2,
+				real_pw& charge1,
+				real_pw& charge2){
   
-  real d12[3];
+  real_pw d12[3];
   pbc->diff_crd_minim_image(d12, crd1, crd2);
-  real r12_2 = d12[0]*d12[0] + d12[1]*d12[1] + d12[2]*d12[2];
-  real r12 = sqrt(r12_2);
-  real r12_inv = 1.0 / r12;
-  real r12_3_inv = r12_inv * r12_inv * r12_inv;
-  real cc = charge1 * charge2 * CHARGE_COEFF;
-  real work_coef;
+  real_pw r12_2 = d12[0]*d12[0] + d12[1]*d12[1] + d12[2]*d12[2];
+  real_pw r12 = sqrt(r12_2);
+  real_pw r12_inv = 1.0 / r12;
+  real_pw r12_3_inv = r12_inv * r12_inv * r12_inv;
+  real_pw cc = charge1 * charge2 * CHARGE_COEFF;
+  real_pw work_coef;
   //cout << "dbg0204: cc " << cc << " " <<  charge1 << " " << charge2 << " " << r12_2 << " " << r12_inv << endl;
   (ele->*(ele->func_calc_zms_excess))(ene, work_coef,
 				      r12, r12_2, r12_3_inv, cc);
@@ -349,7 +352,7 @@ int ForceField::cal_self_energy(const int& n_atoms,
 				const int**& torsion_atomid_quads,
 				const int*& torsion_nb14,
 				*/
-				const real_pw*& charge,
+				real_pw*& charge,
 				real*& energy_self,
 				real& energy_self_sum){
   ele->cal_self_energy(n_atoms, n_excess, excess_pairs,

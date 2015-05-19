@@ -7,8 +7,8 @@ CelesteObject::CelesteObject(){
 
 const string CelesteObject::EXE = "celeste";
 const string CelesteObject::ABOUT_ME = "celeste ver.0.30.a 28-mar-2015";
-const int CelesteObject::REAL_BYTE = 4;
-//const int CelesteObject::REAL_BYTE = 8;
+//const int CelesteObject::REAL_BYTE = 4;
+const int CelesteObject::REAL_BYTE = 8;
 const real CelesteObject::PI = 3.14159265;
 const int CelesteObject::MAGIC_NUMBER = 66261;
 const real CelesteObject::EPS = 1e-10;

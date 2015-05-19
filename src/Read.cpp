@@ -252,15 +252,15 @@ int Read::load_ls_tpl(MmSystem& mmsys){
   for(int i=0; i < mmsys.n_atoms; i++){
     double charge;
     read_bin_values(&charge, 1);
-    mmsys.charge[i] = (real)charge;
+    mmsys.charge[i] = (real_pw)charge;
     //if (DBG==1){ cout << "charge " << i << " : " << mmsys.charge[i] << endl; }
   }
     // mass
   for(int i=0; i < mmsys.n_atoms; i++){  
     double mass;
     read_bin_values(&mass, 1);
-    mmsys.mass[i] = (real)mass;
-    //if (DBG==1){ cout << "mass " << i << " : " << mmsys.mass[i] << endl; }
+    mmsys.mass[i] = (real_pw)mass;
+    //    if (DBG==1){ cout << "mass " << i << " : " << mmsys.mass[i] << endl; }
   }
 	// atom_type
   for(int i=0; i < mmsys.n_atoms; i++){
@@ -450,7 +450,7 @@ int Read::load_ls_constraint(Constraint* cst){
     read_bin_values(&atomid2, 1);    
     read_bin_values(&dist1, 1);    
     dist1 = dist1 * dist1;
-    cst->add_pair(atomid1, atomid2, (real)dist1);
+    cst->add_pair(atomid1, atomid2, (real_cst)dist1);
   }
   // 3 atoms
   for(int i=0; i < n_const_3; i++){
@@ -464,7 +464,7 @@ int Read::load_ls_constraint(Constraint* cst){
     dist2 = dist2 * dist2;
     dist3 = dist3 * dist3;
     cst->add_trio(atomid1, atomid2, atomid3,
-		  (real)dist1, (real)dist2, (real)dist3);
+		  (real_cst)dist1, (real_cst)dist2, (real_cst)dist3);
   }
   // 4 atoms
   for(int i=0; i < n_const_4; i++){
@@ -485,8 +485,8 @@ int Read::load_ls_constraint(Constraint* cst){
     dist5 = dist5 * dist5;
     dist6 = dist6 * dist6;
     cst->add_quad(atomid1, atomid2, atomid3, atomid4,
-		  (real)dist1, (real)dist2, (real)dist3,
-		  (real)dist4, (real)dist5, (real)dist6);
+		  (real_cst)dist1, (real_cst)dist2, (real_cst)dist3,
+		  (real_cst)dist4, (real_cst)dist5, (real_cst)dist6);
   }
 
   return 0;
