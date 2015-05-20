@@ -98,7 +98,6 @@ class CelesteObject {
     CRDOUT_PRESTO,
     CRDOUT_DUMMY
   };
-
   // 
   static const int MAX_N_ATOMTYPE;
   //

@@ -8,13 +8,39 @@ class WriteTrr : public Write {
  public:
   WriteTrr();
   ~WriteTrr();
-  int write_trr(int n_atoms,
-		int cur_step, real cur_time,
-		real lx, real ly, real lz, 
-		real** crd, real** vel_just, real_fc** force,
-		bool out_box,
-		bool out_crd, bool out_vel, bool out_force);
+  virtual int write_trr(int n_atoms,
+			int cur_step, real cur_time,
+			real lx, real ly, real lz, 
+			real** crd, real** vel_just, real_fc** force,
+			bool out_box,
+			bool out_crd, bool out_vel, bool out_force);
+};
 
+class WriteTrrGromacs : public WriteTrr {
+ private:
+ public:
+  WriteTrrGromacs();
+  ~WriteTrrGromacs();
+  virtual int write_trr(int n_atoms,
+			int cur_step, real cur_time,
+			real lx, real ly, real lz, 
+			real** crd, real** vel_just, real_fc** force,
+			bool out_box,
+			bool out_crd, bool out_vel, bool out_force);
+  
+};
+class WriteTrrPresto : public WriteTrr {
+ private:
+ public:
+  WriteTrrPresto();
+  ~WriteTrrPresto();
+  virtual int write_trr(int n_atoms,
+			int cur_step, real cur_time,
+			real lx, real ly, real lz, 
+			real** crd, real** vel_just, real_fc** force,
+			bool out_box,
+			bool out_crd, bool out_vel, bool out_force);
+  
 };
 
 class WriteTTPVMcMDLog : public Write {

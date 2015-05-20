@@ -13,6 +13,22 @@ int WriteTrr::write_trr(int n_atoms,
 			real** crd, real** vel_just, real_fc** force,
 			bool out_box,
 			bool out_crd, bool out_vel, bool out_force){
+  return 0;
+}
+
+WriteTrrGromacs::WriteTrrGromacs()
+  : WriteTrr(){
+}
+
+WriteTrrGromacs::~WriteTrrGromacs(){
+}
+
+int WriteTrrGromacs::write_trr(int n_atoms,
+			int cur_step, real cur_time,
+			real lx, real ly, real lz, 
+			real** crd, real** vel_just, real_fc** force,
+			bool out_box,
+			bool out_crd, bool out_vel, bool out_force){
 
 
   int box_size = 0;
@@ -106,6 +122,51 @@ int WriteTrr::write_trr(int n_atoms,
   return 0;
 }
 
+
+WriteTrrPresto::WriteTrrPresto()
+  : WriteTrr(){
+}
+
+WriteTrrPresto::~WriteTrrPresto(){
+}
+
+int WriteTrrPresto::write_trr(int n_atoms,
+			      int cur_step, real cur_time,
+			      real lx, real ly, real lz, 
+			      real** crd, real** vel_just, real_fc** force,
+			      bool out_box,
+			      bool out_crd, bool out_vel, bool out_force){
+  
+  int buf = 44;
+  ofs.write((const char*)&buf, sizeof(int));
+  ofs.write((const char*)&cur_step, sizeof(int));
+  float buf_cur_time = cur_time;
+  ofs.write((const char*)&buf_cur_time, sizeof(float));
+  float buf_f = 0.0;
+  ofs.write((const char*)&buf_f, sizeof(float));   //cpu_time
+  ofs.write((const char*)&buf_f, sizeof(float));   //total e
+  ofs.write((const char*)&buf_f, sizeof(float));   //kinetic e  
+  ofs.write((const char*)&buf_f, sizeof(float));   //temperature  
+  ofs.write((const char*)&buf_f, sizeof(float));   //potential e
+  ofs.write((const char*)&buf_f, sizeof(float));   //rmsf
+  ofs.write((const char*)&buf_f, sizeof(float));   //vdw
+  ofs.write((const char*)&buf_f, sizeof(float));   //hyd
+  ofs.write((const char*)&buf_f, sizeof(float));   //rmsd
+  ofs.write((const char*)&buf, sizeof(int));
+  
+  buf = n_atoms * 3 * 4;
+  ofs.write((const char*)&buf, sizeof(int));
+  for (int i = 0; i < n_atoms; i++){
+    float x = crd[i][0];
+    float y = crd[i][1];
+    float z = crd[i][2];
+    ofs.write((const char*)&x, sizeof(float));    
+    ofs.write((const char*)&y, sizeof(float));    
+    ofs.write((const char*)&z, sizeof(float));    
+  }
+  ofs.write((const char*)&buf, sizeof(int));
+  return 0;
+}
 WriteTTPVMcMDLog::WriteTTPVMcMDLog()
   : Write() {
 }

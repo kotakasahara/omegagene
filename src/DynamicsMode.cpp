@@ -28,10 +28,18 @@ int DynamicsMode::initial_preprocess(){
   */
   //if (DBG >= 1)
   cout << "DBG1: DynamicsMode::initial_preprocess()" << endl;
+
   mmsys.ff_setup(cfg);
+
+  if(cfg->format_o_crd == CRDOUT_GROMACS){
+    writer_trr = new WriteTrrGromacs();
+  }else if (cfg->format_o_crd == CRDOUT_PRESTO){
+    writer_trr = new WriteTrrPresto();
+  }
+
   if(cfg->fn_o_crd!=""){
-    writer_trr.set_fn(cfg->fn_o_crd);
-    writer_trr.open();
+    writer_trr->set_fn(cfg->fn_o_crd);
+    writer_trr->open();
   }
   if(cfg->constraint != CONST_NONE){
     int n_shake_dist = mmsys.constraint.get_n_pair() + 
@@ -67,7 +75,7 @@ int DynamicsMode::initial_preprocess(){
 
 int DynamicsMode::terminal_process(){
   cout << "DynamicsMode::terminal_process()"<<endl;  
-  writer_trr.close();
+  writer_trr->close();
   if(cfg->expanded_ensemble != EXPAND_NONE)
     mmsys.vmcmd.close_files();
   return 0;
@@ -229,7 +237,7 @@ int DynamicsMode::sub_output(){
   if(out_crd) subbox.copy_crd(mmsys.crd);
   if(out_vel) subbox.copy_vel(mmsys.vel_just);
   if(out_crd || out_vel || out_force){
-    writer_trr.write_trr(mmsys.n_atoms,
+    writer_trr->write_trr(mmsys.n_atoms,
 			 (int)mmsys.cur_step, mmsys.cur_time,
 			 mmsys.pbc.L[0], mmsys.pbc.L[1], mmsys.pbc.L[2],
 			 mmsys.crd, mmsys.vel_just, mmsys.force,

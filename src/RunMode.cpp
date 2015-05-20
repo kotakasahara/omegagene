@@ -10,17 +10,24 @@ RunMode::~RunMode(){
 }
 
 int RunMode::initial_preprocess(){
-  writer_trr.set_fn(cfg->fn_o_crd);
-  writer_trr.open();
+  if(cfg->format_o_crd == CRDOUT_GROMACS){
+    writer_trr = new WriteTrrGromacs();
+  }else if (cfg->format_o_crd == CRDOUT_PRESTO){
+    writer_trr = new WriteTrrPresto();
+  }
+  writer_trr->set_fn(cfg->fn_o_crd);
+  writer_trr->open();
+
   return 0;
 }
 int RunMode::terminal_process(){
-  writer_trr.close();
+  writer_trr->close();
   return 0;
 }
 
 int RunMode::set_config_parameters(Config* in_cfg){
   cfg = in_cfg;
+
   if(DBG>=1)
     cout << "DBG1: RunMode::set_config_parameters()"<<endl;
   //#if defined(F_CUDA) && defined(F_MPI)
