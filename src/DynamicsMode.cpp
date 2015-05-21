@@ -65,7 +65,8 @@ int DynamicsMode::initial_preprocess(){
     cout << "  VS log output ... " << cfg->fn_o_vmcmd_log << endl;
     cout << "  Lambda output ... " << cfg->fn_o_expand_lambda << endl;
     mmsys.vmcmd.set_files(cfg->fn_o_vmcmd_log,
-			  cfg->fn_o_expand_lambda);
+			  cfg->fn_o_expand_lambda,
+			  cfg->format_o_expand_lambda);
     mmsys.vmcmd.set_lambda_interval(cfg->print_intvl_expand_lambda);
   }
   cout << "DBG MmSystem.n_bonds: " << mmsys.n_bonds << endl;

@@ -56,6 +56,7 @@ class Config : public CelesteObject {
   string fn_o_energy;
   string fn_o_vmcmd_log;
   string fn_o_expand_lambda;
+  int format_o_expand_lambda;
   string fn_o_energyflow;
 
   int init_vel_just;

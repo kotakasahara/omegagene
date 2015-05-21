@@ -62,7 +62,9 @@ void ExpandVMcMD::set_trans_interval(int in_trans_interval){
 
 void ExpandVMcMD::set_temperature(real in_tmp){
   temperature = in_tmp;
+  const_k = (GAS_CONST / JOULE_CAL) * 1e-3 * temperature;
 }
+
 int ExpandVMcMD::get_trans_interval(){
   return trans_interval;
 }
@@ -124,8 +126,6 @@ int ExpandVMcMD::trial_transition(int source, int rel_dest,
 
 int ExpandVMcMD::scale_force(real lambda, real_fc* work, int n_atoms){
   
-  real d_ln_p = vstates[cur_vs].get_poly_param(0);
-
   // case 1 : under the lower limit
   real param = lambda;
   if (lambda <= vstates[cur_vs].get_lambda_low()){
@@ -133,36 +133,41 @@ int ExpandVMcMD::scale_force(real lambda, real_fc* work, int n_atoms){
   }else if (lambda >= vstates[cur_vs].get_lambda_high()){
     param = vstates[cur_vs].get_lambda_high();
   }
-
-  for(int i=1; i < vstates[cur_vs].get_order(); i++){
+  real d_ln_p = vstates[cur_vs].get_poly_param(0);
+  for(int i=1; i < vstates[cur_vs].get_order()+1; i++){
     real tmp = pow(param, i);
     d_ln_p += vstates[cur_vs].get_poly_param(i) * tmp;
   }
   
-  real k = (GAS_CONST / JOULE_CAL) * 1e-3;
-  real dew = k * temperature * d_ln_p;
+  //real k = (GAS_CONST / JOULE_CAL) * 1e-3;
+  real dew = const_k * d_ln_p;
 
   int n_atoms_3 = n_atoms * 3;
   for(int i = 0; i < n_atoms_3; i++){
     work[i] *= dew;
   }
-
+  
   return 0;
 }
 
-int ExpandVMcMD::set_files(string fn_vslog, string fn_lambda){
+int ExpandVMcMD::set_files(string fn_vslog, string fn_lambda, int format_lambda){
   writer_vslog.set_fn(fn_vslog);
   writer_vslog.open();
-  writer_lambda.set_fn(fn_lambda);
-  writer_lambda.open();
-  writer_lambda.set_ncolumns(1);
-  writer_lambda.write_header();
+  if (format_lambda == LAMBDAOUT_BIN){
+    writer_lambda = new WriteTableLogBinary();
+  }else if(format_lambda == LAMBDAOUT_ASC){
+    writer_lambda = new WriteTableLogAscii();
+  }
+  writer_lambda->set_fn(fn_lambda);
+  writer_lambda->open();
+  writer_lambda->set_ncolumns(1);
+  writer_lambda->write_header();
   write_vslog(0);
   return 0;
 }
 int ExpandVMcMD::close_files(){
   writer_vslog.close();
-  writer_lambda.close();
+  writer_lambda->close();
   return 0;
 }
 int ExpandVMcMD::write_vslog(int cur_steps){
@@ -170,7 +175,7 @@ int ExpandVMcMD::write_vslog(int cur_steps){
   return 0;
 }
 int ExpandVMcMD::write_lambda(real lambda){
-  writer_lambda.write_row(&lambda);
+  writer_lambda->write_row(&lambda);
   return 0;
 }
 int ExpandVMcMD::set_vs_order(int vs_id, int ord){

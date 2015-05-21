@@ -94,6 +94,11 @@ class CelesteObject {
     EXPAND_DUMMY
   };
   enum {
+    LAMBDAOUT_BIN = 0,
+    LAMBDAOUT_ASC, 
+    LAMBDAOUT_DUMMY
+  };
+  enum {
     CRDOUT_GROMACS = 0,
     CRDOUT_PRESTO,
     CRDOUT_DUMMY

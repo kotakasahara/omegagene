@@ -43,27 +43,6 @@ class WriteTrrPresto : public WriteTrr {
   
 };
 
-class WriteTTPVMcMDLog : public Write {
- private:
- public:
-  WriteTTPVMcMDLog();
-  ~WriteTTPVMcMDLog();
-  int write_ttpvMcMDLog(int step, int vstate);
-};
-
-class WriteTableLog : public Write {
- private:
- protected:
-  int n_cols;
- public:
-  WriteTableLog();
-  ~WriteTableLog();  
-  void set_ncolumns(int in_n_cols){ n_cols = in_n_cols; };
-  int write_header();
-  int write_row(int* values);
-  int write_row(real* values);
-};
-
 class WriteRestart : public Write{
  private:
  protected:

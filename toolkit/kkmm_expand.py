@@ -19,6 +19,7 @@ class ExpandConf():
     def read_init(self, fn):
         self.init_vs, self.seed = \
             McMDInitialDef(fn).read()
+        print "kkmm_expand.py read_init " + str(self.init_vs) + " " + str(self.seed)
         return 
 
 class McMDParamsReader(kkkit.FileI):

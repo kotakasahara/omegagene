@@ -9,7 +9,6 @@ class Expand : public CelesteObject {
 
  protected:
   int write_lambda_interval;
-
  public:
   Expand();
   ~Expand();

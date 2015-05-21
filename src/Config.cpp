@@ -38,7 +38,8 @@ int Config::set_defaults(){
   print_intvl_vel = 0;
   print_intvl_force = 0;
   fn_o_restart = "md_o.restart";
-  fn_o_crd = "md_o.crd";
+  fn_o_crd = "md_o.trr";
+  format_o_crd = CRDOUT_GROMACS;
   fn_o_log = "md_o.log";
   fn_o_energy = "md_o.erg";
   fn_o_energyflow = "md_o.efl";
@@ -55,6 +56,7 @@ int Config::set_defaults(){
 
   init_vel_just = 0;
   expanded_ensemble = EXPAND_NONE;
+  format_o_expand_lambda = LAMBDAOUT_BIN;
 
   return 0;
 }
@@ -174,6 +176,13 @@ void Config::setAll(vector<string> arg){
     else if(*itr=="--fn-o-energy"){ fn_o_energy = *++itr; }
     else if(*itr=="--fn-o-vmcmd-log"){ fn_o_vmcmd_log = *++itr; }
     else if(*itr=="--fn-o-expand-lambda"){ fn_o_expand_lambda = *++itr; }
+    else if(*itr=="--format-o-expand-lambda"){
+      itr++;
+      if(*itr == "binary"){ format_o_expand_lambda = LAMBDAOUT_BIN; }
+      else if(*itr == "ascii"){  format_o_expand_lambda = LAMBDAOUT_ASC; }
+      else{ format_o_expand_lambda = LAMBDAOUT_DUMMY; }
+    }
+
     else if(*itr=="--fn-o-energyflow"){ fn_o_energyflow = *++itr; }
     else{
       cerr<<"unknown keyword <"<<(*itr)<<">"<<endl;

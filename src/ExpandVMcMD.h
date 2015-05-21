@@ -2,7 +2,8 @@
 #define __EXPAND_VMCMD_H__
 
 #include "Expand.h"
-#include "WriteTrr.h"
+#include "Write.h"
+
 #include <cmath>
 using namespace std;
 
@@ -14,6 +15,7 @@ class VirtualState : public CelesteObject{
   int poly_order;
   real *poly_params;
   real alpha[2];
+
  public:
   VirtualState();
   ~VirtualState();
@@ -38,6 +40,8 @@ class ExpandVMcMD : public Expand {
   int n_vstates;
   int trans_interval;
   real temperature;
+  real const_k;
+
   VirtualState *vstates;
   int init_vs;
   int random_seed;
@@ -47,7 +51,7 @@ class ExpandVMcMD : public Expand {
 
   WriteTTPVMcMDLog writer_vslog;
 
-  WriteTableLog writer_lambda;
+  WriteTableLog* writer_lambda;
 
  public:
   ExpandVMcMD();
@@ -76,7 +80,7 @@ class ExpandVMcMD : public Expand {
   int scale_force(real lambda, real_fc* work, int n_atoms);
 
   // files
-  int set_files(string fn_vslog, string fn_lambda);
+  int set_files(string fn_vslog, string fn_lambda, int format_lambda);
   int close_files();
   int write_vslog(int cur_steps);
   int write_lambda(real lambda);
