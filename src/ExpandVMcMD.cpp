@@ -42,7 +42,8 @@ bool VirtualState::is_in_range(real lambda){
 ExpandVMcMD::ExpandVMcMD()
   : Expand(){
   n_vstates = 0;
-  flg_vs_transition = false;
+  //flg_vs_transition = false;
+  flg_vs_transition = true;
 }
 
 ExpandVMcMD::~ExpandVMcMD(){
@@ -87,20 +88,16 @@ int ExpandVMcMD::apply_bias(unsigned long cur_step,
   return 0;
 }
 int ExpandVMcMD::set_current_vstate(real lambda){
-  int dest_vs = -1;
-  int dest_vs1 = -1;
-  int dest_vs2 = -1;
-  if(cur_vs == 0){
-    dest_vs = trial_transition(cur_vs, 1, lambda);
-  }else if(cur_vs == n_vstates-1){
-    dest_vs = trial_transition(cur_vs, -1, lambda);
-  }else{
-    dest_vs1 = trial_transition(cur_vs, 1, lambda);
-    dest_vs2 = trial_transition(cur_vs, -1, lambda);
+  int dest_vs;
+  dest_vs = trial_transition(cur_vs, 1, lambda);
+  if( dest_vs != cur_vs ){
+    cur_vs = dest_vs;
+    return 0;
   }
-  if(dest_vs1 != dest_vs2){
-    cerr << "Error: set_current_vstate" << endl;
-    return 1;
+  dest_vs = trial_transition(cur_vs, -1, lambda);
+  if( dest_vs != cur_vs ){
+    cur_vs = dest_vs;
+    return 0;
   }
   return 0;
 }
@@ -111,13 +108,13 @@ int ExpandVMcMD::trial_transition(int source, int rel_dest,
   // lambda
 
   // return ...
-
+  if (source == 0 and rel_dest==-1)          return source;
+  if (source == n_vstates-1 and rel_dest==1) return source;
   int up_down = rel_dest;
   if(rel_dest == -1) up_down = 0;
-
   if(vstates[source+rel_dest].is_in_range(lambda)){
     real dice = 1.0; // random value
-    if(dice > (1.0 - vstates[source+rel_dest].get_trans_prob(up_down))){
+    if(dice > (1.0 - vstates[source].get_trans_prob(up_down))){
       return source + rel_dest;
     }
   }

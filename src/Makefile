@@ -15,7 +15,7 @@ CUDALOC = /usr/local/cuda-6.0/lib64
 # BOOST_INC = ${HOME}/include
 # BOOST_LIB = ${HOME}/lib
 
-ICCFLAGS = -ansi -fast -w1 #-I/home/kotakasahara/include -L/home/kotakasahara/lib 
+ICCFLAGS = -ansi -fast -w1 
 #ICCFLAGS = -ansi -O0 -g #-w1 # -std=c++11
 ICCLIB = 
 
