@@ -176,7 +176,7 @@ class SubBox : public CelesteObject {
   int set_parameters(int in_n_atomds, PBC* in_pbc, Config* in_cfg,
 		     real in_cutoff_pair,
 		     int in_n_boxes_x, int in_n_boxes_y, int in_n_boxes_z,
-		     int n_free);
+		     int d_free);
   int set_nsgrid();
   int nsgrid_init();
   int nsgrid_update();
@@ -273,7 +273,7 @@ class SubBox : public CelesteObject {
 		      int max_n_pair,
 		      int max_n_trio,
 		      int max_n_quad);
-  int set_subset_constraint(Constraint& in_cst, real n_free);
+  int set_subset_constraint(Constraint& in_cst, real d_free);
 
   real_fc get_pote_vdw(){return pote_vdw;};
   real_fc get_pote_ele(){return pote_ele;};
@@ -291,13 +291,10 @@ class SubBox : public CelesteObject {
 #endif
   
   int apply_constraint();
-  int thermo_scaling(const real time_step,
-			  const int n_free,
-			  const real target_temperature);
-  int thermo_scaling_with_shake(const real n_free,
-				     const real target_temperature,
-				     const int max_loop,
-				     const real tolerance);
+  int thermo_scaling(const real target_temperature);
+  int thermo_scaling_with_shake(const real target_temperature,
+				const int max_loop,
+				const real tolerance);
   void set_expand(ExpandVMcMD* in_exp){ expand =in_exp; };
   int expand_apply_bias(unsigned long cur_step, real in_lambda);
   void expand_enable_vs_transition();

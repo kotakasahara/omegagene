@@ -83,7 +83,7 @@ class MmSystem : public CelesteObject{
 
   real leapfrog_coef;
   int n_atoms;
-  int n_free;
+  int d_free;
   real** crd;
   real_fc** force;
   //real** vel;

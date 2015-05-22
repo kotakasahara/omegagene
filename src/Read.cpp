@@ -176,7 +176,7 @@ int Read::load_ls_crd(MmSystem& mmsys){
     // ERROR: the number of atoms is zero
     return 1;
   }  
-  mmsys.n_free = mmsys.n_atoms * 3;
+  mmsys.d_free = mmsys.n_atoms * 3 -3;
 
   mmsys.alloc_atom_vars();
 

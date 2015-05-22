@@ -383,7 +383,7 @@ int SubBox::set_parameters(int in_n_atoms, PBC* in_pbc,
 			   Config* in_cfg,
 			   real in_cutoff_pair,
 			   int in_n_boxes_x, int in_n_boxes_y, int in_n_boxes_z,
-			   int n_free){
+			   int d_free){
   // set
   //   n_atoms, pbc, cutoff_pair
   //   n_boxes_xyz,  n_boxes
@@ -398,9 +398,9 @@ int SubBox::set_parameters(int in_n_atoms, PBC* in_pbc,
   pbc = in_pbc;
   cfg = in_cfg;
   time_step_inv_sq = 1.0 /( cfg->time_step * cfg->time_step);
-  //temperature_coeff = 1.0 / (GAS_CONST * (real)n_free) * JOULE_CAL * 1e3 * 2.0;
-  temperature_coef = (2.0 * JOULE_CAL * 1e+3) / (GAS_CONST * (real)n_free);
-  //cout << "DBG coef1: " << temperature_coef << " " << n_free << endl;
+  //temperature_coeff = 1.0 / (GAS_CONST * (real)d_free) * JOULE_CAL * 1e3 * 2.0;
+  temperature_coef = (2.0 * JOULE_CAL * 1e+3) / (GAS_CONST * (real)d_free);
+  //cout << "DBG coef1: " << temperature_coef << " " << d_free << endl;
 
   cutoff_pair = in_cutoff_pair;
   n_boxes_xyz[0] = in_n_boxes_x;
@@ -1552,13 +1552,13 @@ int SubBox::init_constraint(int in_constraint,
   
   return in_constraint;
 }
-int SubBox::set_subset_constraint(Constraint& in_cst, real n_free){
+int SubBox::set_subset_constraint(Constraint& in_cst, real d_free){
   if(cfg->constraint == CONST_NONE) return 1;
 
   //cout << "set_subset_constraint" << endl;
   constraint->set_subset_constraint(in_cst, atomids_rev);
   
-  temperature_coef = (2.0 * JOULE_CAL * 1e+3) / (GAS_CONST * n_free);
+  temperature_coef = (2.0 * JOULE_CAL * 1e+3) / (GAS_CONST * d_free);
   return 0;
 }
 
@@ -1631,16 +1631,14 @@ int SubBox::apply_constraint(){
   return 0;
 }
 
-int SubBox::thermo_scaling(const real time_step,
-			   const int n_free,
-			   const real target_temperature){
+int SubBox::thermo_scaling(const real target_temperature){
   real_fc kine_pre = 0.0;
   
   for(int i=0, i_3=0; i < n_atoms_box; i++, i_3+=3){
     real vel_norm = 0;
     for(int d=0; d < 3; d++){
       real vel_tmp = vel[i_3+d] - 0.5 * 
-	(time_step * FORCE_VEL * work[i_3+d] * mass_inv[i]);
+	(cfg->time_step * FORCE_VEL * work[i_3+d] * mass_inv[i]);
       vel_norm += vel_tmp * vel_tmp;
     }
     kine_pre += mass[i] * vel_norm;
@@ -1650,15 +1648,14 @@ int SubBox::thermo_scaling(const real time_step,
   real scale = sqrt(target_temperature / dt_temperature);
   for(int i=0, i_3=0; i < n_atoms_box; i++, i_3+=3){
     for(int d=0; d < 3; d++){
-      real vel_diff = time_step * FORCE_VEL * work[i_3+d] * mass_inv[i];
+      real vel_diff = cfg->time_step * FORCE_VEL * work[i_3+d] * mass_inv[i];
       vel_next[i_3+d] = (2.0 * scale - 1.0) * vel[i_3+d] - scale * vel_diff;
     }
   }
 
   return 0;
 }
-int SubBox::thermo_scaling_with_shake(const real n_free,
-				      const real target_temperature,
+int SubBox::thermo_scaling_with_shake(const real target_temperature,
 				      const int max_loops,
 				      const real tolerance){
   for(int i_atom = 0;

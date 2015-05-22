@@ -45,10 +45,10 @@ int DynamicsMode::initial_preprocess(){
     int n_shake_dist = mmsys.constraint.get_n_pair() + 
       3 * mmsys.constraint.get_n_trio() + 
       6 * mmsys.constraint.get_n_quad();
-    mmsys.n_free -= n_shake_dist;
+    mmsys.d_free -= n_shake_dist;
   }
 
-  temperature_coeff = 1.0 / (GAS_CONST * (real)mmsys.n_free) * JOULE_CAL * 1e3 * 2.0;
+  temperature_coeff = 1.0 / (GAS_CONST * (real)mmsys.d_free) * JOULE_CAL * 1e3 * 2.0;
   //enecal->initial_preprocess();
   // set atom coordinates into PBC
   mmsys.revise_crd_inbox();
@@ -152,9 +152,7 @@ int DynamicsMode::calc_in_each_step(){
   if(cfg->thermostat==THMSTT_SCALING && 
      cfg->constraint == CONST_NONE){
      //mmsys.leapfrog_coef == 1.0){
-    subbox.thermo_scaling(cfg->time_step,
-			  mmsys.n_free,
-			  cfg->temperature);
+    subbox.thermo_scaling(cfg->temperature);
   }
   //}
   
@@ -215,8 +213,7 @@ int DynamicsMode::apply_constraint(){
     
   if(cfg->thermostat==THMSTT_SCALING){
     
-    subbox.thermo_scaling_with_shake((real)mmsys.n_free,
-				     cfg->temperature,
+    subbox.thermo_scaling_with_shake(cfg->temperature,
 				     cfg->thermo_const_max_loops,
 				     cfg->thermo_const_tolerance);
     //mmsys.leapfrog_coef = 1.0 ;
@@ -341,7 +338,7 @@ int DynamicsMode::subbox_setup(){
 			cfg->nsgrid_cutoff,
 			cfg->box_div[0],
 			cfg->box_div[1],
-			cfg->box_div[2], mmsys.n_free);
+			cfg->box_div[2], mmsys.d_free);
   subbox.set_lj_param(mmsys.n_lj_types,
 		      mmsys.lj_6term,
 		      mmsys.lj_12term);
@@ -372,7 +369,7 @@ int DynamicsMode::subbox_setup(){
 			   mmsys.constraint.get_n_quad());
     
     
-    subbox.set_subset_constraint(mmsys.constraint, (real)mmsys.n_free);
+    subbox.set_subset_constraint(mmsys.constraint, (real)mmsys.d_free);
   }
   if(cfg->expanded_ensemble == EXPAND_VMCMD){
     subbox.set_expand(&mmsys.vmcmd);
