@@ -1,7 +1,7 @@
 #include "ConstraintShake.h"
 
 ConstraintShake::ConstraintShake()
-  : Constraint(){
+  : ConstraintObject(){
   
 }
 

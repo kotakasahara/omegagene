@@ -54,7 +54,7 @@ class Read : private CelesteObject {
   int load_ls_crd(MmSystem& mmsys);
   int load_ls_vel(MmSystem& mmsys);
   int load_ls_tpl(MmSystem& mmsys);
-  int load_ls_constraint(Constraint* cst);
+  int load_ls_constraint(ConstraintObject* cst);
   int load_ls_vmcmd(ExpandVMcMD* vmcmd);
   //int load_ls_pcluster(MmSystem& mmsys);
   int load_ls_atom_groups(MmSystem& mmsys);

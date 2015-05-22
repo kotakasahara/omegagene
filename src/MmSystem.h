@@ -113,7 +113,7 @@ class MmSystem : public CelesteObject{
 
   ForceField ff;
 
-  Constraint constraint;
+  ConstraintObject constraint;
   ExpandVMcMD vmcmd;
   int n_groups;
   int* n_atoms_in_groups;

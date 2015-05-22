@@ -131,14 +131,17 @@ int ExpandVMcMD::scale_force(real lambda, real_fc* work, int n_atoms){
     param = vstates[cur_vs].get_lambda_high();
   }
   real d_ln_p = vstates[cur_vs].get_poly_param(0);
+  //cout << "dbg0522 1 " << param << " " << d_ln_p << endl;
+  real tmp = 1.0;
   for(int i=1; i < vstates[cur_vs].get_order()+1; i++){
-    real tmp = pow(param, i);
+    tmp *= param;
     d_ln_p += vstates[cur_vs].get_poly_param(i) * tmp;
+    //cout << "dbg0522 2 "<<i << " " << vstates[cur_vs].get_poly_param(i) << " " << d_ln_p << endl;
   }
   
   //real k = (GAS_CONST / JOULE_CAL) * 1e-3;
   real dew = const_k * d_ln_p;
-
+  //cout << "dbg0522 "<<dew << endl;
   int n_atoms_3 = n_atoms * 3;
   for(int i = 0; i < n_atoms_3; i++){
     work[i] *= dew;
@@ -190,4 +193,15 @@ int ExpandVMcMD::set_vs_params(int vs_id,
 }
 int ExpandVMcMD::set_vs_poly_param(int vs_id, int ord, real param){
   return vstates[vs_id].set_poly_param(ord, param);
+}
+
+int ExpandVMcMD::print_info(){
+  cout << "V-McMD parameters" << endl;
+  for(int i=0; i < n_vstates; i++){
+    cout << "  Virtual state: " << i << endl;
+    for(int j=0; j < vstates[cur_vs].get_order()+3; j++){
+      cout << "    " << j << ": " << vstates[cur_vs].get_poly_param(i) << endl;
+    }
+  }
+  return 0;
 }

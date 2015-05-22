@@ -1,8 +1,8 @@
 #include "Constraint.h"
 
-const int Constraint::Pairs_idx[6][2] = {{0,1},{1,2},{2,0},{3,0},{2,3},{1,3}};
+const int ConstraintObject::Pairs_idx[6][2] = {{0,1},{1,2},{2,0},{3,0},{2,3},{1,3}};
 
-Constraint::Constraint() 
+ConstraintObject::ConstraintObject() 
   : CelesteObject() {
   n_pair = 0;
   n_trio = 0;
@@ -14,11 +14,11 @@ Constraint::Constraint()
   tolerance = 1e-5;
 }
 
-Constraint::~Constraint(){
+ConstraintObject::~ConstraintObject(){
   free_constraint();
 }
 
-int Constraint::alloc_constraint(){
+int ConstraintObject::alloc_constraint(){
   if(max_n_pair > 0){
     pair_atomids = new int*[max_n_pair];
     pair_dist    = new real_cst[max_n_pair];
@@ -54,7 +54,7 @@ int Constraint::alloc_constraint(){
   return 0;
 }
 
-int Constraint::free_constraint(){
+int ConstraintObject::free_constraint(){
   if(max_n_pair > 0){
     for(int i=0; i < max_n_pair; i++){
       delete[] pair_atomids[i];
@@ -80,12 +80,12 @@ int Constraint::free_constraint(){
   }
   return 0;
 }
-int Constraint::set_parameters(int in_max_loops, real_cst in_tolerance){
+int ConstraintObject::set_parameters(int in_max_loops, real_cst in_tolerance){
   max_loops = in_max_loops;
   tolerance = in_tolerance;
   return 0;
 }
-int Constraint::set_max_n_constraints(int in_n_pair, int in_n_trio, int in_n_quad){
+int ConstraintObject::set_max_n_constraints(int in_n_pair, int in_n_trio, int in_n_quad){
   max_n_pair = in_n_pair;
   max_n_trio = in_n_trio;
   max_n_quad = in_n_quad;
@@ -93,7 +93,7 @@ int Constraint::set_max_n_constraints(int in_n_pair, int in_n_trio, int in_n_qua
   return 0;
 }
 
-int Constraint::add_pair(int atom1, int atom2, real_cst dist1){
+int ConstraintObject::add_pair(int atom1, int atom2, real_cst dist1){
   pair_atomids[n_pair][0] = atom1;
   pair_atomids[n_pair][1] = atom2;
   pair_dist[n_pair] = dist1;
@@ -101,7 +101,7 @@ int Constraint::add_pair(int atom1, int atom2, real_cst dist1){
   return 0;
 }
 
-int Constraint::add_trio(int atom1, int atom2, int atom3,
+int ConstraintObject::add_trio(int atom1, int atom2, int atom3,
 			 real_cst dist1, real_cst dist2, real_cst dist3){
   trio_atomids[n_trio][0] = atom1;
   trio_atomids[n_trio][1] = atom2;
@@ -113,7 +113,7 @@ int Constraint::add_trio(int atom1, int atom2, int atom3,
   return 0;
 }
 
-int Constraint::add_quad(int atom1, int atom2, int atom3, int atom4,
+int ConstraintObject::add_quad(int atom1, int atom2, int atom3, int atom4,
 			 real_cst dist1, real_cst dist2, real_cst dist3,
 			 real_cst dist4, real_cst dist5, real_cst dist6){
   quad_atomids[n_quad][0] = atom1;
@@ -130,11 +130,11 @@ int Constraint::add_quad(int atom1, int atom2, int atom3, int atom4,
   return 0;
 }
 
-int Constraint::apply_constraint(real* in_crd, real* in_crd_prev, real_pw* mass,
+int ConstraintObject::apply_constraint(real* in_crd, real* in_crd_prev, real_pw* mass,
 				 PBC* pbc){
   return 0;
 }
-int Constraint::calc_linear_eq(real_cst a[6][6],
+int ConstraintObject::calc_linear_eq(real_cst a[6][6],
 			       real_cst x[6],
 			       real_cst b[6],
 			       int size){
@@ -209,7 +209,7 @@ int Constraint::calc_linear_eq(real_cst a[6][6],
   return 0;
 }
 
-int Constraint::set_subset_constraint(Constraint& super,
+int ConstraintObject::set_subset_constraint(ConstraintObject& super,
 				      int* atomids_rev){
   n_pair = 0;
   n_trio = 0;
@@ -253,3 +253,4 @@ int Constraint::set_subset_constraint(Constraint& super,
   //cout << "subset end"<< endl;
   return 0;
 }
+

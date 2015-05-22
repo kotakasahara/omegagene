@@ -3,7 +3,7 @@
 
 #include "Constraint.h"
 
-class ConstraintShake : public Constraint {
+class ConstraintShake : public ConstraintObject {
  private:
  protected:
  public:

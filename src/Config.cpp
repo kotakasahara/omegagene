@@ -16,14 +16,14 @@ int Config::set_defaults(){
   fn_cfg = "md_i.cfg";
   fn_inp = "md_i.inp";
   processor = PRCS_SINGLE;
-  integrator = INTGRTR_LEAPFLOG;
-  constraint = CONST_NONE;
+  integrator_type = INTGRTR_LEAPFLOG;
+  constraint_type = CONST_NONE;
   cutoff = 12.0;
   n_steps = 1;
   time_step = 0.0005;
   electrostatic =  ELCTRST_ZERODIPOLE;
   ele_alpha = 0.0;
-  thermostat = THMSTT_NONE;
+  thermostat_type = THMSTT_NONE;
   temperature = 300;
 
   center_of_motion = COM_NONE;
@@ -92,15 +92,15 @@ void Config::setAll(vector<string> arg){
     }
     else if(*itr=="--integrator"){ 
       itr++;
-      if(*itr=="leapflog"){ integrator = INTGRTR_LEAPFLOG; }
-      else { integrator = INTGRTR_DUMMY; }
+      if(*itr=="leapflog"){ integrator_type = INTGRTR_LEAPFLOG; }
+      else { integrator_type = INTGRTR_DUMMY; }
     }
     else if(*itr=="--constraint"){ 
       itr++;
-      if(*itr=="none"){ constraint = CONST_NONE; }
-      else if(*itr=="shake"){ constraint = CONST_SHAKE; }
-      else if(*itr=="shake-settle"){ constraint = CONST_SHAKE_SETTLE; }
-      else { constraint = CONST_DUMMY; }
+      if(*itr=="none"){ constraint_type = CONST_NONE; }
+      else if(*itr=="shake"){ constraint_type = CONST_SHAKE; }
+      else if(*itr=="shake-settle"){ constraint_type = CONST_SHAKE_SETTLE; }
+      else { constraint_type = CONST_DUMMY; }
     }
     else if(*itr=="--const-max-loops"){ constraint_max_loops = atoi((*++itr).c_str()); }
     else if(*itr=="--const-tolerance"){ constraint_tolerance = atof((*++itr).c_str()); }
@@ -119,10 +119,10 @@ void Config::setAll(vector<string> arg){
 
     else if(*itr=="--thermostat"){
       itr++;
-      if(*itr=="none"){ thermostat = THMSTT_NONE; }
-      else if(*itr=="scaling"){ thermostat = THMSTT_SCALING; }
-      else if(*itr=="hoover-evans"){ thermostat = THMSTT_HOOVER_EVANS; }
-      else { thermostat = THMSTT_DUMMY; }
+      if(*itr=="none"){ thermostat_type = THMSTT_NONE; }
+      else if(*itr=="scaling"){ thermostat_type = THMSTT_SCALING; }
+      else if(*itr=="hoover-evans"){ thermostat_type = THMSTT_HOOVER_EVANS; }
+      else { thermostat_type = THMSTT_DUMMY; }
     }
     else if(*itr=="--expanded-ensemble"){
       itr++;

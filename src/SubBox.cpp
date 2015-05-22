@@ -78,8 +78,8 @@ int SubBox::alloc_variables(){
   work = new real_fc[max_n_atoms_exbox*3];
 
   //
-  if(cfg->thermostat!=THMSTT_NONE &&
-     cfg->constraint!=CONST_NONE){
+  if(cfg->thermostat_type!=THMSTT_NONE &&
+     cfg->constraint_type!=CONST_NONE){
     buf_crd1 = new real[max_n_atoms_box*3];
     buf_crd2 = new real[max_n_atoms_box*3];
   }
@@ -259,8 +259,8 @@ int SubBox::free_variables(){
   //delete[] frc;
   delete[] atomids;
 
-  if(cfg->thermostat!=THMSTT_NONE &&
-     cfg->constraint!=CONST_NONE){
+  if(cfg->thermostat_type!=THMSTT_NONE &&
+     cfg->constraint_type!=CONST_NONE){
     delete[] buf_crd1;
     delete[] buf_crd2;
   }
@@ -399,7 +399,7 @@ int SubBox::set_parameters(int in_n_atoms, PBC* in_pbc,
   cfg = in_cfg;
   time_step_inv_sq = 1.0 /( cfg->time_step * cfg->time_step);
   //temperature_coeff = 1.0 / (GAS_CONST * (real)d_free) * JOULE_CAL * 1e3 * 2.0;
-  temperature_coef = (2.0 * JOULE_CAL * 1e+3) / (GAS_CONST * (real)d_free);
+  //temperature_coef = (2.0 * JOULE_CAL * 1e+3) / (GAS_CONST * (real)d_free);
   //cout << "DBG coef1: " << temperature_coef << " " << d_free << endl;
 
   cutoff_pair = in_cutoff_pair;
@@ -1548,17 +1548,29 @@ int SubBox::init_constraint(int in_constraint,
   constraint->set_max_n_constraints(max_n_pair, max_n_trio, max_n_quad);
   cout << "max_n_const: " << max_n_pair << " " << max_n_trio << " " << max_n_quad  << endl;
   constraint->alloc_constraint();
-  cout << "alloc" <<endl;
   
   return in_constraint;
 }
-int SubBox::set_subset_constraint(Constraint& in_cst, real d_free){
-  if(cfg->constraint == CONST_NONE) return 1;
+int SubBox::set_subset_constraint(ConstraintObject& in_cst, real d_free){
+  if(cfg->constraint_type == CONST_NONE) return 1;
 
   //cout << "set_subset_constraint" << endl;
   constraint->set_subset_constraint(in_cst, atomids_rev);
   
-  temperature_coef = (2.0 * JOULE_CAL * 1e+3) / (GAS_CONST * d_free);
+  //temperature_coef = (2.0 * JOULE_CAL * 1e+3) / (GAS_CONST * d_free);
+  return 0;
+}
+int SubBox::init_thermostat(const int in_thermostat_type,
+			    const real in_temperature,
+			    const int d_free){
+  if(in_thermostat_type == THMSTT_NONE){
+    thermostat = new ThermostatObject();
+  }else if(in_thermostat_type == THMSTT_SCALING){
+    thermostat = new ThermostatScaling();
+  }
+  thermostat->set_temperature(in_temperature);
+  thermostat->set_temperature_coeff(d_free);
+  thermostat->set_time_step(cfg->time_step);
   return 0;
 }
 
@@ -1631,33 +1643,23 @@ int SubBox::apply_constraint(){
   return 0;
 }
 
-int SubBox::thermo_scaling(const real target_temperature){
-  real_fc kine_pre = 0.0;
-  
-  for(int i=0, i_3=0; i < n_atoms_box; i++, i_3+=3){
-    real vel_norm = 0;
-    for(int d=0; d < 3; d++){
-      real vel_tmp = vel[i_3+d] - 0.5 * 
-	(cfg->time_step * FORCE_VEL * work[i_3+d] * mass_inv[i]);
-      vel_norm += vel_tmp * vel_tmp;
-    }
-    kine_pre += mass[i] * vel_norm;
-  }
-  real kine = kine_pre * KINETIC_COEFF;
-  real dt_temperature = kine * temperature_coef; 
-  real scale = sqrt(target_temperature / dt_temperature);
-  for(int i=0, i_3=0; i < n_atoms_box; i++, i_3+=3){
-    for(int d=0; d < 3; d++){
-      real vel_diff = cfg->time_step * FORCE_VEL * work[i_3+d] * mass_inv[i];
-      vel_next[i_3+d] = (2.0 * scale - 1.0) * vel[i_3+d] - scale * vel_diff;
-    }
-  }
-
+int SubBox::apply_thermostat(){
+  thermostat->apply_thermostat(n_atoms_box,
+			       work, vel, vel_next,
+			       mass, mass_inv);
   return 0;
 }
-int SubBox::thermo_scaling_with_shake(const real target_temperature,
-				      const int max_loops,
+
+int SubBox::apply_thermostat_with_shake(const int max_loops,
 				      const real tolerance){
+  thermostat->apply_thermostat_with_shake(n_atoms_box,
+					  work, crd, crd_prev,
+					  vel, vel_next,
+					  mass, mass_inv,
+					  constraint,
+					  pbc, buf_crd1,
+					  max_loops, tolerance);
+  /*
   for(int i_atom = 0;
       i_atom < n_atoms_box*3; i_atom++){
     buf_crd2[i_atom] = 0.0;
@@ -1742,6 +1744,7 @@ int SubBox::thermo_scaling_with_shake(const real target_temperature,
     cout << "Thermostat was not converged." << endl;
   }
   return 0;
+  */
 }
 
 int SubBox::expand_apply_bias(unsigned long cur_step,  real in_lambda){

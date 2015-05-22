@@ -16,10 +16,12 @@ class Config : public CelesteObject {
   string fn_cfg;
   string fn_inp;
   int processor;
-  int integrator;
-  int constraint;
+  int integrator_type;
+  int constraint_type;
   real constraint_tolerance;
   int constraint_max_loops;
+  int thermostat_type;
+  real temperature;
   real thermo_const_tolerance;
   int thermo_const_max_loops;
 
@@ -29,8 +31,6 @@ class Config : public CelesteObject {
   real time_step;
   int electrostatic;
   real ele_alpha;
-  int thermostat;
-  real temperature;
   int center_of_motion;
   int n_com_cancel_groups;
   int com_cancel_groups[MAX_N_COM_GROUPS];

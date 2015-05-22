@@ -6,7 +6,7 @@
 #include <cmath>
 using namespace std;
 
-class Constraint : public CelesteObject {
+class ConstraintObject : public CelesteObject {
  private:
   
  protected:
@@ -28,8 +28,8 @@ class Constraint : public CelesteObject {
   real_cst** quad_dist;
 
  public:
-  Constraint();
-  ~Constraint();
+  ConstraintObject();
+  ~ConstraintObject();
   int alloc_constraint();
   int free_constraint();
   int set_parameters(int in_max_loops, real_cst in_tolerance);
@@ -44,7 +44,7 @@ class Constraint : public CelesteObject {
 			       real_pw* mass_inv,
 			       PBC* pbc);
   int calc_linear_eq(real_cst a[6][6], real_cst x[6], real_cst b[6], int size);
-  int set_subset_constraint(Constraint& super,
+  int set_subset_constraint(ConstraintObject& super,
 			    int* atomids_rev);
   
   int get_n_pair() const { return n_pair; }

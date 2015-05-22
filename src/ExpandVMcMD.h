@@ -92,6 +92,7 @@ class ExpandVMcMD : public Expand {
 		    real prob_low, real prob_high,
 		    real alpha_low, real alpha_high);
   int set_vs_poly_param(int vs_id, int ord, real param);
+  int print_info();
 };
 
 #endif

@@ -41,7 +41,7 @@ int DynamicsMode::initial_preprocess(){
     writer_trr->set_fn(cfg->fn_o_crd);
     writer_trr->open();
   }
-  if(cfg->constraint != CONST_NONE){
+  if(cfg->constraint_type != CONST_NONE){
     int n_shake_dist = mmsys.constraint.get_n_pair() + 
       3 * mmsys.constraint.get_n_trio() + 
       6 * mmsys.constraint.get_n_quad();
@@ -68,8 +68,9 @@ int DynamicsMode::initial_preprocess(){
 			  cfg->fn_o_expand_lambda,
 			  cfg->format_o_expand_lambda);
     mmsys.vmcmd.set_lambda_interval(cfg->print_intvl_expand_lambda);
+    mmsys.vmcmd.print_info();
   }
-  cout << "DBG MmSystem.n_bonds: " << mmsys.n_bonds << endl;
+  //cout << "DBG MmSystem.n_bonds: " << mmsys.n_bonds << endl;
 
   return 0;
 }
@@ -149,10 +150,10 @@ int DynamicsMode::calc_in_each_step(){
   const clock_t startTimeCoord = clock();
 
   //if(mmsys.leapfrog_coef == 1.0){
-  if(cfg->thermostat==THMSTT_SCALING && 
-     cfg->constraint == CONST_NONE){
+  if(cfg->thermostat_type==THMSTT_SCALING && 
+     cfg->constraint_type == CONST_NONE){
      //mmsys.leapfrog_coef == 1.0){
-    subbox.thermo_scaling(cfg->temperature);
+    subbox.apply_thermostat();
   }
   //}
   
@@ -167,7 +168,7 @@ int DynamicsMode::calc_in_each_step(){
   subbox.cpy_crd_prev();
   subbox.update_coordinates(cfg->time_step);
 
-  if(cfg->constraint != CONST_NONE){
+  if(cfg->constraint_type != CONST_NONE){
     apply_constraint();
   }
   //cout << "revise_coordinates"<<endl;  
@@ -211,11 +212,9 @@ int DynamicsMode::apply_constraint(){
 
   //if(mmsys.leapfrog_coeff == 1.0){
     
-  if(cfg->thermostat==THMSTT_SCALING){
-    
-    subbox.thermo_scaling_with_shake(cfg->temperature,
-				     cfg->thermo_const_max_loops,
-				     cfg->thermo_const_tolerance);
+  if(cfg->thermostat_type==THMSTT_SCALING){
+    subbox.apply_thermostat_with_shake(cfg->thermo_const_max_loops,
+				       cfg->thermo_const_tolerance);
     //mmsys.leapfrog_coef = 1.0 ;
   }else{
     subbox.apply_constraint();
@@ -360,17 +359,18 @@ int DynamicsMode::subbox_setup(){
 			  mmsys.atom_type);
   subbox_set_bonding_potentials();
 
-  if(cfg->constraint != CONST_NONE){
-    subbox.init_constraint(cfg->constraint,
+  if(cfg->constraint_type != CONST_NONE){
+    subbox.init_constraint(cfg->constraint_type,
 			   cfg->constraint_max_loops,
 			   cfg->constraint_tolerance,
 			   mmsys.constraint.get_n_pair(),
 			   mmsys.constraint.get_n_trio(),
 			   mmsys.constraint.get_n_quad());
     
-    
     subbox.set_subset_constraint(mmsys.constraint, (real)mmsys.d_free);
   }
+  subbox.init_thermostat(cfg->thermostat_type, cfg->temperature,
+			 mmsys.d_free);
   if(cfg->expanded_ensemble == EXPAND_VMCMD){
     subbox.set_expand(&mmsys.vmcmd);
   }

@@ -13,7 +13,6 @@ class DynamicsMode : public RunMode {
   
  protected:
   real time_step;
-  int thermostat;
   real temperature;
   int integrator;
   int barostat;

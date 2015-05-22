@@ -89,7 +89,7 @@ int Read::load_launch_set(MmSystem& mmsys){
     load_ls_constraint(&mmsys.constraint);
   }
   if(size_expand > 0){
-    cout << "--- Load expand ensemble definition : " << size_expand << " bytes." << endl;
+    cout << "--- Load expanded ensemble definition : " << size_expand << " bytes." << endl;
     load_ls_vmcmd(&mmsys.vmcmd);
   }
   if(size_groups > 0){
@@ -427,7 +427,7 @@ int Read::load_ls_tpl(MmSystem& mmsys){
   return 0;
 }
 
-int Read::load_ls_constraint(Constraint* cst){
+int Read::load_ls_constraint(ConstraintObject* cst){
   int n_const_2;
   int n_const_3;
   int n_const_4;
@@ -502,6 +502,7 @@ int Read::load_ls_vmcmd(ExpandVMcMD* vmcmd){
   vmcmd->set_n_vstates(n_vs);
   vmcmd->set_trans_interval(interval);
   vmcmd->set_temperature((real)temperature);
+
 
   for(int i = 0; i < n_vs; i++){
     int ord;

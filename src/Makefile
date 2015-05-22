@@ -1,6 +1,6 @@
-EXECUTABLE = celeste
+#EXECUTABLE = celeste
 #EXECUTABLE = celeste_wons
-#EXECUTABLE = celeste_gpu
+EXECUTABLE = celeste_gpu
 
 
 ### Environment variables for tsubame
@@ -46,6 +46,7 @@ OBJS = CelesteObject.o Celeste.o     Config.o \
        MiniCell.o SubBox.o \
        Constraint.o ConstraintShake.o \
        Expand.o ExpandVMcMD.o \
+       Thermostat.o \
        main.o
 
 ## endif
