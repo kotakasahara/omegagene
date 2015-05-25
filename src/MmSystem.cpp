@@ -2,6 +2,7 @@
 
 MmSystem::MmSystem()
   : CelesteObject(){
+  cur_time = 0.0;
   leapfrog_coef = 1.0;
   max_n_nb15off = 64;
   ctime_per_step = 0;

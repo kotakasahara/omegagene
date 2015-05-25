@@ -13,6 +13,7 @@ class DynamicsMode : public RunMode {
   
  protected:
   real time_step;
+  real time_step_half;
   real temperature;
   int integrator;
   int barostat;
@@ -46,8 +47,8 @@ class DynamicsMode : public RunMode {
   int initial_preprocess();
   int terminal_process();
   int main_stream();
-  int calc_in_each_step();
-  int apply_constraint();
+  virtual int calc_in_each_step();
+  virtual int apply_constraint();
   int sub_output();
   int sub_output_log();
   int cal_kinetic_energy(const real** vel);
@@ -56,4 +57,28 @@ class DynamicsMode : public RunMode {
   int gather_energies();
   int output_restart();
 };
+
+class DynamicsModePresto : public DynamicsMode {
+ private:
+  
+ protected:
+ public:
+  DynamicsModePresto();
+  ~DynamicsModePresto();
+  virtual int calc_in_each_step();
+  virtual int apply_constraint();
+
+};
+class DynamicsModeZhang : public DynamicsMode {
+ private:
+  
+ protected:
+ public:
+  DynamicsModeZhang();
+  ~DynamicsModeZhang();
+  virtual int calc_in_each_step();
+  virtual int apply_constraint();
+
+};
+
 #endif

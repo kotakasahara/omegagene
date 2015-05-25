@@ -16,7 +16,7 @@ int Config::set_defaults(){
   fn_cfg = "md_i.cfg";
   fn_inp = "md_i.inp";
   processor = PRCS_SINGLE;
-  integrator_type = INTGRTR_LEAPFLOG;
+  integrator_type = INTGRTR_LEAPFROG_PRESTO;
   constraint_type = CONST_NONE;
   cutoff = 12.0;
   n_steps = 1;
@@ -92,7 +92,8 @@ void Config::setAll(vector<string> arg){
     }
     else if(*itr=="--integrator"){ 
       itr++;
-      if(*itr=="leapflog"){ integrator_type = INTGRTR_LEAPFLOG; }
+      if(*itr=="zhang"){ integrator_type = INTGRTR_ZHANG; }
+      else if(*itr=="leapfrog-presto"){ integrator_type = INTGRTR_LEAPFROG_PRESTO; }
       else { integrator_type = INTGRTR_DUMMY; }
     }
     else if(*itr=="--constraint"){ 

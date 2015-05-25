@@ -34,6 +34,8 @@ class SubBox : public CelesteObject {
   Config* cfg;
   int box_crd[3];
 
+  real time_step;
+  real time_step_inv;
   real time_step_inv_sq;
   real temperature_coef;
 
@@ -65,8 +67,7 @@ class SubBox : public CelesteObject {
   int  *atom_type;
 
   // buffer for thermostat with shake 
-  real *buf_crd1;
-  real *buf_crd2;
+  real *buf_crd;
   //
 
   int  *atomids;
@@ -176,8 +177,8 @@ class SubBox : public CelesteObject {
   
   int set_parameters(int in_n_atomds, PBC* in_pbc, Config* in_cfg,
 		     real in_cutoff_pair,
-		     int in_n_boxes_x, int in_n_boxes_y, int in_n_boxes_z,
-		     int d_free);
+		     int in_n_boxes_x, int in_n_boxes_y, int in_n_boxes_z);
+
   int set_nsgrid();
   int nsgrid_init();
   int nsgrid_update();
@@ -250,11 +251,15 @@ class SubBox : public CelesteObject {
   int get_n_atoms_box(){return n_atoms_box;};
 
   int cpy_crd_prev();
+  int cpy_crd_from_prev();
+  int cpy_vel_buf_from_prev();
+  int cpy_vel_prev_from_buf();
+  int cpy_vel_prev();
   int swap_velocity_buffer();
-  int update_velocities(const real firstcoeff,
-			const real time_step);
+  int update_velocities(const real time_step);
   int velocity_average();
   int set_velocity_from_crd();
+  int set_force_from_velocity(const real time_step);
   int revise_coordinates_pbc();
   int copy_crd(real** p_crd);
   int copy_vel_just(real** p_vel);
@@ -262,7 +267,9 @@ class SubBox : public CelesteObject {
   int copy_vel_next(real** p_vel);
   int copy_crdvel(real* src, real** dst);
   real cal_kinetic_energy();
-  int  update_coordinates(const real time_step);
+  int update_coordinates_cur(const real time_step);
+  int update_coordinates_prev(const real time_step);
+  int  update_coordinates(const real time_step, real *p_crd, real* p_vel);
   int update_coordinates_nsgrid();
   bool is_in_box(real* in_crd);
   bool is_in_exbox(real* in_crd);
@@ -274,7 +281,7 @@ class SubBox : public CelesteObject {
 		      int max_n_pair,
 		      int max_n_trio,
 		      int max_n_quad);
-  int set_subset_constraint(ConstraintObject& in_cst, real d_free);
+  int set_subset_constraint(ConstraintObject& in_cst);
   int init_thermostat(const int in_thermostat_type,
 		      const real in_temperature,
 		      const int d_free);

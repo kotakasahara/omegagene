@@ -80,8 +80,7 @@ int SubBox::alloc_variables(){
   //
   if(cfg->thermostat_type!=THMSTT_NONE &&
      cfg->constraint_type!=CONST_NONE){
-    buf_crd1 = new real[max_n_atoms_box*3];
-    buf_crd2 = new real[max_n_atoms_box*3];
+    buf_crd = new real[max_n_atoms_box*3];
   }
 
 #if defined(F_CUDA)
@@ -261,8 +260,7 @@ int SubBox::free_variables(){
 
   if(cfg->thermostat_type!=THMSTT_NONE &&
      cfg->constraint_type!=CONST_NONE){
-    delete[] buf_crd1;
-    delete[] buf_crd2;
+    delete[] buf_crd;
   }
 
 #if defined(F_CUDA)
@@ -382,8 +380,7 @@ int SubBox::free_variables_for_nb15off(){
 int SubBox::set_parameters(int in_n_atoms, PBC* in_pbc, 
 			   Config* in_cfg,
 			   real in_cutoff_pair,
-			   int in_n_boxes_x, int in_n_boxes_y, int in_n_boxes_z,
-			   int d_free){
+			   int in_n_boxes_x, int in_n_boxes_y, int in_n_boxes_z){
   // set
   //   n_atoms, pbc, cutoff_pair
   //   n_boxes_xyz,  n_boxes
@@ -397,7 +394,9 @@ int SubBox::set_parameters(int in_n_atoms, PBC* in_pbc,
   n_atoms = in_n_atoms;
   pbc = in_pbc;
   cfg = in_cfg;
-  time_step_inv_sq = 1.0 /( cfg->time_step * cfg->time_step);
+  time_step = cfg->time_step;
+  time_step_inv = 1.0 / time_step;
+  time_step_inv_sq = time_step_inv * time_step_inv;
   //temperature_coeff = 1.0 / (GAS_CONST * (real)d_free) * JOULE_CAL * 1e3 * 2.0;
   //temperature_coef = (2.0 * JOULE_CAL * 1e+3) / (GAS_CONST * (real)d_free);
   //cout << "DBG coef1: " << temperature_coef << " " << d_free << endl;
@@ -896,6 +895,12 @@ int SubBox::calc_energy(){
   pote_vdw += nsgrid.get_energy()[0];
   pote_ele += nsgrid.get_energy()[1];
 #endif
+
+  for ( int i = 0; i < n_atoms_box*3; i++){
+    work[i] *= -FORCE_VEL;
+  }
+
+
   //cout << "nsgrid.get_energy()[1]" << nsgrid.get_energy()[1] << endl;
 
 
@@ -1364,7 +1369,25 @@ int SubBox::cpy_crd_prev(){
   memcpy(crd_prev, crd, sizeof(real) * max_n_atoms_exbox*3);
   return 0;
 }
-
+int SubBox::cpy_crd_from_prev(){
+  //memcpy(crd, crd_prev, sizeof(real) * max_n_atoms_exbox*3);
+  for( int i = 0; i < n_atoms_box *3 ; i ++){
+    crd[i] = crd_prev[i];
+  }
+  return 0;
+}
+int SubBox::cpy_vel_prev(){
+  memcpy(vel, vel_next, sizeof(real) * max_n_atoms_exbox*3);
+  return 0;
+}
+int SubBox::cpy_vel_buf_from_prev(){
+  memcpy(buf_crd, vel, sizeof(real) * max_n_atoms_exbox*3);
+  return 0;
+}
+int SubBox::cpy_vel_prev_from_buf(){
+  memcpy(vel, buf_crd, sizeof(real) * max_n_atoms_exbox*3);
+  return 0;
+}
 int SubBox::swap_velocity_buffer(){
   real* tmp = vel;
   vel = vel_next;
@@ -1372,16 +1395,16 @@ int SubBox::swap_velocity_buffer(){
   return 0;
 }
 
-int SubBox::update_velocities(const real firstcoeff,
-			      const real time_step){
-  swap_velocity_buffer();
+int SubBox::update_velocities(const real time_step){
+  //swap_velocity_buffer();
   for(int atomid_b=0, atomid_b3=0;
       atomid_b < all_n_atoms[rank];
       atomid_b++, atomid_b3+=3){
     for(int d=0; d<3; d++){    
-      vel_next[atomid_b3+d] = vel[atomid_b3+d] - 
-	(firstcoeff * time_step * 
-	 FORCE_VEL * work[atomid_b3+d] 
+      vel_next[atomid_b3+d] = vel[atomid_b3+d]  +
+	( time_step * 
+	 //	 FORCE_VEL * 
+	 work[atomid_b3+d] 
 	 * mass_inv[atomid_b]);
     }
   }
@@ -1399,8 +1422,6 @@ int SubBox::velocity_average(){
   return 0;
 }
 int SubBox::set_velocity_from_crd(){
-  const real ts_inv = 1.0 / cfg->time_step;
-  //DBG
   
   for(int atomid_b = 0, atomid_b3 = 0;
       atomid_b < all_n_atoms[rank];
@@ -1414,7 +1435,7 @@ int SubBox::set_velocity_from_crd(){
 
     for(int d=0; d<3; d++){
       norm1 += vel_next[atomid_b3+d] * vel_next[atomid_b3+d];
-      vel_next[atomid_b3+d] = (crd[atomid_b3+d] - crd_prev[atomid_b3+d]) * ts_inv;
+      vel_next[atomid_b3+d] = (crd[atomid_b3+d] - crd_prev[atomid_b3+d]) * time_step_inv;
       //vel_next[atomid_b3+d] = d_crd[d] * ts_inv;
       norm2 += vel_next[atomid_b3+d] * vel_next[atomid_b3+d];
     }
@@ -1457,6 +1478,17 @@ int SubBox::copy_vel_just(real** p_vel){
   //     subbox.set_vel_just(mmsys.vel)
   //return get_vel(vel_just, p_vel);
 }
+int SubBox::set_force_from_velocity(const real time_step){
+  time_step_inv = 1.0 / time_step;
+  for(int atomid_b = 0, atomid_b3 = 0;
+      atomid_b < all_n_atoms[rank];
+      atomid_b++, atomid_b3+=3){
+    for(int d=0; d<3; d++){
+      work[atomid_b3+d] = (vel_next[atomid_b3+d] - vel[atomid_b3+d])*mass[atomid_b] * time_step_inv;
+    }
+  }  
+  return 0;
+}
 int SubBox::copy_crd(real** p_crd){
   return copy_crdvel(crd, p_crd);
 }
@@ -1477,22 +1509,31 @@ int SubBox::copy_crdvel(real* src, real** dst){
   return 0;
 }
 
-int SubBox::update_coordinates(const real time_step){
+int SubBox::update_coordinates_prev(const real time_step){
+  update_coordinates(time_step, crd_prev, vel);
+  return 0;
+}
+int SubBox::update_coordinates_cur(const real time_step){
+  update_coordinates(time_step, crd, vel_next);
+  return 0;
+}
+
+int SubBox::update_coordinates(const real time_step, real *p_crd, real* p_vel){
   //subbox.cpy_crd_prev();
   for(int atomid_b=0, atomid_b3=0;
       atomid_b < all_n_atoms[rank];
       atomid_b++, atomid_b3+=3){
     for(int d=0; d<3; d++){
-      real diff = vel_next[atomid_b3+d] * time_step;
-      crd[atomid_b3+d] += diff;
+      real diff = p_vel[atomid_b3+d] * time_step;
+      crd[atomid_b3+d] = p_crd[atomid_b3+d] + diff;
       //#ifndef F_WO_NS      
       //      nsgrid.move_atom(atomid_b, d, diff);
       //#endif
     }
   }
-
   return 0;
 }
+
 int SubBox::update_coordinates_nsgrid(){
   // this method should be called 
   //   after update_coordinates(), before revise_coordinates_pbc()
@@ -1551,7 +1592,7 @@ int SubBox::init_constraint(int in_constraint,
   
   return in_constraint;
 }
-int SubBox::set_subset_constraint(ConstraintObject& in_cst, real d_free){
+int SubBox::set_subset_constraint(ConstraintObject& in_cst){
   if(cfg->constraint_type == CONST_NONE) return 1;
 
   //cout << "set_subset_constraint" << endl;
@@ -1567,10 +1608,14 @@ int SubBox::init_thermostat(const int in_thermostat_type,
     thermostat = new ThermostatObject();
   }else if(in_thermostat_type == THMSTT_SCALING){
     thermostat = new ThermostatScaling();
+  }else if(in_thermostat_type == THMSTT_HOOVER_EVANS){
+    thermostat = new ThermostatHooverEvans();
   }
   thermostat->set_temperature(in_temperature);
   thermostat->set_temperature_coeff(d_free);
+
   thermostat->set_time_step(cfg->time_step);
+  thermostat->set_constant(n_atoms_box, mass_inv, vel_next, work);
   return 0;
 }
 
@@ -1657,94 +1702,10 @@ int SubBox::apply_thermostat_with_shake(const int max_loops,
 					  vel, vel_next,
 					  mass, mass_inv,
 					  constraint,
-					  pbc, buf_crd1,
+					  pbc, buf_crd,
 					  max_loops, tolerance);
-  /*
-  for(int i_atom = 0;
-      i_atom < n_atoms_box*3; i_atom++){
-    buf_crd2[i_atom] = 0.0;
-  }
-  //DBG
-  bool converge = false;
 
-  for(int i_loop=0; i_loop < max_loops; i_loop++){
-    for(int idx = 0; idx < n_atoms_box*3; idx++)
-      buf_crd1[idx] =  crd[idx];
-    //cout << "DBG 01 : " << i_loop << endl;
-    apply_constraint();
-
-    real_fc kine_pre = 0.0;
-    for(int i_atom = 0, i_atom_3 = 0;
-	i_atom < n_atoms_box; i_atom++, i_atom_3+=3){
-      real vel_norm = 0.0;
-      for(int d=0; d < 3; d++){
-	//vel_next[i_atom_3+d] = (crd[i_atom_3+d] - crd_prev[i_atom_3+d]) / cfg->time_step;
-	real vel_tmp = (vel_next[i_atom_3+d] + vel[i_atom_3+d]) * 0.5;
-	vel_norm += (vel_tmp * vel_tmp);
-      }
-      kine_pre += vel_norm * mass[i_atom];
-    }
-    real kine = kine_pre * KINETIC_COEFF;
-    real cur_temperature = kine * temperature_coef;
-    
-    if(i_loop == max_loops-1) break;
-    real diff = fabs(cur_temperature - target_temperature) / target_temperature;
-    if(diff < tolerance){
-      converge = true;
-      break;
-    }
-
-
-    kine_pre = 0.0;
-    for(int i_atom = 0, i_atom_3 = 0;
-	i_atom < n_atoms_box; i_atom++, i_atom_3+=3){
-      real vel_norm = 0.0;
-      for(int d=0; d < 3; d++){
-	buf_crd2[i_atom_3+d] += (crd[i_atom_3+d] - buf_crd1[i_atom_3+d]) * time_step_inv_sq;
-	real vel_diff = -FORCE_VEL * work[i_atom_3+d] * mass_inv[i_atom] + buf_crd2[i_atom_3+d];
-	//real vel_diff = -FORCE_VEL * work[i_atom_3+d] * mass_inv[i_atom] + (crd[i_atom_3+d]-buf_crd1[i_atom_3+d])*time_step_inv_sq;
-	//real vel_tmp = vel[i_atom_3+d] + 0.5 * cfg->time_step * vel_diff;
-	vel_next[i_atom_3+d] = vel[i_atom_3+d] + 0.5 * cfg->time_step * vel_diff;
-	real vel_tmp = vel_next[i_atom_3+d];
-	vel_norm += vel_tmp * vel_tmp;
-      }
-      kine_pre += mass[i_atom] * vel_norm;
-    }
-    kine = kine_pre * KINETIC_COEFF;
-
-    cur_temperature = kine * temperature_coef;
-
-    real scale = sqrt(target_temperature / cur_temperature);
-
-    kine_pre = 0.0;
-    for(int i_atom = 0, i_atom_3 = 0;
-	i_atom < n_atoms_box; i_atom++, i_atom_3+=3){
-      real vel_norm = 0.0;
-      for(int d=0; d < 3; d++){
-	real vel_diff = -FORCE_VEL * work[i_atom_3+d] * mass_inv[i_atom] + buf_crd2[i_atom_3+d];
-	//real vel_diff = -FORCE_VEL * work[i_atom_3+d] * mass_inv[i_atom] + (crd[i_atom_3+d]-buf_crd1[i_atom_3+d])*time_step_inv_sq;
-	vel_next[i_atom_3+d] = (2.0 * scale - 1.0) * vel[i_atom_3+d]
-	  + scale * cfg->time_step * vel_diff;
-	real tmp_vel = (vel_next[i_atom_3+d] + vel[i_atom_3+d]) * 0.5;
-	vel_norm += tmp_vel*tmp_vel;
-      }
-      kine_pre += vel_norm * mass[i_atom];
-    }
-    
-    kine = kine_pre * KINETIC_COEFF;
-
-    for(int i_atom = 0, i_atom_3 = 0;
-	i_atom < n_atoms_box; i_atom++, i_atom_3+=3){
-      for(int d=0; d < 3; d++){
-	crd[i_atom_3+d] = crd_prev[i_atom_3+d] + cfg->time_step * vel_next[i_atom_3+d];
-      }
-    }
-  }  
-  if(!converge){
-    cout << "Thermostat was not converged." << endl;
-  }
   return 0;
-  */
 }
 
 int SubBox::expand_apply_bias(unsigned long cur_step,  real in_lambda){

@@ -64,7 +64,8 @@ class CelesteObject {
     PRCS_DUMMY
   };
   enum {
-    INTGRTR_LEAPFLOG = 0,
+    INTGRTR_ZHANG = 0,
+    INTGRTR_LEAPFROG_PRESTO = 1,
     INTGRTR_DUMMY
   };
   enum {

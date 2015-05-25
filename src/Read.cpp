@@ -104,7 +104,7 @@ int Read::load_launch_set(MmSystem& mmsys){
 
 int Read::load_ls_header(MmSystem& mmsys){
   cout << "--- Load file header." << endl;
-
+  
   int magic;
   ifs.read((char*)&magic, sizeof(int));
   if(magic != MAGIC_NUMBER){

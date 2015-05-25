@@ -6,6 +6,7 @@ Celeste::Celeste()
 }
 
 int Celeste::setup(int argn, char* argv[]){
+  cout << ABOUT_ME << endl;
   string fn_cfg;
   if(argn<2){
     cerr << "Usage: celeste [mode]"<<endl;
@@ -23,6 +24,7 @@ int Celeste::setup(int argn, char* argv[]){
 }
 
 int Celeste::main_stream(){
+
   cout<<"mainstream\n";
   switch(cfg.mode){
   case M_TEST: test_mode();           break;
@@ -56,7 +58,14 @@ int Celeste::dynamics_mode(){
   //  cout << "F_CUDA flag = ON" << endl;
   //  GpuDynamicsMode* dynamics = new GpuDynamicsMode;
   //#else
-  DynamicsMode* dynamics = new DynamicsMode;
+  DynamicsMode* dynamics;
+  if (cfg.integrator_type == INTGRTR_LEAPFROG_PRESTO){
+    dynamics = new DynamicsModePresto();
+  }else if (cfg.integrator_type == INTGRTR_ZHANG){
+    dynamics = new DynamicsModeZhang();
+  }else{
+    cout << "Unknown Integrator" << endl;
+  }
   //#endif
   
   Read(cfg.fn_inp).load_launch_set(dynamics->mmsys);
