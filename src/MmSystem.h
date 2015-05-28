@@ -19,6 +19,7 @@ using namespace std;
 #include "ForceField.h"
 #include "Constraint.h"
 #include "ExpandVMcMD.h"
+#include "DistRestraint.h"
 
 class MmSystem : public CelesteObject{
  private:
@@ -105,6 +106,8 @@ class MmSystem : public CelesteObject{
   real_fc pote_vdw;
   real_fc pote_ele;
 
+  real_fc pote_dist_rest;
+
   real kinetic_e;
   real temperature;
 
@@ -114,7 +117,9 @@ class MmSystem : public CelesteObject{
   ForceField ff;
 
   ConstraintObject constraint;
+  ConstraintObject settle;
   ExpandVMcMD vmcmd;
+
   int n_groups;
   int* n_atoms_in_groups;
   int** atom_groups;
@@ -122,6 +127,8 @@ class MmSystem : public CelesteObject{
   real* mass_inv_groups;
   vector<string> atom_groups_names;
   
+  DistRestraintObject*  dist_restraint;
+
   //mt19937 random_mt;
 
   //time

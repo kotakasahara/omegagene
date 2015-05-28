@@ -68,13 +68,14 @@ int Celeste::dynamics_mode(){
   }
   //#endif
   
-  Read(cfg.fn_inp).load_launch_set(dynamics->mmsys);
   
   if(DBG>=1)
     cout << "DBG1: dynamics->set_config_parameters(cfg)" << endl;
   
   dynamics->set_config_parameters(&cfg);
   
+  Read(cfg.fn_inp).load_launch_set(dynamics->mmsys);
+
   if(DBG>=1)
     cout << "DBG1: dynamics->initial_preprocess()" << endl;
   

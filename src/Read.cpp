@@ -88,6 +88,10 @@ int Read::load_launch_set(MmSystem& mmsys){
     cout << "--- Load constraint definition : " << size_constraint << " bytes." << endl;
     load_ls_constraint(&mmsys.constraint);
   }
+  if(size_settle > 0){
+    cout << "--- Load SETTLE definition : " << size_settle << " bytes." << endl;
+    load_ls_constraint(&mmsys.settle);
+  }
   if(size_expand > 0){
     cout << "--- Load expanded ensemble definition : " << size_expand << " bytes." << endl;
     load_ls_vmcmd(&mmsys.vmcmd);
@@ -95,6 +99,10 @@ int Read::load_launch_set(MmSystem& mmsys){
   if(size_groups > 0){
     cout << "--- Load atom group definition : " << size_groups << " bytes." << endl;
     load_ls_atom_groups(mmsys);
+  }
+  if(size_dist_restraint > 0){
+    cout << "--- Load distance restraint definition : " << size_dist_restraint << " bytes." << endl;
+    load_ls_dist_restraint(mmsys.dist_restraint);
   }
   //cout << "load_ls_pcluster()" << endl;
   //load_ls_pcluster(mmsys);
@@ -126,19 +134,23 @@ int Read::load_ls_header(MmSystem& mmsys){
   read_bin_values(&size_vel, 1);
   read_bin_values(&size_topol, 1);
   read_bin_values(&size_constraint, 1);
+  read_bin_values(&size_settle, 1);
   read_bin_values(&size_expand, 1);
   read_bin_values(&size_groups, 1);
+  read_bin_values(&size_dist_restraint, 1);
   //int size_pcluster;
   //read_bin_values(&size_pcluster, 1);
 
   if(DBG==1){
-    cout << "size_box:        " << size_box << endl;
-    cout << "size_crd:        " << size_crd << endl;
-    cout << "size_vel:        " << size_vel << endl;
-    cout << "size_topol:      " << size_topol << endl;
-    cout << "size_constraint: " << size_constraint << endl;
-    cout << "size_expand:     " << size_expand << endl;
-    cout << "size_groups:     " << size_groups << endl;
+    cout << "size_box:            " << size_box << endl;
+    cout << "size_crd:            " << size_crd << endl;
+    cout << "size_vel:            " << size_vel << endl;
+    cout << "size_topol:          " << size_topol << endl;
+    cout << "size_constraint:     " << size_constraint << endl;
+    cout << "size_settle:         " << size_settle << endl;
+    cout << "size_expand:         " << size_expand << endl;
+    cout << "size_groups:         " << size_groups << endl;
+    cout << "size_dist_restraint: " << size_dist_restraint << endl;
     //cout << "size_pcluster: " << size_pcluster << endl;
   }
 
@@ -441,7 +453,7 @@ int Read::load_ls_constraint(ConstraintObject* cst){
   
   cst->set_max_n_constraints(n_const_2, n_const_3, n_const_4);
   cst->alloc_constraint();
-
+  
   int atomid1, atomid2, atomid3, atomid4;
   double dist1, dist2, dist3, dist4, dist5, dist6;
   // 2 atoms
@@ -558,7 +570,24 @@ int Read::load_ls_atom_groups(MmSystem& mmsys){
   delete[] n_atoms_in_group;
   return 0;
 }
-
+int Read::load_ls_dist_restraint(DistRestraintObject* dr){
+  int n_drunits;
+  read_bin_values(&n_drunits, 1);
+  dr->alloc_drunits(n_drunits);
+  for(int i=0; i < n_drunits; i++){
+    int aid1, aid2;
+    float coef_low, coef_high;
+    float dist_low, dist_high;
+    read_bin_values(&aid1, 1);    
+    read_bin_values(&aid2, 1);    
+    read_bin_values(&coef_low, 1);
+    read_bin_values(&coef_high, 1);
+    read_bin_values(&dist_low, 1);
+    read_bin_values(&dist_high, 1);
+    dr->add_drunit(aid1, aid2, coef_low, coef_high, dist_low, dist_high);
+  }
+  return 0;
+}
 /*
 int Read::load_ls_pcluster(MmSystem& mmsys){
   int n_clusters1;
@@ -599,4 +628,3 @@ template <typename TYPE> int Read::read_bin_values(TYPE *recept, int len){
   }
   return 0;
 }
-

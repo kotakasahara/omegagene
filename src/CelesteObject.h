@@ -104,6 +104,11 @@ class CelesteObject {
     CRDOUT_PRESTO,
     CRDOUT_DUMMY
   };
+  enum {
+    DISTREST_NONE = 0,
+    DISTREST_HARMONIC,
+    DISTREST_DUMMY
+  };
   // 
   static const int MAX_N_ATOMTYPE;
   //
@@ -128,6 +133,7 @@ class CelesteObject {
   
   static const real JOULE_CAL;
   static const real KINETIC_COEFF;
+  static const real BOLTZMAN;
   
 
   template <typename TYPE> inline const TYPE& max(const TYPE& a, const TYPE& b){ return a < b ? b : a; }

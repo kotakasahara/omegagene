@@ -83,6 +83,7 @@ int DynamicsMode::initial_preprocess(){
   cout << "Initial temperature : " <<  mmsys.temperature << endl;
   cout << "Degree of freedom : " <<  mmsys.d_free << endl;
 
+
   return 0;
 }
 
@@ -147,6 +148,15 @@ int DynamicsMode::apply_constraint(){
   //}
   return 0;
 }
+
+int DynamicsMode::apply_dist_restraint(){
+  subbox.copy_crd(mmsys.crd);
+  mmsys.pote_dist_rest = mmsys.dist_restraint->apply_restraint(mmsys.n_atoms,
+							       mmsys.crd, mmsys.pbc, mmsys.force);
+  subbox.add_force_from_mmsys(mmsys.force);
+  return 0;
+}
+
 int DynamicsMode::sub_output(){
   // Output
   //cout << "cur_step: " << mmsys.cur_step << " ";
@@ -178,7 +188,7 @@ int DynamicsMode::sub_output_log(){
       + mmsys.pote_torsion + mmsys.pote_impro
       + mmsys.pote_14vdw + mmsys.pote_14ele
       + mmsys.pote_vdw + mmsys.pote_ele;
-    real total_e = potential_e + mmsys.kinetic_e;
+    real total_e = potential_e + mmsys.kinetic_e + mmsys.pote_dist_rest;
     sprintf(buf, "Total:     %14.10e\n", total_e);
     ss << string(buf);
     sprintf(buf, "Potential: %14.10e    Kinetic:  %14.10e\n", potential_e, mmsys.kinetic_e);
@@ -191,6 +201,10 @@ int DynamicsMode::sub_output_log(){
     ss << string(buf);    
     sprintf(buf, "VDW:       %14.10e    Ele:      %14.10e\n", mmsys.pote_vdw, mmsys.pote_ele);
     ss << string(buf);    
+    if(cfg->dist_restraint_type != DISTREST_NONE){
+      sprintf(buf, "Distance restraint: %14.10e\n", mmsys.pote_dist_rest);
+      ss << string(buf);    
+    }
     sprintf(buf, "Temperature:       %14.10e\n", mmsys.temperature);
     ss << string(buf);    
     sprintf(buf, "Comput Time:       %14.10e\n", (float)mmsys.ctime_per_step/ (float)CLOCKS_PER_SEC);
@@ -289,11 +303,13 @@ int DynamicsMode::subbox_setup(){
 			   cfg->constraint_tolerance,
 			   mmsys.constraint.get_n_pair(),
 			   mmsys.constraint.get_n_trio(),
-			   mmsys.constraint.get_n_quad());
+			   mmsys.constraint.get_n_quad(),
+			   mmsys.settle.get_n_trio());
     
-    subbox.set_subset_constraint(mmsys.constraint);
+    subbox.set_subset_constraint(mmsys.constraint,
+				 mmsys.settle);
   }
-  subbox.init_thermostat(cfg->thermostat_type, cfg->temperature,
+ subbox.init_thermostat(cfg->thermostat_type, cfg->temperature,
 			 mmsys.d_free);
   if(cfg->expanded_ensemble == EXPAND_VMCMD){
     subbox.set_expand(&mmsys.vmcmd);
@@ -383,7 +399,9 @@ int DynamicsModePresto::calc_in_each_step(){
       + mmsys.pote_vdw + mmsys.pote_ele;
     subbox.expand_apply_bias(mmsys.cur_step, potential_e);
   }
-
+  if(cfg->dist_restraint_type != DISTREST_NONE){
+    apply_dist_restraint();
+  }
   const clock_t startTimeVel = clock();
   //cout << "update_velocities"<<endl;
   subbox.cpy_vel_prev();
@@ -500,6 +518,9 @@ int DynamicsModeZhang::calc_in_each_step(){
       + mmsys.pote_14vdw + mmsys.pote_14ele
       + mmsys.pote_vdw + mmsys.pote_ele;
     subbox.expand_apply_bias(mmsys.cur_step, potential_e);
+  }
+  if(cfg->dist_restraint_type != DISTREST_NONE){
+    apply_dist_restraint();
   }
   
   const clock_t startTimeVel = clock();

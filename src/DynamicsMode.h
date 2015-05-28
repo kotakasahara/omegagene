@@ -49,6 +49,7 @@ class DynamicsMode : public RunMode {
   int main_stream();
   virtual int calc_in_each_step();
   virtual int apply_constraint();
+  int apply_dist_restraint();
   int sub_output();
   int sub_output_log();
   int cal_kinetic_energy(const real** vel);

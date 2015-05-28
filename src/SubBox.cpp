@@ -58,6 +58,8 @@ SubBox::SubBox(){
   ctime_enumerate_cellpairs = 0;
   ctime_calc_energy_pair = 0;
   ctime_calc_energy_bonded = 0;
+  flg_constraint = 0;
+  flg_settle = 0;
 }
 SubBox::~SubBox(){
 #if defined(F_CUDA)
@@ -66,6 +68,9 @@ SubBox::~SubBox(){
 #endif
   free_variables();
   delete constraint;
+  delete settle;
+
+  delete thermostat;
 }
 
 int SubBox::alloc_variables(){
@@ -78,8 +83,7 @@ int SubBox::alloc_variables(){
   work = new real_fc[max_n_atoms_exbox*3];
 
   //
-  if(cfg->thermostat_type!=THMSTT_NONE &&
-     cfg->constraint_type!=CONST_NONE){
+  if(cfg->thermostat_type!=THMSTT_NONE){
     buf_crd = new real[max_n_atoms_box*3];
   }
 
@@ -258,8 +262,7 @@ int SubBox::free_variables(){
   //delete[] frc;
   delete[] atomids;
 
-  if(cfg->thermostat_type!=THMSTT_NONE &&
-     cfg->constraint_type!=CONST_NONE){
+  if(cfg->thermostat_type!=THMSTT_NONE){
     delete[] buf_crd;
   }
 
@@ -1490,15 +1493,15 @@ int SubBox::set_force_from_velocity(const real time_step){
   return 0;
 }
 int SubBox::copy_crd(real** p_crd){
-  return copy_crdvel(crd, p_crd);
+  return copy_crdvel_to_mmsys(crd, p_crd);
 }
 int SubBox::copy_vel(real** p_vel){
-  return copy_crdvel(vel, p_vel);
+  return copy_crdvel_to_mmsys(vel, p_vel);
 }
 int SubBox::copy_vel_next(real** p_vel){
-  return copy_crdvel(vel_next, p_vel);
+  return copy_crdvel_to_mmsys(vel_next, p_vel);
 }
-int SubBox::copy_crdvel(real* src, real** dst){
+int SubBox::copy_crdvel_to_mmsys(real* src, real** dst){
   for(int atomid_b=0, atomid_b3=0;
       atomid_b < all_n_atoms[rank];
       atomid_b++, atomid_b3+=3){
@@ -1508,7 +1511,19 @@ int SubBox::copy_crdvel(real* src, real** dst){
   }
   return 0;
 }
-
+int SubBox::add_force_from_mmsys(real_fc** in_force){
+  add_crdvel_from_mmsys(work, in_force);
+}
+template <typename TYPE> int SubBox::add_crdvel_from_mmsys(TYPE* dst, TYPE** src){
+  for(int atomid_b=0, atomid_b3=0;
+      atomid_b < all_n_atoms[rank];
+      atomid_b++, atomid_b3+=3){
+    for(int d=0; d<3; d++){
+      dst[atomid_b3+d] += src[atomids[atomid_b]][d];
+    }
+  }
+  return 0;
+}
 int SubBox::update_coordinates_prev(const real time_step){
   update_coordinates(time_step, crd_prev, vel);
   return 0;
@@ -1553,6 +1568,7 @@ int SubBox::update_coordinates_nsgrid(){
 
   return 0;
 }
+
 bool SubBox::is_in_box(real* in_crd){
   return in_crd[0]>=box_lower[0] && in_crd[0]<box_upper[0] &&
     in_crd[1]>=box_lower[1] && in_crd[1]<box_upper[1] &&
@@ -1576,28 +1592,48 @@ int SubBox::init_constraint(int in_constraint,
 			    int in_max_loops, real in_tolerance,
 			    int max_n_pair,
 			    int max_n_trio,
-			    int max_n_quad){
+			    int max_n_quad,
+			    int max_n_settle){
   switch (in_constraint){
   case CONST_SHAKE:
-    
-    constraint = new ConstraintShake(); break;
-
+    flg_constraint = 1;
+    break;
+  case CONST_SHAKE_SETTLE:    
+    flg_constraint = 1;
+    flg_settle = 1;
+    break;
   default:
     return in_constraint;
   }
-  constraint->set_parameters(in_max_loops, in_tolerance);
-  constraint->set_max_n_constraints(max_n_pair, max_n_trio, max_n_quad);
-  cout << "max_n_const: " << max_n_pair << " " << max_n_trio << " " << max_n_quad  << endl;
-  constraint->alloc_constraint();
-  
+  if (flg_constraint != 0){
+    constraint = new ConstraintShake();
+    constraint->set_parameters(in_max_loops, in_tolerance);
+    constraint->set_max_n_constraints(max_n_pair, max_n_trio, max_n_quad);
+    //cout << "max_n_const: " << max_n_pair << " " << max_n_trio << " " << max_n_quad  << endl;
+    constraint->alloc_constraint();
+  }else{
+    constraint = new ConstraintObject();
+  }
+  if (flg_settle != 0){
+    settle = new ConstraintSettle();
+    settle->set_max_n_constraints(0, max_n_settle, 0);
+    settle->alloc_constraint();
+  }else{
+    settle = new ConstraintObject();
+  }
+
   return in_constraint;
 }
-int SubBox::set_subset_constraint(ConstraintObject& in_cst){
-  if(cfg->constraint_type == CONST_NONE) return 1;
 
-  //cout << "set_subset_constraint" << endl;
-  constraint->set_subset_constraint(in_cst, atomids_rev);
-  
+int SubBox::set_subset_constraint(ConstraintObject& in_cst,
+				  ConstraintObject& in_settle){
+  if(flg_constraint != 0)
+    //cout << "set_subset_constraint" << endl;
+    constraint->set_subset_constraint(in_cst, atomids_rev);
+
+  if(flg_settle != 0)
+    settle->set_subset_constraint(in_settle, atomids_rev);
+
   //temperature_coef = (2.0 * JOULE_CAL * 1e+3) / (GAS_CONST * d_free);
   return 0;
 }

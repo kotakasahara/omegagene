@@ -348,3 +348,18 @@ int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real_pw* in_mas
   return 0;
 }
 
+ConstraintSettle::ConstraintSettle()
+  : ConstraintObject(){
+  
+}
+
+ConstraintSettle::~ConstraintSettle(){
+  free_constraint();
+}
+int ConstraintSettle::apply_constraint(real* in_crd, real* in_crd_prev, real_pw* in_mass_inv,
+				 PBC* pbc){
+  
+  
+  return 0;
+}
+

@@ -6,7 +6,7 @@ CelesteObject::CelesteObject(){
 //const int CelesteObject::MAX_N_ATOMTYPE = 40;
 
 const string CelesteObject::EXE = "celeste";
-const string CelesteObject::ABOUT_ME = "celeste ver.0.33.a 24-may-2015";
+const string CelesteObject::ABOUT_ME = "celeste ver.0.34.a 28-may-2015";
 //const int CelesteObject::REAL_BYTE = 4;
 const int CelesteObject::REAL_BYTE = 8;
 const real CelesteObject::PI = 3.14159265;
@@ -21,6 +21,7 @@ const real CelesteObject::FORCE_VEL = 4.184e-4;
 const real CelesteObject::GAS_CONST = 8.31451;
 const real CelesteObject::JOULE_CAL = 4.184;
 const real CelesteObject::KINETIC_COEFF = (1e7 / (JOULE_CAL*1e3)) * 0.5;
+const real CelesteObject::BOLTZMAN = 1.380658e-23;
 
 int CelesteObject::cross(const double* a, const double* b, double* ret){
   ret[0] = a[1]*b[2] - a[2]*b[1];

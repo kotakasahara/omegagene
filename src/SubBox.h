@@ -19,7 +19,6 @@ class SubBox : public CelesteObject {
  private:
   // only for rank=0
   int n_atoms;
-  
   int n_boxes;
   int n_boxes_xyz[3];
   real box_l[3];
@@ -145,8 +144,15 @@ class SubBox : public CelesteObject {
   real_fc pote_14vdw;
 
   MiniCell nsgrid;
+
+  //int constraint_type;
+  int  flg_constraint;
+  int  flg_settle;
   ConstraintObject* constraint;
+  ConstraintObject* settle;
   ExpandVMcMD* expand;
+  
+  int flg_thermostat;
   ThermostatObject* thermostat;
   
   clock_t ctime_setgrid;
@@ -265,7 +271,9 @@ class SubBox : public CelesteObject {
   int copy_vel_just(real** p_vel);
   int copy_vel(real** p_vel);
   int copy_vel_next(real** p_vel);
-  int copy_crdvel(real* src, real** dst);
+  int copy_crdvel_to_mmsys(real* src, real** dst);
+  int add_force_from_mmsys(real_fc** in_force);
+  template <typename TYPE> int add_crdvel_from_mmsys(TYPE* dst, TYPE** src);
   real cal_kinetic_energy();
   int update_coordinates_cur(const real time_step);
   int update_coordinates_prev(const real time_step);
@@ -280,8 +288,10 @@ class SubBox : public CelesteObject {
 		      real in_tolerance,
 		      int max_n_pair,
 		      int max_n_trio,
-		      int max_n_quad);
-  int set_subset_constraint(ConstraintObject& in_cst);
+		      int max_n_quad,
+		      int max_n_settle);
+  int set_subset_constraint(ConstraintObject& in_cst,
+			    ConstraintObject& in_settle);
   int init_thermostat(const int in_thermostat_type,
 		      const real in_temperature,
 		      const int d_free);

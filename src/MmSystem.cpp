@@ -621,6 +621,7 @@ int MmSystem::reset_energy(){
   pote_14ele = 0.0;
   pote_vdw = 0.0;
   pote_ele = 0.0;
+  pote_dist_rest = 0.0;
   for(int atomid=0; atomid < n_atoms; atomid++)
     for(int d=0; d<3; d++) force[atomid][d] = 0.0;
 

@@ -22,12 +22,20 @@ int RunMode::initial_preprocess(){
 }
 int RunMode::terminal_process(){
   writer_trr->close();
+  delete writer_trr;
+  delete mmsys.dist_restraint;
   return 0;
 }
 
 int RunMode::set_config_parameters(Config* in_cfg){
   cfg = in_cfg;
 
+  if(cfg->dist_restraint_type==DISTREST_HARMONIC){
+    mmsys.dist_restraint = new DistRestraintHarmonic();
+  }else{
+    mmsys.dist_restraint = new DistRestraintObject();
+  }
+  mmsys.dist_restraint->set_weight(cfg->dist_restraint_weight);
   if(DBG>=1)
     cout << "DBG1: RunMode::set_config_parameters()"<<endl;
   //#if defined(F_CUDA) && defined(F_MPI)

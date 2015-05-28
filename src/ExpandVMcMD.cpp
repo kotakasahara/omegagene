@@ -49,6 +49,8 @@ ExpandVMcMD::ExpandVMcMD()
 ExpandVMcMD::~ExpandVMcMD(){
   if(n_vstates > 0)
     delete[] vstates;
+  delete writer_lambda;
+
 }
 
 int ExpandVMcMD::set_n_vstates(int in_n_vstates){
@@ -157,6 +159,8 @@ int ExpandVMcMD::set_files(string fn_vslog, string fn_lambda, int format_lambda)
     writer_lambda = new WriteTableLogBinary();
   }else if(format_lambda == LAMBDAOUT_ASC){
     writer_lambda = new WriteTableLogAscii();
+  }else{
+    writer_lambda = new WriteTableLog();
   }
   writer_lambda->set_fn(fn_lambda);
   writer_lambda->open();

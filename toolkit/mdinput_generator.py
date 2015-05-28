@@ -11,7 +11,8 @@ MAGIC=66261
 #VERSION = 14013204  ## PBC origin, shake
 #VERSION = 15020801  ## shake, expand_shake_info()
 #VERSION = 15030901  ## vmcmd 
-VERSION = 15032221  ## atom_groups
+#VERSION = 15032221  ## atom_groups
+VERSION = 15052711  ## dist_rest , settle
 
 import sys
 from optparse import OptionParser
@@ -27,6 +28,7 @@ import kkmmconfig
 import kkpresto_shake as shk
 import kkmm_expand
 import define_atom_groups as atgrp
+import kkpresto_distrest as disres
 
 def get_options():
     p = OptionParser()
@@ -60,14 +62,17 @@ class MDInputGen(object):
         self.structure = None
         self.restart = None
         self.tpl = None
+        self.settle = None
         self.expand = None
         self.atom_groups = {}
+        self.dist_rest = []
         return 
 
     def read_files(self):
         print "read_config"
         self.config = kkmmconfig.ConfigReader(self.fn_config).read_config()
         print "read_tpl"
+        print self.config.get_val("fn-i-tpl")
         self.tpl = prst.TPLReader(self.config.get_val("fn-i-tpl")).read_tpl()
         self.tpl.enumerate_12_13_14()
         print "read initial pdb"
@@ -105,6 +110,7 @@ class MDInputGen(object):
     #                        tpl.atom_id_14nb)
     #system.store_self_energy(system.ff.energy_self)
         self.read_shake()
+        self.read_settle()
         self.read_expand()
 
         if self.config.get_val("fn-i-atom-groups"):
@@ -112,14 +118,36 @@ class MDInputGen(object):
             print self.config.get_val("fn-i-atom-groups")
             print atom_groups_reader.fn
             self.atom_groups = atom_groups_reader.read_groups()
+
+        if self.config.get_val("fn-i-dist-restraint"):
+            dist_rest_reader = disres.PrestoDistRestReader(self.config.get_val("fn-i-dist-restraint"))
+            print self.config.get_val("fn-i-dist-restraint")
+            self.dist_rest = dist_rest_reader.read()
+            for d in self.dist_rest:
+                d.set_atom_ids(self.tpl)
+
         return
 
     def read_shake(self):
         if self.config.get_val("fn-i-shake"):
             shkreader = shk.SHKReader(self.config.get_val("fn-i-shake"))
-            shkreader.read_shk()
+            mol_settle = set(self.config.get_val("mol-settle"))
+            if not mol_settle:  mol_settle = set()
+            shkreader.read_shk(exclude=mol_settle)
             self.tpl = shkreader.expand_shake_info(self.tpl)
             self.system.shake = shkreader.shake_sys
+            shkreader.print_shake_info()
+        return
+
+    def read_settle(self):
+        fn_shk = self.config.get_val("fn-i-shake")
+        mol_settle = set(self.config.get_val("mol-settle"))
+        if fn_shk and mol_settle:
+            shkreader = shk.SHKReader(fn_shk)
+            if not mol_settle:  mol_settle = set()
+            shkreader.read_shk(readonly=mol_settle)
+            self.tpl = shkreader.expand_shake_info(self.tpl)
+            self.settle = shkreader.shake_sys
             shkreader.print_shake_info()
         return
         
@@ -158,14 +186,20 @@ class MDInputGen(object):
         buf_velocities = self.dump_crdvel(self.system.vel)
         buf_topol = self.dump_topol(self.system, self.tpl)
         buf_shake = ""
+        buf_settle = ""
         buf_expand = ""
         if self.system.shake:
             buf_shake = self.dump_shake(self.system.model, self.tpl,
                                         self.system.shake)
+        if self.settle:
+            buf_settle = self.dump_shake(self.system.model, self.tpl,
+                                         self.settle)
         if self.expand:
             buf_expand = self.dump_expand(self.expand)
 
         buf_atom_groups = self.dump_atom_groups(self.atom_groups)
+
+        buf_dist_rest = self.dump_dist_rest(self.dist_rest)
 
         #if config.get_val("particle-cluster-shake"):
         f.write(st.pack("@i", len(buf_box)))
@@ -173,15 +207,19 @@ class MDInputGen(object):
         f.write(st.pack("@i", len(buf_velocities)))
         f.write(st.pack("@i", len(buf_topol)))
         f.write(st.pack("@i", len(buf_shake)))
+        f.write(st.pack("@i", len(buf_settle)))
         f.write(st.pack("@i", len(buf_expand)))
         f.write(st.pack("@i", len(buf_atom_groups)))
+        f.write(st.pack("@i", len(buf_dist_rest)))
         print "size: buf_box        : " + str(len(buf_box))
         print "size: buf_coordinates: " + str(len(buf_coordinates))
         print "size: buf_velocities : " + str(len(buf_velocities))
         print "size: buf_topol      : " + str(len(buf_topol))
         print "size: buf_shake      : " + str(len(buf_shake))
+        print "size: buf_settle     : " + str(len(buf_settle))
         print "size: buf_expand     : " + str(len(buf_expand))
         print "size: buf_atom_groups: " + str(len(buf_atom_groups))
+        print "size: buf_dist_rest: " + str(len(buf_dist_rest))
 
         #f.write(st.pack("@i", len(buf_pcluster)))
         f.write(buf_box)
@@ -189,9 +227,11 @@ class MDInputGen(object):
         f.write(buf_velocities)
         f.write(buf_topol)
         f.write(buf_shake)
+        f.write(buf_settle)
         f.write(buf_expand)
     #f.write(buf_pcluster)
         f.write(buf_atom_groups)
+        f.write(buf_dist_rest)
         f.close()
         return
 
@@ -451,7 +491,16 @@ class MDInputGen(object):
             for atomid in atoms:
                 buf += st.pack("@i", atomid)
         return buf
-
-
+    def dump_dist_rest(self, dist_rest):
+        buf = ""
+        buf += st.pack("@i", len(dist_rest))
+        for dr in dist_rest:
+            buf += st.pack("@i", dr.atom_id[0])
+            buf += st.pack("@i", dr.atom_id[1])
+            buf += st.pack("@f", dr.coeff[0])
+            buf += st.pack("@f", dr.coeff[1])
+            buf += st.pack("@f", dr.dist[0])
+            buf += st.pack("@f", dr.dist[1])
+        return buf
 if __name__ == "__main__":
     _main()

@@ -53,10 +53,12 @@ int Config::set_defaults(){
   thermo_const_tolerance = 1000;
   thermo_const_max_loops = 0.000001;
 
-
   init_vel_just = 0;
   expanded_ensemble = EXPAND_NONE;
   format_o_expand_lambda = LAMBDAOUT_BIN;
+
+  dist_restraint_type = DISTREST_NONE;
+  dist_restraint_weight = 0.0;
 
   return 0;
 }
@@ -185,6 +187,13 @@ void Config::setAll(vector<string> arg){
     }
 
     else if(*itr=="--fn-o-energyflow"){ fn_o_energyflow = *++itr; }
+    else if(*itr=="--dist-restraint"){
+      itr++;
+      if(*itr == "none"){ dist_restraint_type = DISTREST_NONE; }
+      else if(*itr == "harmonic"){ dist_restraint_type = DISTREST_HARMONIC; }
+      else{ dist_restraint_type = DISTREST_DUMMY; }
+    }
+    else if(*itr=="--dist-restraint-weight"){ dist_restraint_weight = atof((*++itr).c_str()); }
     else{
       cerr<<"unknown keyword <"<<(*itr)<<">"<<endl;
     }

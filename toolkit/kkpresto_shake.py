@@ -27,9 +27,9 @@ class SHKReader(kkpresto.PrestoAsciiReader):
         self.shake_sys[4] = []
         self.const_pairs = set()
         
-    def read_shk(self):
+    def read_shk(self, exclude=set(), readonly=set()):
         self.shake = []
-
+        
         self.open()
         reading_mol_id = -1
         reading_mol = ""
@@ -41,9 +41,17 @@ class SHKReader(kkpresto.PrestoAsciiReader):
                 reading_mol_id += 1
                 reading_mol = self.readline().strip()
                 print "Mol " + str(reading_mol_id) + ": " + reading_mol
+
+                if reading_mol in exclude or \
+                        (len(readonly) > 0 and not reading_mol in readonly):
+                    print "Skip this molecule."
                 self.shake.append([])
                 #print "Len " + str(len(self.shake))
             elif len(terms) >= 4:
+                if reading_mol in exclude or \
+                        (len(readonly) > 0 and not reading_mol in readonly):
+                    line = self.readline()            
+                    continue
                 try:
                     a = int(terms[0])
                     b = int(terms[1])

@@ -68,6 +68,9 @@ class Config : public CelesteObject {
   //real nsgrid_max_n_atoms;
   int nsgrid_update_intvl;
 
+  int dist_restraint_type;
+  real dist_restraint_weight;
+
   Config();
   ~Config();
   int set_defaults();

@@ -20,5 +20,14 @@ class ConstraintShake : public ConstraintObject {
 
 
 };
+class ConstraintSettle: public ConstraintObject {
+ private:
+ protected:
+ public:
+  ConstraintSettle();
+  ~ConstraintSettle();
+  virtual int apply_constraint(real* in_crd, real* in_crd_prev, real_pw* in_mass_inv,
+			       PBC* pbc);
+};
 
 #endif
