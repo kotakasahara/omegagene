@@ -77,7 +77,7 @@ class MmSystem : public CelesteObject{
   int n_excess;
   int** excess_pairs;
 
-  int launchset_version;
+  string launchset_version;
 
   real pbc_val[9];
   PBC pbc;

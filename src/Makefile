@@ -2,6 +2,9 @@
 #EXECUTABLE = celeste_wons
 EXECUTABLE = celeste_gpu
 
+ICCFLAGS = -ansi -fast -w1 
+#ICCFLAGS = -ansi -O0 -g #-w1 # -std=c++11
+ICCLIB = 
 
 ### Environment variables for tsubame
 #CXX = icpc 
@@ -15,9 +18,6 @@ CUDALOC = /usr/local/cuda-6.0/lib64
 # BOOST_INC = ${HOME}/include
 # BOOST_LIB = ${HOME}/lib
 
-ICCFLAGS = -ansi -fast -w1 
-#ICCFLAGS = -ansi -O0 -g #-w1 # -std=c++11
-ICCLIB = 
 
 MODE_FLAG =
 CUDALIB = 

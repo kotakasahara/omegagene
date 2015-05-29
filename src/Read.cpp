@@ -126,7 +126,12 @@ int Read::load_ls_header(MmSystem& mmsys){
     }
   }
 
-  read_bin_values(&mmsys.launchset_version, 1);
+  int buf_int;
+  char version_c[MAX_LEN_NAME];
+  read_bin_values(&buf_int, 1); //length of string
+  ifs.read(version_c, buf_int);
+  //read_bin_values(&mmsys.launchset_version, 1);
+  mmsys.launchset_version = string(version_c);
   cout << "---- Input file format : version " << mmsys.launchset_version << endl;
 
   read_bin_values(&size_box, 1);

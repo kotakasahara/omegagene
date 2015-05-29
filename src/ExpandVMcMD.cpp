@@ -204,7 +204,7 @@ int ExpandVMcMD::print_info(){
   for(int i=0; i < n_vstates; i++){
     cout << "  Virtual state: " << i << endl;
     for(int j=0; j < vstates[cur_vs].get_order()+3; j++){
-      cout << "    " << j << ": " << vstates[cur_vs].get_poly_param(i) << endl;
+      cout << "    " << j << ": " << vstates[cur_vs].get_poly_param(j) << endl;
     }
   }
   return 0;

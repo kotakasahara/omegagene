@@ -12,7 +12,7 @@ MAGIC=66261
 #VERSION = 15020801  ## shake, expand_shake_info()
 #VERSION = 15030901  ## vmcmd 
 #VERSION = 15032221  ## atom_groups
-VERSION = 15052711  ## dist_rest , settle
+VERSION = "v.0.34.b" ## version_info
 
 import sys
 from optparse import OptionParser
@@ -176,7 +176,8 @@ class MDInputGen(object):
         ## Magic number 66261
         f.write(st.pack("@i", MAGIC))
         ## Version
-        f.write(st.pack("@i", VERSION))
+        f.write(st.pack("@i", len(VERSION)))
+        f.write(VERSION)
         ## Config
         #buf_config = dump_mmconfig(cfg)
         #f.write(struct.pack("@i", len(buf_config)))
