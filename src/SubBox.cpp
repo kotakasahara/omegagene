@@ -14,7 +14,9 @@ extern "C" int cuda_memcpy_htod_cell_pairs(CellPair*& h_cell_pairs,
 extern "C" int cuda_memcpy_htod_atom_info(real_pw*& h_charge_orig,
 					  int*& h_atomtype_orig,
 					  int n_atoms);
-extern "C" int cuda_set_cell_constant(int n_cells, int n_cell_pairs, int n_atom_array);
+extern "C" int cuda_set_cell_constant(int n_cells, int n_cell_pairs, int n_atom_array,
+				      int n_cells_x, int n_cells_y,
+				      int n_columns);
 extern "C" int cuda_set_constant(int n_atoms, real_pw cutoff, int n_atomtypes);
 extern "C" int cuda_alloc_set_lj_params(real_pw* h_lj_6term,
 					real_pw* h_lj_12term,
@@ -470,11 +472,15 @@ int SubBox::set_nsgrid(){
   nsgrid.set_atoms_into_grid_xy();
   nsgrid.set_atomids_buf();
 
-  nsgrid.enumerate_cell_pairs();
-
 #ifdef F_CUDA
   cout << "gpu_device_setup()"<<endl;
   gpu_device_setup();
+#endif
+
+  nsgrid.enumerate_cell_pairs();
+
+#ifdef F_CUDA
+  update_device_cell_info();  
 #endif
 
   return 0;
@@ -1679,8 +1685,6 @@ int SubBox::gpu_device_setup(){
 			   ff.ele->get_bcoeff(),
 			   ff.ele->get_fcoeff());
 
-  update_device_cell_info();  
-
   return 0;
 }
 
@@ -1692,7 +1696,10 @@ int SubBox::update_device_cell_info(){
 			     max_n_atoms_exbox);
   cuda_set_cell_constant(nsgrid.get_max_n_cells(),
 			 nsgrid.get_max_n_cell_pairs(),
-			 nsgrid.get_n_atom_array());
+			 nsgrid.get_n_atom_array(),
+			 nsgrid.get_n_cells_x(),
+			 nsgrid.get_n_cells_y(),
+			 nsgrid.get_n_columns());
   cuda_memcpy_htod_cell_pairs(nsgrid.get_cell_pairs(),
 			      nsgrid.get_idx_head_cell_pairs(),
 			      nsgrid.get_n_cell_pairs(),

@@ -11,6 +11,8 @@ using namespace std;
 #define N_ATOM_CELL 8
 #define N_BITMASK (N_ATOM_CELL * N_ATOM_CELL + 31) / 32
 #define COEF_MAX_N_ATOMS_CELL 1.2;
+#define MAX_N_CELL_UNI 10;
+#define MAX_N_PAIR_Z 100;
 
 typedef struct cell_pair_info{
   int cell_id1;
@@ -28,7 +30,6 @@ class MiniCell : public CelesteObject{
   // n_atoms
   //  the number of atoms in the whole system
   int n_atoms;
-
 
   int n_cells;
   int n_columns;
@@ -154,6 +155,24 @@ class MiniCell : public CelesteObject{
   //   cell_pairs[ ].cell1_id = cell_id
   int *idx_head_cell_pairs;
 
+  // Uniform z-grid
+  //   index for enumerating pairs of 8-atom grid cells
+  //   z crd divided into PBC.L[2]/(cutoff/2)
+  //  uni_id = 
+  //   uni_id(z) = uni_id / ( n_uni(x) * n_uni(y) )
+  //   uni_id(y) = uni_id % ( n_uni(x) * n_uni(y) )
+  //   uni_id(x) = uni_id % ( n_uni(x) * n_uni(y) )
+  //  uni2cell[uni_id] = [cell1, cell2, ...]
+  //  cell2uni[cell_id] = [uni_z1, uni_z2, ...]
+  int n_uni;
+  real_pw L_z_uni;
+  int n_uni_z;
+  int* n_uni2cell_z;
+  int** uni2cell_z;
+  int** cell2uni_z;
+  int get_uni_z(int uni_id);
+  int get_uni_id_from_crd(int x, int y, int z);
+
  public:
   MiniCell();
   ~MiniCell();
@@ -183,6 +202,7 @@ class MiniCell : public CelesteObject{
   // pair
   real_pw get_cell_z_min(int cell_id);
   real_pw get_cell_z_max(int cell_id);
+  int set_uniform_grid();
   int enumerate_cell_pairs();
   bool check_valid_pair(const int cell1_id, const int cell2_id,
 			const bool cell1_odd, const bool cell2_odd);
@@ -212,6 +232,7 @@ class MiniCell : public CelesteObject{
   //  void get_crd_from_gridorder(const int aid, real_pw* ret_crd){
   //memcpy(ret_crd, crd+aid*3, sizeof(real_pw)*3);};
   int get_column_id_from_crd(int x, int y);
+  //int get_column_crd_from_id(int x, int y);
   int get_cell_id_from_crd(int x, int y, int z);
   
   int is_dummy(int atom_id_grid){ return atomids[atom_id_grid]==-1; };
@@ -221,7 +242,11 @@ class MiniCell : public CelesteObject{
   int get_n_cells(){ return n_cells; };
   int get_max_n_cells(){ return max_n_cells; };
   int get_max_n_cell_pairs(){ return max_n_cell_pairs; };
-  
+
+  int get_n_cells_x(){ return n_cells_xyz[0]; };
+  int get_n_cells_y(){ return n_cells_xyz[1]; };
+  int get_n_columns(){ return n_columns; };
+
   //int get_ene_forces(real_fc& in_ene_vdw, real_fc& in_ene_ele, real_fc**& in_force);
 
   /////// setter
