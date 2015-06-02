@@ -41,8 +41,8 @@ int ZeroMultipoleSum::cal_self_energy(const int& n_atoms,
 
   if (DBG >= 1)
     cout << "DBG1: ZeroMultipoleSum::cal_self_energy()"<<endl;
-  real_pw* dwork;
-  dwork = new real_pw[n_atoms];
+  real* dwork;
+  dwork = new real[n_atoms];
   for (int i=0; i < n_atoms; i++)
     dwork[i] = 0.0;
   for (int i=0; i < n_excess; i++){
@@ -184,9 +184,9 @@ int ZeroMultipoleSum::calc_zms_alpha0(real_pw& ene_ele, real_pw& grad_coeff,
   //#pragma optimize("", on)
   return 0;
 }
-int ZeroMultipoleSum::calc_zms_excess_alpha0(real_pw& ene_ele, real_pw& grad_coeff,
-					     const real_pw& r12,      const real_pw& r12_2,
-					     const real_pw& r12_3_inv, const real_pw& cc){
+int ZeroMultipoleSum::calc_zms_excess_alpha0(real& ene_ele, real& grad_coeff,
+					     const real& r12,      const real& r12_2,
+					     const real& r12_3_inv, const real& cc){
   ene_ele = cc * bcoeff * r12_2;
   grad_coeff = cc * fcoeff;
   //cout << "DBG0203excess: " << cc << " " << bcoeff << " "  << r12_2 << endl;  
@@ -202,9 +202,9 @@ int ZeroMultipoleSum::calc_zms(real_pw& ene_ele, real_pw& grad_coeff,
   grad_coeff = -cc * (errorfc * r12_3_inv + piewald * exp(tmp*tmp) * r12_2_inv - fcoeff);
   return 0;
 }
-int ZeroMultipoleSum::calc_zms_excess(real_pw& ene_ele, real_pw& grad_coeff,
-				       const real_pw& r12,      const real_pw& r12_2,
-				       const real_pw& r12_3_inv, const real_pw& cc){
+int ZeroMultipoleSum::calc_zms_excess(real& ene_ele, real& grad_coeff,
+				       const real& r12,      const real& r12_2,
+				       const real& r12_3_inv, const real& cc){
   
   real_pw tmp = ewald_alpha * r12;
   real_pw errorfc = 1.0 - erfc(tmp);

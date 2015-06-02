@@ -15,7 +15,7 @@ int ThermostatObject::set_temperature_coeff(int in_d_free){
   temperature_coeff = (2.0 * JOULE_CAL * 1e+3) / (GAS_CONST * (real)d_free) * KINETIC_COEFF;
   return 0;
 }
-int ThermostatObject::set_constant(int n_atoms, real* mass_inv, real* vel, real* force){
+int ThermostatObject::set_constant(int n_atoms, real_pw* mass_inv, real* vel, real* force){
   return 0;
 }
 int ThermostatObject::apply_thermostat(const int n_atoms,
@@ -50,7 +50,7 @@ ThermostatScaling::ThermostatScaling()
 }
 ThermostatScaling::~ThermostatScaling(){
 }
-int ThermostatScaling::set_constant(int n_atoms, real* mass_inv, real* vel, real* force){
+int ThermostatScaling::set_constant(int n_atoms, real_pw* mass_inv, real* vel, real* force){
   return 0;
 }
 
@@ -179,7 +179,7 @@ ThermostatHooverEvans::ThermostatHooverEvans()
 ThermostatHooverEvans::~ThermostatHooverEvans(){
 }
 
-int ThermostatHooverEvans::set_constant(int n_atoms, real* mass_inv, real* vel, real* force){
+int ThermostatHooverEvans::set_constant(int n_atoms, real_pw* mass_inv, real* vel, real* force){
   real k0=0.0;
   for(int i=0, i_3=0;
       i < n_atoms; i++){

@@ -19,21 +19,21 @@ class ForceField : public ForceFieldObject{
   virtual int set_config_parameters(const Config* cfg);
   virtual int initial_preprocess(const PBC* in_pbc);
   
-  int calc_bond(real& ene, real work[],
+  int calc_bond(real& ene, real_fc work[],
 		const real* crd1, const real* crd2,
 		const real& param_e, const real& param_r0);
-  int calc_angle(real_pw& ene, real_pw work1[], real_pw work2[],
+  int calc_angle(real& ene, real_fc work1[], real_fc work2[],
 		 const real* crd1, const real* crd2, const real* crd3,
 		 const real& param_e, const real& param_theta0);
-  int calc_torsion(real_pw& ene,
-		   real_pw work1[], real_pw work2[], real_pw work3[],
+  int calc_torsion(real& ene,
+		   real_fc work1[], real_fc work2[], real_fc work3[],
 		   const real* crd1, const real* crd2,
 		   const real* crd3, const real* crd4,
 		   const real& param_ene,
 		   const real& param_overlaps,
 		   const real& param_symmetry,
 		   const real& param_phase);
-  int calc_14pair(real_pw& ene_vdw, real_pw& ene_ele,
+  int calc_14pair(real& ene_vdw, real& ene_ele,
 		  real_fc work[],
 		  const real* crd1, const real* crd4,
 		  const real& lj_6term,
@@ -42,6 +42,7 @@ class ForceField : public ForceFieldObject{
 		  const real& charge4,
 		  const real& param_coeff_vdw,
 		  const real& param_coeff_ele);
+
   real_pw calc_pairwise(real_pw& ene_vdw, real_pw& ene_ele,
 			real_fc work[],
 			real_pw* crd1, real_pw* crd2,
