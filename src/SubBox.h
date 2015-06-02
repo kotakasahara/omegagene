@@ -236,7 +236,8 @@ class SubBox : public CelesteObject {
   int calc_energy();
   int calc_energy_pairwise();
   int calc_energy_pairwise_wo_neighborsearch();
-  bool check_nb15off(const int& a1, const int& a2, const int* bitmask);
+  bool check_nb15off(const int& a1, const int& a2, const int* bitmask,
+		     int& mask_id, int& interact_bit);
   int calc_energy_bonds();
   int calc_energy_angles();
   int calc_energy_torsions();

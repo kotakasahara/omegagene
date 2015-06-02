@@ -42,13 +42,13 @@ class ForceField : public ForceFieldObject{
 		  const real& charge4,
 		  const real& param_coeff_vdw,
 		  const real& param_coeff_ele);
-  int calc_pairwise(real_pw& ene_vdw, real_pw& ene_ele,
-		    real_fc work[],
-		    real_pw* crd1, real_pw* crd2,
-		    real_pw& param_6term,
-		    real_pw& param_12term,
-		    real_pw& charge1,
-		    real_pw& charge2);
+  real_pw calc_pairwise(real_pw& ene_vdw, real_pw& ene_ele,
+			real_fc work[],
+			real_pw* crd1, real_pw* crd2,
+			real_pw& param_6term,
+			real_pw& param_12term,
+			real_pw& charge1,
+			real_pw& charge2);
   int calc_zms_excess(real_pw& ene, real_pw work[],
 		       real_pw* crd1,  real_pw* crd2,
 		       real_pw& charge1,

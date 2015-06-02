@@ -258,13 +258,13 @@ int ForceField::calc_14pair(real_pw& ene_vdw,
   return 0;
 }
 
-int ForceField::calc_pairwise(real_pw& ene_vdw, real_pw& ene_ele,
-			      real_fc work[],
-			       real_pw* crd1,  real_pw* crd2,
-			       real_pw& param_6term,
-			       real_pw& param_12term,
-			       real_pw& charge1,
-			       real_pw& charge2){
+real_pw ForceField::calc_pairwise(real_pw& ene_vdw, real_pw& ene_ele,
+				  real_fc work[],
+				  real_pw* crd1,  real_pw* crd2,
+				  real_pw& param_6term,
+				  real_pw& param_12term,
+				  real_pw& charge1,
+				  real_pw& charge2){
   
   real_pw d12[3] = {0.0, 0.0, 0.0};
 
@@ -284,7 +284,7 @@ int ForceField::calc_pairwise(real_pw& ene_vdw, real_pw& ene_ele,
   real_pw work_ele[3] = {0.0, 0.0, 0.0};
   //if( r12 < 0.1) 
   //cout << "  r12 " << r12 << endl;
-  if (r12 >= cutoff) return 1;
+  if (r12 >= cutoff) return r12;
   real_pw r12_inv = 1.0 / r12;
   real_pw r12_2_inv = 1.0 / r12_2;
   real_pw r12_3_inv = r12_inv * r12_2_inv;
@@ -316,7 +316,7 @@ int ForceField::calc_pairwise(real_pw& ene_vdw, real_pw& ene_ele,
   for(int d=0; d<3; d++)
     work[d] = work_vdw[d] + work_ele[d];
 
-  return 0;
+  return r12;
 }
 int ForceField::calc_zms_excess(real_pw& ene, real_pw work[],
 				real_pw* crd1,

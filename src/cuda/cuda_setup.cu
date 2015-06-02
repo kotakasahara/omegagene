@@ -180,7 +180,8 @@ extern "C" int cuda_set_cell_constant(int n_cells, int n_cell_pairs,
 
 // cuda_set_constant
 //   called only onece at the beginning of simulation
-extern "C" int cuda_set_constant(int n_atoms, real_pw cutoff, int n_atomtypes){
+extern "C" int cuda_set_constant(int n_atoms, real_pw cutoff,
+				 real_pw cutoff_pairlist, int n_atomtypes){
   real_pw tmp_charge_coeff = (real_pw)CelesteObject::CHARGE_COEFF;
   HANDLE_ERROR( cudaMemcpyToSymbol(D_CHARGE_COEFF,
 				   &tmp_charge_coeff,
@@ -193,6 +194,9 @@ extern "C" int cuda_set_constant(int n_atoms, real_pw cutoff, int n_atomtypes){
 				   sizeof(int) ) );
   HANDLE_ERROR( cudaMemcpyToSymbol(D_CUTOFF,
 				   &cutoff,
+				   sizeof(real_pw) ));
+  HANDLE_ERROR( cudaMemcpyToSymbol(D_CUTOFF_PAIRLIST,
+				   &cutoff_pairlist,
 				   sizeof(real_pw) ));
   return 0;
 }
@@ -304,10 +308,8 @@ extern "C" int cuda_hostalloc_atom_info(real_pw*& h_crd, int*& h_atomids,
 
 extern "C" int cuda_hostalloc_cell_info(CellPair*& h_cell_pairs, 
 					int*& h_idx_head_cell_pairs,
-					int*& h_n_cells_z,
 					int max_n_cell_pairs,
-					int max_n_cells,
-					int n_columns){
+					int max_n_cells){
   printf("cuda_hostalloc_cell_info cu\n");
   HANDLE_ERROR( cudaHostAlloc( (void**)&h_cell_pairs,
 			       max_n_cell_pairs * sizeof(CellPair),
@@ -315,9 +317,7 @@ extern "C" int cuda_hostalloc_cell_info(CellPair*& h_cell_pairs,
   HANDLE_ERROR( cudaHostAlloc( (void**)&h_idx_head_cell_pairs,
 			       (max_n_cells) * sizeof(int),
 			       cudaHostAllocDefault));
-  HANDLE_ERROR( cudaHostAlloc( (void**)&h_n_cells_z,
-			       (n_columns) * sizeof(int),
-			       cudaHostAllocDefault));
+
   return 0;
 }
 
@@ -338,11 +338,9 @@ extern "C" int cuda_hostfree_atom_info(real_pw* h_crd, int* h_atomids,
   return 0;
 }
 extern "C" int cuda_hostfree_cell_info(CellPair* h_cell_pairs,
-				       int* h_idx_head_cell_pairs,
-				       int* h_n_cells_z){
+				       int* h_idx_head_cell_pairs){
   HANDLE_ERROR( cudaFreeHost(h_cell_pairs) );
   HANDLE_ERROR( cudaFreeHost(h_idx_head_cell_pairs) );
-  HANDLE_ERROR( cudaFreeHost(h_n_cells_z) );
   return 0;
 }
 __global__ void kernel_set_atominfo(const int* d_atomids,
@@ -431,18 +429,22 @@ __global__ void kernel_reduction_energy(real_fc* d_energy){
 }
 
 __device__ bool check_15off64(const int atom_idx1, const int atom_idx2,
-			      const int*bitmask){
+			      const int* bitmask, int& mask_id, int& interact_bit){
   int bit_pos = atom_idx2 * N_ATOM_CELL + atom_idx1;
-  int mask_id =  bit_pos / 32;
-  int interact_pos =  bit_pos % 32;
-  int interact = 1 << interact_pos;
-  return (bitmask[mask_id] & interact) == interact;
+  mask_id =  bit_pos / 32;
+  //int interact_pos =  bit_pos % 32;
+  interact_bit = 1 << ( bit_pos % 32 ) ;
+  return (bitmask[mask_id] & interact_bit) == interact_bit;
 }
+//__device__ int disable_15pair(const int interact_bit,
+//			      int& bitmask_i){
+//  bitmask_i = bitmask_i & ~interact_bit;
+//  return 0;
+//}
 
 __device__ real_pw check_15off(const int atomid1, const int atomid2,
 			       const int tmask_a1,
-			       const int tmask_a2
-				 ){
+			       const int tmask_a2){
   int aid_diff = atomid2 - atomid1;
   int target = tmask_a1;
   if(aid_diff < 0){aid_diff = -aid_diff; target=tmask_a2; }
@@ -454,7 +456,7 @@ __device__ real_pw check_15off(const int atomid1, const int atomid2,
     valid_pair = 0.0;
   return valid_pair;
 }
-__device__ int cal_pair(real_pw& w1,
+__device__ real_pw cal_pair(real_pw& w1,
 			real_pw& w2,
 			real_pw& w3,
 			real_pw& ene_vdw,
@@ -487,7 +489,7 @@ __device__ int cal_pair(real_pw& w1,
   work_coef -= cc * (r12_3_inv - D_FCOEFF);
   //  printf("dbgpair %10e %d %d %d %d %10e %10e %10e\n", r12, atomid1, atomid2,  a1, a2, D_CHARGE_COEFF, D_ZCORE, D_BCOEFF);
 
-  if(r12 >= D_CUTOFF) {return 1;}
+  if(r12 >= D_CUTOFF) {return r12;}
   //pairs[0]++;
   
   //work_coef *= valid_pair;
@@ -522,11 +524,11 @@ __device__ int cal_pair(real_pw& w1,
 
 	 );
   */
-  return 0;
+  return r12;
 }
 
 __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
-				     const CellPair* d_cell_pairs,
+				     CellPair* d_cell_pairs,
 				     const int* d_idx_head_cell_pairs,
 				     const int2* d_atominfo,
 				     const real_pw* __restrict__ d_lj_6term,
@@ -557,7 +559,8 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
     
   for(int loopIdx=0; loopIdx < n_loops; loopIdx++){
     const int cp = d_idx_head_cell_pairs[c1] + (loopIdx >> 1);
-    
+    //if(d_cell_pairs[cp].pair_mask[0] == ~0 && 
+    //  d_cell_pairs[cp].pair_mask[1] == ~0) continue;
     if(cp >= D_N_CELL_PAIRS) break;
     //atomicAdd(&d_pairs[3],1);
     const int c2 = d_cell_pairs[cp].cell_id2;
@@ -583,12 +586,18 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
     real_pw w1=0.0, w2=0.0, w3=0.0;
     real_pw cur_ene_ele=0.0;
     real_pw cur_ene_vdw=0.0;
-
-    if(!check_15off64(atom_idx1, atom_idx2, d_cell_pairs[cp].pair_mask)){
+    int mask_id;
+    int interact_bit;
+    if(!check_15off64(atom_idx1, atom_idx2, d_cell_pairs[cp].pair_mask,
+		      mask_id, interact_bit)){
       //if(d_atominfo[a1].x == -1 || d_atominfo[a2].x == -1) continue;
-      cal_pair(w1, w2, w3, cur_ene_vdw, cur_ene_ele,
-	       d_crd_chg[a1], crd_chg2, d_atominfo[a1].y, d_atominfo[a2].y,
-	       d_lj_6term, d_lj_12term, d_atominfo[a1].x, d_atominfo[a2].x);
+      real_pw r12 = cal_pair(w1, w2, w3, cur_ene_vdw, cur_ene_ele,
+			     d_crd_chg[a1], crd_chg2, d_atominfo[a1].y, d_atominfo[a2].y,
+			     d_lj_6term, d_lj_12term, d_atominfo[a1].x, d_atominfo[a2].x);
+      if(r12 > D_CUTOFF_PAIRLIST){
+	d_cell_pairs[cp].pair_mask[mask_id] &= ~interact_bit;
+      }
+
       //atomicAdd(&d_pairs[1],1);
 
       //debug
@@ -646,7 +655,7 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
       w3 += shfl_xor(w3, i, 8);
       //printf("SHFL[%d] wapridx:%d lane:%d a2:%d w:%12.8e %12.8e %12.8e\n",i, warpIdx, laneIdx,  a2, w1, w2, w3);
     }
-    if(laneIdx % 8 == 0){
+    if(laneIdx % 8 == 0 && w1 != 0.0 && w2 != 0.0 && w3 != 0.0){
       const int tmp_index = (((global_threadIdx/32)%N_MULTI_WORK)*D_N_ATOM_ARRAY + a2) * 3;
       //const int tmp_index = ((ene_index_offset*D_N_ATOM_ARRAY + a2) * 3);
       atomicAdd(&(d_work[tmp_index+0]), -w1);

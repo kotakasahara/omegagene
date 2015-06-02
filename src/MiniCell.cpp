@@ -7,15 +7,12 @@ extern "C" int cuda_hostalloc_atom_info(real_pw*& h_crd, int*& h_atomids,
 					int n_atom_array);
 extern "C" int cuda_hostalloc_cell_info(CellPair*& h_cell_pairs, 
 					int*& h_idx_head_cell_pairs,
-					int*& h_n_cells_z,
 					int max_n_cell_pairs,
-					int max_n_cells,
-					int n_columns);
+					int max_n_cells);
 extern "C" int cuda_hostfree_atom_info(real_pw* h_crd, int* h_atomids,
 				       real_fc*& h_work, real_fc*& h_energy);
 extern "C" int cuda_hostfree_cell_info(CellPair* h_cell_pairs,
-				       int* h_idx_head_cell_pairs,
-				       int* h_n_cells_z);
+				       int* h_idx_head_cell_pairs);
 #endif
 
 MiniCell::MiniCell(){
@@ -65,9 +62,7 @@ int MiniCell::alloc_variables(){
   cuda_hostalloc_atom_info(crd, atomids, work, energy, get_max_n_atom_array());
   cout << "cuda_hostalloc_cell_info"<<endl;
   cuda_hostalloc_cell_info(cell_pairs, idx_head_cell_pairs,
-			   n_cells_z,
-			   max_n_cell_pairs, max_n_cells+1,
-			   n_columns);
+			   max_n_cell_pairs, max_n_cells+1);
 #else
   crd = new real_pw[get_max_n_atom_array()*3];
   atomids = new int[get_max_n_atom_array()];
@@ -185,8 +180,7 @@ int MiniCell::free_variables(){
   delete[] atomids_buf;
 #ifdef F_CUDA
   cuda_hostfree_atom_info(crd, atomids, work, energy);
-  cuda_hostfree_cell_info(cell_pairs, idx_head_cell_pairs,
-			  n_cells_z);
+  cuda_hostfree_cell_info(cell_pairs, idx_head_cell_pairs);
 #else
   delete[] crd;
   delete[] work;
@@ -199,11 +193,13 @@ int MiniCell::free_variables(){
   for(int i=0; i < 125; i++){
     delete[] region_atoms[i];
   }
+  delete[] region_atoms;
 
   for(int i=0; i<n_uni; i++){
     delete[] uni2cell_z[i];
   }
   delete[] uni2cell_z;
+
   for(int i=0; i<max_n_cells; i++){
     delete[] cell2uni_z[i];
   }
@@ -809,7 +805,7 @@ int MiniCell::set_uniform_grid(){
     uni2cell_z[i][0] = -1;
     uni2cell_z[i][1] = -1;
   }
-  for(int i=0; i<n_cells; i++){
+  for(int i=0; i<max_n_cells; i++){
     cell2uni_z[i][0] = -1;
     cell2uni_z[i][1] = -1;
   }
@@ -838,6 +834,7 @@ int MiniCell::set_uniform_grid(){
 
   return 0;
 }
+
 int MiniCell::enumerate_cell_pairs(){
   // set
   //   cel_pairs
@@ -938,8 +935,7 @@ int MiniCell::enumerate_cell_pairs(){
 	
 	int tmp_img = -2;
 	for(int i_img = 0; i_img < 3; i_img++){
-	  image[2] = i_img-1;
-	  
+	  image[2] = i_img-1;	  
 	  if (first_uni_z[i_img] < 0) continue;
 	  int first_uni_id = get_uni_id_from_crd(cell2[0], cell2[1], 
 						 first_uni_z[i_img]);
@@ -1105,8 +1101,9 @@ int MiniCell::set_grid_parameters(const int in_n_atoms,
 
   max_n_nb15off = in_max_n_nb15off;
 
-  L_z_uni = cutoff_pair*0.5;
-  n_uni_z = (pbc->L[2] + L_z_uni*0.5) / L_z_uni;
+  n_uni_z = pbc->L[2] / cutoff_pair_half;
+  L_z_uni = pbc->L[2] / (float)n_uni_z;
+  cout << "uniform grid ... n_uni_z: " << n_uni_z << " L_z_uni: " << L_z_uni << endl;
   return 0;
 }
 

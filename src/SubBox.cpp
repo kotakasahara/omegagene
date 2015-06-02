@@ -17,7 +17,7 @@ extern "C" int cuda_memcpy_htod_atom_info(real_pw*& h_charge_orig,
 extern "C" int cuda_set_cell_constant(int n_cells, int n_cell_pairs, int n_atom_array,
 				      int n_cells_x, int n_cells_y,
 				      int n_columns);
-extern "C" int cuda_set_constant(int n_atoms, real_pw cutoff, int n_atomtypes);
+extern "C" int cuda_set_constant(int n_atoms, real_pw cutoff, real_pw cutoff_pairlist, int n_atomtypes);
 extern "C" int cuda_alloc_set_lj_params(real_pw* h_lj_6term,
 					real_pw* h_lj_12term,
 					int n_lj_types);
@@ -936,10 +936,12 @@ int SubBox::calc_energy_pairwise(){
     double p_ele = 0.0;
   */
   nsgrid.init_energy_work();
+  CellPair* cellpairs = nsgrid.get_cell_pairs();
   for(int cp=0; cp < nsgrid.get_n_cell_pairs(); cp++){
-    CellPair cellpair = nsgrid.get_cell_pair(cp);
-    int c1 = cellpair.cell_id1;
-    int c2 = cellpair.cell_id2;
+    //CellPair cellpair = nsgrid.get_cell_pair(cp);
+    
+    int c1 = cellpairs[cp].cell_id1;
+    int c2 = cellpairs[cp].cell_id2;
     int n_atoms_c1 = nsgrid.get_n_atoms_in_cell(c1);
     int n_atoms_c2 = nsgrid.get_n_atoms_in_cell(c2);
     int atoms_index_c1 = nsgrid.get_idx_cell_head_atom(c1);
@@ -950,12 +952,14 @@ int SubBox::calc_energy_pairwise(){
       int atomid2 = nsgrid.get_atomid_from_gridorder(atomid_grid2);
       real_pw crd2[3];
       nsgrid.get_crd(atomid_grid2, crd2[0], crd2[1], crd2[2]);
-      pbc->fix_pbc_image(crd2, cellpair.image);
+      pbc->fix_pbc_image(crd2, cellpairs[cp].image);
       for (int a1=0; a1 < N_ATOM_CELL; a1++){
 	int atomid_grid1 = atoms_index_c1 + a1;
 	int atomid1 = nsgrid.get_atomid_from_gridorder(atomid_grid1);
 	//n_pairs ++;
-	if (check_nb15off(a1, a2, cellpair.pair_mask) ){ 
+	int mask_id;
+	int interact_bit;
+	if (check_nb15off(a1, a2, cellpairs[cp].pair_mask, mask_id, interact_bit) ){ 
 	  //n_pairs_15off++;
 	  continue; }
 	real_pw crd1[3];
@@ -966,46 +970,49 @@ int SubBox::calc_energy_pairwise(){
 	real_fc tmp_work[3] = {0.0, 0.0, 0.0};
 	real_pw param_6term  = lj_6term[atom_type[atomid1]  * n_lj_types + atom_type[atomid2]];
 	real_pw param_12term = lj_12term[atom_type[atomid1] * n_lj_types + atom_type[atomid2]];
-
+	
 	//real_pw r12 = sqrt(pow(crd2[0]-crd1[0],2)+pow(crd2[1]-crd1[1],2)+pow(crd2[2]-crd1[2],2));
 	//sum_dist += r12;
 	//if(sum_dist > 100000) sum_dist -= 100000;
-
-	if(ff.calc_pairwise(tmp_ene_vdw, tmp_ene_ele, tmp_work,
-			    crd1, crd2,
-			    param_6term, param_12term,
-			    charge[atomid1],
-			    charge[atomid2])==0){
-	  nsgrid.add_energy(tmp_ene_vdw, tmp_ene_ele);
-	  /*
-	    if(isnan(tmp_ene_vdw)){
-	    cout << "Error! nonbond " << atomid1 << " "  << atomid2 <<" "
-	    << " g:" << atomid_grid1 << " "  << atomid_grid2 <<" ";
-	    cout << tmp_ene_vdw << " " <<  tmp_ene_ele << " " << r12 << " "
-		 << crd1[0] << "," << crd1[1] << "," << crd1[2] <<" " 
-		 << crd2[0] << "," << crd2[1] << "," << crd2[2] <<" " 
-		 <<endl;
-	  }
-	  */
-	  nsgrid.add_work(atomid_grid1, tmp_work[0], tmp_work[1], tmp_work[2]);
-	  nsgrid.add_work(atomid_grid2, -tmp_work[0], -tmp_work[1], -tmp_work[2]);
-	  
-	  //n_pairs_incutoff++;
+	
+	real_pw r12 = ff.calc_pairwise(tmp_ene_vdw, tmp_ene_ele, tmp_work,
+				       crd1, crd2,
+				       param_6term, param_12term,
+				       charge[atomid1],
+				       charge[atomid2]);
+	if(r12 > cfg->nsgrid_cutoff){
+	  cellpairs[cp].pair_mask[mask_id] &= ~interact_bit;
 	}
+	
+	nsgrid.add_energy(tmp_ene_vdw, tmp_ene_ele);
 	/*
-	  p_vdw += tmp_ene_vdw;
-	  p_ele += tmp_ene_ele;
+	  if(isnan(tmp_ene_vdw)){
+	  cout << "Error! nonbond " << atomid1 << " "  << atomid2 <<" "
+	  << " g:" << atomid_grid1 << " "  << atomid_grid2 <<" ";
+	  cout << tmp_ene_vdw << " " <<  tmp_ene_ele << " " << r12 << " "
+	  << crd1[0] << "," << crd1[1] << "," << crd1[2] <<" " 
+	  << crd2[0] << "," << crd2[1] << "," << crd2[2] <<" " 
+	  <<endl;
+	  }
+	*/
+	nsgrid.add_work(atomid_grid1, tmp_work[0], tmp_work[1], tmp_work[2]);
+	nsgrid.add_work(atomid_grid2, -tmp_work[0], -tmp_work[1], -tmp_work[2]);
+	
+	//n_pairs_incutoff++;
+      /*
+	p_vdw += tmp_ene_vdw;
+	p_ele += tmp_ene_ele;
 	if (tmp_ene_vdw != 0.0 || tmp_ene_ele != 0.0){
 	  n_pairs_nonzero++;
-	sum_dist_incut += r12;
-	if(sum_dist_incut > 100000) sum_dist_incut -= 100000;	
-	if(atomid1 > atomid2){
+	  sum_dist_incut += r12;
+	  if(sum_dist_incut > 100000) sum_dist_incut -= 100000;	
+	  if(atomid1 > atomid2){
 	atomid1sum+=atomid2;
-	    atomid2sum+=atomid1;
-	    }else{
-	    atomid1sum+=atomid1;
+	atomid2sum+=atomid1;
+	}else{
+	atomid1sum+=atomid1;
 	    atomid2sum+=atomid2;
-	  }
+	    }
 	  lj6mult += param_6term;
 	  while(lj6mult > 100000) lj6mult -= 100000;
 	  lj12mult += param_12term;
@@ -1153,12 +1160,12 @@ int SubBox::calc_energy_pairwise_wo_neighborsearch(){
   return 0;
 }
 
-bool SubBox::check_nb15off(const int& a1, const int& a2, const int* bitmask){
+bool SubBox::check_nb15off(const int& a1, const int& a2, const int* bitmask,
+			   int& mask_id, int& interact_bit){
   int bit_pos = a2 * N_ATOM_CELL + a1;
-  int mask_id =  bit_pos / 32;
-  int interact_pos =  bit_pos % 32;
-  int interact = 1 << interact_pos;
-  return (bitmask[mask_id] & interact) == interact;
+  mask_id =  bit_pos / 32;
+  interact_bit = 1 << bit_pos % 32;
+  return (bitmask[mask_id] & interact_bit) == interact_bit;
 }
 
 int SubBox::calc_energy_bonds(){
@@ -1690,7 +1697,9 @@ int SubBox::gpu_device_setup(){
 
 int SubBox::update_device_cell_info(){
   cuda_set_constant(n_atoms_exbox,
-		    (real_pw)cfg->cutoff, n_lj_types);
+		    (real_pw)cfg->cutoff,
+		    (real_pw)cfg->nsgrid_cutoff,
+		    n_lj_types);
   //cout << "cuda_memcpy_htod_atom_info"<<endl;
   cuda_memcpy_htod_atom_info(charge, atom_type,
 			     max_n_atoms_exbox);
