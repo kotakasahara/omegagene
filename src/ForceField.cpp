@@ -44,7 +44,7 @@ int ForceField::initial_preprocess(const PBC* in_pbc){
   return 0;
 }
 
-int ForceField::calc_bond(real_bp& ene, real_bp work[],
+int ForceField::calc_bond(real& ene, real_fc work[],
 			  const real* crd1, const real* crd2,
 			  const real& param_e, const real& param_r0){
   
@@ -70,7 +70,7 @@ int ForceField::calc_bond(real_bp& ene, real_bp work[],
   return 0;
 }
 
-int ForceField::calc_angle(real_pw& ene, real_pw work1[], real_pw work2[],
+int ForceField::calc_angle(real& ene, real_fc work1[], real_fc work2[],
 			   const real* crd1, const real* crd2, const real* crd3,
 			   const real& param_e, const real& param_theta0){
   
@@ -106,7 +106,7 @@ int ForceField::calc_angle(real_pw& ene, real_pw work1[], real_pw work2[],
   return 0;
 }
 
-int ForceField::calc_torsion(real_pw& ene, real_pw work1[], real_pw work2[], real_pw work3[],
+int ForceField::calc_torsion(real& ene, real_fc work1[], real_fc work2[], real_fc work3[],
 			     const real* crd1, const real* crd2,
 			     const real* crd3, const real* crd4,
 			     const real& param_ene,      const real& param_overlaps,
@@ -215,8 +215,8 @@ int ForceField::calc_torsion(real_pw& ene, real_pw work1[], real_pw work2[], rea
   return 0;
 }
 
-int ForceField::calc_14pair(real_pw& ene_vdw,
-			    real_pw& ene_ele,
+int ForceField::calc_14pair(real& ene_vdw,
+			    real& ene_ele,
 			    real_fc work[],
 			    const real* crd1, const real* crd4,
 			    const real& lj_6term,
@@ -318,20 +318,20 @@ int ForceField::calc_pairwise(real_pw& ene_vdw, real_pw& ene_ele,
 
   return 0;
 }
-int ForceField::calc_zms_excess(real_pw& ene, real_pw work[],
-				real_pw* crd1,
-				real_pw* crd2,
+int ForceField::calc_zms_excess(real& ene, real_fc work[],
+				real* crd1,
+				real* crd2,
 				real_pw& charge1,
 				real_pw& charge2){
   
-  real_pw d12[3];
+  real d12[3];
   pbc->diff_crd_minim_image(d12, crd1, crd2);
-  real_pw r12_2 = d12[0]*d12[0] + d12[1]*d12[1] + d12[2]*d12[2];
-  real_pw r12 = sqrt(r12_2);
-  real_pw r12_inv = 1.0 / r12;
-  real_pw r12_3_inv = r12_inv * r12_inv * r12_inv;
-  real_pw cc = charge1 * charge2 * CHARGE_COEFF;
-  real_pw work_coef;
+  real r12_2 = d12[0]*d12[0] + d12[1]*d12[1] + d12[2]*d12[2];
+  real r12 = sqrt(r12_2);
+  real r12_inv = 1.0 / r12;
+  real r12_3_inv = r12_inv * r12_inv * r12_inv;
+  real cc = charge1 * charge2 * CHARGE_COEFF;
+  real work_coef;
   //cout << "dbg0204: cc " << cc << " " <<  charge1 << " " << charge2 << " " << r12_2 << " " << r12_inv << endl;
   (ele->*(ele->func_calc_zms_excess))(ene, work_coef,
 				      r12, r12_2, r12_3_inv, cc);

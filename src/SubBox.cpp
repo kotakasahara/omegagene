@@ -1182,8 +1182,8 @@ int SubBox::calc_energy_bonds(){
 int SubBox::calc_energy_angles(){
   for(int i=0; i < n_angles; i++){
     //  int angle_idx = bp_angles[i];
-    real_pw tmp_ene;
-    real_pw tmp_work1[3], tmp_work2[3];
+    real tmp_ene;
+    real_fc tmp_work1[3], tmp_work2[3];
 
     int atomidx1 = angle_atomid_triads[i][0]*3;
     int atomidx2 = angle_atomid_triads[i][1]*3;
@@ -1208,8 +1208,8 @@ int SubBox::calc_energy_angles(){
 int SubBox::calc_energy_torsions(){
   for(int i=0; i < n_torsions; i++){
     //int torsion_idx = bp_torsions[i];
-    real_pw tmp_ene;
-    real_pw tmp_work1[3], tmp_work2[3], tmp_work3[3];
+    real tmp_ene;
+    real_fc tmp_work1[3], tmp_work2[3], tmp_work3[3];
     int atomidx1 = torsion_atomid_quads[i][0]*3;
     int atomidx2 = torsion_atomid_quads[i][1]*3;
     int atomidx3 = torsion_atomid_quads[i][2]*3;
@@ -1238,8 +1238,8 @@ int SubBox::calc_energy_torsions(){
 int SubBox::calc_energy_impros(){
   for(int i=0; i < n_impros; i++){
     //int impro_idx = bp_impros[i];
-    real_pw tmp_ene;
-    real_pw tmp_work1[3], tmp_work2[3], tmp_work3[3];
+    real tmp_ene;
+    real_fc tmp_work1[3], tmp_work2[3], tmp_work3[3];
     int atomidx1 = impro_atomid_quads[i][0]*3;
     int atomidx2 = impro_atomid_quads[i][1]*3;
     int atomidx3 = impro_atomid_quads[i][2]*3;
@@ -1266,8 +1266,8 @@ int SubBox::calc_energy_impros(){
 }
 int SubBox::calc_energy_14nb(){
   for(int i=0; i < n_nb14; i++){
-    real_pw tmp_ene_vdw;
-    real_pw tmp_ene_ele;
+    real tmp_ene_vdw;
+    real tmp_ene_ele;
     real_fc tmp_work[3];
     int atomidx1 = nb14_atomid_pairs[i][0]*3;
     int atomidx2 = nb14_atomid_pairs[i][1]*3;
@@ -1297,12 +1297,12 @@ int SubBox::calc_energy_14nb(){
 int SubBox::calc_energy_ele_excess(){
   real tmp = pote_ele;
   for (int i=0; i < n_excess; i++){
-    real_pw tmp_ene;
-    real_pw tmp_work[3];
+    real tmp_ene;
+    real_fc tmp_work[3];
     int atomidx1 = excess_pairs[i][0]*3;
     int atomidx2 = excess_pairs[i][1]*3;
-    real_pw c1[3] = {(real_pw)crd[atomidx1], (real_pw)crd[atomidx1+1], (real_pw)crd[atomidx1+2]};
-    real_pw c2[3] = {(real_pw)crd[atomidx2], (real_pw)crd[atomidx2+1], (real_pw)crd[atomidx2+2]};
+    real c1[3] = {crd[atomidx1], crd[atomidx1+1], crd[atomidx1+2]};
+    real c2[3] = {crd[atomidx2], crd[atomidx2+1], crd[atomidx2+2]};
     ff.calc_zms_excess(tmp_ene, tmp_work,
 		       c1, c2,
 		       charge[excess_pairs[i][0]],

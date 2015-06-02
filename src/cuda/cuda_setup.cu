@@ -625,7 +625,7 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
       w3 += shfl_xor(w3, i, 8);
       //printf("SHFL[%d] wapridx:%d lane:%d a2:%d w:%12.8e %12.8e %12.8e\n",i, warpIdx, laneIdx,  a2, w1, w2, w3);
     }
-    if(laneIdx % 8 == 0){
+    if(laneIdx % 8 == 0 && w1 != 0.0 && w2 != 0.0 && w3 != 0.0){
       const int tmp_index = (((global_threadIdx/32)%N_MULTI_WORK)*D_N_ATOM_ARRAY + a2) * 3;
       //const int tmp_index = ((ene_index_offset*D_N_ATOM_ARRAY + a2) * 3);
       atomicAdd(&(d_work[tmp_index+0]), -w1);

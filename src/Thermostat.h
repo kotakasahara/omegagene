@@ -20,7 +20,7 @@ class ThermostatObject : public CelesteObject{
   ~ThermostatObject();
   int set_time_step(real in_time_step);
   int set_temperature_coeff(int in_d_free);
-  virtual int set_constant(int n_atoms, real* mass, real* vel, real* force);
+  virtual int set_constant(int n_atoms, real_pw* mass, real* vel, real* force);
   virtual int apply_thermostat(const int n_atoms,
 			       real_fc* work,
 			       real* vel, real* vel_next,
@@ -50,7 +50,7 @@ class ThermostatScaling : public ThermostatObject {
  public:
   ThermostatScaling();
   ~ThermostatScaling();
-  virtual int set_constant(int n_atoms, real* mass, real* vel, real* force);
+  virtual int set_constant(int n_atoms, real_pw* mass, real* vel, real* force);
   virtual int apply_thermostat(const int n_atoms,
 			       real_fc* work,
 			       real* vel, real* vel_next,
@@ -76,7 +76,7 @@ class ThermostatHooverEvans : public ThermostatObject {
  public:
   ThermostatHooverEvans();
   ~ThermostatHooverEvans();
-  virtual int set_constant(int n_atoms, real* mass, real* vel, real* force);
+  virtual int set_constant(int n_atoms, real_pw* mass, real* vel, real* force);
   virtual int apply_thermostat(const int n_atoms,
 			       real_fc* work,
 			       real* vel, real* vel_next,
