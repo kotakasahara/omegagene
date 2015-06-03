@@ -525,60 +525,83 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
   const int laneIdx = global_threadIdx & 31;
   const int n_loops = (d_idx_head_cell_pairs[c1+1] - d_idx_head_cell_pairs[c1])*2;
   const int ene_index_offset = global_threadIdx%N_MULTI_WORK;  
-
+  
   real_fc work_c1[3] = {0.0, 0.0, 0.0};
 
   const int atom_idx1 = (laneIdx & 7);  // laneIdx%8
   const int a1 = c1 * D_N_ATOM_CELL + atom_idx1;
-    
+  
   __shared__ real4 crd_chg1[D_N_ATOM_CELL * (PW_THREADS >> 5)];
   __shared__ int2  atominfo1[D_N_ATOM_CELL * (PW_THREADS >> 5)];
+
   //__shared__ real4 crd_chg2[D_N_ATOM_CELL * PW_THREADS / 32];
+  const int sharedmem_idx  = D_N_ATOM_CELL * warpIdx + atom_idx1;
   if(laneIdx<D_N_ATOM_CELL){
-    crd_chg1[D_N_ATOM_CELL * warpIdx + laneIdx] = d_crd_chg[c1*D_N_ATOM_CELL + laneIdx];
-    atominfo1[D_N_ATOM_CELL * warpIdx + laneIdx] = d_atominfo[c1*D_N_ATOM_CELL + laneIdx];
+    crd_chg1[sharedmem_idx] = d_crd_chg[c1*D_N_ATOM_CELL + laneIdx];
+    atominfo1[sharedmem_idx] = d_atominfo[c1*D_N_ATOM_CELL + laneIdx];
   }
   __syncthreads();
 
+  CellPair cellpair;
+  int cp;
   for(int loopIdx=0; loopIdx < n_loops; loopIdx++){
-    const int cp = d_idx_head_cell_pairs[c1] + (loopIdx >> 1);
+    if(loopIdx%2 == 0){
+      cp = d_idx_head_cell_pairs[c1] + (loopIdx >> 1);
+      if(cp >= D_N_CELL_PAIRS) break;
+      cellpair = d_cell_pairs[cp];
+    }
     
-    if(cp >= D_N_CELL_PAIRS) break;
+    //CellPair cellpair;
+    //if(laneIdx==0){
+    //cellpair = cellpair;
+    //}
+    //for(int i=1; i < 32; i*=2){
+    //cellpair = __shfl_up(cellpair, i);
+    //}
+
     //atomicAdd(&d_pairs[3],1);
-    const int c2 = d_cell_pairs[cp].cell_id2;
+    const int c2 = cellpair.cell_id2;
 
     // atom_idx ... index in cell, 0-7
-    const int atom_idx2 = (laneIdx >> 3) + 4 * (loopIdx % 2);  // laneIdx/8 + 4*(warpIdx%2)
+    const int atom_idx2 = (laneIdx / 8)  + 4 * (loopIdx % 2);  // laneIdx/8 + 4*(warpIdx%2)
 
     // remove 1-2, 1-3, 1-4 pairs
     const int a2 = c2 * D_N_ATOM_CELL + atom_idx2;
+    //real4 crd_chg2;
+    //int2 atominfo2;
+    //if(atom_idx1 == 0){
+    real4 crd_chg2 = d_crd_chg[a2];
+    const int2 atominfo2 = d_atominfo[a2];
+    //}
+    //int atomid2_top = laneIdx - laneIdx%8;
+    //crd_chg2.x = __shfl(crd_chg2.x, laneIdx - atom_idx1);
+    //crd_chg2.y = __shfl(crd_chg2.y, laneIdx - atom_idx1);
+    //crd_chg2.z = __shfl(crd_chg2.z, laneIdx - atom_idx1);
+    //crd_chg2.w = __shfl(crd_chg2.w, laneIdx - atom_idx1);
+    //atominfo2.x = __shfl(atominfo2.x, laneIdx - atom_idx1);
+    //atominfo2.y = __shfl(atominfo2.y, laneIdx - atom_idx1);
 
-    real_pw crd2x = d_crd_chg[a2].x;
-    real_pw crd2y = d_crd_chg[a2].y;
-    real_pw crd2z = d_crd_chg[a2].z;
-    if      ( (d_cell_pairs[cp].image & 1) == 1 )   crd2x -= PBC_L[0];
-    else if ( (d_cell_pairs[cp].image & 2) == 2 )   crd2x += PBC_L[0];
-    if      ( (d_cell_pairs[cp].image & 4) == 4 )   crd2y -= PBC_L[1];
-    else if ( (d_cell_pairs[cp].image & 8) == 8 )   crd2y += PBC_L[1];
-    if      ( (d_cell_pairs[cp].image & 16) == 16 ) crd2z -= PBC_L[2];
-    else if ( (d_cell_pairs[cp].image & 32) == 32 ) crd2z += PBC_L[2];
-
-    const real4 crd_chg2 = make_float4(crd2x, crd2y, crd2z, d_crd_chg[a2].w);
+    if      ( (cellpair.image & 1) == 1 )   crd_chg2.x -= PBC_L[0];
+    else if ( (cellpair.image & 2) == 2 )   crd_chg2.x += PBC_L[0];
+    if      ( (cellpair.image & 4) == 4 )   crd_chg2.y -= PBC_L[1];
+    else if ( (cellpair.image & 8) == 8 )   crd_chg2.y += PBC_L[1];
+    if      ( (cellpair.image & 16) == 16 ) crd_chg2.z -= PBC_L[2];
+    else if ( (cellpair.image & 32) == 32 ) crd_chg2.z += PBC_L[2];
 
     real_pw w1=0.0, w2=0.0, w3=0.0;
     real_pw cur_ene_ele=0.0;
     real_pw cur_ene_vdw=0.0;
 
-    if(!check_15off64(atom_idx1, atom_idx2, d_cell_pairs[cp].pair_mask)){
+    if(!check_15off64(atom_idx1, atom_idx2, cellpair.pair_mask)){
       //if(d_atominfo[a1].x == -1 || d_atominfo[a2].x == -1) continue;
       cal_pair(w1, w2, w3, cur_ene_vdw, cur_ene_ele,
-	       crd_chg1[D_N_ATOM_CELL * warpIdx + atom_idx1],
+	       crd_chg1[sharedmem_idx],
 	       crd_chg2,
-	       atominfo1[D_N_ATOM_CELL * warpIdx + atom_idx1].y,
-	       d_atominfo[a2].y,
+	       atominfo1[sharedmem_idx].y,
+	       atominfo2.y,
 	       d_lj_6term, d_lj_12term,
-	       atominfo1[D_N_ATOM_CELL * warpIdx + atom_idx1].x,
-	       d_atominfo[a2].x);
+	       atominfo1[sharedmem_idx].x,
+	       atominfo2.x);
       //atomicAdd(&d_pairs[1],1);
 
       //debug
