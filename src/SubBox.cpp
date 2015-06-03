@@ -35,7 +35,8 @@ extern "C" int cuda_memcpy_htod_crd(real_pw*& h_crd,
 extern "C" int cuda_set_atominfo(int n_atom_array);
 
 extern "C" int cuda_pairwise_ljzd(const int offset_cellpairs, const int n_cal_cellpairs,
-				  const int offset_cells,     const int n_cal_cells);
+				  const int offset_cells,     const int n_cal_cells,
+				  const bool flg_mod_15mask);
 
 extern "C" int cuda_memcpy_dtoh_work(real_fc*& h_work, real_fc*& h_energy,
 				     int n_atoms, int n_atom_array);
@@ -510,6 +511,8 @@ int SubBox::nsgrid_update(){
   const clock_t endTimePair = clock();
   ctime_setgrid += endTimeSet - startTimeSet;
   ctime_enumerate_cellpairs += endTimePair - endTimeSet;
+
+  flg_mod_15mask = true;
   return 0;
 }
 
@@ -1728,8 +1731,11 @@ int SubBox::calc_energy_pairwise_cuda(){
   cuda_pairwise_ljzd(0, // offset_paridpairs,
 		     nsgrid.get_n_cell_pairs(), // n_cal_gridpairs,
 		     0, // offset_grids,
-		     nsgrid.get_n_cells() ); // n_cal_grids);
+		     nsgrid.get_n_cells(),
+		     flg_mod_15mask
+		     ); // n_cal_grids);
   
+  flg_mod_15mask = false;
   return 0;
 }
 

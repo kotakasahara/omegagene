@@ -536,12 +536,13 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
 				     real_fc* d_energy, real_fc* d_work,
 				     int* d_pairs, real_pw* d_realbuf,
 				     const int offset_cells,
-				     const int n_cells){
+				     const int n_cells,
+				     const bool flg_mod_15mask){
   real_fc ene_vdw = 0.0;
   real_fc ene_ele = 0.0;
 
   const int global_threadIdx = blockDim.x * blockIdx.x + threadIdx.x;
-
+  
   const int c1 = global_threadIdx >> 5;
   const int warpIdx = threadIdx.x >> 5;  
   if(c1 >= n_cells){ return; }
@@ -559,8 +560,8 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
     
   for(int loopIdx=0; loopIdx < n_loops; loopIdx++){
     const int cp = d_idx_head_cell_pairs[c1] + (loopIdx >> 1);
-    //if(d_cell_pairs[cp].pair_mask[0] == ~0 && 
-    //  d_cell_pairs[cp].pair_mask[1] == ~0) continue;
+    if(d_cell_pairs[cp].pair_mask[loopIdx%2] == ~0) continue;
+
     if(cp >= D_N_CELL_PAIRS) break;
     //atomicAdd(&d_pairs[3],1);
     const int c2 = d_cell_pairs[cp].cell_id2;
@@ -594,12 +595,11 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
       real_pw r12 = cal_pair(w1, w2, w3, cur_ene_vdw, cur_ene_ele,
 			     d_crd_chg[a1], crd_chg2, d_atominfo[a1].y, d_atominfo[a2].y,
 			     d_lj_6term, d_lj_12term, d_atominfo[a1].x, d_atominfo[a2].x);
-      if(r12 > D_CUTOFF_PAIRLIST){
-	d_cell_pairs[cp].pair_mask[mask_id] &= ~interact_bit;
+      if(flg_mod_15mask){
+	if(r12 < D_CUTOFF_PAIRLIST) interact_bit = 0;
       }
-
       //atomicAdd(&d_pairs[1],1);
-
+      
       //debug
       /*
       const real_pw d12[3] = {
@@ -649,6 +649,13 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
     //    if(w1 != 0.0) printf("cp %d: %d-%d\n",cp, c1, c2);
     //printf("SHFL wapridx:%d lane:%d a2:%d w:%12.8e %12.8e %12.8e\n", warpIdx, laneIdx, a2, w1, w2, w3);
     }    
+    if(flg_mod_15mask){
+      for(int i = 32; i >= 1; i/=2){
+	interact_bit |= __shfl_xor(interact_bit, i);
+      }
+      if(laneIdx == 0)
+	d_cell_pairs[cp].pair_mask[mask_id]  |= interact_bit;
+    }
     for(int i = 4; i >= 1; i/=2){
       w1 += shfl_xor(w1, i, 8);
       w2 += shfl_xor(w2, i, 8);
@@ -699,7 +706,8 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
 }
 
 extern "C" int cuda_pairwise_ljzd(const int offset_cellpairs, const int n_cal_cellpairs,
-				  const int offset_cells,     const int n_cal_cells){
+				  const int offset_cells,     const int n_cal_cells,
+				  const bool flg_mod_15mask){
   // test
   //real_pw w1=0.0, w2=0.0, w3=0.0;
   //real_pw cur_ene_ele=0.0;
@@ -733,7 +741,8 @@ extern "C" int cuda_pairwise_ljzd(const int offset_cellpairs, const int n_cal_ce
 			   d_atominfo,
 			   d_lj_6term, d_lj_12term,
 			   d_energy, d_work, d_pairs, d_realbuf,
-			   offset_cells, n_cal_cells);
+			   offset_cells, n_cal_cells, flg_mod_15mask);
+  kernel_reset_cellpairs<<blocks, PW_THREADS, 0, stream_pair_home>>(d_cell_pairs);
   //HANDLE_ERROR(cudaMemcpy(h_pairs, d_pairs, sizeof(int)*5, cudaMemcpyDeviceToHost));
   //HANDLE_ERROR(cudaMemcpy(h_realbuf, d_realbuf, sizeof(real)*4, cudaMemcpyDeviceToHost));
   //printf("n 15 pairs: nb:%d / interact:%d / all:%d / cellpairs:%d / incut:%d\n", h_pairs[0],h_pairs[1],h_pairs[2], h_pairs[3], h_pairs[4]); 

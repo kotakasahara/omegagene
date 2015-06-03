@@ -154,6 +154,8 @@ class SubBox : public CelesteObject {
   
   int flg_thermostat;
   ThermostatObject* thermostat;
+
+  bool flg_mod_15mask;
   
   clock_t ctime_setgrid;
   clock_t ctime_enumerate_cellpairs;
