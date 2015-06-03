@@ -54,6 +54,7 @@ extern "C" int cuda_hostalloc_atom_type_charge(int*& h_atom_type,
 					       real_pw*& h_charge,
 					       int n_atoms);
 
+extern "C" int cuda_init_cellinfo(const int n_cells);
 #endif
 
 SubBox::SubBox(){
@@ -1718,6 +1719,7 @@ int SubBox::update_device_cell_info(){
 			      nsgrid.get_n_cells());
   cuda_memcpy_htod_atomids(nsgrid.get_atomids(),
 			   nsgrid.get_max_n_atom_array());
+  cuda_init_cellinfo(nsgrid.get_n_cells());
   return 0;
 }
 
