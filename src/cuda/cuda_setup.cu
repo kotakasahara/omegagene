@@ -528,12 +528,18 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
 
   real_fc work_c1[3] = {0.0, 0.0, 0.0};
 
-  //__shared__ real4 s_crdchg_c1[D_N_ATOM_CELL * (PW_THREADS >> 5)];
-  //__shared__ int2  s_atominfo_c1[D_N_ATOM_CELL * (PW_THREADS >> 5)];
-
   const int atom_idx1 = (laneIdx & 7);  // laneIdx%8
   const int a1 = c1 * D_N_ATOM_CELL + atom_idx1;
     
+  __shared__ real4 crd_chg1[D_N_ATOM_CELL * (PW_THREADS >> 5)];
+  __shared__ int2  atominfo1[D_N_ATOM_CELL * (PW_THREADS >> 5)];
+  //__shared__ real4 crd_chg2[D_N_ATOM_CELL * PW_THREADS / 32];
+  if(laneIdx<D_N_ATOM_CELL){
+    crd_chg1[D_N_ATOM_CELL * warpIdx + laneIdx] = d_crd_chg[c1*D_N_ATOM_CELL + laneIdx];
+    atominfo1[D_N_ATOM_CELL * warpIdx + laneIdx] = d_atominfo[c1*D_N_ATOM_CELL + laneIdx];
+  }
+  __syncthreads();
+
   for(int loopIdx=0; loopIdx < n_loops; loopIdx++){
     const int cp = d_idx_head_cell_pairs[c1] + (loopIdx >> 1);
     
@@ -566,8 +572,13 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
     if(!check_15off64(atom_idx1, atom_idx2, d_cell_pairs[cp].pair_mask)){
       //if(d_atominfo[a1].x == -1 || d_atominfo[a2].x == -1) continue;
       cal_pair(w1, w2, w3, cur_ene_vdw, cur_ene_ele,
-	       d_crd_chg[a1], crd_chg2, d_atominfo[a1].y, d_atominfo[a2].y,
-	       d_lj_6term, d_lj_12term, d_atominfo[a1].x, d_atominfo[a2].x);
+	       crd_chg1[D_N_ATOM_CELL * warpIdx + atom_idx1],
+	       crd_chg2,
+	       atominfo1[D_N_ATOM_CELL * warpIdx + atom_idx1].y,
+	       d_atominfo[a2].y,
+	       d_lj_6term, d_lj_12term,
+	       atominfo1[D_N_ATOM_CELL * warpIdx + atom_idx1].x,
+	       d_atominfo[a2].x);
       //atomicAdd(&d_pairs[1],1);
 
       //debug

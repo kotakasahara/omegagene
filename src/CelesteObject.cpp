@@ -6,7 +6,8 @@ CelesteObject::CelesteObject(){
 //const int CelesteObject::MAX_N_ATOMTYPE = 40;
 
 const string CelesteObject::EXE = "celeste";
-const string CelesteObject::ABOUT_ME = "celeste ver.0.34.f 2-jun-2015";
+const string CelesteObject::ABOUT_ME = "celeste ver.0.34.i 2-jun-2015";
+const string CelesteObject::DESCRIPTION = "Using shared memory in GPU";
 //const int CelesteObject::REAL_BYTE = 4;
 const int CelesteObject::REAL_BYTE = 8;
 const real CelesteObject::PI = 3.14159265;
