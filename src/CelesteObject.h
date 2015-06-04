@@ -115,6 +115,7 @@ class CelesteObject {
 
   static const string EXE;
   static const string ABOUT_ME;
+  static const string DESCRIPTION;
   static const int REAL_BYTE;
   static const real PI;
   static const int MAGIC_NUMBER;
