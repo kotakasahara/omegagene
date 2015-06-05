@@ -31,8 +31,8 @@ extern "C" int cuda_alloc_atom_info(int n_atoms,
 			   n_atom_array * 3 * sizeof(real_pw)) );
   HANDLE_ERROR( cudaMalloc((void**)&d_charge_orig,
 			   n_atoms * sizeof(real_pw) ));
-  HANDLE_ERROR( cudaMalloc((void**)&d_atominfo,
-			   n_atom_array * sizeof(int2) ));
+  HANDLE_ERROR( cudaMalloc((void**)&d_atomtype,
+			   n_atom_array * sizeof(int) ));
   HANDLE_ERROR( cudaMalloc((void**)&d_atomids,
 			   n_atom_array * sizeof(int)) );
   //  HANDLE_ERROR( cudaMalloc((void**)&d_atomids_rev,
@@ -63,7 +63,7 @@ extern "C" int cuda_free_atom_info(){
   HANDLE_ERROR( cudaFree(d_atomids) );
   //  HANDLE_ERROR( cudaFree(d_atomids_rev) );
   HANDLE_ERROR( cudaFree(d_charge_orig) );
-  HANDLE_ERROR( cudaFree(d_atominfo) );
+  HANDLE_ERROR( cudaFree(d_atomtype) );
   HANDLE_ERROR( cudaFree(d_atomtype_orig) );
   HANDLE_ERROR( cudaFree(d_cell_pairs) );
   HANDLE_ERROR( cudaFree(d_idx_head_cell_pairs) );
@@ -352,29 +352,25 @@ __global__ void kernel_set_cellinfo(int* d_cell_pair_removed,
   if(cell_id >= n_cells) return;
   d_cell_pair_removed[cell_id] = 0;
 }
+__global__ void kernel_set_crd(const real* d_crd,
+			       real4* d_crd_chg){
+  int atomid = threadIdx.x + blockIdx.x * blockDim.x;
+  d_crd_chg[atomid].x = d_crd[atomid*3+0];
+  d_crd_chg[atomid].y = d_crd[atomid*3+1];
+  d_crd_chg[atomid].z = d_crd[atomid*3+2];
+}
 __global__ void kernel_set_atominfo(const int* d_atomids,
 				    const int* d_atomtype_orig,
-				    const real_pw* d_crd,
 				    const real_pw* d_charge_orig,
-				    int2* d_atominfo,
+				    int* d_atomtype,
 				    real4* d_crd_chg){
   int atomid = threadIdx.x + blockIdx.x * blockDim.x;
   if(atomid < D_N_ATOM_ARRAY){
-    d_atominfo[atomid].x = d_atomids[atomid];
     if(d_atomids[atomid] >= 0){
-      d_atominfo[atomid].y = d_atomtype_orig[d_atomids[atomid]];
+      d_atomtype[atomid] = d_atomtype_orig[d_atomids[atomid]];
       d_crd_chg[atomid].w = d_charge_orig[d_atomids[atomid]];
-    }else{
-      d_atominfo[atomid].y = 0;
-      d_crd_chg[atomid].w = 0.0;
     }
-    //d_atominfo[atomid].z = d_nb15off1_orig[d_atomids[atomid]];
-    //d_atominfo[atomid].w = d_nb15off2_orig[d_atomids[atomid]];
-    d_crd_chg[atomid].x = d_crd[atomid*3+0];
-    d_crd_chg[atomid].y = d_crd[atomid*3+1];
-    d_crd_chg[atomid].z = d_crd[atomid*3+2];
   }
-  
 }
 /*
 __Global__ void kernel_set_atomids_rev(const int* d_atomids, int* d_atomids_rev){
@@ -384,13 +380,17 @@ __Global__ void kernel_set_atomids_rev(const int* d_atomids, int* d_atomids_rev)
   }
 }
 */
+extern "C" int cuda_set_crd(int n_atom_array){
+  int blocks = (n_atom_array + REORDER_THREADS-1) / REORDER_THREADS;
+  kernel_set_crd<<<blocks, REORDER_THREADS>>>(d_crd,
+					      d_crd_chg);
+}
 extern "C" int cuda_set_atominfo(int n_atom_array){
   int blocks = (n_atom_array + REORDER_THREADS-1) / REORDER_THREADS;
   kernel_set_atominfo<<<blocks, REORDER_THREADS>>>(d_atomids,
 						   d_atomtype_orig,
-						   d_crd,
 						   d_charge_orig,
-						   d_atominfo,
+						   d_atomtype,
 						   d_crd_chg);
   return 0;
 }
@@ -475,10 +475,8 @@ __device__ real_pw cal_pair(real_pw& w1,
 			const int& atomtype1,
 			const int& atomtype2,
 			const real_pw* __restrict__ d_lj_6term,
-			const real_pw* __restrict__ d_lj_12term,
-			const int a1, const int a2
+			const real_pw* __restrict__ d_lj_12term
 			){
-
   const real_pw d12[3] = {
     crd_chg1.x - crd_chg2.x,
     crd_chg1.y - crd_chg2.y,
@@ -539,7 +537,7 @@ __device__ real_pw cal_pair(real_pw& w1,
 __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
 				     CellPair* d_cell_pairs,
 				     const int* d_idx_head_cell_pairs,
-				     const int2* d_atominfo,
+				     const int* d_atomtype,
 				     const real_pw* __restrict__ d_lj_6term,
 				     const real_pw* __restrict__ d_lj_12term,
 				     real_fc* d_energy, real_fc* d_work,
@@ -566,13 +564,13 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
   const int a1 = c1 * D_N_ATOM_CELL + atom_idx1;
   
   __shared__ real4 crd_chg1[D_N_ATOM_CELL * (PW_THREADS >> 5)];
-  __shared__ int2  atominfo1[D_N_ATOM_CELL * (PW_THREADS >> 5)];
+  __shared__ int  atomtype1[D_N_ATOM_CELL * (PW_THREADS >> 5)];
 
   //__shared__ real4 crd_chg2[D_N_ATOM_CELL * PW_THREADS / 32];
   const int sharedmem_idx  = D_N_ATOM_CELL * warpIdx + atom_idx1;
   if(laneIdx<D_N_ATOM_CELL){
     crd_chg1[sharedmem_idx] = d_crd_chg[c1*D_N_ATOM_CELL + laneIdx];
-    atominfo1[sharedmem_idx] = d_atominfo[c1*D_N_ATOM_CELL + laneIdx];
+    atomtype1[sharedmem_idx] = d_atomtype[c1*D_N_ATOM_CELL + laneIdx];
   }
   __syncthreads();
 
@@ -596,7 +594,7 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
     //int2 atominfo2;
     //if(atom_idx1 == 0){
     real4 crd_chg2 = d_crd_chg[a2];
-    const int2 atominfo2 = d_atominfo[a2];
+    const int atomtype2 = d_atomtype[a2];
     //}
     //int atomid2_top = laneIdx - laneIdx%8;
     //crd_chg2.x = __shfl(crd_chg2.x, laneIdx - atom_idx1);
@@ -624,11 +622,9 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
       real_pw r12 = cal_pair(w1, w2, w3, cur_ene_vdw, cur_ene_ele,
 			     crd_chg1[sharedmem_idx],
 			     crd_chg2,
-			     atominfo1[sharedmem_idx].y,
-			     atominfo2.y,
-			     d_lj_6term, d_lj_12term,
-			     atominfo1[sharedmem_idx].x,
-			     atominfo2.x);
+			     atomtype1[sharedmem_idx],
+			     atomtype2,
+			     d_lj_6term, d_lj_12term);
       if(flg_mod_15mask && r12 < D_CUTOFF_PAIRLIST) interact_bit = 0;
       //atomicAdd(&d_pairs[1],1);
       
@@ -796,7 +792,7 @@ extern "C" int cuda_pairwise_ljzd(const int offset_cellpairs, const int n_cal_ce
     0, stream_pair_home>>>(d_crd_chg,
 			   d_cell_pairs,
 			   d_idx_head_cell_pairs,
-			   d_atominfo,
+			   d_atomtype,
 			   d_lj_6term, d_lj_12term,
 			   d_energy, d_work, d_pairs, d_realbuf,
 			   offset_cells, n_cal_cells, flg_mod_15mask,
