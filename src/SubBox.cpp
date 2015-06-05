@@ -7,10 +7,6 @@ extern "C" int cuda_alloc_atom_info(int n_atoms,
 				    int max_n_cells,
 				    int max_n_cell_pairs);
 extern "C" int cuda_free_atom_info();
-extern "C" int cuda_memcpy_htod_cell_pairs(CellPair*& h_cell_pairs,
-					   int*& h_idx_head_cell_pairs,
-					   int n_cell_pairs,
-					   int n_cells);
 extern "C" int cuda_memcpy_htod_atom_info(real_pw*& h_charge_orig,
 					  int*& h_atomtype_orig,
 					  int n_atoms);
@@ -55,6 +51,13 @@ extern "C" int cuda_hostalloc_atom_type_charge(int*& h_atom_type,
 					       int n_atoms);
 
 extern "C" int cuda_init_cellinfo(const int n_cells);
+extern "C" int cuda_grid_update(CellPair*& h_cell_pairs,
+				int*& h_idx_head_cell_pairs,
+				int*& h_atomids,
+				const int n_cell_pairs,
+				const int n_cells,
+				const int n_atom_array);
+
 #endif
 
 SubBox::SubBox(){
@@ -474,14 +477,12 @@ int SubBox::set_nsgrid(){
   nsgrid.set_atoms_into_grid_xy();
   nsgrid.set_atomids_buf();
 
-#ifdef F_CUDA
-  cout << "gpu_device_setup()"<<endl;
-  gpu_device_setup();
-#endif
+
 
   nsgrid.enumerate_cell_pairs();
 
 #ifdef F_CUDA
+  gpu_device_setup();
   update_device_cell_info();  
 #endif
 
@@ -1704,22 +1705,20 @@ int SubBox::update_device_cell_info(){
 		    (real_pw)cfg->cutoff,
 		    (real_pw)cfg->nsgrid_cutoff,
 		    n_lj_types);
-  //cout << "cuda_memcpy_htod_atom_info"<<endl;
-  cuda_memcpy_htod_atom_info(charge, atom_type,
-			     max_n_atoms_exbox);
+
   cuda_set_cell_constant(nsgrid.get_max_n_cells(),
 			 nsgrid.get_max_n_cell_pairs(),
 			 nsgrid.get_n_atom_array(),
 			 nsgrid.get_n_cells_x(),
 			 nsgrid.get_n_cells_y(),
 			 nsgrid.get_n_columns());
-  cuda_memcpy_htod_cell_pairs(nsgrid.get_cell_pairs(),
-			      nsgrid.get_idx_head_cell_pairs(),
-			      nsgrid.get_n_cell_pairs(),
-			      nsgrid.get_n_cells());
-  cuda_memcpy_htod_atomids(nsgrid.get_atomids(),
-			   nsgrid.get_max_n_atom_array());
-  cuda_init_cellinfo(nsgrid.get_n_cells());
+  cuda_grid_update(nsgrid.get_cell_pairs(),
+		   nsgrid.get_idx_head_cell_pairs(),
+		   nsgrid.get_atomids(),
+		   nsgrid.get_n_cell_pairs(),
+		   nsgrid.get_n_cells(),
+		   nsgrid.get_max_n_atom_array()) ;
+
   return 0;
 }
 
