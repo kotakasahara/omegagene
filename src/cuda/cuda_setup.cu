@@ -18,6 +18,7 @@ __device__ double atomicAdd(double* address, double val){
     return __longlong_as_double(old);
 }
 
+
 extern "C" int cuda_alloc_atom_info(int n_atoms,
 				    int n_atom_array,
 				    int max_n_cells,
@@ -73,7 +74,27 @@ extern "C" int cuda_free_atom_info(){
   return 0;
 }
 
-
+extern "C" int cuda_memcpy_htod_cell_pairs(CellPair*& h_cell_pairs,
+					   int*& h_idx_head_cell_pairs,
+					   int n_cell_pairs,
+					   int n_cells){
+  //printf("cuda_memcpy_htod_cell_pairs\n");
+  HANDLE_ERROR(cudaMemcpy(d_cell_pairs, h_cell_pairs,
+			  n_cell_pairs * sizeof(CellPair),
+			  cudaMemcpyHostToDevice));
+  HANDLE_ERROR(cudaMemcpy(d_idx_head_cell_pairs,
+			  h_idx_head_cell_pairs,
+			  (n_cells+1) * sizeof(int),
+			  cudaMemcpyHostToDevice));
+  return 0;
+}
+extern "C" int cuda_memcpy_htod_atomids(int*& h_atomids,
+					int n_atom_array){
+  HANDLE_ERROR(cudaMemcpy(d_atomids, h_atomids,
+			  n_atom_array * sizeof(int),
+			  cudaMemcpyHostToDevice));
+  return 0;
+}
 
 // cuda_memcpy_htod_atom_info
 //   Arrays of charges and atomtypes of all atoms in the process are sent to
@@ -715,7 +736,11 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
   //printf("dbg10\n");  
   //printf("dbg01ene %d: %f %f\n",global_threadIdx, d_energy[ene_index_offset*2], d_energy[ene_index_offset*2+1]);
 }
-
+extern "C" int cuda_init_cellinfo(const int n_cells){
+  int blocks = (n_cells+PW_THREADS/32-1) / (PW_THREADS/32);
+  kernel_set_cellinfo<<<blocks, PW_THREADS>>>(d_cell_pair_removed, n_cells);
+  return 0;
+}
 __global__ void kernel_reset_cellpairs(CellPair* d_cell_pairs,
 				       int* d_cell_pair_removed,
 				       const int* d_idx_head_cell_pairs,
@@ -836,51 +861,4 @@ extern "C" int cuda_reset_work_ene(int n_atoms){
   HANDLE_ERROR(cudaMemset(d_energy, 0.0, sizeof(real_pw)*2*N_MULTI_WORK));
   return 0;
 }
-
-extern "C" int cuda_grid_update(CellPair*& h_cell_pairs,
-				int*& h_idx_head_cell_pairs,
-				int*& h_atomids,
-				const int n_cell_pairs,
-				const int n_cells,
-				const int n_atom_array){
-  cudaStream_t stream_cp1;
-  cudaStream_t stream_cp2;
-  cudaStream_t stream_cp3;
-  cudaStream_t stream_kn1;
-  cudaStreamCreate(&stream_cp1);
-  cudaStreamCreate(&stream_cp2);
-  cudaStreamCreate(&stream_cp3);
-  cudaStreamCreate(&stream_kn1);
-  HANDLE_ERROR(cudaMemcpyAsync(d_cell_pairs, h_cell_pairs,
-			       n_cell_pairs * sizeof(CellPair),
-			       cudaMemcpyHostToDevice, stream_cp1));
-  HANDLE_ERROR(cudaMemcpyAsync(d_idx_head_cell_pairs,
-			  h_idx_head_cell_pairs,
-			  (n_cells+1) * sizeof(int),
-			  cudaMemcpyHostToDevice, stream_cp2));
-  HANDLE_ERROR(cudaMemcpyAsync(d_atomids, h_atomids,
-			       n_atom_array * sizeof(int),
-			       cudaMemcpyHostToDevice, stream_cp3));
-  
-  int blocks = (n_cells+PW_THREADS/32-1) / (PW_THREADS/32);
-  kernel_set_cellinfo<<<blocks, PW_THREADS,0,stream_kn1>>>(d_cell_pair_removed, n_cells);
-  cudaStreamSynchronize(stream_cp1);
-  cudaStreamSynchronize(stream_cp2);
-  cudaStreamSynchronize(stream_cp3);
-  cudaStreamSynchronize(stream_kn1);
-  cudaStreamDestroy(stream_cp1);
-  cudaStreamDestroy(stream_cp2);
-  cudaStreamDestroy(stream_cp3);
-  cudaStreamDestroy(stream_kn1);
-  return 0;
-}
-
-extern "C" int cuda_set_uniform_grid(){
- return 0;
-}
-extern "C" int cuda_enumerate_cell_pairs(){
-  
-  return 0;
-}
-
 
