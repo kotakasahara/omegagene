@@ -67,7 +67,10 @@ int* d_cell_pair_removed;
 int* d_atomids;
 int* d_atomids_rev;
 
-int* d_atomtype;
+// info reordered by atomid_grid
+// x: atomid in original order
+// y: atomtype
+int2* d_atominfo;
 
 // info in original atomid order
 real_pw* d_charge_orig;
