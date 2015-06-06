@@ -33,6 +33,7 @@ extern "C" int cuda_reset_work_ene(int n_atoms);
 extern "C" int cuda_memcpy_htod_crd(real_pw*& h_crd,
 				    int n_atom_array);
 extern "C" int cuda_set_atominfo(int n_atom_array);
+extern "C" int cuda_set_crd(int n_atom_array);
 
 extern "C" int cuda_pairwise_ljzd(const int offset_cellpairs, const int n_cal_cellpairs,
 				  const int offset_cells,     const int n_cal_cells,
@@ -1720,6 +1721,7 @@ int SubBox::update_device_cell_info(){
   cuda_memcpy_htod_atomids(nsgrid.get_atomids(),
 			   nsgrid.get_max_n_atom_array());
   cuda_init_cellinfo(nsgrid.get_n_cells());
+  cuda_set_atominfo(nsgrid.get_n_atom_array());
   return 0;
 }
 
@@ -1728,7 +1730,7 @@ int SubBox::calc_energy_pairwise_cuda(){
   cuda_memcpy_htod_crd(nsgrid.get_crd(),
 		       nsgrid.get_n_atom_array());
 
-  cuda_set_atominfo(nsgrid.get_n_atom_array());
+  cuda_set_crd(nsgrid.get_n_atom_array());
 
   cuda_pairwise_ljzd(0, // offset_paridpairs,
 		     nsgrid.get_n_cell_pairs(), // n_cal_gridpairs,

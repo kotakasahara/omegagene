@@ -70,7 +70,7 @@ int* d_atomids_rev;
 // info reordered by atomid_grid
 // x: atomid in original order
 // y: atomtype
-int2* d_atominfo;
+int* d_atomtype;
 
 // info in original atomid order
 real_pw* d_charge_orig;
