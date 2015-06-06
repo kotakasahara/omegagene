@@ -902,3 +902,34 @@ extern "C" int cuda_reset_work_ene(int n_atoms){
   return 0;
 }
 
+__device__ int get_uni_id_from_crd(const int x, const int y, const int z){
+  return x * D_N_UNI_Z + y * (D_N_UNI_Z * D_N_CELLS_X) + z;  
+}
+__global__ void kernel_set_uniform_grid(const real4* d_crd_chg,
+					int2* d_uni2cell_z,
+					int n_cells){
+
+  const int cell_id = threadIdx.x + blockIdx.x * blockDim.x;  
+  if ( cell_id >= n_cells ) return;
+  const int laneIdx = threadIdx.x%WARPSIZE;
+  const int warpIdx = threadIdx.x/WARPSIZE;
+
+  const real4 crd_chg = d_crd_chg[cell_id * D_N_ATOM_CELL];
+  const int col_x = (int)((crd_chg.x-PBC_LOWER_BOUND[0]) / D_L_CELL_X);
+  const int col_y = (int)((crd_chg.y-PBC_LOWER_BOUND[1]) / D_L_CELL_Y);
+
+
+  const int uni_z_min = (int)((d_crd_chg[cell_id*D_N_ATOM_CELL].z-PBC_LOWER_BOUND[2]) / D_L_UNI_Z);
+
+  const int uni_id_min = get_uni_id_from_crd(col_x, col_y, uni_z_min);
+
+  //
+  if (uni_id_min >= D_N_UNI || uni_id_min < 0){
+    printf("DBG!! %d %d %d %d\n", uni_id_min, col_x, col_y, uni_z_min);
+  }
+  //atomicMin(&d_uni2cell_z[uni_id_min].x, cell_id);
+  //const int uni_z_max = (int)(d_crd_chg[cell_id*D_N_ATOM_CELL-1].z / D_L_UNI_Z);
+  //const int uni_id_max = get_uni_id_from_crd(uni_x, uni_y, uni_z_max);
+  //atomicMax(&d_uni2cell_z[uni_id_max].y, cell_id);
+
+}

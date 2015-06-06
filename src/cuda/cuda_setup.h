@@ -30,6 +30,8 @@ cudaStream_t stream_pair_home;
 #define D_N_ATOM_CELL  8
 #define D_N_ATOM_CELL_3  24
 
+#define WARPSIZE 32
+
 __constant__ real_pw  D_CHARGE_COEFF;
 __constant__ real_pw  PBC_L[3];
 __constant__ real_pw  PBC_LOWER_BOUND[3];

@@ -384,8 +384,20 @@ int DynamicsModePresto::calc_in_each_step(){
   const clock_t endTimeReset = clock();
   mmsys.ctime_cuda_reset_work_ene += endTimeReset - startTimeReset;
 
+#ifndef F_WO_NS
+  const clock_t startTimeHtod = clock();
+  if(mmsys.cur_step%cfg->nsgrid_update_intvl==0){
+    //cout << "nsgrid_update"<<endl;
+    subbox.nsgrid_update();
+  }else{
+    subbox.nsgrid_crd_to_gpu();
+  }
+  const clock_t endTimeHtod = clock();
+  mmsys.ctime_cuda_htod_atomids += endTimeHtod - startTimeHtod;
+#endif
   const clock_t startTimeEne = clock();
   //cout << "calc_energy()" << endl;
+
   subbox.calc_energy();
   //cout << "gather_energies()"<<endl;
   gather_energies();
@@ -449,18 +461,6 @@ int DynamicsModePresto::calc_in_each_step(){
   const clock_t endTimeKine = clock();
   mmsys.ctime_calc_kinetic += endTimeKine - startTimeKine;
 
-#ifndef F_WO_NS
-  const clock_t startTimeHtod = clock();
-  if(mmsys.cur_step%cfg->nsgrid_update_intvl==0){
-    //cout << "nsgrid_update"<<endl;
-    subbox.nsgrid_update();
-  }else{
-    subbox.nsgrid_init();
-  }
-  const clock_t endTimeHtod = clock();
-  mmsys.ctime_cuda_htod_atomids += endTimeHtod - startTimeHtod;
-#endif
-
   const clock_t endTimeStep = clock();
   mmsys.ctime_per_step += endTimeStep - startTimeStep;
 
@@ -503,6 +503,18 @@ int DynamicsModeZhang::calc_in_each_step(){
 
   subbox.update_coordinates_cur(time_step_half);
   subbox.cpy_vel_prev();  
+
+#ifndef F_WO_NS
+  const clock_t startTimeHtod = clock();
+  if(mmsys.cur_step%cfg->nsgrid_update_intvl==0){
+    //cout << "nsgrid_update"<<endl;
+    subbox.nsgrid_update();
+  }else{
+    subbox.nsgrid_crd_to_gpu();
+  }
+  const clock_t endTimeHtod = clock();
+  mmsys.ctime_cuda_htod_atomids += endTimeHtod - startTimeHtod;
+#endif
 
   const clock_t startTimeEne = clock();
   //cout << "calc_energy()" << endl;
@@ -565,17 +577,6 @@ int DynamicsModeZhang::calc_in_each_step(){
   const clock_t endTimeKine = clock();
   mmsys.ctime_calc_kinetic += endTimeKine - startTimeKine;
 
-#ifndef F_WO_NS
-  const clock_t startTimeHtod = clock();
-  if(mmsys.cur_step%cfg->nsgrid_update_intvl==0){
-    //cout << "nsgrid_update"<<endl;
-    subbox.nsgrid_update();
-  }else{
-    subbox.nsgrid_init();
-  }
-  const clock_t endTimeHtod = clock();
-  mmsys.ctime_cuda_htod_atomids += endTimeHtod - startTimeHtod;
-#endif
 
   const clock_t endTimeStep = clock();
   mmsys.ctime_per_step += endTimeStep - startTimeStep;

@@ -188,7 +188,7 @@ class SubBox : public CelesteObject {
 		     int in_n_boxes_x, int in_n_boxes_y, int in_n_boxes_z);
 
   int set_nsgrid();
-  int nsgrid_init();
+  int nsgrid_crd_to_gpu();
   int nsgrid_update();
   int nsgrid_update_receiver();
   int rank0_alloc_variables();
