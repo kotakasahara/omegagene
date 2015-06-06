@@ -139,9 +139,11 @@ extern "C" int cuda_memcpy_htod_crd(real_pw*& h_crd,
   return 0;
 }
 
-extern "C" int cuda_set_pbc(real_pw* l){
+extern "C" int cuda_set_pbc(real_pw* l, real_pw* lb){
   HANDLE_ERROR( cudaMemcpyToSymbol(PBC_L,
 				   l, sizeof(real_pw) * 3) );
+  HANDLE_ERROR( cudaMemcpyToSymbol(PBC_LOWER_BOUND,
+				   lb, sizeof(real_pw) * 3) );
   //printf("dbg cuda l %f %f %f , %f %f %f \n",PBC_L[0], PBC_L[1], PBC_L[2],
   //l[0], l[1], l[2]);
   return 0;

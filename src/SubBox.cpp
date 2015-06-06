@@ -30,7 +30,7 @@ extern "C" int cuda_alloc_set_nb15off(int* h_nb15off1,
 				      int n_atoms);
 extern "C" int cuda_memcpy_htod_atomids(int*& h_atomids,
 					int n_atoms);
-extern "C" int cuda_set_pbc(real_pw* l);
+extern "C" int cuda_set_pbc(real_pw* l, real_pw* lb);
 extern "C" int cuda_reset_work_ene(int n_atoms);
 extern "C" int cuda_memcpy_htod_crd(real_pw*& h_crd,
 				    int n_atom_array);
@@ -1693,8 +1693,9 @@ int SubBox::gpu_device_setup(){
 			   n_lj_types);
 
   real_pw tmp_l[3] = {(real_pw)pbc->L[0], (real_pw)pbc->L[1], (real_pw)pbc->L[2]};
+  real_pw tmp_lb[3] = {(real_pw)pbc->lower_bound[0], (real_pw)pbc->lower_bound[1], (real_pw)pbc->lower_bound[2]};
   //cuda_set_pbc((const real_pw*)pbc->L);
-  cuda_set_pbc(tmp_l);
+  cuda_set_pbc(tmp_l, tmp_lb);
   //cout << "dbg 01 : l[0] "<< pbc->L[0]<<endl;   
   
   cuda_zerodipole_constant(ff.ele->get_zcore(),
