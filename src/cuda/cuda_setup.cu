@@ -53,16 +53,6 @@ extern "C" int cuda_alloc_atom_info(int n_atoms,
 			   N_MULTI_WORK * n_atom_array * 3 * sizeof(real_fc) ) );
   //HANDLE_ERROR( cudaMalloc((void**)&d_work_orig,
   //n_atom_array * 3 * sizeof(real_fc) ) );
-
-  /*
-<<<<<<< HEAD
-   HANDLE_ERROR( cudaMalloc((void**)&d_idx_xy_head_cell,
-			    n_columns * sizeof(int) ) );
-   HANDLE_ERROR( cudaMalloc((void**)&d_uni2cell_z,
-			    n_uni * sizeof(int2) ) );
-=======
-  */
-
   return 0;
 }
 
@@ -80,12 +70,6 @@ extern "C" int cuda_free_atom_info(){
   HANDLE_ERROR( cudaFree(d_cell_pair_removed) );
   HANDLE_ERROR( cudaFree(d_energy) );
   HANDLE_ERROR( cudaFree(d_work) );
-  /*
-<<<<<<< HEAD
-  HANDLE_ERROR( cudaFree(d_idx_xy_head_cell) );
-  HANDLE_ERROR( cudaFree(d_uni2cell_z) );
-  */
-
   //HANDLE_ERROR( cudaFree(d_work_orig) );
   return 0;
 }
@@ -146,12 +130,9 @@ extern "C" int cuda_memcpy_htod_crd(real_pw*& h_crd,
   return 0;
 }
 
-extern "C" int cuda_set_pbc(real_pw* l, real_pw* low_bound){
+extern "C" int cuda_set_pbc(real_pw* l){
   HANDLE_ERROR( cudaMemcpyToSymbol(PBC_L,
 				   l, sizeof(real_pw) * 3) );
-  //HANDLE_ERROR( cudaMemcpyToSymbol(PBC_LOW_BOUND,
-  //low_bound, sizeof(real_pw) * 3) );
-  
   //printf("dbg cuda l %f %f %f , %f %f %f \n",PBC_L[0], PBC_L[1], PBC_L[2],
   //l[0], l[1], l[2]);
   return 0;
@@ -178,12 +159,7 @@ extern "C" int cuda_set_cell_constant(int n_cells, int n_cell_pairs,
 				      int n_atom_array,
 				      int n_cells_x,
 				      int n_cells_y,
-				      real_pw l_cell_x,
-				      real_pw l_cell_y,
-				      int n_columns,
-				      int n_uni,
-				      int n_uni_z,
-				      real_pw L_uni_z){
+				      int n_columns){
   HANDLE_ERROR( cudaMemcpyToSymbol(D_N_CELL_PAIRS,
 				   &n_cell_pairs,
 				   sizeof(int) ) );
@@ -202,21 +178,6 @@ extern "C" int cuda_set_cell_constant(int n_cells, int n_cell_pairs,
   HANDLE_ERROR( cudaMemcpyToSymbol(D_N_COLUMNS,
 				   &n_columns,
 				   sizeof(int) ) );
-  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_UNI,
-				   &n_uni,
-				   sizeof(int) ) );
-  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_UNI_Z,
-				   &n_uni_z,
-				   sizeof(int) ) );
-  HANDLE_ERROR( cudaMemcpyToSymbol(D_L_CELL_X,
-				   &l_cell_x,
-				   sizeof(real_pw) ) );
-  HANDLE_ERROR( cudaMemcpyToSymbol(D_L_CELL_Y,
-				   &l_cell_y,
-				   sizeof(real_pw) ) );
-  HANDLE_ERROR( cudaMemcpyToSymbol(D_L_UNI_Z,
-				   &L_uni_z,
-				   sizeof(real_pw) ) );
   return 0;
 }
 
@@ -350,19 +311,14 @@ extern "C" int cuda_hostalloc_atom_info(real_pw*& h_crd, int*& h_atomids,
 
 extern "C" int cuda_hostalloc_cell_info(CellPair*& h_cell_pairs, 
 					int*& h_idx_head_cell_pairs,
-					int*& h_idx_xy_head_cell,
 					int max_n_cell_pairs,
-					int max_n_cells,
-					int n_columns){
+					int max_n_cells){
   printf("cuda_hostalloc_cell_info cu\n");
   HANDLE_ERROR( cudaHostAlloc( (void**)&h_cell_pairs,
 			       max_n_cell_pairs * sizeof(CellPair),
 			       cudaHostAllocDefault));
   HANDLE_ERROR( cudaHostAlloc( (void**)&h_idx_head_cell_pairs,
 			       (max_n_cells) * sizeof(int),
-			       cudaHostAllocDefault));
-  HANDLE_ERROR( cudaHostAlloc( (void**)&h_idx_xy_head_cell,
-			       (n_columns) * sizeof(int),
 			       cudaHostAllocDefault));
 
   return 0;
@@ -385,11 +341,9 @@ extern "C" int cuda_hostfree_atom_info(real_pw* h_crd, int* h_atomids,
   return 0;
 }
 extern "C" int cuda_hostfree_cell_info(CellPair* h_cell_pairs,
-				       int* h_idx_head_cell_pairs,
-				       int* h_idx_xy_head_cell){
+				       int* h_idx_head_cell_pairs){
   HANDLE_ERROR( cudaFreeHost(h_cell_pairs) );
   HANDLE_ERROR( cudaFreeHost(h_idx_head_cell_pairs) );
-  HANDLE_ERROR( cudaFreeHost(h_idx_xy_head_cell) );
   return 0;
 }
 __global__ void kernel_set_cellinfo(int* d_cell_pair_removed,
@@ -904,116 +858,3 @@ extern "C" int cuda_reset_work_ene(int n_atoms){
   return 0;
 }
 
-/*<<<<<<< HEAD
-
-__device__ int get_uni_id_from_crd(const int x, const int y, const int z){
-  return x * D_N_UNI_Z + y * (D_N_UNI_Z * D_N_CELLS_X) + z;  
-}
-
-__global__ void kernel_set_uniform_grid(const real4* d_crd_chg,
-					int2* d_uni2cell_z,
-					int n_cells){
-
-  const int cell_id = threadIdx.x + blockIdx.x * blockDim.x;  
-  if ( cell_id >= n_cells ) return;
-  const int laneIdx = threadIdx.x%WARPSIZE;
-  const int warpIdx = threadIdx.x/WARPSIZE;
-
-  const real4 crd_chg = d_crd_chg[cell_id * D_N_ATOM_CELL];
-  const int col_x = (int)((crd_chg.x-PBC_LOW_BOUND[0]) / D_L_CELL_X);
-  const int col_y = (int)((crd_chg.y-PBC_LOW_BOUND[1]) / D_L_CELL_Y);
-
-
-  const int uni_z_min = (int)((d_crd_chg[cell_id*D_N_ATOM_CELL].z-PBC_LOW_BOUND[2]) / D_L_UNI_Z);
-
-  const int uni_id_min = get_uni_id_from_crd(col_x, col_y, uni_z_min);
-
-  //
-  if (uni_id_min >= D_N_UNI || uni_id_min < 0){
-    printf("DBG!! %d %d %d %d\n", uni_id_min, col_x, col_y, uni_z_min);
-  }
-  //atomicMin(&d_uni2cell_z[uni_id_min].x, cell_id);
-  //const int uni_z_max = (int)(d_crd_chg[cell_id*D_N_ATOM_CELL-1].z / D_L_UNI_Z);
-  //const int uni_id_max = get_uni_id_from_crd(uni_x, uni_y, uni_z_max);
-  //atomicMax(&d_uni2cell_z[uni_id_max].y, cell_id);
-
-}
-
-__global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
-					   const real4* d_crd_chg){
-  const int cell1_id = threadIdx.x + blockIdx.x * blockDim.x;  
-  const int laneIdx = threadIdx.x%WARPSIZE;
-  const int warpIdx = threadIdx.x/WARPSIZE;
-  const int n_neighbor_col = (D_N_NEIGHBOR_COL_X*2+1) * (D_N_NEIGHBOR_COL_Y*2+1);
-  const int n_col_thread = (n_neighbor_col+WARPSIZE-1) / WARPSIZE;
-  const real4 crd_chg11 = d_crd_chg[cell1_id*D_N_ATOM_CELL];
-  const int cell1_x = (int)(crd_chg11.x / D_L_CELL_X);
-  const int cell1_y = (int)(crd_chg11.y / D_L_CELL_Y);
-
-  int first_uni_z[3] = {0, 0, 0};
-  int last_uni_z[3] = {0, 0, 0};
-  int tmp_first = (crd_chg11.z)/D_L_UNI_Z - 2;
-  if(tmp_first < 0){
-    first_uni_z[0] = D_N_UNI_Z + tmp_first;
-    last_uni_z[0] = D_N_UNI_Z -1;
-    tmp_first = 0;
-  }else{
-    first_uni_z[0] = 1;
-    last_uni_z[0] = 1;
-  }
-  first_uni_z[1] = tmp_first;
-  int tmp_last = (d_crd_chg[cell1_id*D_N_ATOM_CELL+D_N_ATOM_CELL-1].z)/D_L_UNI_Z + 2;
-  if(tmp_last >= D_N_UNI_Z){
-    first_uni_z[2] = 0;
-    last_uni_z[2] = tmp_last - D_N_UNI_Z;
-    last_uni_z[1] = D_N_UNI_Z -1;
-  }else{
-    first_uni_z[2] = -1;
-    last_uni_z[2] = -1;
-    last_uni_z[1] = tmp_last;
-  }
-  int image[3] = {0,0,0};
-  for(int i_col=0; i_col < n_col_thread; i_col++){
-    const int neighbor_col_id = i_col + laneIdx*n_col_thread;
-    if(neighbor_col_id >= n_neighbor_col) break;
-    const int dx = neighbor_col_id % (D_N_NEIGHBOR_COL_X*2+1) - D_N_NEIGHBOR_COL_X -1;
-    const int dy = neighbor_col_id / (D_N_NEIGHBOR_COL_X*2+1) - D_N_NEIGHBOR_COL_X -1;
-    // for x
-    image[0] = 0;
-    const int rel_x = cell1_x + dx;
-    int cell2_x = rel_x;
-    if(rel_x < 0){
-      image[0] = -1;
-      cell2_x = D_N_CELLS_X + rel_x;
-    }else if(rel_x >= D_N_CELLS_X){
-      image[0] = 1;
-      cell2_x = rel_x - D_N_CELLS_X;
-    }
-    // for y
-    image[1] = 0;
-    const int rel_y = cell1_y + dy;
-    int cell2_y = rel_y;
-    if(rel_y < 0){
-      image[1] = -1;
-      cell2_y = D_N_CELLS_Y + rel_y;
-    }else if(rel_y >= D_N_CELLS_Y){
-      image[1] = 1;
-      cell2_y = rel_y - D_N_CELLS_Y;
-    }
-
-    for(int i_img = 0; i_img < 3; i_img++){
-      
-    }
-  }
-}
-
-extern "C" int cuda_enumerate_cell_pairs(int n_cells){
-  const int blocks1 = (n_cells + REORDER_THREADS-1) / REORDER_THREADS;  
-  kernel_set_uniform_grid<<<blocks1, REORDER_THREADS>>>(d_crd_chg, d_uni2cell_z, n_cells);
-  const int blocks2 = (n_cells*32 + REORDER_THREADS-1) / REORDER_THREADS;  
-  //kernel_set_uniform_grid<<<blocks2, REORDER_THREADS>>>(d_idx_xy_head_cell, d_crd_chg);
-  
-  return 0;
-}
-=======
-*/

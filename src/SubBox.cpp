@@ -15,8 +15,8 @@ extern "C" int cuda_memcpy_htod_atom_info(real_pw*& h_charge_orig,
 					  int*& h_atomtype_orig,
 					  int n_atoms);
 extern "C" int cuda_set_cell_constant(int n_cells, int n_cell_pairs, int n_atom_array,
-				      int n_cells_x, int n_cells_y, real_pw l_cell_x, real_pw l_cell_y,
-				      int n_columns, int n_uni, int n_uni_z, real_pw L_uni_z);
+				      int n_cells_x, int n_cells_y,
+				      int n_columns);
 extern "C" int cuda_set_constant(int n_atoms, real_pw cutoff, real_pw cutoff_pairlist, int n_atomtypes);
 extern "C" int cuda_alloc_set_lj_params(real_pw* h_lj_6term,
 					real_pw* h_lj_12term,
@@ -55,7 +55,6 @@ extern "C" int cuda_hostalloc_atom_type_charge(int*& h_atom_type,
 					       int n_atoms);
 
 extern "C" int cuda_init_cellinfo(const int n_cells);
-extern "C" int cuda_enumerate_cell_pairs(int n_cells);
 #endif
 
 SubBox::SubBox(){
@@ -476,10 +475,10 @@ int SubBox::set_nsgrid(){
   nsgrid.set_atomids_buf();
 
   nsgrid.enumerate_cell_pairs();
+
 #ifdef F_CUDA
   gpu_device_setup();
   update_device_cell_info();  
-  //cuda_enumerate_cell_pairs(nsgrid.get_n_cells());
 #endif
 
   return 0;
@@ -1686,7 +1685,6 @@ int SubBox::gpu_device_setup(){
 
   real_pw tmp_l[3] = {(real_pw)pbc->L[0], (real_pw)pbc->L[1], (real_pw)pbc->L[2]};
   //cuda_set_pbc((const real_pw*)pbc->L);
-  real_pw tmp_lb[3] = {(real_pw)pbc->lower_bound[0], (real_pw)pbc->lower_bound[1], (real_pw)pbc->lower_bound[2]};  
   cuda_set_pbc(tmp_l);
   //cout << "dbg 01 : l[0] "<< pbc->L[0]<<endl;   
   
@@ -1703,20 +1701,14 @@ int SubBox::update_device_cell_info(){
 		    (real_pw)cfg->nsgrid_cutoff,
 		    n_lj_types);
   //cout << "cuda_memcpy_htod_atom_info"<<endl;
-  //cuda_memcpy_htod_atom_info(charge, atom_type,
-  //max_n_atoms_exbox);
+  cuda_memcpy_htod_atom_info(charge, atom_type,
+			     max_n_atoms_exbox);
   cuda_set_cell_constant(nsgrid.get_max_n_cells(),
 			 nsgrid.get_max_n_cell_pairs(),
 			 nsgrid.get_n_atom_array(),
 			 nsgrid.get_n_cells_x(),
 			 nsgrid.get_n_cells_y(),
-			 nsgrid.get_L_cell_xy()[0],
-			 nsgrid.get_L_cell_xy()[1],
-			 nsgrid.get_n_columns(),
-			 nsgrid.get_n_uni(),
-			 nsgrid.get_n_uni_z(),
-			 nsgrid.get_l_uni_z()
-			 );
+			 nsgrid.get_n_columns());
   cuda_memcpy_htod_cell_pairs(nsgrid.get_cell_pairs(),
 			      nsgrid.get_idx_head_cell_pairs(),
 			      nsgrid.get_n_cell_pairs(),

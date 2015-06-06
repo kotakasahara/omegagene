@@ -203,10 +203,6 @@ class MiniCell : public CelesteObject{
   real_pw get_cell_z_min(int cell_id);
   real_pw get_cell_z_max(int cell_id);
   int set_uniform_grid();
-  int get_n_uni(){return n_uni;};
-  int get_n_uni_z(){return n_uni_z;};
-  int get_l_uni_z(){return L_z_uni;};
-
   int enumerate_cell_pairs();
   bool check_valid_pair(const int cell1_id, const int cell2_id,
 			const bool cell1_odd, const bool cell2_odd);
@@ -284,9 +280,6 @@ class MiniCell : public CelesteObject{
   int add_atom_to_region(int atomid_g, int region_id);
   int setup_replica_regions();
   int mpi_send_crd_replica_regions(int dir_x, int dir_y, int dir_z);
-
-  
-
 };
 
 #endif 
