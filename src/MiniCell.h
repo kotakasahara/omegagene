@@ -282,6 +282,8 @@ class MiniCell : public CelesteObject{
   int mpi_send_crd_replica_regions(int dir_x, int dir_y, int dir_z);
 
   int get_n_uni(){ return n_uni; };
+  int get_n_uni_z(){ return n_uni_z; };
+  int get_l_uni_z(){ return L_z_uni; };
 
 };
 

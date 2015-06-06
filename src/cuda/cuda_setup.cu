@@ -166,11 +166,17 @@ extern "C" int cuda_zerodipole_constant(real_pw zcore,
 
 // cuda_set_cell_constant
 //  These constants are updated when the cell grid is updated
-extern "C" int cuda_set_cell_constant(int n_cells, int n_cell_pairs,
-				      int n_atom_array,
-				      int n_cells_x,
-				      int n_cells_y,
-				      int n_columns){
+extern "C" int cuda_set_cell_constant(const int  n_cells,
+				      const int  n_cell_pairs,
+				      const int  n_atom_array,
+				      const int  n_cells_x,
+				      const int  n_cells_y,
+				      const int  n_columns,
+				      const int  n_uni,
+				      const int  n_uni_z,
+				      const real_pw l_cell_x,
+				      const real_pw l_cell_y,
+				      const real_pw L_uni_z){
   HANDLE_ERROR( cudaMemcpyToSymbol(D_N_CELL_PAIRS,
 				   &n_cell_pairs,
 				   sizeof(int) ) );
@@ -189,6 +195,21 @@ extern "C" int cuda_set_cell_constant(int n_cells, int n_cell_pairs,
   HANDLE_ERROR( cudaMemcpyToSymbol(D_N_COLUMNS,
 				   &n_columns,
 				   sizeof(int) ) );
+  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_UNI,
+				   &n_uni,
+				   sizeof(int) ) );
+  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_UNI_Z,
+				   &n_uni_z,
+				   sizeof(int) ) );
+  HANDLE_ERROR( cudaMemcpyToSymbol(D_L_CELL_X,
+				   &l_cell_x,
+				   sizeof(real_pw) ) );
+  HANDLE_ERROR( cudaMemcpyToSymbol(D_L_CELL_Y,
+				   &l_cell_y,
+				   sizeof(real_pw) ) );
+  HANDLE_ERROR( cudaMemcpyToSymbol(D_L_UNI_Z,
+				   &L_uni_z,
+				   sizeof(real_pw) ));
   return 0;
 }
 

@@ -41,8 +41,14 @@ __constant__ int      D_N_COLUMNS;
 __constant__ int      D_N_ATOMS;
 __constant__ int      D_N_ATOM_ARRAY;
 __constant__ int      D_N_ATOMTYPES;
+__constant__ int      D_N_UNI;
+__constant__ int      D_N_UNI_Z;
+__constant__ real_pw  D_L_CELL_X;
+__constant__ real_pw  D_L_CELL_Y;
+__constant__ real_pw  D_L_UNI_Z;
 //__constant__ int      D_MAX_N_NB15OFF;
 //__constant__ int      D_MAX_N_ATOMS_GRID;
+
 __constant__ real_pw  D_CUTOFF;
 __constant__ real_pw  D_CUTOFF_PAIRLIST;
 

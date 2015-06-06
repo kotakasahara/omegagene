@@ -16,9 +16,17 @@ extern "C" int cuda_memcpy_htod_cell_pairs(CellPair*& h_cell_pairs,
 extern "C" int cuda_memcpy_htod_atom_info(real_pw*& h_charge_orig,
 					  int*& h_atomtype_orig,
 					  int n_atoms);
-extern "C" int cuda_set_cell_constant(int n_cells, int n_cell_pairs, int n_atom_array,
-				      int n_cells_x, int n_cells_y,
-				      int n_columns);
+extern "C" int cuda_set_cell_constant(const int n_cells, int n_cell_pairs,
+				      const int n_atom_array,
+				      const int n_cells_x,
+				      const int n_cells_y,
+				      const int n_columns,
+				      const int n_uni,
+				      const int n_uni_z,
+				      const real_pw l_cell_x,
+				      const real_pw l_cell_y,
+				      const real_pw L_uni_z);
+
 extern "C" int cuda_set_constant(int n_atoms, real_pw cutoff, real_pw cutoff_pairlist, int n_atomtypes);
 extern "C" int cuda_alloc_set_lj_params(real_pw* h_lj_6term,
 					real_pw* h_lj_12term,
@@ -1718,7 +1726,13 @@ int SubBox::update_device_cell_info(){
 			 nsgrid.get_n_atom_array(),
 			 nsgrid.get_n_cells_x(),
 			 nsgrid.get_n_cells_y(),
-			 nsgrid.get_n_columns());
+			 nsgrid.get_n_columns(),
+			 nsgrid.get_n_uni(),
+			 nsgrid.get_n_uni_z(),
+			 nsgrid.get_L_cell_xy()[0],
+			 nsgrid.get_L_cell_xy()[1],
+			 nsgrid.get_l_uni_z());
+
   cuda_memcpy_htod_cell_pairs(nsgrid.get_cell_pairs(),
 			      nsgrid.get_idx_head_cell_pairs(),
 			      nsgrid.get_n_cell_pairs(),
