@@ -22,7 +22,9 @@ __device__ double atomicAdd(double* address, double val){
 extern "C" int cuda_alloc_atom_info(int n_atoms,
 				    int n_atom_array,
 				    int max_n_cells,
-				    int max_n_cell_pairs){
+				    int max_n_cell_pairs,
+				    int n_columns,
+				    int n_uni){
   //printf("cuda_alloc_atom_info\n");
   // max_n_atoms ... maximum number of atoms for each grid cell
   HANDLE_ERROR( cudaMalloc((void**)&d_crd_chg,
@@ -51,6 +53,11 @@ extern "C" int cuda_alloc_atom_info(int n_atoms,
 			   N_MULTI_WORK * 2 * sizeof(real_fc) ) );
   HANDLE_ERROR( cudaMalloc((void**)&d_work,
 			   N_MULTI_WORK * n_atom_array * 3 * sizeof(real_fc) ) );
+  HANDLE_ERROR( cudaMalloc((void**)&d_idx_xy_head_cell,
+			   n_columns * sizeof(int) ) );
+  HANDLE_ERROR( cudaMalloc((void**)&d_uni2cell_z,
+			   n_uni * sizeof(int2) ) );
+  
   //HANDLE_ERROR( cudaMalloc((void**)&d_work_orig,
   //n_atom_array * 3 * sizeof(real_fc) ) );
   return 0;
@@ -70,6 +77,8 @@ extern "C" int cuda_free_atom_info(){
   HANDLE_ERROR( cudaFree(d_cell_pair_removed) );
   HANDLE_ERROR( cudaFree(d_energy) );
   HANDLE_ERROR( cudaFree(d_work) );
+  HANDLE_ERROR( cudaFree(d_idx_xy_head_cell));
+  HANDLE_ERROR( cudaFree(d_uni2cell_z));
   //HANDLE_ERROR( cudaFree(d_work_orig) );
   return 0;
 }

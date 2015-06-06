@@ -5,7 +5,9 @@
 extern "C" int cuda_alloc_atom_info(int n_atoms,
 				    int n_atom_array,
 				    int max_n_cells,
-				    int max_n_cell_pairs);
+				    int max_n_cell_pairs,
+				    int n_columns,
+				    int n_uni);
 extern "C" int cuda_free_atom_info();
 extern "C" int cuda_memcpy_htod_cell_pairs(CellPair*& h_cell_pairs,
 					   int*& h_idx_head_cell_pairs,
@@ -1682,7 +1684,9 @@ int SubBox::gpu_device_setup(){
   cuda_alloc_atom_info(max_n_atoms_exbox,
 		       nsgrid.get_max_n_atom_array(),
 		       nsgrid.get_max_n_cells(),
-		       nsgrid.get_max_n_cell_pairs());
+		       nsgrid.get_max_n_cell_pairs(),
+		       nsgrid.get_n_columns(),
+		       nsgrid.get_n_uni());
 
   cuda_alloc_set_lj_params(lj_6term,
 			   lj_12term,

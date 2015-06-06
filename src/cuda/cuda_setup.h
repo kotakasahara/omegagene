@@ -84,7 +84,9 @@ real_pw* d_lj_12term;
 
 real_fc* d_energy;
 real_fc* d_work;
-real_fc* d_work_orig;
+
+int*  d_idx_xy_head_cell;
+int2* d_uni2cell_z;
 
 //texture<real, 2> tex_lj_6term;
 //texture<real, 2> tex_lj_12term;

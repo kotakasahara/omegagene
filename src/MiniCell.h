@@ -280,6 +280,9 @@ class MiniCell : public CelesteObject{
   int add_atom_to_region(int atomid_g, int region_id);
   int setup_replica_regions();
   int mpi_send_crd_replica_regions(int dir_x, int dir_y, int dir_z);
+
+  int get_n_uni(){ return n_uni; };
+
 };
 
 #endif 
