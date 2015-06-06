@@ -10,6 +10,8 @@
 #define real4 float4
 #define real_fc3 double3
 
+#define WARPSIZE 32
+
 #ifdef  THREADS128
   #define PW_THREADS 128
 #elif   THREADS256
@@ -32,10 +34,13 @@ cudaStream_t stream_pair_home;
 
 __constant__ real_pw  D_CHARGE_COEFF;
 __constant__ real_pw  PBC_L[3];
+__constant__ real_pw  PBC_LOW_BOUND[3];
 __constant__ int      D_N_CELL_PAIRS;
 __constant__ int      D_N_CELLS;
 __constant__ int      D_N_CELLS_X;
 __constant__ int      D_N_CELLS_Y;
+__constant__ real_pw  D_L_CELL_X;
+__constant__ real_pw  D_L_CELL_Y;
 __constant__ int      D_N_COLUMNS;
 __constant__ int      D_N_ATOMS;
 __constant__ int      D_N_ATOM_ARRAY;
@@ -44,6 +49,11 @@ __constant__ int      D_N_ATOMTYPES;
 //__constant__ int      D_MAX_N_ATOMS_GRID;
 __constant__ real_pw  D_CUTOFF;
 __constant__ real_pw  D_CUTOFF_PAIRLIST;
+__constant__ int      D_N_UNI;
+__constant__ int      D_N_UNI_Z;
+__constant__ real_pw  D_L_UNI_Z;
+__constant__ int      D_N_NEIGHBOR_COL_X;
+__constant__ int      D_N_NEIGHBOR_COL_Y;
 
 __constant__ real_pw  D_ZCORE;
 __constant__ real_pw  D_BCOEFF;
@@ -92,5 +102,10 @@ real_fc* d_work_orig;
 //float *d_test_buf;
 
 //test
+
+
+int* d_idx_xy_head_cell;
+int2* d_uni2cell_z;
+
 
 #endif

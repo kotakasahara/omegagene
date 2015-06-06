@@ -311,9 +311,9 @@ int DynamicsMode::subbox_setup(){
   }
  subbox.init_thermostat(cfg->thermostat_type, cfg->temperature,
 			 mmsys.d_free);
-  if(cfg->expanded_ensemble == EXPAND_VMCMD){
-    subbox.set_expand(&mmsys.vmcmd);
-  }
+ if(cfg->expanded_ensemble == EXPAND_VMCMD){
+   subbox.set_expand(&mmsys.vmcmd);
+ }
 
   //  cout << "set_nsgrid" << endl;
 #ifndef F_WO_NS

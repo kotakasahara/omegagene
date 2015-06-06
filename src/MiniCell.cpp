@@ -7,12 +7,15 @@ extern "C" int cuda_hostalloc_atom_info(real_pw*& h_crd, int*& h_atomids,
 					int n_atom_array);
 extern "C" int cuda_hostalloc_cell_info(CellPair*& h_cell_pairs, 
 					int*& h_idx_head_cell_pairs,
+					int*& h_idx_xy_head_cell,
 					int max_n_cell_pairs,
-					int max_n_cells);
+					int max_n_cells,
+					int n_columns);
 extern "C" int cuda_hostfree_atom_info(real_pw* h_crd, int* h_atomids,
 				       real_fc*& h_work, real_fc*& h_energy);
 extern "C" int cuda_hostfree_cell_info(CellPair* h_cell_pairs,
-				       int* h_idx_head_cell_pairs);
+				       int* h_idx_head_cell_pairs,
+				       int* h_idx_xy_head_cell);
 #endif
 
 MiniCell::MiniCell(){
@@ -46,7 +49,8 @@ int MiniCell::alloc_variables(){
   //}
 
   idx_atom_cell_xy = new int[max_n_atoms_exbox];
-  idx_xy_head_cell = new int[n_columns+1];
+
+
   idx_xy_head_atom = new int[n_columns+1];
 
   //idx_cell_head_atom = new int[max_n_cells+1];
@@ -62,8 +66,11 @@ int MiniCell::alloc_variables(){
   cuda_hostalloc_atom_info(crd, atomids, work, energy, get_max_n_atom_array());
   cout << "cuda_hostalloc_cell_info"<<endl;
   cuda_hostalloc_cell_info(cell_pairs, idx_head_cell_pairs,
-			   max_n_cell_pairs, max_n_cells+1);
+			   idx_xy_head_cell,
+			   max_n_cell_pairs, max_n_cells+1,
+			   n_columns+1);
 #else
+  idx_xy_head_cell = new int[n_columns+1];
   crd = new real_pw[get_max_n_atom_array()*3];
   atomids = new int[get_max_n_atom_array()];
   work = new real_fc[get_max_n_atom_array()*3];
@@ -180,7 +187,8 @@ int MiniCell::free_variables(){
   delete[] atomids_buf;
 #ifdef F_CUDA
   cuda_hostfree_atom_info(crd, atomids, work, energy);
-  cuda_hostfree_cell_info(cell_pairs, idx_head_cell_pairs);
+  cuda_hostfree_cell_info(cell_pairs, idx_head_cell_pairs,
+			  idx_xy_head_cell);
 #else
   delete[] crd;
   delete[] work;
