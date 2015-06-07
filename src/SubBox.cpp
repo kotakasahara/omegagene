@@ -39,7 +39,9 @@ extern "C" int cuda_alloc_set_nb15off(int* h_nb15off1,
 				      int* h_nb15off2,
 				      int n_atoms);
 extern "C" int cuda_memcpy_htod_atomids(int*& h_atomids,
-					int n_atoms);
+					int*& h_idx_xy_head_cell,
+					int n_atoms,
+					int n_columns);
 extern "C" int cuda_set_pbc(real_pw* l, real_pw* lb);
 extern "C" int cuda_reset_work_ene(int n_atoms);
 extern "C" int cuda_memcpy_htod_crd(real_pw*& h_crd,
@@ -1704,7 +1706,7 @@ int SubBox::gpu_device_setup(){
 		       nsgrid.get_max_n_atom_array(),
 		       nsgrid.get_max_n_cells(),
 		       nsgrid.get_max_n_cell_pairs(),
-		       nsgrid.get_n_columns(),
+		       nsgrid.get_n_columns()+1,
 		       nsgrid.get_n_uni());
 
   cuda_alloc_set_lj_params(lj_6term,
@@ -1751,7 +1753,9 @@ int SubBox::update_device_cell_info(){
 			      nsgrid.get_n_cell_pairs(),
 			      nsgrid.get_n_cells());
   cuda_memcpy_htod_atomids(nsgrid.get_atomids(),
-			   nsgrid.get_max_n_atom_array());
+			   nsgrid.get_idx_xy_head_cell(),
+			   nsgrid.get_max_n_atom_array(),
+			   nsgrid.get_n_columns()+1);
   cuda_init_cellinfo(nsgrid.get_n_cells());
   cuda_set_atominfo(nsgrid.get_n_atom_array());
 

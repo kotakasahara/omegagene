@@ -98,10 +98,15 @@ extern "C" int cuda_memcpy_htod_cell_pairs(CellPair*& h_cell_pairs,
   return 0;
 }
 extern "C" int cuda_memcpy_htod_atomids(int*& h_atomids,
-					int n_atom_array){
+					int*& h_idx_xy_head_cell,
+					int n_atom_array,
+					int n_columns){
   HANDLE_ERROR(cudaMemcpy(d_atomids, h_atomids,
 			  n_atom_array * sizeof(int),
 			  cudaMemcpyHostToDevice));
+  HANDLE_ERROR(cudaMemcpy(d_idx_xy_head_cell, h_idx_xy_head_cell,
+  			  n_columns * sizeof(int),
+  			  cudaMemcpyHostToDevice));
   return 0;
 }
 
@@ -910,7 +915,9 @@ extern "C" int cuda_reset_work_ene(int n_atoms){
   HANDLE_ERROR(cudaMemset(d_energy, 0.0, sizeof(real_pw)*2*N_MULTI_WORK));
   return 0;
 }
-
+__device__ int get_column_id_from_crd(const int x, const int y){
+  return y*D_N_CELLS_X + x;
+}
 __device__ int get_uni_id_from_crd(const int x, const int y, const int z){
   return x * D_N_UNI_Z + y * (D_N_UNI_Z * D_N_CELLS_X) + z;  
 }
@@ -947,20 +954,32 @@ __global__ void kernel_set_uniform_grid(const real4* d_crd_chg,
   //atomicMax(&d_uni2cell_z[uni_id_max].y, cell_id);
 }
 
+__device__ bool check_valid_pair(const int cell1_id, const int cell2_id){
+  bool flg = true;
+  //const bool cell1_odd = cell1_id%2!=0;
+  //const bool cell2_odd = cell2_id%2!=0;
+  return flg;
+}
+__device__ int add_cell_pair(const int cell1_id, const int cell2_id,
+			      const int image[3]){
+  return 0;
+}
 __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
-					   const real4* d_crd_chg){
-  const int cell1_id = threadIdx.x + blockIdx.x * blockDim.x;  
+					   const real4* d_crd_chg,
+					   const int* d_idx_xy_head_cell){
+  // 1 warp calculates pairs with a cell
+
+  const int cell1_id = (threadIdx.x + blockIdx.x * blockDim.x)/WARPSIZE; 
   const int laneIdx = threadIdx.x%WARPSIZE;
   const int warpIdx = threadIdx.x/WARPSIZE;
   const int n_neighbor_col = (D_N_NEIGHBOR_COL_X*2+1) * (D_N_NEIGHBOR_COL_Y*2+1);
   const int n_col_thread = (n_neighbor_col+WARPSIZE-1) / WARPSIZE;
   const real4 crd_chg11 = d_crd_chg[cell1_id*D_N_ATOM_CELL];
-  const int cell1_x = (int)(crd_chg11.x / D_L_CELL_X);
-  const int cell1_y = (int)(crd_chg11.y / D_L_CELL_Y);
-
+  const int cell1_x = (int)((crd_chg11.x - PBC_LOWER_BOUND[0]) / D_L_CELL_X);
+  const int cell1_y = (int)((crd_chg11.y - PBC_LOWER_BOUND[1]) / D_L_CELL_Y);
   int first_uni_z[3] = {0, 0, 0};
   int last_uni_z[3] = {0, 0, 0};
-  int tmp_first = (crd_chg11.z)/D_L_UNI_Z - 2;
+  int tmp_first = (crd_chg11.z-PBC_LOWER_BOUND[2]) / D_L_UNI_Z - 2;
   if(tmp_first < 0){
     first_uni_z[0] = D_N_UNI_Z + tmp_first;
     last_uni_z[0] = D_N_UNI_Z -1;
@@ -970,7 +989,7 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
     last_uni_z[0] = 1;
   }
   first_uni_z[1] = tmp_first;
-  int tmp_last = (d_crd_chg[cell1_id*D_N_ATOM_CELL+D_N_ATOM_CELL-1].z)/D_L_UNI_Z + 2;
+  int tmp_last = (d_crd_chg[cell1_id*D_N_ATOM_CELL+D_N_ATOM_CELL-1].z - PBC_LOWER_BOUND[2])/D_L_UNI_Z + 2;
   if(tmp_last >= D_N_UNI_Z){
     first_uni_z[2] = 0;
     last_uni_z[2] = tmp_last - D_N_UNI_Z;
@@ -981,7 +1000,15 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
     last_uni_z[1] = tmp_last;
   }
   int image[3] = {0,0,0};
+  if(cell1_id==0 && laneIdx==0)
+  printf("DBG n_col_thread:%d %d-%d %d-%d %d-%d\n", n_col_thread,
+	 first_uni_z[0], last_uni_z[0],
+	 first_uni_z[1], last_uni_z[1],
+	 first_uni_z[2], last_uni_z[2]);
+
+
   for(int i_col=0; i_col < n_col_thread; i_col++){
+
     const int neighbor_col_id = i_col + laneIdx*n_col_thread;
     if(neighbor_col_id >= n_neighbor_col) break;
     const int dx = neighbor_col_id % (D_N_NEIGHBOR_COL_X*2+1) - D_N_NEIGHBOR_COL_X -1;
@@ -1008,18 +1035,42 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
       image[1] = 1;
       cell2_y = rel_y - D_N_CELLS_Y;
     }
+    const int head_cell_id = d_idx_xy_head_cell[get_column_id_from_crd(cell2_x, cell2_y)];
 
     for(int i_img = 0; i_img < 3; i_img++){
-      
+      image[2] = i_img-1;
+      if(first_uni_z[i_img] < 0) continue;
+
+      const int first_uni_id = get_uni_id_from_crd(cell2_x, cell2_y,
+						   first_uni_z[i_img]);
+      const int last_uni_id = get_uni_id_from_crd(cell2_x, cell2_y,
+						  last_uni_z[i_img]);
+
+      const int first_cell = head_cell_id + d_uni2cell_z[first_uni_id].x;
+      const int last_cell = head_cell_id + d_uni2cell_z[first_uni_id].y;
+      if(first_cell > last_cell){
+	printf("DGB!! cell:%d uni:%d-%d cell:%d-%d head:%d\n", cell1_id, 
+	       first_uni_id, last_uni_id, first_cell, last_cell,
+	       head_cell_id);
+      }
+      /*
+	for(int cell2_id = first_cell;
+	cell2_id <= last_cell; cell2_id++){      
+	bool cell2_odd = cell2_id%2!=0;
+	if(check_valid_pair(cell1_id, cell2_id))
+	add_cell_pair(cell1_id, cell2_id, image);	    
+      */
     }
   }
+  
 }
 
 extern "C" int cuda_enumerate_cell_pairs(int n_cells){
   const int blocks1 = (n_cells + REORDER_THREADS-1) / REORDER_THREADS;  
   kernel_set_uniform_grid<<<blocks1, REORDER_THREADS>>>(d_crd_chg, d_uni2cell_z, n_cells);
-  const int blocks2 = (n_cells*32 + REORDER_THREADS-1) / REORDER_THREADS;  
-  //kernel_set_uniform_grid<<<blocks2, REORDER_THREADS>>>(d_idx_xy_head_cell, d_crd_chg);
+
+  const int blocks2 = (n_cells*WARPSIZE + REORDER_THREADS-1) / REORDER_THREADS;  
+  kernel_enumerate_cell_pair<<<blocks2, REORDER_THREADS>>>(d_uni2cell_z, d_crd_chg, d_idx_xy_head_cell);
   
   return 0;
 }

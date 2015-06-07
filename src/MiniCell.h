@@ -10,9 +10,10 @@ using namespace std;
 
 #define N_ATOM_CELL 8
 #define N_BITMASK (N_ATOM_CELL * N_ATOM_CELL + 31) / 32
-#define COEF_MAX_N_ATOMS_CELL 1.2;
-#define MAX_N_CELL_UNI 10;
-#define MAX_N_PAIR_Z 100;
+#define COEF_MAX_N_ATOMS_CELL 1.2
+#define MAX_N_CELL_UNI 10
+#define MAX_N_PAIR_Z 100
+#define COEF_MAX_N_CELL_PAIRS 1.3
 
 typedef struct cell_pair_info{
   int cell_id1;
@@ -285,7 +286,7 @@ class MiniCell : public CelesteObject{
   int get_n_uni(){ return n_uni; };
   int get_n_uni_z(){ return n_uni_z; };
   int get_l_uni_z(){ return L_z_uni; };
-
+  int*& get_idx_xy_head_cell(){return idx_xy_head_cell;};
 };
 
 #endif 

@@ -66,7 +66,7 @@ int MiniCell::alloc_variables(){
   cuda_hostalloc_cell_info(cell_pairs, idx_head_cell_pairs,
 			   idx_xy_head_cell,
 			   max_n_cell_pairs, max_n_cells+1,
-			   n_columns);
+			   n_columns+1);
 #else
   crd = new real_pw[get_max_n_atom_array()*3];
   atomids = new int[get_max_n_atom_array()];
@@ -250,7 +250,7 @@ int MiniCell::set_grid_xy(){
   // 
   max_n_cells = n_cells_xyz[0] * n_cells_xyz[1] * n_cells_xyz[2];
   max_n_cell_pairs = ((n_neighbors_xy[0]*2+1) *
-		      (n_neighbors_xy[1]*2+1) * (n_neighbors_xy[0]+n_neighbors_xy[1]+2) ) / 2
+		      (n_neighbors_xy[1]*2+1) * (n_neighbors_xy[0]+n_neighbors_xy[1]+2) ) * 0.5 * COEF_MAX_N_CELL_PAIRS
 									       * max_n_cells;
   //max_n_cell_pairs = max_n_cells * max_n_cells;
   //cout << "max_n_cell_pairs : " << max_n_cell_pairs << endl;
