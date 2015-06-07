@@ -176,7 +176,9 @@ extern "C" int cuda_set_cell_constant(const int  n_cells,
 				      const int  n_uni_z,
 				      const real_pw l_cell_x,
 				      const real_pw l_cell_y,
-				      const real_pw L_uni_z){
+				      const real_pw L_uni_z,
+				      const int n_neighbor_col_x,
+				      const int n_neighbor_col_y){
   HANDLE_ERROR( cudaMemcpyToSymbol(D_N_CELL_PAIRS,
 				   &n_cell_pairs,
 				   sizeof(int) ) );
@@ -210,6 +212,13 @@ extern "C" int cuda_set_cell_constant(const int  n_cells,
   HANDLE_ERROR( cudaMemcpyToSymbol(D_L_UNI_Z,
 				   &L_uni_z,
 				   sizeof(real_pw) ));
+  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_NEIGHBOR_COL_X,
+				   &n_neighbor_col_x,
+				   sizeof(int) ) );
+  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_NEIGHBOR_COL_Y,
+				   &n_neighbor_col_y,
+				   sizeof(int) ) );
+
   return 0;
 }
 
@@ -918,11 +927,9 @@ __global__ void kernel_set_uniform_grid(const real4* d_crd_chg,
   const int col_x = (int)((crd_chg.x-PBC_LOWER_BOUND[0]) / D_L_CELL_X);
   const int col_y = (int)((crd_chg.y-PBC_LOWER_BOUND[1]) / D_L_CELL_Y);
 
-
   const int uni_z_min = (int)((d_crd_chg[cell_id*D_N_ATOM_CELL].z-PBC_LOWER_BOUND[2]) / D_L_UNI_Z);
 
   const int uni_id_min = get_uni_id_from_crd(col_x, col_y, uni_z_min);
-
   //
   if (uni_id_min >= D_N_UNI || uni_id_min < 0){
     printf("DBG!! %d %d %d %d\n", uni_id_min, col_x, col_y, uni_z_min);
@@ -931,5 +938,81 @@ __global__ void kernel_set_uniform_grid(const real4* d_crd_chg,
   //const int uni_z_max = (int)(d_crd_chg[cell_id*D_N_ATOM_CELL-1].z / D_L_UNI_Z);
   //const int uni_id_max = get_uni_id_from_crd(uni_x, uni_y, uni_z_max);
   //atomicMax(&d_uni2cell_z[uni_id_max].y, cell_id);
+}
 
+__global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
+					   const real4* d_crd_chg){
+  const int cell1_id = threadIdx.x + blockIdx.x * blockDim.x;  
+  const int laneIdx = threadIdx.x%WARPSIZE;
+  const int warpIdx = threadIdx.x/WARPSIZE;
+  const int n_neighbor_col = (D_N_NEIGHBOR_COL_X*2+1) * (D_N_NEIGHBOR_COL_Y*2+1);
+  const int n_col_thread = (n_neighbor_col+WARPSIZE-1) / WARPSIZE;
+  const real4 crd_chg11 = d_crd_chg[cell1_id*D_N_ATOM_CELL];
+  const int cell1_x = (int)(crd_chg11.x / D_L_CELL_X);
+  const int cell1_y = (int)(crd_chg11.y / D_L_CELL_Y);
+
+  int first_uni_z[3] = {0, 0, 0};
+  int last_uni_z[3] = {0, 0, 0};
+  int tmp_first = (crd_chg11.z)/D_L_UNI_Z - 2;
+  if(tmp_first < 0){
+    first_uni_z[0] = D_N_UNI_Z + tmp_first;
+    last_uni_z[0] = D_N_UNI_Z -1;
+    tmp_first = 0;
+  }else{
+    first_uni_z[0] = 1;
+    last_uni_z[0] = 1;
+  }
+  first_uni_z[1] = tmp_first;
+  int tmp_last = (d_crd_chg[cell1_id*D_N_ATOM_CELL+D_N_ATOM_CELL-1].z)/D_L_UNI_Z + 2;
+  if(tmp_last >= D_N_UNI_Z){
+    first_uni_z[2] = 0;
+    last_uni_z[2] = tmp_last - D_N_UNI_Z;
+    last_uni_z[1] = D_N_UNI_Z -1;
+  }else{
+    first_uni_z[2] = -1;
+    last_uni_z[2] = -1;
+    last_uni_z[1] = tmp_last;
+  }
+  int image[3] = {0,0,0};
+  for(int i_col=0; i_col < n_col_thread; i_col++){
+    const int neighbor_col_id = i_col + laneIdx*n_col_thread;
+    if(neighbor_col_id >= n_neighbor_col) break;
+    const int dx = neighbor_col_id % (D_N_NEIGHBOR_COL_X*2+1) - D_N_NEIGHBOR_COL_X -1;
+    const int dy = neighbor_col_id / (D_N_NEIGHBOR_COL_X*2+1) - D_N_NEIGHBOR_COL_X -1;
+    // for x
+    image[0] = 0;
+    const int rel_x = cell1_x + dx;
+    int cell2_x = rel_x;
+    if(rel_x < 0){
+      image[0] = -1;
+      cell2_x = D_N_CELLS_X + rel_x;
+    }else if(rel_x >= D_N_CELLS_X){
+      image[0] = 1;
+      cell2_x = rel_x - D_N_CELLS_X;
+    }
+    // for y
+    image[1] = 0;
+    const int rel_y = cell1_y + dy;
+    int cell2_y = rel_y;
+    if(rel_y < 0){
+      image[1] = -1;
+      cell2_y = D_N_CELLS_Y + rel_y;
+    }else if(rel_y >= D_N_CELLS_Y){
+      image[1] = 1;
+      cell2_y = rel_y - D_N_CELLS_Y;
+    }
+
+    for(int i_img = 0; i_img < 3; i_img++){
+      
+    }
+  }
+}
+
+extern "C" int cuda_enumerate_cell_pairs(int n_cells){
+  const int blocks1 = (n_cells + REORDER_THREADS-1) / REORDER_THREADS;  
+  kernel_set_uniform_grid<<<blocks1, REORDER_THREADS>>>(d_crd_chg, d_uni2cell_z, n_cells);
+  const int blocks2 = (n_cells*32 + REORDER_THREADS-1) / REORDER_THREADS;  
+  //kernel_set_uniform_grid<<<blocks2, REORDER_THREADS>>>(d_idx_xy_head_cell, d_crd_chg);
+  
+  return 0;
 }

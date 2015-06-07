@@ -25,7 +25,9 @@ extern "C" int cuda_set_cell_constant(const int n_cells, int n_cell_pairs,
 				      const int n_uni_z,
 				      const real_pw l_cell_x,
 				      const real_pw l_cell_y,
-				      const real_pw L_uni_z);
+				      const real_pw L_uni_z,
+				      const int n_neighbor_col_x,
+				      const int n_neighbor_col_y);
 
 extern "C" int cuda_set_constant(int n_atoms, real_pw cutoff, real_pw cutoff_pairlist, int n_atomtypes);
 extern "C" int cuda_alloc_set_lj_params(real_pw* h_lj_6term,
@@ -493,6 +495,8 @@ int SubBox::set_nsgrid(){
   nsgrid.enumerate_cell_pairs();
 
 #ifdef F_CUDA
+  cuda_memcpy_htod_atom_info(charge, atom_type,
+  max_n_atoms_exbox);
   update_device_cell_info();  
 #endif
 
@@ -1724,8 +1728,8 @@ int SubBox::update_device_cell_info(){
 		    (real_pw)cfg->nsgrid_cutoff,
 		    n_lj_types);
   //cout << "cuda_memcpy_htod_atom_info"<<endl;
-  cuda_memcpy_htod_atom_info(charge, atom_type,
-			     max_n_atoms_exbox);
+  //cuda_memcpy_htod_atom_info(charge, atom_type,
+  //max_n_atoms_exbox);
   cuda_set_cell_constant(nsgrid.get_max_n_cells(),
 			 nsgrid.get_max_n_cell_pairs(),
 			 nsgrid.get_n_atom_array(),
@@ -1736,7 +1740,9 @@ int SubBox::update_device_cell_info(){
 			 nsgrid.get_n_uni_z(),
 			 nsgrid.get_L_cell_xy()[0],
 			 nsgrid.get_L_cell_xy()[1],
-			 nsgrid.get_l_uni_z());
+			 nsgrid.get_l_uni_z(),
+			 nsgrid.get_n_neighbors_xy()[0],
+			 nsgrid.get_n_neighbors_xy()[1]);
 
   cuda_memcpy_htod_cell_pairs(nsgrid.get_cell_pairs(),
 			      nsgrid.get_idx_head_cell_pairs(),
@@ -1746,6 +1752,9 @@ int SubBox::update_device_cell_info(){
 			   nsgrid.get_max_n_atom_array());
   cuda_init_cellinfo(nsgrid.get_n_cells());
   cuda_set_atominfo(nsgrid.get_n_atom_array());
+
+  
+
   return 0;
 }
 

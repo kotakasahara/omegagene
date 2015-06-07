@@ -40,6 +40,8 @@ __constant__ int      D_N_CELLS;
 __constant__ int      D_N_CELLS_X;
 __constant__ int      D_N_CELLS_Y;
 __constant__ int      D_N_COLUMNS;
+__constant__ int      D_N_NEIGHBOR_COL_X;
+__constant__ int      D_N_NEIGHBOR_COL_Y;
 __constant__ int      D_N_ATOMS;
 __constant__ int      D_N_ATOM_ARRAY;
 __constant__ int      D_N_ATOMTYPES;

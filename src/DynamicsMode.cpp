@@ -318,6 +318,7 @@ int DynamicsMode::subbox_setup(){
   //  cout << "set_nsgrid" << endl;
 #ifndef F_WO_NS
   subbox.set_nsgrid();
+  
 #endif
   //subbox.set_ff(&ff);
 

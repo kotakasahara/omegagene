@@ -45,7 +45,7 @@ class MiniCell : public CelesteObject{
   //   "neighboring" means it can be included in 
   //   the cutoff sphere
   int n_neighbors_xy[2];
-
+  
   // cutoff_pair
   //   cutoff length for pair interactions
   real_pw cutoff_pair_half;
@@ -202,6 +202,7 @@ class MiniCell : public CelesteObject{
   // pair
   real_pw get_cell_z_min(int cell_id);
   real_pw get_cell_z_max(int cell_id);
+  const int* get_n_neighbors_xy(){ return (const int*)n_neighbors_xy;};
   int set_uniform_grid();
   int enumerate_cell_pairs();
   bool check_valid_pair(const int cell1_id, const int cell2_id,
