@@ -924,15 +924,22 @@ __global__ void kernel_set_uniform_grid(const real4* d_crd_chg,
   const int warpIdx = threadIdx.x/WARPSIZE;
 
   const real4 crd_chg = d_crd_chg[cell_id * D_N_ATOM_CELL];
-  const int col_x = (int)((crd_chg.x-PBC_LOWER_BOUND[0]) / D_L_CELL_X);
-  const int col_y = (int)((crd_chg.y-PBC_LOWER_BOUND[1]) / D_L_CELL_Y);
+  const int col_x = floor((crd_chg.x-PBC_LOWER_BOUND[0]) / D_L_CELL_X);
+  const int col_y = floor((crd_chg.y-PBC_LOWER_BOUND[1]) / D_L_CELL_Y);
 
   const int uni_z_min = (int)((d_crd_chg[cell_id*D_N_ATOM_CELL].z-PBC_LOWER_BOUND[2]) / D_L_UNI_Z);
 
   const int uni_id_min = get_uni_id_from_crd(col_x, col_y, uni_z_min);
   //
   if (uni_id_min >= D_N_UNI || uni_id_min < 0){
-    printf("DBG!! %d %d %d %d\n", uni_id_min, col_x, col_y, uni_z_min);
+    printf("DBG!! %d/%d x:%d/%d y:%d/%d z:%d/%d x:%f/%f y:%f/%f\n",
+	   uni_id_min, D_N_UNI,
+	   col_x, D_N_CELLS_X,
+	   col_y, D_N_CELLS_Y,
+	   uni_z_min, D_N_UNI_Z,
+	   crd_chg.x-PBC_LOWER_BOUND[0],PBC_L[0],
+	   crd_chg.y-PBC_LOWER_BOUND[1],PBC_L[1]);
+
   }
   //atomicMin(&d_uni2cell_z[uni_id_min].x, cell_id);
   //const int uni_z_max = (int)(d_crd_chg[cell_id*D_N_ATOM_CELL-1].z / D_L_UNI_Z);

@@ -528,6 +528,7 @@ int SubBox::nsgrid_update(){
 #if defined(F_CUDA)  
   update_device_cell_info();  
   nsgrid_crd_to_gpu();
+  cuda_enumerate_cell_pairs(nsgrid.get_n_cells());
 #endif
 
   const clock_t endTimePair = clock();
@@ -1753,8 +1754,6 @@ int SubBox::update_device_cell_info(){
 			   nsgrid.get_max_n_atom_array());
   cuda_init_cellinfo(nsgrid.get_n_cells());
   cuda_set_atominfo(nsgrid.get_n_atom_array());
-
-  cuda_enumerate_cell_pairs(nsgrid.get_n_cells());
 
   return 0;
 }
