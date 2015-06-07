@@ -285,7 +285,7 @@ class MiniCell : public CelesteObject{
 
   int get_n_uni(){ return n_uni; };
   int get_n_uni_z(){ return n_uni_z; };
-  int get_l_uni_z(){ return L_z_uni; };
+  real_pw get_l_uni_z(){ return L_z_uni; };
   int*& get_idx_xy_head_cell(){return idx_xy_head_cell;};
 };
 

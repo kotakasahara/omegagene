@@ -70,7 +70,7 @@ extern "C" int cuda_hostalloc_atom_type_charge(int*& h_atom_type,
 					       int n_atoms);
 
 extern "C" int cuda_init_cellinfo(const int n_cells);
-extern "C" int cuda_enumerate_cell_pairs(int n_cells);
+extern "C" int cuda_enumerate_cell_pairs(const int n_cells, const int n_unit);
 #endif
 
 SubBox::SubBox(){
@@ -530,7 +530,8 @@ int SubBox::nsgrid_update(){
 #if defined(F_CUDA)  
   update_device_cell_info();  
   nsgrid_crd_to_gpu();
-  cuda_enumerate_cell_pairs(nsgrid.get_n_cells());
+  cuda_enumerate_cell_pairs(nsgrid.get_n_cells(),
+			    nsgrid.get_n_uni());
 #endif
 
   const clock_t endTimePair = clock();
@@ -1734,7 +1735,7 @@ int SubBox::update_device_cell_info(){
   //cout << "cuda_memcpy_htod_atom_info"<<endl;
   //cuda_memcpy_htod_atom_info(charge, atom_type,
   //max_n_atoms_exbox);
-  cuda_set_cell_constant(nsgrid.get_max_n_cells(),
+  cuda_set_cell_constant(nsgrid.get_n_cells(),
 			 nsgrid.get_max_n_cell_pairs(),
 			 nsgrid.get_n_atom_array(),
 			 nsgrid.get_n_cells_x(),

@@ -24,6 +24,7 @@
 #define REORDER_THREADS 512
 
 #define N_MULTI_WORK 8
+#define MAX_INT 99999999
 
 cudaStream_t stream_pair_home;
 
