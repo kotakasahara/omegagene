@@ -477,12 +477,12 @@ int SubBox::set_nsgrid(){
   //cout << "set_box_info" << endl;
   nsgrid.set_box_info(n_boxes_xyz, box_l);
 
-  
   nsgrid.set_max_n_atoms_region();
 
   //nsgrid.setup_crd_into_grid(crd, charge, atom_type);
   nsgrid.set_grid_xy();
   nsgrid.alloc_variables();
+  revise_coordinates_pbc();
   nsgrid.set_crds_to_homebox(get_crds(),
 			     get_atomids(),
 			     get_n_atoms_box());
@@ -497,10 +497,10 @@ int SubBox::set_nsgrid(){
 #ifdef F_CUDA
   cout << "gpu_device_setup()"<<endl;
   gpu_device_setup();
-
   cuda_memcpy_htod_atom_info(charge, atom_type,
 			     max_n_atoms_exbox);
   update_device_cell_info();  
+  nsgrid_crd_to_gpu();
   cuda_enumerate_cell_pairs(nsgrid.get_n_cells(),
 			    nsgrid.get_n_uni(),
 			    nsgrid.get_max_n_cell_pairs());
@@ -515,7 +515,6 @@ int SubBox::nsgrid_crd_to_gpu(){
   nsgrid.init_energy_work();
   cuda_memcpy_htod_crd(nsgrid.get_crd(),
 		       nsgrid.get_n_atom_array());
-
   cuda_set_crd(nsgrid.get_n_atom_array());
   //nsgrid.update_crd((const real**)crd);
   return 0;
