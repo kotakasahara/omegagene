@@ -6,7 +6,7 @@ CelesteObject::CelesteObject(){
 //const int CelesteObject::MAX_N_ATOMTYPE = 40;
 
 const string CelesteObject::EXE = "celeste";
-const string CelesteObject::ABOUT_ME = "celeste ver.0.35.a 4-jun-2015";
+const string CelesteObject::ABOUT_ME = "celeste ver.0.35.e.12 8-jun-2015";
 const string CelesteObject::DESCRIPTION = "Uniform grid";
 //const int CelesteObject::REAL_BYTE = 4;
 const int CelesteObject::REAL_BYTE = 8;

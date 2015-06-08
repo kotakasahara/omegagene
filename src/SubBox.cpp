@@ -1775,7 +1775,6 @@ int SubBox::update_device_cell_info(){
 
 int SubBox::calc_energy_pairwise_cuda(){
   nsgrid.init_energy_work();
-  //nsgrid_crd_to_gpu();
   cuda_pairwise_ljzd(0, // offset_paridpairs,
 		     nsgrid.get_max_n_cell_pairs(), // n_cal_gridpairs,
 		     0, // offset_grids,

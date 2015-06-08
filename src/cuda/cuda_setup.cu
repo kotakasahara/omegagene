@@ -912,9 +912,9 @@ extern "C" int cuda_pair_sync(){
 
 extern "C" int cuda_memcpy_dtoh_work(real_fc*& h_work, real_fc*& h_energy,
 				     int n_atoms, int n_atom_array){
-  printf("! cuda_memcpy_dtoh_work\n");
+  //printf("! cuda_memcpy_dtoh_work\n");
   int blocks = (n_atom_array + REORDER_THREADS-1) / REORDER_THREADS;
-  printf("kernel_set_work_orig\n");
+  //printf("kernel_set_work_orig\n");
 
   cudaStream_t stream_reduction1;
   cudaStream_t stream_reduction2;
