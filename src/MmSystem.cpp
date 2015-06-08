@@ -4,7 +4,7 @@ MmSystem::MmSystem()
   : CelesteObject(){
   cur_time = 0.0;
   leapfrog_coef = 1.0;
-  max_n_nb15off = 64;
+  max_n_nb15off = 32;
   ctime_per_step = 0;
   ctime_cuda_htod_atomids = 0;
   ctime_cuda_reset_work_ene = 0;
@@ -456,6 +456,11 @@ int MmSystem::set_nb15off(int atomid1, int atomid2){
   for(i=0; i<max_n_nb15off; i++)
     if(nb15off[atomid1*max_n_nb15off+i]==-1 ||
        nb15off[atomid1*max_n_nb15off+i]==atomid2 ) break;
+  if(i == max_n_nb15off){
+    cout << "The number of the 1-5 OFF pairs exceeds the limit" <<endl;
+    cout << "Increase MmSys::maxn_nb15off" << endl;
+    exit(1);
+  }
   nb15off[atomid1 * max_n_nb15off + i] = atomid2;
   for(i=0; i<max_n_nb15off; i++)
     if(nb15off[atomid2*max_n_nb15off+i]==-1 ||

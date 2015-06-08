@@ -37,12 +37,16 @@ __constant__ real_pw  D_CHARGE_COEFF;
 __constant__ real_pw  PBC_L[3];
 __constant__ real_pw  PBC_LOWER_BOUND[3];
 __constant__ int      D_N_CELL_PAIRS;
+__constant__ int      D_MAX_N_CELL_PAIRS;
 __constant__ int      D_N_CELLS;
+__constant__ int      D_MAX_N_CELL_PAIRS_PER_CELL;
+__constant__ int      D_MAX_N_CELL_PAIRS_PER_COLUMN;
 __constant__ int      D_N_CELLS_X;
 __constant__ int      D_N_CELLS_Y;
 __constant__ int      D_N_COLUMNS;
 __constant__ int      D_N_NEIGHBOR_COL_X;
 __constant__ int      D_N_NEIGHBOR_COL_Y;
+__constant__ int      D_N_NEIGHBOR_COL;
 __constant__ int      D_N_ATOMS;
 __constant__ int      D_N_ATOM_ARRAY;
 __constant__ int      D_N_ATOMTYPES;
@@ -53,6 +57,8 @@ __constant__ real_pw  D_L_CELL_Y;
 __constant__ real_pw  D_L_UNI_Z;
 //__constant__ int      D_MAX_N_NB15OFF;
 //__constant__ int      D_MAX_N_ATOMS_GRID;
+
+__constant__ int D_MAX_N_NB15OFF;
 
 __constant__ real_pw  D_CUTOFF;
 __constant__ real_pw  D_CUTOFF_PAIRLIST;
@@ -70,6 +76,7 @@ real_pw* d_crd;
 CellPair* d_cell_pairs;
 int* d_idx_head_cell_pairs;
 int* d_cell_pair_removed;
+//int* d_n_cell_pairs;
 
 // atomid ordered by atomid_grid order
 //  integer values in this array are original atomid
@@ -99,6 +106,9 @@ real_fc* d_work;
 
 int*  d_idx_xy_head_cell;
 int2* d_uni2cell_z;
+
+int* d_nb15off;
+int* d_nb15off_orig;
 
 //texture<real, 2> tex_lj_6term;
 //texture<real, 2> tex_lj_12term;

@@ -6,16 +6,16 @@ __device__   __inline__    double  shfl_xor ( double value,  int const lane, int
 }
 
 __device__ double atomicAdd(double* address, double val){
-    unsigned long long int* address_as_ull =
-      (unsigned long long int*)address;
-    unsigned long long int old = *address_as_ull, assumed;
-    do {
-      assumed = old;
-      old = atomicCAS(address_as_ull, assumed,
-		      __double_as_longlong(val +
-					   __longlong_as_double(assumed)));
-    } while (assumed != old);
-    return __longlong_as_double(old);
+  unsigned long long int* address_as_ull =
+    (unsigned long long int*)address;
+  unsigned long long int old = *address_as_ull, assumed;
+  do {
+    assumed = old;
+    old = atomicCAS(address_as_ull, assumed,
+		    __double_as_longlong(val +
+					 __longlong_as_double(assumed)));
+  } while (assumed != old);
+  return __longlong_as_double(old);
 }
 
 
@@ -47,6 +47,8 @@ extern "C" int cuda_alloc_atom_info(int n_atoms,
 			   (max_n_cells+1) * sizeof(int)) );
   HANDLE_ERROR( cudaMalloc((void**)&d_cell_pair_removed,
 			   (max_n_cells+1) * sizeof(int)) );
+  ///HANDLE_ERROR( cudaMalloc((void**)&d_n_cell_pairs,
+  //(max_n_cells) * sizeof(int)) );
   //HANDLE_ERROR( cudaMalloc((void**)&d_grid_atom_index,
   //(max_n_ + 1) * sizeof(int)) );
   HANDLE_ERROR( cudaMalloc((void**)&d_energy,
@@ -57,7 +59,11 @@ extern "C" int cuda_alloc_atom_info(int n_atoms,
 			   n_columns * sizeof(int) ) );
   HANDLE_ERROR( cudaMalloc((void**)&d_uni2cell_z,
 			   n_uni * sizeof(int2) ) );
-  
+
+  HANDLE_ERROR( cudaMemcpyToSymbol(D_MAX_N_CELL_PAIRS,
+				   &max_n_cell_pairs,
+				   sizeof(int) ) );  
+
   //HANDLE_ERROR( cudaMalloc((void**)&d_work_orig,
   //n_atom_array * 3 * sizeof(real_fc) ) );
   return 0;
@@ -140,7 +146,7 @@ extern "C" int cuda_memcpy_htod_crd(real_pw*& h_crd,
   //cudaMemcpyHostToDevice));
   HANDLE_ERROR( cudaMemset(d_energy, 0.0, sizeof(real_fc)*2*N_MULTI_WORK ));
   HANDLE_ERROR( cudaMemset(d_work, 0.0, sizeof(real_fc)*n_atom_array*3*N_MULTI_WORK ));
-
+  
   return 0;
 }
 
@@ -172,6 +178,7 @@ extern "C" int cuda_zerodipole_constant(real_pw zcore,
 // cuda_set_cell_constant
 //  These constants are updated when the cell grid is updated
 extern "C" int cuda_set_cell_constant(const int  n_cells,
+				      const int max_n_cell_pairs,
 				      const int  n_cell_pairs,
 				      const int  n_atom_array,
 				      const int  n_cells_x,
@@ -223,7 +230,18 @@ extern "C" int cuda_set_cell_constant(const int  n_cells,
   HANDLE_ERROR( cudaMemcpyToSymbol(D_N_NEIGHBOR_COL_Y,
 				   &n_neighbor_col_y,
 				   sizeof(int) ) );
-
+  const int n_neighbor_col = (D_N_NEIGHBOR_COL_X*2+1) * (D_N_NEIGHBOR_COL_Y*2+1);
+  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_NEIGHBOR_COL,
+				   &n_neighbor_col,
+				   sizeof(int) ) );
+  const int max_n_cell_pairs_per_column = max_n_cell_pairs / (n_cells * n_neighbor_col);
+  HANDLE_ERROR( cudaMemcpyToSymbol(D_MAX_N_CELL_PAIRS_PER_COLUMN,
+				   &max_n_cell_pairs_per_column,
+				   sizeof(int) ) );  
+  const int max_n_cell_pairs_per_cell = max_n_cell_pairs_per_column * n_neighbor_col;
+  HANDLE_ERROR( cudaMemcpyToSymbol(D_MAX_N_CELL_PAIRS_PER_CELL,
+				   &max_n_cell_pairs_per_cell,
+				   sizeof(int) ) );  
   return 0;
 }
 
@@ -276,7 +294,10 @@ extern "C" int cuda_set_constant(int n_atoms, real_pw cutoff,
 
 extern "C" int cuda_alloc_set_lj_params(real_pw* h_lj_6term,
 					real_pw* h_lj_12term,
-					int n_lj_types){
+					int n_lj_types,
+					int* h_nb15off,
+					const int max_n_nb15off,
+					const int max_n_atoms){
   //printf("threads : %d\n", PW_THREADS);
   unsigned int size_lj_matrix = sizeof(real_pw) * n_lj_types * n_lj_types;
   // cudaMalloc
@@ -284,15 +305,23 @@ extern "C" int cuda_alloc_set_lj_params(real_pw* h_lj_6term,
 			    size_lj_matrix ) );
   HANDLE_ERROR( cudaMalloc( (void**)&d_lj_12term,
 			    size_lj_matrix ) );
+  HANDLE_ERROR( cudaMemcpyToSymbol(D_MAX_N_NB15OFF,
+				   &max_n_nb15off,
+				   sizeof(int) ) );  
+  unsigned int size_nb15off = sizeof(int)*max_n_nb15off*max_n_atoms;
+  HANDLE_ERROR( cudaMalloc( (void**)&d_nb15off_orig,
+			    size_nb15off));
+  HANDLE_ERROR( cudaMalloc( (void**)&d_nb15off,
+			    size_nb15off));
   // cudaBindTexture2D
   /*
-  cudaChannelFormatDesc desc = cudaCreateChannelDesc<real>();
-  HANDLE_ERROR( cudaBindTexture2D( NULL,
-				   tex_lj_6term,
-				   d_lj_6term,
-				   desc, n_lj_types, n_lj_types,
-				   sizeof(real)*n_lj_types) );
-  HANDLE_ERROR( cudaBindTexture2D( NULL,
+    cudaChannelFormatDesc desc = cudaCreateChannelDesc<real>();
+    HANDLE_ERROR( cudaBindTexture2D( NULL,
+    tex_lj_6term,
+    d_lj_6term,
+    desc, n_lj_types, n_lj_types,
+    sizeof(real)*n_lj_types) );
+    HANDLE_ERROR( cudaBindTexture2D( NULL,
 				   tex_lj_12term,
 				   d_lj_12term,
 				   desc, n_lj_types, n_lj_types,
@@ -305,6 +334,9 @@ extern "C" int cuda_alloc_set_lj_params(real_pw* h_lj_6term,
   HANDLE_ERROR( cudaMemcpy( d_lj_12term, h_lj_12term,
 			    size_lj_matrix,
 			    cudaMemcpyHostToDevice) );
+  HANDLE_ERROR( cudaMemcpy( d_nb15off_orig, h_nb15off,
+			    size_nb15off,
+			    cudaMemcpyHostToDevice) );
   
   return 0;
 }
@@ -315,6 +347,8 @@ extern "C" int cuda_free_lj_params(){
   //cudaUnbindTexture(tex_lj_12term);
   HANDLE_ERROR( cudaFree(d_lj_6term) );
   HANDLE_ERROR( cudaFree(d_lj_12term) );
+  HANDLE_ERROR( cudaFree(d_nb15off_orig) );
+  HANDLE_ERROR( cudaFree(d_nb15off) );
   return 0;
 }
 
@@ -600,7 +634,6 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
 				     real_fc* d_energy, real_fc* d_work,
 				     int* d_pairs, real_pw* d_realbuf,
 				     const int offset_cells,
-				     const int n_cells,
 				     const bool flg_mod_15mask,
 				     const int* d_cell_pair_removed){
   real_fc ene_vdw = 0.0;
@@ -610,9 +643,10 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
   
   const int c1 = global_threadIdx >> 5;
   const int warpIdx = threadIdx.x >> 5;  
-  if(c1 >= n_cells){ return; }
+  if(c1 >= D_N_CELLS){ return; }
   const int laneIdx = global_threadIdx & 31;
-  const int n_loops = (d_idx_head_cell_pairs[c1+1] - d_idx_head_cell_pairs[c1] - d_cell_pair_removed[c1])*2;
+  //;const int n_loops = (d_idx_head_cell_pairs[c1+1] - d_idx_head_cell_pairs[c1] - d_cell_pair_removed[c1])*2;
+  const int n_loops = (D_MAX_N_CELL_PAIRS_PER_CELL - d_cell_pair_removed[c1])*2;
   const int ene_index_offset = global_threadIdx%N_MULTI_WORK;  
   
   real_fc work_c1[3] = {0.0, 0.0, 0.0};
@@ -635,8 +669,8 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
   int cp;
   for(int loopIdx=0; loopIdx < n_loops; loopIdx++){
     if(loopIdx%2 == 0){
-      cp = d_idx_head_cell_pairs[c1] + (loopIdx >> 1);
-      if(cp >= D_N_CELL_PAIRS) break;
+      cp = D_MAX_N_CELL_PAIRS_PER_CELL*c1 + (loopIdx >> 1);
+      if(cp >= D_MAX_N_CELL_PAIRS) break;
       cellpair = d_cell_pairs[cp];
     }
     //atomicAdd(&d_pairs[3],1);
@@ -673,6 +707,11 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
     real_pw cur_ene_vdw=0.0;
     int mask_id;
     int interact_bit;
+    if (threadIdx.x + blockIdx.x * blockDim.x == 0){
+      printf("cp: %d (%d-%d) at: %d-%d mask: %d %d \n", cp, c1, c2, atom_idx1, atom_idx2,
+	     d_cell_pairs[cp].pair_mask[0], d_cell_pairs[cp].pair_mask[1]);
+    }      
+
     if(!check_15off64(atom_idx1, atom_idx2, d_cell_pairs[cp].pair_mask,
 		      mask_id, interact_bit)){
       //if(d_atominfo[a1].x == -1 || d_atominfo[a2].x == -1) continue;
@@ -682,6 +721,10 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
 			     atomtype1[sharedmem_idx],
 			     atomtype2,
 			     d_lj_6term, d_lj_12term);
+      if (threadIdx.x + blockIdx.x * blockDim.x == 0){
+	printf("r %f ene %f %f\n", r12, cur_ene_vdw, cur_ene_ele);
+      }      
+
 
       if(flg_mod_15mask && r12 < D_CUTOFF_PAIRLIST) interact_bit = 0;
       //atomicAdd(&d_pairs[1],1);
@@ -801,17 +844,17 @@ __global__ void kernel_reset_cellpairs(CellPair* d_cell_pairs,
 				       const int n_cells){
   const int cell1_id = blockDim.x * blockIdx.x + threadIdx.x;
   if(cell1_id >= n_cells){ return; }
-  int n_cell2 = d_idx_head_cell_pairs[cell1_id+1] - d_idx_head_cell_pairs[cell1_id]
+  int n_cell2 = D_MAX_N_CELL_PAIRS_PER_CELL
     - d_cell_pair_removed[cell1_id];  
   for(int cell2=0; cell2<n_cell2; cell2++){
     bool flg = true;
     int n_mask_int = (N_ATOM_CELL * N_ATOM_CELL + 31) / 32;
-    const int cp = d_idx_head_cell_pairs[cell1_id] + cell2;
+    const int cp = D_MAX_N_CELL_PAIRS_PER_CELL*cell1_id + cell2;
     for(int i=0; i < n_mask_int; i++)
       flg &= (d_cell_pairs[cp].pair_mask[i] == ~0);
     if(flg){
       d_cell_pair_removed[cell1_id]++;
-      int cp_src = d_idx_head_cell_pairs[cell1_id] + --n_cell2;
+      int cp_src = D_MAX_N_CELL_PAIRS_PER_CELL*cell1_id + --n_cell2;
       d_cell_pairs[cp] = d_cell_pairs[cp_src];
       cell2--;
     }
@@ -846,6 +889,7 @@ extern "C" int cuda_pairwise_ljzd(const int offset_cellpairs, const int n_cal_ce
   //
 
   int blocks = (n_cal_cells+PW_THREADS/32-1) / (PW_THREADS/32);
+  printf("kernel_pairwize_ljzd %d\n", n_cal_cells);
   kernel_pairwise_ljzd<<<blocks, PW_THREADS,
     0, stream_pair_home>>>(d_crd_chg,
 			   d_cell_pairs,
@@ -853,7 +897,7 @@ extern "C" int cuda_pairwise_ljzd(const int offset_cellpairs, const int n_cal_ce
 			   d_atomtype,
 			   d_lj_6term, d_lj_12term,
 			   d_energy, d_work, d_pairs, d_realbuf,
-			   offset_cells, n_cal_cells, flg_mod_15mask,
+			   offset_cells, flg_mod_15mask,
 			   d_cell_pair_removed);
 
   if(flg_mod_15mask){
@@ -963,26 +1007,96 @@ __global__ void kernel_set_uniform_grid(const real4* d_crd_chg,
 }
 
 __device__ bool check_valid_pair(const int cell1_id, const int cell2_id){
-  bool flg = true;
-  //const bool cell1_odd = cell1_id%2!=0;
-  //const bool cell2_odd = cell2_id%2!=0;
-  return flg;
- }
-__device__ int add_cell_pair(const int cell1_id, const int cell2_id,
-			      const int image[3]){
+  const bool cell1_odd = cell1_id%2!=0;
+  const bool cell2_odd = cell2_id%2!=0;
+  if ( cell1_odd){
+    if ((cell2_id < cell1_id && !cell2_odd ) || 
+	(cell2_id > cell1_id && cell2_odd )) return false;
+  }else{
+    if ((cell2_id < cell1_id && cell2_odd ) || 
+	(cell2_id > cell1_id && !cell2_odd )) return false;
+  }
+  return true;
+}
+__device__ int set_cell_pair_bitmask(const int cell_id1, const int cell_id2,
+				     const int* d_atomids,
+				     const int* d_nb15off_orig,
+				     int* pair_mask){
+  for(int i = 0; i < N_BITMASK; i++) pair_mask[i] = 0;
+  int a1 = D_N_ATOM_CELL*cell_id1;
+  for(int a1_cell = 0; a1_cell < D_N_ATOM_CELL; a1++, a1_cell++){
+    bool flg1 = false;
+    if(d_atomids[a1] == -1) flg1 = true;
+    int a2 = D_N_ATOM_CELL*cell_id2;
+    //int a2_cell = 0;
+    for(int a2_cell = 0; 
+	a2_cell < D_N_ATOM_CELL; a2++, a2_cell++){
+      const int bit_pos = a2_cell * D_N_ATOM_CELL + a1_cell;
+      const int mask_id =  bit_pos / 32;
+      const int mask_pos =  bit_pos % 32;
+      const int add_bit = 1 << mask_pos;
+      bool flg12 = false;
+      if(flg1) flg12 = true;
+      else if (d_atomids[a2] == -1) flg12=true;
+      else if (cell_id1 == cell_id2 && a1 >= a2) flg12=true;
+      else{
+	const int tail = (d_atomids[a1]+1) * D_MAX_N_NB15OFF;
+	for(int i = d_atomids[a1] * D_MAX_N_NB15OFF;
+	    i < tail && d_nb15off_orig[i] != -1; i++){
+	  if(d_nb15off_orig[i] == d_atomids[a2]){ 
+	    flg12=true;
+	    break;}
+	}
+      }
+      //if(atomids[a1]==1 || atomids[a2]==1) flg=true;
+      if(flg12){
+	//int tmp = pair_mask[mask_id];
+	pair_mask[mask_id] |= add_bit;
+      }
+    }
+    
+  }
   return 0;
 }
+__device__ CellPair get_new_cell_pair(const int cell1_id, const int cell2_id,
+				      const int image[3],
+				      int* d_atomids,
+				      int* d_nb15off_orig){
+  CellPair new_cp;
+  new_cp.cell_id1 = cell1_id;
+  new_cp.cell_id2 = cell2_id;
+  int bit_image = 0;
+  if(image[0] == -1)      bit_image = bit_image | 1;
+  else if(image[0] == 1)  bit_image = bit_image | 2;
+  if(image[1] == -1)      bit_image = bit_image | 4;
+  else if(image[1] == 1)  bit_image = bit_image | 8;
+  if(image[2] == -1)      bit_image = bit_image | 16;
+  else if(image[2] == 1)  bit_image = bit_image | 32;
+  new_cp.image = bit_image;
+  //new_cp.pair_mask[0] = 0;
+  //new_cp.pair_mask[1] = 0;
+  set_cell_pair_bitmask(cell1_id, cell2_id,
+			d_atomids,
+			d_nb15off_orig,
+			new_cp.pair_mask);
+  return new_cp;
+}
+
+
 __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
 					   const real4* d_crd_chg,
-					   const int* d_idx_xy_head_cell){
+					   const int* d_idx_xy_head_cell,
+					   int* d_atomids,
+					   int* d_nb15off_orig,
+					   CellPair* d_cell_pairs){
   // 1 warp calculates pairs with a cell
 
   const int cell1_id = (threadIdx.x + blockIdx.x * blockDim.x)/WARPSIZE; 
   if(cell1_id >= D_N_CELLS) return;
   const int laneIdx = threadIdx.x%WARPSIZE;
   const int warpIdx = threadIdx.x/WARPSIZE;
-  const int n_neighbor_col = (D_N_NEIGHBOR_COL_X*2+1) * (D_N_NEIGHBOR_COL_Y*2+1);
-  const int n_col_thread = (n_neighbor_col+WARPSIZE-1) / WARPSIZE;
+  
+  const int n_col_thread = (D_N_NEIGHBOR_COL+WARPSIZE-1) / WARPSIZE;
   const real4 crd_chg11 = d_crd_chg[cell1_id*D_N_ATOM_CELL];
   const int cell1_x = (int)((crd_chg11.x - PBC_LOWER_BOUND[0]) / D_L_CELL_X);
   const int cell1_y = (int)((crd_chg11.y - PBC_LOWER_BOUND[1]) / D_L_CELL_Y);
@@ -1016,9 +1130,13 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
   //first_uni_z[2], last_uni_z[2]);
 
   for(int i_col=0; i_col < n_col_thread; i_col++){
-
+    int added_col = 0;
     const int neighbor_col_id = i_col + laneIdx*n_col_thread;
-    if(neighbor_col_id >= n_neighbor_col) break;
+    const int idx_cell_pair_head = D_MAX_N_CELL_PAIRS_PER_CELL * cell1_id +
+      D_MAX_N_CELL_PAIRS_PER_COLUMN * neighbor_col_id;
+
+
+    if(neighbor_col_id >= D_N_NEIGHBOR_COL) break;
     const int dx = neighbor_col_id % (D_N_NEIGHBOR_COL_X*2+1) - D_N_NEIGHBOR_COL_X -1;
     const int dy = neighbor_col_id / (D_N_NEIGHBOR_COL_X*2+1) - D_N_NEIGHBOR_COL_X -1;
     // for x
@@ -1056,23 +1174,50 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
 
       const int first_cell = d_uni2cell_z[first_uni_id].x;
       const int last_cell = d_uni2cell_z[first_uni_id].y;
-      if(first_cell > last_cell || first_cell < 0|| last_cell >= D_N_CELLS || first_cell < 0 || last_cell >= D_N_CELLS){
-	printf("DGB!! cell:%d/%d uni:%d-%d cell:%d-%d\n", 
-	       cell1_id, D_N_CELLS, 
-	       first_uni_id, last_uni_id, first_cell, last_cell);
-
-      }
-      
-      //for(int cell2_id = first_cell;
-      //cell2_id <= last_cell; cell2_id++){      
-      //if(check_valid_pair(cell1_id, cell2_id))
-	//add_cell_pair(cell1_id, cell2_id, image);	    
+      //if(first_cell > last_cell || first_cell < 0|| last_cell >= D_N_CELLS || first_cell < 0 || last_cell >= D_N_CELLS){
+      //printf("DGB!! cell:%d/%d uni:%d-%d cell:%d-%d\n", 
+      //cell1_id, D_N_CELLS, 
+      //first_uni_id, last_uni_id, first_cell, last_cell);
       //}
+      
+      for(int cell2_id = first_cell;
+	  cell2_id <= last_cell; cell2_id++){      
+	if (threadIdx.x + blockIdx.x * blockDim.x == 0){
+	  printf("cell: %d-%d\n", cell1_id, cell2_id);
+	}
+	if(idx_cell_pair_head + added_col >= D_MAX_N_CELL_PAIRS){
+	  printf("Index exceeds the maximum value. %d / %d", idx_cell_pair_head + added_col, D_MAX_N_CELL_PAIRS);
+	}
+	if(check_valid_pair(cell1_id, cell2_id)){
+	  d_cell_pairs[idx_cell_pair_head + added_col] = 
+	    get_new_cell_pair(cell1_id, cell2_id, image,
+			      d_atomids, d_nb15off_orig);
+	  added_col++;
+	  if (threadIdx.x + blockIdx.x * blockDim.x == 0){
+	    printf("mask %d %d\n",d_cell_pairs[idx_cell_pair_head + added_col-1].pair_mask[0],
+		   d_cell_pairs[idx_cell_pair_head + added_col-1].pair_mask[1]);
+	  }
+
+	}else{
+	  if (threadIdx.x + blockIdx.x * blockDim.x == 0){
+	    printf("pair invalid\n");
+	  }
+	}
+      }
     }
   }
-  
- }
- 
+}
+
+__global__ void kernel_init_cell_pairs(CellPair* d_cell_pairs){
+  const int cp_id = threadIdx.x + blockDim.x * blockIdx.x;  
+  if (cp_id >= D_MAX_N_CELL_PAIRS) return;
+  d_cell_pairs[cp_id].cell_id1 = -1;
+  d_cell_pairs[cp_id].cell_id2 = -1;
+  d_cell_pairs[cp_id].image = 0;
+  for(int i = 0; i < N_BITMASK; i++){
+    d_cell_pairs[cp_id].pair_mask[i] = ~0;
+  }
+}
 __global__ void kernel_init_uni2cell(const int n_uni, int2* d_uni2cell_z){
   const int uni_id = threadIdx.x + blockDim.x * blockIdx.x;
   if(uni_id >= n_uni) return;
@@ -1080,14 +1225,34 @@ __global__ void kernel_init_uni2cell(const int n_uni, int2* d_uni2cell_z){
   d_uni2cell_z[uni_id].y = -1;
 }
 
-extern "C" int cuda_enumerate_cell_pairs(const int n_cells, const int n_uni){
-  const int blocks1 = (n_uni + REORDER_THREADS-1) / REORDER_THREADS;  
-  kernel_init_uni2cell<<<blocks1, REORDER_THREADS>>>(n_uni, d_uni2cell_z);
-  const int blocks2 = (n_cells + REORDER_THREADS-1) / REORDER_THREADS;  
-  kernel_set_uniform_grid<<<blocks2, REORDER_THREADS>>>(d_crd_chg, d_uni2cell_z);
+extern "C" int cuda_enumerate_cell_pairs(const int n_cells, const int n_uni,
+					 const int max_n_cell_pairs){
 
-  const int blocks3 = (n_cells*WARPSIZE + REORDER_THREADS-1) / REORDER_THREADS;  
-  kernel_enumerate_cell_pair<<<blocks2, REORDER_THREADS>>>(d_uni2cell_z, d_crd_chg, d_idx_xy_head_cell);
+  cudaStream_t stream1;
+  cudaStream_t stream2;
+  cudaStreamCreate(&stream1);
+  cudaStreamCreate(&stream2);
+
+  const int blocks1 = (n_uni + REORDER_THREADS-1) / REORDER_THREADS;  
+  kernel_init_uni2cell<<<blocks1, REORDER_THREADS, 0, stream1>>>(n_uni, d_uni2cell_z);
+  const int blocks2 = (n_cells + REORDER_THREADS-1) / REORDER_THREADS;  
+  kernel_set_uniform_grid<<<blocks2, REORDER_THREADS, 0, stream1>>>(d_crd_chg, d_uni2cell_z);
+  const int blocks3 = (max_n_cell_pairs + REORDER_THREADS-1) / REORDER_THREADS;  
+  kernel_init_cell_pairs<<<blocks3, REORDER_THREADS, 0, stream2>>>(d_cell_pairs);
+
+  cudaStreamSynchronize(stream1);
+  cudaStreamSynchronize(stream2);
+  cudaStreamDestroy(stream1);
+
+  const int blocks4 = (n_cells*WARPSIZE + REORDER_THREADS-1) / REORDER_THREADS;  
+  kernel_enumerate_cell_pair<<<blocks4, REORDER_THREADS,0,stream2>>>(d_uni2cell_z, d_crd_chg,
+								     d_idx_xy_head_cell,
+								     d_atomids, d_nb15off_orig,
+								     d_cell_pairs);
   
+  
+  cudaStreamDestroy(stream2);
+
   return 0;
 }
+		
