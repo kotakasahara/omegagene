@@ -9,10 +9,10 @@ extern "C" int cuda_alloc_atom_info(int n_atoms,
 				    int n_columns,
 				    int n_uni);
 extern "C" int cuda_free_atom_info();
-extern "C" int cuda_memcpy_htod_cell_pairs(CellPair*& h_cell_pairs,
-					   int*& h_idx_head_cell_pairs,
-					   int n_cell_pairs,
-					   int n_cells);
+//extern "C" int cuda_memcpy_htod_cell_pairs(CellPair*& h_cell_pairs,
+//int*& h_idx_head_cell_pairs,
+//int n_cell_pairs,
+//					   int n_cells);
 extern "C" int cuda_memcpy_htod_atom_info(real_pw*& h_charge_orig,
 					  int*& h_atomtype_orig,
 					  int n_atoms);
@@ -510,13 +510,14 @@ int SubBox::set_nsgrid(){
 
   return 0;
 }
-
 int SubBox::nsgrid_crd_to_gpu(){
+#ifdef F_CUDA
   nsgrid.init_energy_work();
   cuda_memcpy_htod_crd(nsgrid.get_crd(),
 		       nsgrid.get_n_atom_array());
   cuda_set_crd(nsgrid.get_n_atom_array());
   //nsgrid.update_crd((const real**)crd);
+#endif
   return 0;
 }
 

@@ -5,16 +5,16 @@
 extern "C" int cuda_hostalloc_atom_info(real_pw*& h_crd, int*& h_atomids,
 					real_fc*& h_work, real_fc*& h_energy,
 					int n_atom_array);
-extern "C" int cuda_hostalloc_cell_info(CellPair*& h_cell_pairs, 
-					int*& h_idx_head_cell_pairs,
+extern "C" int cuda_hostalloc_cell_info(//CellPair*& h_cell_pairs, 
+					//int*& h_idx_head_cell_pairs,
 					int*& h_idx_xy_head_cell,
-					int max_n_cell_pairs,
-					int max_n_cells,
+					//int max_n_cell_pairs,
+					//int max_n_cells,
 					int n_columns);
 extern "C" int cuda_hostfree_atom_info(real_pw* h_crd, int* h_atomids,
 				       real_fc*& h_work, real_fc*& h_energy);
-extern "C" int cuda_hostfree_cell_info(CellPair* h_cell_pairs,
-				       int* h_idx_head_cell_pairs,
+extern "C" int cuda_hostfree_cell_info(//CellPair* h_cell_pairs,
+				       //int* h_idx_head_cell_pairs,
 				       int* h_idx_xy_head_cell);
 #endif
 
@@ -63,9 +63,9 @@ int MiniCell::alloc_variables(){
   cout << "cuda_hostalloc_atom_info"<<endl;
   cuda_hostalloc_atom_info(crd, atomids, work, energy, get_max_n_atom_array());
   cout << "cuda_hostalloc_cell_info"<<endl;
-  cuda_hostalloc_cell_info(cell_pairs, idx_head_cell_pairs,
+  cuda_hostalloc_cell_info(//cell_pairs, idx_head_cell_pairs,
 			   idx_xy_head_cell,
-			   max_n_cell_pairs, max_n_cells+1,
+			   //max_n_cell_pairs, max_n_cells+1,
 			   n_columns+1);
 #else
   crd = new real_pw[get_max_n_atom_array()*3];
@@ -184,15 +184,16 @@ int MiniCell::free_variables(){
   delete[] atomids_buf;
 #ifdef F_CUDA
   cuda_hostfree_atom_info(crd, atomids, work, energy);
-  cuda_hostfree_cell_info(cell_pairs, idx_head_cell_pairs, idx_xy_head_cell);
+  cuda_hostfree_cell_info(//cell_pairs, idx_head_cell_pairs,
+			  idx_xy_head_cell);
 #else
   delete[] crd;
   delete[] work;
   delete[] atomids;
   delete[] energy;
+  delete[] idx_xy_head_cell;
   delete[] cell_pairs;
   delete[] idx_head_cell_pairs;
-  delete[] idx_xy_head_cell;
 #endif
 
   for(int i=0; i < 125; i++){
@@ -250,8 +251,8 @@ int MiniCell::set_grid_xy(){
   // 
   max_n_cells = n_cells_xyz[0] * n_cells_xyz[1] * n_cells_xyz[2];
   max_n_cell_pairs = ((n_neighbors_xy[0]*2+1) *
-		      (n_neighbors_xy[1]*2+1) * (n_neighbors_xy[0]+n_neighbors_xy[1]+2) ) * 0.5 * COEF_MAX_N_CELL_PAIRS
-									       * max_n_cells;
+		      (n_neighbors_xy[1]*2+1) * (n_neighbors_xy[0]+n_neighbors_xy[1]+2) )
+    * 0.5 * max_n_cells;
   //max_n_cell_pairs = max_n_cells * max_n_cells;
   //cout << "max_n_cell_pairs : " << max_n_cell_pairs << endl;
 
