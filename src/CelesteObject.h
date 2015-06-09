@@ -25,7 +25,6 @@ typedef double real_bp;
 typedef double real_cst; 
 
 
-#define MAX_N_NB15OFF 32
 
 #ifdef F_MPI
 #include <mpi.h>
@@ -137,7 +136,7 @@ class CelesteObject {
   static const real JOULE_CAL;
   static const real KINETIC_COEFF;
   static const real BOLTZMAN;
-  //static const int MAX_N_NB15OFF;
+  static const int MAX_N_NB15OFF;
   
   template <typename TYPE> inline const TYPE& max(const TYPE& a, const TYPE& b){ return a < b ? b : a; }
   template <typename TYPE> inline const TYPE& min(const TYPE& a, const TYPE& b){ return a > b ? b : a; }

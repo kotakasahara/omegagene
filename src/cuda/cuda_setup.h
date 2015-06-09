@@ -28,9 +28,9 @@
 
 cudaStream_t stream_pair_home;
 
-#define N_ATOM_CELL  8
-#define N_ATOM_CELL_3  24
-#define MAX_N_CELL_BLOCK 8
+#define D_N_ATOM_CELL  8
+#define D_N_ATOM_CELL_3  24
+
 #define WARPSIZE 32
 
 __constant__ real_pw  D_CHARGE_COEFF;

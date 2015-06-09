@@ -23,7 +23,7 @@ const real CelesteObject::GAS_CONST = 8.31451;
 const real CelesteObject::JOULE_CAL = 4.184;
 const real CelesteObject::KINETIC_COEFF = (1e7 / (JOULE_CAL*1e3)) * 0.5;
 const real CelesteObject::BOLTZMAN = 1.380658e-23;
-//const int CelesteObject::MAX_N_NB15OFF = 32;
+const int CelesteObject::MAX_N_NB15OFF = 32;
 
 int CelesteObject::cross(const double* a, const double* b, double* ret){
   ret[0] = a[1]*b[2] - a[2]*b[1];
