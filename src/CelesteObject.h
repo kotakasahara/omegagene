@@ -25,6 +25,7 @@ typedef double real_bp;
 typedef double real_cst; 
 
 
+
 #ifdef F_MPI
 #include <mpi.h>
 #define  mpi_real MPI_DOUBLE
@@ -135,8 +136,8 @@ class CelesteObject {
   static const real JOULE_CAL;
   static const real KINETIC_COEFF;
   static const real BOLTZMAN;
+  static const int MAX_N_NB15OFF;
   
-
   template <typename TYPE> inline const TYPE& max(const TYPE& a, const TYPE& b){ return a < b ? b : a; }
   template <typename TYPE> inline const TYPE& min(const TYPE& a, const TYPE& b){ return a > b ? b : a; }
   int cross(const double* a, const double* b, double* ret);

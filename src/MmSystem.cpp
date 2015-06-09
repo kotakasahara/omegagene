@@ -4,7 +4,7 @@ MmSystem::MmSystem()
   : CelesteObject(){
   cur_time = 0.0;
   leapfrog_coef = 1.0;
-  max_n_nb15off = 32;
+  max_n_nb15off = MAX_N_NB15OFF;
   ctime_per_step = 0;
   ctime_cuda_htod_atomids = 0;
   ctime_cuda_reset_work_ene = 0;

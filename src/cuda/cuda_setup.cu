@@ -416,6 +416,14 @@ __global__ void kernel_set_cellinfo(int* d_cell_pair_removed,
   if(cell_id >= n_cells) return;
   d_cell_pair_removed[cell_id] = 0;
 }
+__global__ void kernel_set_nb15off(const int* d_atomids,
+				   const int* d_nb15off_orig,
+				   int* d_nb15off){
+  const int g_thread_idx = threadIdx.x + blockDim.x * blockIdx.x;
+  const int atomidx = g_thread_idx/D_MAX_N_NB15OFF;
+  const int idx = g_thread_idx%D_MAX_N_NB15OFF;
+  d_nb15off[g_thread_idx] = d_atomids[d_nb15off_orig[d_atomids[atomidx] + idx]];
+}
 __global__ void kernel_set_atominfo(const int* d_atomids,
 				    const int* d_atomtype_orig,
 				    const real_pw* d_charge_orig,
@@ -454,13 +462,18 @@ __Global__ void kernel_set_atomids_rev(const int* d_atomids, int* d_atomids_rev)
   }
 }
 */
-extern "C" int cuda_set_atominfo(int n_atom_array){
-  int blocks = (n_atom_array + REORDER_THREADS-1) / REORDER_THREADS;
-  kernel_set_atominfo<<<blocks, REORDER_THREADS>>>(d_atomids,
+ extern "C" int cuda_set_atominfo(const int n_atom_array,
+				  const int max_n_nb15off){
+  int blocks1 = (n_atom_array + REORDER_THREADS-1) / REORDER_THREADS;
+  kernel_set_atominfo<<<blocks1, REORDER_THREADS>>>(d_atomids,
 						   d_atomtype_orig,
 						   d_charge_orig,
 						   d_atomtype,
 						   d_crd_chg);
+  int blocks2 = (n_atom_array*max_n_nb15off + REORDER_THREADS-1) / REORDER_THREADS;
+  kernel_set_nb15off<<<blocks2, REORDER_THREADS>>>(d_atomids,
+						    d_nb15off_orig,
+						    d_nb15off);
   return 0;
 }
 extern "C" int cuda_set_crd(int n_atom_array){
@@ -1083,6 +1096,8 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
   const int cell1_id = g_thread_id/D_N_NEIGHBOR_COL; 
   if(cell1_id >= D_N_CELLS) return;
   const int neighbor_col_id = g_thread_id%D_N_NEIGHBOR_COL; 
+  const int cell1_id_in_block = cell1_id - blockIdx.x*blockDim.x/D_N_NEIGHBOR_COL;
+
   if(neighbor_col_id >= D_N_NEIGHBOR_COL) return;
   //const int laneIdx = threadIdx.x%WARPSIZE;
   //const int warpIdx = threadIdx.x/WARPSIZE;
