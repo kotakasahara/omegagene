@@ -1030,6 +1030,7 @@ __device__ bool check_valid_pair(const int cell1_id, const int cell2_id){
 __device__ int set_cell_pair_bitmask(const int cell_id1, const int cell_id2,
 				     const int* d_atomids,
 				     const int* d_nb15off_orig,
+				     const int* d_nb15off,
 				     int* pair_mask){
   for(int i = 0; i < N_BITMASK; i++) pair_mask[i] = 0;
   int a1 = D_N_ATOM_CELL*cell_id1;
@@ -1069,8 +1070,9 @@ __device__ int set_cell_pair_bitmask(const int cell_id1, const int cell_id2,
 }
 __device__ CellPair get_new_cell_pair(const int cell1_id, const int cell2_id,
 				      const int image[3],
-				      int* d_atomids,
-				      int* d_nb15off_orig){
+				      const int* d_atomids,
+				      const int* d_nb15off_orig,
+				      const int* d_nb15off){
   CellPair new_cp;
   new_cp.cell_id1 = cell1_id;
   new_cp.cell_id2 = cell2_id;
@@ -1086,7 +1088,7 @@ __device__ CellPair get_new_cell_pair(const int cell1_id, const int cell2_id,
   //new_cp.pair_mask[1] = 0;
   set_cell_pair_bitmask(cell1_id, cell2_id,
 			d_atomids,
-			d_nb15off_orig,
+			d_nb15off_orig, d_nb15off,
 			new_cp.pair_mask);
   return new_cp;
 }
@@ -1095,8 +1097,9 @@ __device__ CellPair get_new_cell_pair(const int cell1_id, const int cell2_id,
 __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
 					   const real4* d_crd_chg,
 					   const int* d_idx_xy_head_cell,
-					   int* d_atomids,
-					   int* d_nb15off_orig,
+					   const int* d_atomids,
+					   const int* d_nb15off_orig,
+					   const int* d_nb15off,
 					   CellPair* d_cell_pairs
 					   ){
   // 1 warp calculates pairs with a cell
@@ -1208,7 +1211,7 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
       if(check_valid_pair(cell1_id, cell2_id)){
 	d_cell_pairs[idx_cell_pair_head + added_col] = 
 	  get_new_cell_pair(cell1_id, cell2_id, image,
-			    d_atomids, d_nb15off_orig);
+			    d_atomids, d_nb15off_orig, d_nb15off);
 	added_col++;
 	//if (cell1_id==0){
 	//printf("nb_col:%d i_col:%d i_img:%d cp_idx:%d mask: %d %d\n",
@@ -1270,6 +1273,7 @@ extern "C" int cuda_enumerate_cell_pairs(const int n_cells, const int n_uni,
   kernel_enumerate_cell_pair<<<blocks4, REORDER_THREADS,0,stream2>>>(d_uni2cell_z, d_crd_chg,
 								     d_idx_xy_head_cell,
 								     d_atomids, d_nb15off_orig,
+								     d_nb15off,
 								     d_cell_pairs);
   
   
