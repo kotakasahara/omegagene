@@ -425,8 +425,24 @@ __global__ void kernel_set_nb15off(const int* d_atomids,
   const int g_thread_idx = threadIdx.x + blockDim.x * blockIdx.x;
   const int atomid = g_thread_idx/D_MAX_N_NB15OFF;
   const int idx = g_thread_idx%D_MAX_N_NB15OFF;
-  if(atomid >= D_N_ATOM_ARRAY || d_atomids[atomid] < 0) return;
-  d_nb15off[g_thread_idx] = d_atomids_rev[d_nb15off_orig[d_atomids[atomid]*D_MAX_N_NB15OFF + idx]];
+  if(atomid >= D_N_ATOM_ARRAY) return;
+  if(d_atomids[atomid] < 0){
+    d_nb15off[g_thread_idx] = atomid;
+  }else{
+    const int orig = d_nb15off_orig[d_atomids[atomid]*D_MAX_N_NB15OFF + idx];
+    if(orig == -1){
+      d_nb15off[g_thread_idx] = -1;
+    }else{
+      d_nb15off[g_thread_idx] = d_atomids_rev[orig];
+    }
+  }
+  //if(atomid == 0){
+  //printf("nb15off[%d] atom: %d (%d, rev:%d) nb[%d]: %d (%d) \n",
+  //g_thread_idx,
+  //atomid, d_atomids[atomid], d_atomids_rev[d_atomids[atomid]],
+  //idx,
+  //d_nb15off[g_thread_idx], d_nb15off_orig[d_atomids[atomid]]);
+  //}
 }
 __global__ void kernel_set_atominfo(const int* d_atomids,
 				    const int* d_atomtype_orig,
@@ -468,8 +484,11 @@ __Global__ void kernel_set_atomids_rev(const int* d_atomids, int* d_atomids_rev)
   }
 }
 */
- extern "C" int cuda_set_atominfo(const int n_atom_array,
-				  const int max_n_nb15off){
+extern "C" int cuda_set_atominfo(const int n_atom_array,
+				 const int max_n_nb15off){
+  HANDLE_ERROR( cudaMemset(d_atomids_rev, -1, sizeof(int)*n_atom_array ));
+  HANDLE_ERROR( cudaMemset(d_nb15off, -1, sizeof(int)*n_atom_array*max_n_nb15off ));
+
   int blocks1 = (n_atom_array + REORDER_THREADS-1) / REORDER_THREADS;
   kernel_set_atominfo<<<blocks1, REORDER_THREADS>>>(d_atomids,
 						   d_atomtype_orig,
@@ -1036,9 +1055,9 @@ __device__ int set_cell_pair_bitmask(const int cell_id1, const int cell_id2,
   int a1 = D_N_ATOM_CELL*cell_id1;
   for(int a1_cell = 0; a1_cell < D_N_ATOM_CELL; a1++, a1_cell++){
     bool flg1 = false;
-    if(d_atomids[a1] == -1) flg1 = true;
+    //if(d_atomids[a1] == -1) flg1 = true;
+    if(d_nb15off[a1*D_MAX_N_NB15OFF] == a1) flg1 = true;
     int a2 = D_N_ATOM_CELL*cell_id2;
-    //int a2_cell = 0;
     for(int a2_cell = 0; 
 	a2_cell < D_N_ATOM_CELL; a2++, a2_cell++){
       const int bit_pos = a2_cell * D_N_ATOM_CELL + a1_cell;
@@ -1047,13 +1066,21 @@ __device__ int set_cell_pair_bitmask(const int cell_id1, const int cell_id2,
       const int add_bit = 1 << mask_pos;
       bool flg12 = false;
       if(flg1) flg12 = true;
-      else if (d_atomids[a2] == -1) flg12=true;
-      else if (cell_id1 == cell_id2 && a1 >= a2) flg12=true;
+      //else if (d_atomids[a2] == -1) flg12=true;
+      else if(d_nb15off[a2*D_MAX_N_NB15OFF] == a2) flg12=true;
+      else if((cell_id1 == cell_id2 && a1 >= a2)) flg12=true;
       else{
-	const int tail = (d_atomids[a1]+1) * D_MAX_N_NB15OFF;
-	for(int i = d_atomids[a1] * D_MAX_N_NB15OFF;
-	    i < tail && d_nb15off_orig[i] != -1; i++){
+	/*
+	  const int tail = (d_atomids[a1]+1) * D_MAX_N_NB15OFF;
+	  for(int i = d_atomids[a1] * D_MAX_N_NB15OFF;
+	  i < tail && d_nb15off_orig[i] != -1; i++){
 	  if(d_nb15off_orig[i] == d_atomids[a2]){ 
+	*/   
+	const int tail = (a1+1) * D_MAX_N_NB15OFF;
+	for(int i = a1 * D_MAX_N_NB15OFF;
+	    i < tail && d_nb15off[i] != -1; i++){
+	  if(d_nb15off[i] == a2){
+
 	    flg12=true;
 	    break;}
 	}
