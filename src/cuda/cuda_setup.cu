@@ -1076,15 +1076,16 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
 					   const int* d_idx_xy_head_cell,
 					   int* d_atomids,
 					   int* d_nb15off_orig,
-					   CellPair* d_cell_pairs){
+					   CellPair* d_cell_pairs
+					   ){
   // 1 warp calculates pairs with a cell
-
-  const int cell1_id = (threadIdx.x + blockIdx.x * blockDim.x)/WARPSIZE; 
+  const int g_thread_id = (threadIdx.x + blockIdx.x * blockDim.x);
+  const int cell1_id = g_thread_id/D_N_NEIGHBOR_COL; 
   if(cell1_id >= D_N_CELLS) return;
-  const int laneIdx = threadIdx.x%WARPSIZE;
-  const int warpIdx = threadIdx.x/WARPSIZE;
-  
-  const int n_col_thread = (D_N_NEIGHBOR_COL+WARPSIZE-1) / WARPSIZE;
+  const int neighbor_col_id = g_thread_id%D_N_NEIGHBOR_COL; 
+  if(neighbor_col_id >= D_N_NEIGHBOR_COL) return;
+  //const int laneIdx = threadIdx.x%WARPSIZE;
+  //const int warpIdx = threadIdx.x/WARPSIZE;
   const real4 crd_chg11 = d_crd_chg[cell1_id*D_N_ATOM_CELL];
   const int cell1_x = floor((crd_chg11.x - PBC_LOWER_BOUND[0]) / D_L_CELL_X);
   const int cell1_y = floor((crd_chg11.y - PBC_LOWER_BOUND[1]) / D_L_CELL_Y);
@@ -1117,96 +1118,93 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
   //first_uni_z[1], last_uni_z[1],
   //first_uni_z[2], last_uni_z[2]);
 
-  for(int i_col=0; i_col < n_col_thread; i_col++){
-    int added_col = 0;
-    const int neighbor_col_id = i_col + laneIdx*n_col_thread;
-    const int idx_cell_pair_head = D_MAX_N_CELL_PAIRS_PER_CELL * cell1_id +
-      D_MAX_N_CELL_PAIRS_PER_COLUMN * neighbor_col_id;
-
-    //if(cell1_id == 0){
-    //  printf("neighbor col: %d / %d \n",
-    //neighbor_col_id, D_N_NEIGHBOR_COL);
+  int added_col = 0;
+  const int idx_cell_pair_head = D_MAX_N_CELL_PAIRS_PER_CELL * cell1_id +
+    D_MAX_N_CELL_PAIRS_PER_COLUMN * neighbor_col_id;
+  
+  //if(cell1_id == 0){
+  //  printf("neighbor col: %d / %d \n",
+  //neighbor_col_id, D_N_NEIGHBOR_COL);
     //}
 
-    if(neighbor_col_id >= D_N_NEIGHBOR_COL) break;
-    const int dx = neighbor_col_id % (D_N_NEIGHBOR_COL_X*2+1) - D_N_NEIGHBOR_COL_X;
-    const int dy = neighbor_col_id / (D_N_NEIGHBOR_COL_X*2+1) - D_N_NEIGHBOR_COL_X;
-    // for x
-    image[0] = 0;
-    const int rel_x = cell1_x + dx;
-    int cell2_x = rel_x;
-    if(rel_x < 0){
-      image[0] = -1;
-      cell2_x = D_N_CELLS_X + rel_x;
-    }else if(rel_x >= D_N_CELLS_X){
-      image[0] = 1;
-      cell2_x = rel_x - D_N_CELLS_X;
-    }
-    // for y
-    image[1] = 0;
-    const int rel_y = cell1_y + dy;
-    int cell2_y = rel_y;
-    if(rel_y < 0){
-      image[1] = -1;
-      cell2_y = D_N_CELLS_Y + rel_y;
-    }else if(rel_y >= D_N_CELLS_Y){
-      image[1] = 1;
-      cell2_y = rel_y - D_N_CELLS_Y;
-    }
-    //const int head_cell_id = d_idx_xy_head_cell[get_column_id_from_crd(cell2_x, cell2_y)];
-
-    for(int i_img = 0; i_img < 3; i_img++){
-      image[2] = i_img-1;
-      if(first_uni_z[i_img] < 0) continue;
-
-      const int first_uni_id = get_uni_id_from_crd(cell2_x, cell2_y,
-						   first_uni_z[i_img]);
-      const int last_uni_id = get_uni_id_from_crd(cell2_x, cell2_y,
-						  last_uni_z[i_img]);
-
-      const int first_cell = d_uni2cell_z[first_uni_id].x;
-      const int last_cell = d_uni2cell_z[last_uni_id].y;
-      //if(first_cell > last_cell || first_cell < 0|| last_cell >= D_N_CELLS || first_cell < 0 || last_cell >= D_N_CELLS){
-      //if(cell1_id == 0){
-      //printf("DGB!! cell:%d/%d img:%d uni:%d-%d cell:%d-%d\n", 
-      //cell1_id, D_N_CELLS, 
-      //i_img,
-      //first_uni_id, last_uni_id,
-      //first_cell, last_cell);
+  const int dx = neighbor_col_id % (D_N_NEIGHBOR_COL_X*2+1) - D_N_NEIGHBOR_COL_X;
+  const int dy = neighbor_col_id / (D_N_NEIGHBOR_COL_X*2+1) - D_N_NEIGHBOR_COL_X;
+  // for x
+  image[0] = 0;
+  const int rel_x = cell1_x + dx;
+  int cell2_x = rel_x;
+  if(rel_x < 0){
+    image[0] = -1;
+    cell2_x = D_N_CELLS_X + rel_x;
+  }else if(rel_x >= D_N_CELLS_X){
+    image[0] = 1;
+    cell2_x = rel_x - D_N_CELLS_X;
+  }
+  // for y
+  image[1] = 0;
+  const int rel_y = cell1_y + dy;
+  int cell2_y = rel_y;
+  if(rel_y < 0){
+    image[1] = -1;
+    cell2_y = D_N_CELLS_Y + rel_y;
+  }else if(rel_y >= D_N_CELLS_Y){
+    image[1] = 1;
+    cell2_y = rel_y - D_N_CELLS_Y;
+  }
+  //const int head_cell_id = d_idx_xy_head_cell[get_column_id_from_crd(cell2_x, cell2_y)];
+  
+  for(int i_img = 0; i_img < 3; i_img++){
+    image[2] = i_img-1;
+    if(first_uni_z[i_img] < 0) continue;
+    
+    const int first_uni_id = get_uni_id_from_crd(cell2_x, cell2_y,
+						 first_uni_z[i_img]);
+    const int last_uni_id = get_uni_id_from_crd(cell2_x, cell2_y,
+						last_uni_z[i_img]);
+    
+    const int first_cell = d_uni2cell_z[first_uni_id].x;
+    const int last_cell = d_uni2cell_z[last_uni_id].y;
+    //if(first_cell > last_cell || first_cell < 0|| last_cell >= D_N_CELLS || first_cell < 0 || last_cell >= D_N_CELLS){
+    //if(cell1_id == 0){
+    //printf("DGB!! cell:%d/%d img:%d uni:%d-%d cell:%d-%d\n", 
+    //cell1_id, D_N_CELLS, 
+    //i_img,
+    //first_uni_id, last_uni_id,
+    //first_cell, last_cell);
+    //}
+    //}
+    
+    for(int cell2_id = first_cell;
+	cell2_id <= last_cell; cell2_id++){      
+      //if (cell1_id == 0){
+      //printf("cell: %d-%d\n", cell1_id, cell2_id);
       //}
-      //}
-      
-      for(int cell2_id = first_cell;
-	  cell2_id <= last_cell; cell2_id++){      
-	//if (cell1_id == 0){
-	//printf("cell: %d-%d\n", cell1_id, cell2_id);
-	//}
-	if(idx_cell_pair_head + added_col >= D_MAX_N_CELL_PAIRS){
-	  printf("Index exceeds the maximum value. %d / %d", idx_cell_pair_head + added_col, D_MAX_N_CELL_PAIRS);
-	}
-	if(check_valid_pair(cell1_id, cell2_id)){
-	  d_cell_pairs[idx_cell_pair_head + added_col] = 
-	    get_new_cell_pair(cell1_id, cell2_id, image,
-			      d_atomids, d_nb15off_orig);
-	  added_col++;
-	  //if (cell1_id==0){
-	  //printf("nb_col:%d i_col:%d i_img:%d cp_idx:%d mask: %d %d\n",
-	  //neighbor_col_id,
-	  //i_col, i_img,
-	  //idx_cell_pair_head + added_col-1,
-	  //d_cell_pairs[idx_cell_pair_head + added_col-1].pair_mask[0],
-	  //d_cell_pairs[idx_cell_pair_head + added_col-1].pair_mask[1]);
-	  //}
-
-	}//else{
-	//	  if (threadIdx.x + blockIdx.x * blockDim.x == 0){
-	//printf("pair invalid\n");
-	//}
-	//}
+      if(added_col >=  D_MAX_N_CELL_PAIRS_PER_COLUMN){
+	printf("Index exceeds the maximum value. %d / %d",added_col, D_MAX_N_CELL_PAIRS_PER_COLUMN);
       }
+      if(check_valid_pair(cell1_id, cell2_id)){
+	d_cell_pairs[idx_cell_pair_head + added_col] = 
+	  get_new_cell_pair(cell1_id, cell2_id, image,
+			    d_atomids, d_nb15off_orig);
+	added_col++;
+	//if (cell1_id==0){
+	//printf("nb_col:%d i_col:%d i_img:%d cp_idx:%d mask: %d %d\n",
+	//neighbor_col_id,
+	//i_col, i_img,
+	//idx_cell_pair_head + added_col-1,
+	//d_cell_pairs[idx_cell_pair_head + added_col-1].pair_mask[0],
+	//d_cell_pairs[idx_cell_pair_head + added_col-1].pair_mask[1]);
+	//}
+	
+      }//else{
+      //	  if (threadIdx.x + blockIdx.x * blockDim.x == 0){
+      //printf("pair invalid\n");
+      //}
+      //}
     }
   }
 }
+
 
 __global__ void kernel_init_cell_pairs(CellPair* d_cell_pairs){
   const int cp_id = threadIdx.x + blockDim.x * blockIdx.x;  
@@ -1226,7 +1224,8 @@ __global__ void kernel_init_uni2cell(const int n_uni, int2* d_uni2cell_z){
 }
 
 extern "C" int cuda_enumerate_cell_pairs(const int n_cells, const int n_uni,
-					 const int max_n_cell_pairs){
+					 const int max_n_cell_pairs,
+					 const int n_neighbor_col){
 
   cudaStream_t stream1;
   cudaStream_t stream2;
@@ -1244,7 +1243,7 @@ extern "C" int cuda_enumerate_cell_pairs(const int n_cells, const int n_uni,
   cudaStreamSynchronize(stream2);
   cudaStreamDestroy(stream1);
 
-  const int blocks4 = (n_cells*WARPSIZE + REORDER_THREADS-1) / REORDER_THREADS;  
+  const int blocks4 = (n_neighbor_col * n_cells + REORDER_THREADS-1) / REORDER_THREADS;  
   kernel_enumerate_cell_pair<<<blocks4, REORDER_THREADS,0,stream2>>>(d_uni2cell_z, d_crd_chg,
 								     d_idx_xy_head_cell,
 								     d_atomids, d_nb15off_orig,

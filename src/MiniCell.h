@@ -204,6 +204,7 @@ class MiniCell : public CelesteObject{
   real_pw get_cell_z_min(int cell_id);
   real_pw get_cell_z_max(int cell_id);
   const int* get_n_neighbors_xy(){ return (const int*)n_neighbors_xy;};
+  int get_n_neighbor_cols(){ return (n_neighbors_xy[0]*2+1) * (n_neighbors_xy[1]*2+1);};
   int set_uniform_grid();
   int enumerate_cell_pairs();
   bool check_valid_pair(const int cell1_id, const int cell2_id,

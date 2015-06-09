@@ -74,7 +74,8 @@ extern "C" int cuda_hostalloc_atom_type_charge(int*& h_atom_type,
 
 extern "C" int cuda_init_cellinfo(const int n_cells);
 extern "C" int cuda_enumerate_cell_pairs(const int n_cells, const int n_uni,
-					 const int max_n_cell_pairs);
+					 const int max_n_cell_pairs,
+					 const int n_neighbor_cols);
 #endif
 
 SubBox::SubBox(){
@@ -503,7 +504,9 @@ int SubBox::set_nsgrid(){
   nsgrid_crd_to_gpu();
   cuda_enumerate_cell_pairs(nsgrid.get_n_cells(),
 			    nsgrid.get_n_uni(),
-			    nsgrid.get_max_n_cell_pairs());
+			    nsgrid.get_max_n_cell_pairs(),
+			    nsgrid.get_n_neighbor_cols());
+
 #else
     nsgrid.enumerate_cell_pairs();
 #endif
@@ -537,7 +540,8 @@ int SubBox::nsgrid_update(){
   nsgrid_crd_to_gpu();
   cuda_enumerate_cell_pairs(nsgrid.get_n_cells(),
 			    nsgrid.get_n_uni(),
-			    nsgrid.get_max_n_cell_pairs());
+			    nsgrid.get_max_n_cell_pairs(),
+			    nsgrid.get_n_neighbor_cols());
 #else
   nsgrid.enumerate_cell_pairs();
 #endif
@@ -1563,6 +1567,7 @@ int SubBox::copy_crdvel_to_mmsys(real* src, real** dst){
 }
 int SubBox::add_force_from_mmsys(real_fc** in_force){
   add_crdvel_from_mmsys(work, in_force);
+  return 0;
 }
 template <typename TYPE> int SubBox::add_crdvel_from_mmsys(TYPE* dst, TYPE** src){
   for(int atomid_b=0, atomid_b3=0;
