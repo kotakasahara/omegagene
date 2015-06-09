@@ -419,13 +419,14 @@ __global__ void kernel_set_cellinfo(int* d_cell_pair_removed,
   d_cell_pair_removed[cell_id] = 0;
 }
 __global__ void kernel_set_nb15off(const int* d_atomids,
+				   const int* d_atomids_rev,
 				   const int* d_nb15off_orig,
 				   int* d_nb15off){
   const int g_thread_idx = threadIdx.x + blockDim.x * blockIdx.x;
   const int atomid = g_thread_idx/D_MAX_N_NB15OFF;
   const int idx = g_thread_idx%D_MAX_N_NB15OFF;
   if(atomid >= D_N_ATOM_ARRAY || d_atomids[atomid] < 0) return;
-  d_nb15off[g_thread_idx] = d_atomids[d_nb15off_orig[d_atomids[atomid] + idx]];
+  d_nb15off[g_thread_idx] = d_atomids_rev[d_nb15off_orig[d_atomids[atomid]*D_MAX_N_NB15OFF + idx]];
 }
 __global__ void kernel_set_atominfo(const int* d_atomids,
 				    const int* d_atomtype_orig,
@@ -478,8 +479,9 @@ __Global__ void kernel_set_atomids_rev(const int* d_atomids, int* d_atomids_rev)
 						    d_atomids_rev);
   int blocks2 = (n_atom_array*max_n_nb15off + REORDER_THREADS-1) / REORDER_THREADS;
   kernel_set_nb15off<<<blocks2, REORDER_THREADS>>>(d_atomids,
-						    d_nb15off_orig,
-						    d_nb15off);
+						   d_atomids_rev,
+						   d_nb15off_orig,
+						   d_nb15off);
   return 0;
 }
 extern "C" int cuda_set_crd(int n_atom_array){
