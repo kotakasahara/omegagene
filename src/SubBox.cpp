@@ -37,7 +37,8 @@ extern "C" int cuda_alloc_set_lj_params(real_pw* h_lj_6term,
 					int n_lj_types,
 					int* h_nb15off,
 					const int max_n_nb15off,
-					const int max_n_atoms);
+					const int max_n_atoms,
+					const int max_n_atom_array);
 
 extern "C" int cuda_free_lj_params();
 
@@ -1728,7 +1729,8 @@ int SubBox::gpu_device_setup(){
 			   n_lj_types,
 			   nb15off,
 			   max_n_nb15off,
-			   max_n_atoms_exbox);
+			   max_n_atoms_exbox,
+			   nsgrid.get_max_n_atom_array());
 
   real_pw tmp_l[3] = {(real_pw)pbc->L[0], (real_pw)pbc->L[1], (real_pw)pbc->L[2]};
   real_pw tmp_lb[3] = {(real_pw)pbc->lower_bound[0], (real_pw)pbc->lower_bound[1], (real_pw)pbc->lower_bound[2]};

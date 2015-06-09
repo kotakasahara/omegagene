@@ -37,8 +37,8 @@ extern "C" int cuda_alloc_atom_info(int n_atoms,
 			   n_atom_array * sizeof(int) ));
   HANDLE_ERROR( cudaMalloc((void**)&d_atomids,
 			   n_atom_array * sizeof(int)) );
-  //  HANDLE_ERROR( cudaMalloc((void**)&d_atomids_rev,
-  //			   n_atoms * sizeof(int)) );
+  HANDLE_ERROR( cudaMalloc((void**)&d_atomids_rev,
+			   n_atoms * sizeof(int)) );
   HANDLE_ERROR( cudaMalloc((void**)&d_atomtype_orig,
 			   n_atoms * sizeof(int) ));
   HANDLE_ERROR( cudaMalloc((void**)&d_cell_pairs,
@@ -74,7 +74,7 @@ extern "C" int cuda_free_atom_info(){
   HANDLE_ERROR( cudaFree(d_crd_chg) );
   HANDLE_ERROR( cudaFree(d_crd) );
   HANDLE_ERROR( cudaFree(d_atomids) );
-  //  HANDLE_ERROR( cudaFree(d_atomids_rev) );
+  HANDLE_ERROR( cudaFree(d_atomids_rev) );
   HANDLE_ERROR( cudaFree(d_charge_orig) );
   HANDLE_ERROR( cudaFree(d_atomtype) );
   HANDLE_ERROR( cudaFree(d_atomtype_orig) );
@@ -274,10 +274,11 @@ extern "C" int cuda_alloc_set_lj_params(real_pw* h_lj_6term,
 					int n_lj_types,
 					int* h_nb15off,
 					const int max_n_nb15off,
-					const int max_n_atoms){
+					const int max_n_atoms,
+					const int max_n_atom_array){
   //printf("threads : %d\n", PW_THREADS);
   printf("cuda_alloc_set_lj_params\n");
-  unsigned int size_lj_matrix = sizeof(real_pw) * n_lj_types * n_lj_types;
+  const unsigned int size_lj_matrix = sizeof(real_pw) * n_lj_types * n_lj_types;
   // cudaMalloc
   HANDLE_ERROR( cudaMalloc( (void**)&d_lj_6term,
 			    size_lj_matrix ) );
@@ -286,9 +287,10 @@ extern "C" int cuda_alloc_set_lj_params(real_pw* h_lj_6term,
   HANDLE_ERROR( cudaMemcpyToSymbol(D_MAX_N_NB15OFF,
 				   &max_n_nb15off,
 				   sizeof(int) ) );  
-  unsigned int size_nb15off = sizeof(int)*max_n_nb15off*max_n_atoms;
+  const unsigned int size_nb15off_orig = sizeof(int)*max_n_nb15off*max_n_atoms;
   HANDLE_ERROR( cudaMalloc( (void**)&d_nb15off_orig,
-			    size_nb15off));
+			    size_nb15off_orig));
+  const unsigned int size_nb15off = sizeof(int)*max_n_nb15off*max_n_atom_array;
   HANDLE_ERROR( cudaMalloc( (void**)&d_nb15off,
 			    size_nb15off));
   // cudaBindTexture2D
@@ -313,7 +315,7 @@ extern "C" int cuda_alloc_set_lj_params(real_pw* h_lj_6term,
 			    size_lj_matrix,
 			    cudaMemcpyHostToDevice) );
   HANDLE_ERROR( cudaMemcpy( d_nb15off_orig, h_nb15off,
-			    size_nb15off,
+			    size_nb15off_orig,
 			    cudaMemcpyHostToDevice) );
   
   return 0;
@@ -420,9 +422,10 @@ __global__ void kernel_set_nb15off(const int* d_atomids,
 				   const int* d_nb15off_orig,
 				   int* d_nb15off){
   const int g_thread_idx = threadIdx.x + blockDim.x * blockIdx.x;
-  const int atomidx = g_thread_idx/D_MAX_N_NB15OFF;
+  const int atomid = g_thread_idx/D_MAX_N_NB15OFF;
   const int idx = g_thread_idx%D_MAX_N_NB15OFF;
-  d_nb15off[g_thread_idx] = d_atomids[d_nb15off_orig[d_atomids[atomidx] + idx]];
+  if(atomid >= D_N_ATOM_ARRAY || d_atomids[atomid] < 0) return;
+  d_nb15off[g_thread_idx] = d_atomids[d_nb15off_orig[d_atomids[atomid] + idx]];
 }
 __global__ void kernel_set_atominfo(const int* d_atomids,
 				    const int* d_atomtype_orig,
