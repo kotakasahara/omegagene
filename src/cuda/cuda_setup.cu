@@ -431,11 +431,13 @@ __global__ void kernel_set_atominfo(const int* d_atomids,
 				    const int* d_atomtype_orig,
 				    const real_pw* d_charge_orig,
 				    int* d_atomtype,
-				    real4* d_crd_chg){
+				    real4* d_crd_chg,
+				    int* d_atomids_rev){
   int atomid = threadIdx.x + blockIdx.x * blockDim.x;
   if(atomid < D_N_ATOM_ARRAY && d_atomids[atomid] >= 0){
     d_atomtype[atomid] = d_atomtype_orig[d_atomids[atomid]];
     d_crd_chg[atomid].w = d_charge_orig[d_atomids[atomid]];
+    d_atomids_rev[d_atomids[atomid]] = atomid;
   }
 }
 __global__ void kernel_set_crd(const int* d_atomids,
@@ -472,7 +474,8 @@ __Global__ void kernel_set_atomids_rev(const int* d_atomids, int* d_atomids_rev)
 						   d_atomtype_orig,
 						   d_charge_orig,
 						   d_atomtype,
-						   d_crd_chg);
+						    d_crd_chg,
+						    d_atomids_rev);
   int blocks2 = (n_atom_array*max_n_nb15off + REORDER_THREADS-1) / REORDER_THREADS;
   kernel_set_nb15off<<<blocks2, REORDER_THREADS>>>(d_atomids,
 						    d_nb15off_orig,
