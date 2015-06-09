@@ -47,8 +47,8 @@ extern "C" int cuda_alloc_atom_info(int n_atoms,
   //(max_n_cells+1) * sizeof(int)) );
   HANDLE_ERROR( cudaMalloc((void**)&d_cell_pair_removed,
 			   (max_n_cells+1) * sizeof(int)) );
-  ///HANDLE_ERROR( cudaMalloc((void**)&d_n_cell_pairs,
-  //(max_n_cells) * sizeof(int)) );
+  /HANDLE_ERROR( cudaMalloc((void**)&d_n_cell_pairs,
+			    (max_n_cells) * sizeof(int)) );
   //HANDLE_ERROR( cudaMalloc((void**)&d_grid_atom_index,
   //(max_n_ + 1) * sizeof(int)) );
   HANDLE_ERROR( cudaMalloc((void**)&d_energy,
@@ -85,6 +85,7 @@ extern "C" int cuda_free_atom_info(){
   HANDLE_ERROR( cudaFree(d_work) );
   HANDLE_ERROR( cudaFree(d_idx_xy_head_cell));
   HANDLE_ERROR( cudaFree(d_uni2cell_z));
+  HANDLE_ERROR( cudaFree(d_n_cell_pairs) );
   //HANDLE_ERROR( cudaFree(d_work_orig) );
   return 0;
 }
@@ -1135,6 +1136,10 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
   if(cell1_id >= D_N_CELLS) return;
   const int neighbor_col_id = g_thread_id%D_N_NEIGHBOR_COL; 
   const int cell1_id_in_block = cell1_id - blockIdx.x*blockDim.x/D_N_NEIGHBOR_COL;
+
+  __shared__ int s_nb15off[(blockDim.x/D_N_NEIGHBOR_COL +2) * D_N_NB15OFF];
+  if(threadIdx.x == 0 || neighbor_col_id == 0){
+  }
 
   if(neighbor_col_id >= D_N_NEIGHBOR_COL) return;
   //const int laneIdx = threadIdx.x%WARPSIZE;
