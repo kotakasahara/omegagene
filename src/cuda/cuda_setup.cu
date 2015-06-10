@@ -886,20 +886,50 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
 __global__ void set_idx_head_cell_pairs(const int* d_n_cell_pairs,
 					int* d_idx_head_cell_pairs){
   
-  const int g_thread_id = blockDim.x * blockIdx.x + threadIdx.x;    
-  if(g_thread_id!=0) return;
-  int idx_cp = 0;
-  for(int cell_id = 0; cell_id < D_N_CELLS; cell_id++){
-    d_idx_head_cell_pairs[cell_id] = idx_cp;
-    idx_cp += d_n_cell_pairs[cell_id];
-    idx_cp = ((idx_cp + CP_PER_THREAD -1)/CP_PER_THREAD) * CP_PER_THREAD;
+  //const int g_thread_id = blockDim.x * blockIdx.x + threadIdx.x;    
+  //if(g_thread_id!=0) return;
+  //int idx_cp = 0;
+  //for(int cell_id = 0; cell_id < D_N_CELLS; cell_id++){
+  //d_idx_head_cell_pairs[cell_id] = idx_cp;
+  //idx_cp += d_n_cell_pairs[cell_id];
+  //idx_cp = ((idx_cp + CP_PER_THREAD -1)/CP_PER_THREAD) * CP_PER_THREAD;
+  //}
+  int n_rep = (D_N_CELLS + REORDER_THREADS - 1) / REORDER_THREADS;
+  for(int i=0; i < n_rep; i++){
+  //for(int i=0; i < 1; i++){
+    const int idx_head = REORDER_THREADS * i;
+    const int idx_write = idx_head + threadIdx.x ;
+    if(idx_write < D_N_CELLS){
+      if(idx_write > 0){
+	d_idx_head_cell_pairs[idx_write] = d_n_cell_pairs[idx_write - 1];
+      }else{
+	d_idx_head_cell_pairs[idx_write] = 0;
+      }
+    }
+    for(int j=1; j < REORDER_THREADS; j*=2){
+      const int idx = (threadIdx.x / j);
+      if( idx_write < D_N_CELLS && idx % 2 == 1 ){
+	d_idx_head_cell_pairs[idx_write] += d_idx_head_cell_pairs[idx_head + idx*j-1];
+      }
+      __syncthreads();
+      //printf("i:%d j:%d write:%d head:%d\n",
+      //i, j, idx_write, d_idx_head_cell_pairs[idx_write]);
+    }
+    if(i>0){
+      d_idx_head_cell_pairs[idx_write] += d_idx_head_cell_pairs[idx_head - 1];
+    }
+
+    __syncthreads();
   }
-/*
-  for(int cell_id = 0; cell_id < D_N_CELLS; cell_id++){
-  printf("idx_head: cell:%d n_cp:%d head:%d\n",
-  cell_id, d_n_cell_pairs[cell_id], d_idx_head_cell_pairs[cell_id]);
-	   }*/
-  
+  /*
+  if(threadIdx.x == 0){
+    for(int cell_id = 0; cell_id < D_N_CELLS; cell_id++){
+      printf("idx_head: cell:%d n_cp:%d head:%d\n",
+	     cell_id, d_n_cell_pairs[cell_id], d_idx_head_cell_pairs[cell_id]);
+    }
+    printf("D_N_CELLS : %d\n" , D_N_CELLS);
+  }
+  */
   //printf("max cp: %d\n",idx_cp);
 }
 
@@ -1000,7 +1030,7 @@ extern "C" int cuda_pairwise_ljzd(const int offset_cellpairs, const int n_cal_ce
 
   const int blocks = (n_cal_cells+PW_THREADS/32-1) / (PW_THREADS/32);
   //printf("kernel_pairwize_ljzd %d\n", n_cal_cells);
-
+  
   kernel_pairwise_ljzd<<<blocks, PW_THREADS,
     0, stream_pair_home>>>(d_crd_chg,
 			   d_cell_pairs,
@@ -1436,9 +1466,9 @@ extern "C" int cuda_enumerate_cell_pairs(const int n_cells, const int n_uni,
 								     d_cell_pairs_buf);
   
   
-  set_idx_head_cell_pairs<<<1, 128, 0, stream2>>>
+  set_idx_head_cell_pairs<<<1, REORDER_THREADS, 0, stream2>>>
     (d_n_cell_pairs, d_idx_head_cell_pairs);
-  
+  printf("aaaa\n");
   pack_cellpairs_array<<<blocks3, REORDER_THREADS, 0, stream2>>>
     (d_cell_pairs, d_cell_pairs_buf, 
      d_n_cell_pairs, d_idx_head_cell_pairs);
