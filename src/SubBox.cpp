@@ -50,7 +50,8 @@ extern "C" int cuda_set_pbc(real_pw* l, real_pw* lb);
 extern "C" int cuda_reset_work_ene(int n_atoms);
 extern "C" int cuda_memcpy_htod_crd(real_pw*& h_crd,
 				    int n_atom_array);
-extern "C" int cuda_set_atominfo(const int n_atom_array, const int max_n_nb15off);
+extern "C" int cuda_set_atominfo(const int n_atom_array, const int max_n_nb15off,
+				 const int max_n_cells);
 extern "C" int cuda_set_crd(int n_atom_array);
 
 extern "C" int cuda_pairwise_ljzd(const int offset_cellpairs, const int n_cal_cellpairs,
@@ -1774,9 +1775,10 @@ int SubBox::update_device_cell_info(){
 			   nsgrid.get_idx_xy_head_cell(),
 			   nsgrid.get_max_n_atom_array(),
 			   nsgrid.get_n_columns()+1);
-  cuda_init_cellinfo(nsgrid.get_n_cells());
+  //cuda_init_cellinfo(nsgrid.get_n_cells());
   cuda_set_atominfo(nsgrid.get_n_atom_array(),
-		    MAX_N_NB15OFF);
+		    MAX_N_NB15OFF,
+		    nsgrid.get_max_n_cells());
 
   return 0;
 }
