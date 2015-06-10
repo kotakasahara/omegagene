@@ -492,7 +492,7 @@ extern "C" int cuda_set_atominfo(const int n_atom_array,
 				 const int max_n_nb15off, const int max_n_cells){
   HANDLE_ERROR( cudaMemset(d_atomids_rev, -1, sizeof(int)*n_atom_array ));
   HANDLE_ERROR( cudaMemset(d_nb15off, -1, sizeof(int)*n_atom_array*max_n_nb15off ));
-  HANDLE_ERROR( cudaMemset(d_n_cell_pairs, 0, sizeof(int)*max_n_cells ));
+  HANDLE_ERROR( cudaMemset(d_n_cell_pairs, -1, sizeof(int)*max_n_cells ));
   HANDLE_ERROR( cudaMemset(d_cell_pair_removed, 0, sizeof(int)*max_n_cells ));
 
   int blocks1 = (n_atom_array + REORDER_THREADS-1) / REORDER_THREADS;
@@ -667,7 +667,7 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
 				     //int* d_pairs, real_pw* d_realbuf,
 				     const int offset_cells,
 				     const bool flg_mod_15mask,
-				     const int* d_cell_pair_removed){
+				     const int* d_n_cell_pairs){
   real_fc ene_vdw = 0.0;
   real_fc ene_ele = 0.0;
 
@@ -678,7 +678,7 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
   if(c1 >= D_N_CELLS){ return; }
   const int laneIdx = global_threadIdx & 31;
   //;const int n_loops = (d_idx_head_cell_pairs[c1+1] - d_idx_head_cell_pairs[c1] - d_cell_pair_removed[c1])*2;
-  const int n_loops = (D_MAX_N_CELL_PAIRS_PER_CELL - d_cell_pair_removed[c1])*2;
+  const int n_loops = d_n_cell_pairs[c1];//(D_MAX_N_CELL_PAIRS_PER_CELL - d_cell_pair_removed[c1])*2;
   const int ene_index_offset = global_threadIdx%N_MULTI_WORK;  
   
   real_fc work_c1[3] = {0.0, 0.0, 0.0};
@@ -930,7 +930,7 @@ extern "C" int cuda_pairwise_ljzd(const int offset_cellpairs, const int n_cal_ce
 			   d_lj_6term, d_lj_12term,
 			   d_energy, d_work,// d_pairs, d_realbuf,
 			   offset_cells, flg_mod_15mask,
-			   d_cell_pair_removed);
+			   d_n_cell_pairs);
 
   if(flg_mod_15mask){
     kernel_reset_cellpairs<<<blocks, PW_THREADS, 0, stream_pair_home>>>(d_cell_pairs, d_cell_pair_removed,
@@ -1145,7 +1145,7 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
 					   const int* d_atomids,
 					   const int* d_nb15off_orig,
 					   const int* d_nb15off,
-					   int * n_cell_pairs,
+					   int * d_n_cell_pairs,
 					   CellPair* d_cell_pairs,
 					   CellPair* d_cell_pairs_buf
 					   ){
@@ -1277,7 +1277,7 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
       }
       if(check_valid_pair(cell1_id, cell2_id)){
 	//d_cell_pairs[idx_cell_pair_head + added_col] = 
-	const int cp_idx_cell = atomicAdd(d_n_cell_pairs[cell1_id], 1);
+	const int cp_idx_cell = atomicAdd(&d_n_cell_pairs[cell1_id], 1);
 	d_cell_pairs[idx_cell_pair_head + cp_idx_cell] = 
 	  get_new_cell_pair(cell1_id, cell2_id,
 			    cell1_id_in_block,
