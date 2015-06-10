@@ -678,7 +678,8 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
   if(c1 >= D_N_CELLS){ return; }
   const int laneIdx = global_threadIdx & 31;
   //;const int n_loops = (d_idx_head_cell_pairs[c1+1] - d_idx_head_cell_pairs[c1] - d_cell_pair_removed[c1])*2;
-  const int n_loops = d_n_cell_pairs[c1];//(D_MAX_N_CELL_PAIRS_PER_CELL - d_cell_pair_removed[c1])*2;
+  const int n_loops = d_n_cell_pairs[c1]*2;//(D_MAX_N_CELL_PAIRS_PER_CELL - d_cell_pair_removed[c1])*2;
+
   const int ene_index_offset = global_threadIdx%N_MULTI_WORK;  
   
   real_fc work_c1[3] = {0.0, 0.0, 0.0};
@@ -870,27 +871,28 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
 //  kernel_set_cellinfo<<<blocks, PW_THREADS>>>(d_cell_pair_removed, n_cells);
 //  return 0;
 //}
+
+
 __global__ void kernel_reset_cellpairs(CellPair* d_cell_pairs,
-				       int* d_cell_pair_removed,
-				       //const int* d_idx_head_cell_pairs,
+				       //int* d_idx_head_cell_pairs,
+				       int* d_n_cell_pairs,
 				       const int n_cells){
   const int cell1_id = blockDim.x * blockIdx.x + threadIdx.x;
   if(cell1_id >= n_cells){ return; }
-  int n_cell2 = D_MAX_N_CELL_PAIRS_PER_CELL
-    - d_cell_pair_removed[cell1_id];  
-  for(int cell2=0; cell2<n_cell2; cell2++){
+  int n_cp1 = d_n_cell_pairs[cell1_id];
+  for(int cell2=0; cell2<n_cp1; cell2++){
     bool flg = true;
     int n_mask_int = (N_ATOM_CELL * N_ATOM_CELL + 31) / 32;
     const int cp = D_MAX_N_CELL_PAIRS_PER_CELL*cell1_id + cell2;
     for(int i=0; i < n_mask_int; i++)
       flg &= (d_cell_pairs[cp].pair_mask[i] == ~0);
     if(flg){
-      d_cell_pair_removed[cell1_id]++;
-      int cp_src = D_MAX_N_CELL_PAIRS_PER_CELL*cell1_id + --n_cell2;
+      d_n_cell_pairs[cell1_id]--;
+      int cp_src = D_MAX_N_CELL_PAIRS_PER_CELL*cell1_id + --n_cp1;
       d_cell_pairs[cp] = d_cell_pairs[cp_src];
-      cell2--;
     }
   }
+  d_n_cell_pairs[cell1_id] = n_cp1;  
 }
 
 extern "C" int cuda_pairwise_ljzd(const int offset_cellpairs, const int n_cal_cellpairs,
@@ -920,7 +922,7 @@ extern "C" int cuda_pairwise_ljzd(const int offset_cellpairs, const int n_cal_ce
   //HANDLE_ERROR(cudaMemcpy(d_realbuf, h_realbuf, sizeof(real)*4, cudaMemcpyHostToDevice));
   //
 
-  int blocks = (n_cal_cells+PW_THREADS/32-1) / (PW_THREADS/32);
+  const int blocks = (n_cal_cells+PW_THREADS/32-1) / (PW_THREADS/32);
   //printf("kernel_pairwize_ljzd %d\n", n_cal_cells);
   kernel_pairwise_ljzd<<<blocks, PW_THREADS,
     0, stream_pair_home>>>(d_crd_chg,
@@ -932,11 +934,14 @@ extern "C" int cuda_pairwise_ljzd(const int offset_cellpairs, const int n_cal_ce
 			   offset_cells, flg_mod_15mask,
 			   d_n_cell_pairs);
 
+  
   if(flg_mod_15mask){
-    kernel_reset_cellpairs<<<blocks, PW_THREADS, 0, stream_pair_home>>>(d_cell_pairs, d_cell_pair_removed,
-									//d_idx_head_cell_pairs,
-									n_cal_cells);
+    const int blocks2 = (n_cal_cells+PW_THREADS-1) / PW_THREADS;
+    kernel_reset_cellpairs<<<blocks2, PW_THREADS, 0, stream_pair_home>>>
+      (d_cell_pairs, d_n_cell_pairs, n_cal_cells);
+    //n_cal_cells);
   }
+
   //HANDLE_ERROR(cudaMemcpy(h_pairs, d_pairs, sizeof(int)*5, cudaMemcpyDeviceToHost));
   //HANDLE_ERROR(cudaMemcpy(h_realbuf, d_realbuf, sizeof(real)*4, cudaMemcpyDeviceToHost));
   //printf("n 15 pairs: nb:%d / interact:%d / all:%d / cellpairs:%d / incut:%d\n", h_pairs[0],h_pairs[1],h_pairs[2], h_pairs[3], h_pairs[4]); 
@@ -1168,7 +1173,7 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
       s_nb15off[cell1_id_in_block*N_ATOM_CELL*MAX_N_NB15OFF + i] = d_nb15off[cell1_id*N_ATOM_CELL*MAX_N_NB15OFF+i];
     }
   }
-
+  __syncthreads();
   if(neighbor_col_id >= D_N_NEIGHBOR_COL) return;
   //const int laneIdx = threadIdx.x%WARPSIZE;
   //const int warpIdx = threadIdx.x/WARPSIZE;
