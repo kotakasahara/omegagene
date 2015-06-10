@@ -1052,24 +1052,27 @@ __device__ int set_cell_pair_bitmask(const int cell_id1, const int cell_id2,
 				     const int* d_nb15off_orig,
 				     const int* d_nb15off,
 				     const int* s_nb15off,
+				     const int  n_atom_cell2,
 				     int* pair_mask){
   for(int i = 0; i < N_BITMASK; i++) pair_mask[i] = 0;
   int a1 = N_ATOM_CELL*cell_id1;
   for(int a1_cell = 0; a1_cell < N_ATOM_CELL; a1++, a1_cell++){
     bool flg1 = false;
-    if(d_atomids[a1] == -1) flg1 = true;
+    //    if(d_atomids[a1] == -1) flg1 = true;
     //if(d_nb15off[a1*D_MAX_N_NB15OFF] == a1) flg1 = true;
-    //if(s_nb15off[(cell1_id_in_block*N_ATOM_CELL+a1_cell)*D_MAX_N_NB15OFF] == a1) flg1 = true;
+    if(s_nb15off[(cell1_id_in_block*N_ATOM_CELL+a1_cell)*D_MAX_N_NB15OFF] == a1) flg1 = true;
     int a2 = N_ATOM_CELL*cell_id2;
     for(int a2_cell = 0; 
 	a2_cell < N_ATOM_CELL; a2++, a2_cell++){
+	//a2_cell < n_atom_cell2; a2++, a2_cell++){
       const int bit_pos = a2_cell * N_ATOM_CELL + a1_cell;
       const int mask_id =  bit_pos / 32;
       const int mask_pos =  bit_pos % 32;
       const int add_bit = 1 << mask_pos;
       bool flg12 = false;
       if(flg1) flg12 = true;
-      else if (d_atomids[a2] == -1) flg12=true;
+      if (a2_cell >= n_atom_cell2) flg12=true;
+      //else if (d_atomids[a2] == -1) flg12=true;
       //else if(d_nb15off[a2*D_MAX_N_NB15OFF] == a2) flg12=true;
       else if((cell_id1 == cell_id2 && a1 >= a2)) flg12=true;
       else{
@@ -1105,7 +1108,8 @@ __device__ CellPair get_new_cell_pair(const int cell1_id, const int cell2_id,
 				      const int* d_atomids,
 				      const int* d_nb15off_orig,
 				      const int* d_nb15off,
-				      const int* s_nb15off){
+				      const int* s_nb15off,
+				      const int n_atom_cell2){
   CellPair new_cp;
   new_cp.cell_id1 = cell1_id;
   new_cp.cell_id2 = cell2_id;
@@ -1123,6 +1127,7 @@ __device__ CellPair get_new_cell_pair(const int cell1_id, const int cell2_id,
 			cell1_id_in_block,
 			d_atomids,
 			d_nb15off_orig, d_nb15off, s_nb15off,
+			n_atom_cell2,
 			new_cp.pair_mask);
   return new_cp;
 }
@@ -1249,6 +1254,12 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
     
     for(int cell2_id = first_cell;
 	cell2_id <= last_cell; cell2_id++){      
+      int n_atom_cell2 = 0;
+      const int tail = (cell2_id+1) * N_ATOM_CELL;
+      for(int at2 = tail-N_ATOM_CELL; at2 < tail; at2++){
+	if(d_atomids[at2] >= 0) n_atom_cell2++;
+	else break;
+      }
       //if (cell1_id == 0){
       //printf("cell: %d-%d\n", cell1_id, cell2_id);
       //}
@@ -1262,7 +1273,7 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
 			    image,
 			    d_atomids, d_nb15off_orig,
 			    d_nb15off,
-			    s_nb15off);
+			    s_nb15off, n_atom_cell2);
 	added_col++;
 	//if (cell1_id==0){
 	//printf("nb_col:%d i_col:%d i_img:%d cp_idx:%d mask: %d %d\n",
