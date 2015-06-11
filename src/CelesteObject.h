@@ -137,7 +137,6 @@ class CelesteObject {
   static const real JOULE_CAL;
   static const real KINETIC_COEFF;
   static const real BOLTZMAN;
-
   //  static const int MAX_N_NB15OFF;
   
   template <typename TYPE> inline const TYPE& max(const TYPE& a, const TYPE& b){ return a < b ? b : a; }

@@ -14,7 +14,6 @@ using namespace std;
 #define MAX_N_CELL_UNI 10
 #define MAX_N_PAIR_Z 100
 #define COEF_MAX_N_CELL_PAIRS 1.3
-#define COEF_MAX_N_NEIGHBORS 1.5
 
 typedef struct cell_pair_info{
   int cell_id1;
@@ -189,7 +188,7 @@ class MiniCell : public CelesteObject{
   int reorder_atominfo_for_columns();
   int set_dummy_atoms();
   int reorder_atominfo_in_columns();
-  int set_n_neighbors_z_cells();
+  int reset_cell_assignment();
   int swap_atomid_crd(const int i, const int j);
   int quick_sort_in_columns(const int l, const int r);
   int debug_set_atoms_into_grid();
@@ -205,7 +204,6 @@ class MiniCell : public CelesteObject{
   real_pw get_cell_z_min(int cell_id);
   real_pw get_cell_z_max(int cell_id);
   const int* get_n_neighbors_xy(){ return (const int*)n_neighbors_xy;};
-  int get_n_neighbor_cells(){ return (n_neighbors_xy[0]*2+1) * (n_neighbors_xy[1]*2+1) * (n_neighbors_xy[2]*2+1);};
   int get_n_neighbor_cols(){ return (n_neighbors_xy[0]*2+1) * (n_neighbors_xy[1]*2+1);};
   int set_uniform_grid();
   int enumerate_cell_pairs();

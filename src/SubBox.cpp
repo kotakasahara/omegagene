@@ -76,7 +76,7 @@ extern "C" int cuda_hostalloc_atom_type_charge(int*& h_atom_type,
 extern "C" int cuda_init_cellinfo(const int n_cells);
 extern "C" int cuda_enumerate_cell_pairs(const int n_cells, const int n_uni,
 					 const int max_n_cell_pairs,
-					 const int n_neighbor_cell);
+					 const int n_neighbor_cols);
 #endif
 
 SubBox::SubBox(){
@@ -506,7 +506,7 @@ int SubBox::set_nsgrid(){
   cuda_enumerate_cell_pairs(nsgrid.get_n_cells(),
 			    nsgrid.get_n_uni(),
 			    nsgrid.get_max_n_cell_pairs(),
-			    nsgrid.get_n_neighbor_cells());
+			    nsgrid.get_n_neighbor_cols());
 
 #else
     nsgrid.enumerate_cell_pairs();
