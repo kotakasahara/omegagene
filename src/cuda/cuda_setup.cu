@@ -492,7 +492,7 @@ extern "C" int cuda_set_atominfo(const int n_atom_array,
 				 const int max_n_nb15off, const int max_n_cells){
   HANDLE_ERROR( cudaMemset(d_atomids_rev, -1, sizeof(int)*n_atom_array ));
   HANDLE_ERROR( cudaMemset(d_nb15off, -1, sizeof(int)*n_atom_array*max_n_nb15off ));
-  HANDLE_ERROR( cudaMemset(d_n_cell_pairs, -1, sizeof(int)*max_n_cells ));
+  HANDLE_ERROR( cudaMemset(d_n_cell_pairs, 0, sizeof(int)*max_n_cells ));
   HANDLE_ERROR( cudaMemset(d_cell_pair_removed, 0, sizeof(int)*max_n_cells ));
 
   int blocks1 = (n_atom_array + REORDER_THREADS-1) / REORDER_THREADS;
@@ -677,7 +677,7 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
   const int warpIdx = threadIdx.x >> 5;  
   if(c1 >= D_N_CELLS){ return; }
   const int laneIdx = global_threadIdx & 31;
-  //;const int n_loops = (d_idx_head_cell_pairs[c1+1] - d_idx_head_cell_pairs[c1] - d_cell_pair_removed[c1])*2;
+  //const int n_loops = (d_idx_head_cell_pairs[c1+1] - d_idx_head_cell_pairs[c1])*2;
   const int n_loops = d_n_cell_pairs[c1]*2;
 
   const int ene_index_offset = global_threadIdx%N_MULTI_WORK;  
@@ -922,8 +922,10 @@ __global__ void set_idx_head_cell_pairs(const int* d_n_cell_pairs,
 
     __syncthreads();
   }
-  /*
-  if(threadIdx.x == 0){
+
+  if(threadIdx.x == 0) 
+    d_idx_head_cell_pairs[D_N_CELLS] = d_idx_head_cell_pairs[D_N_CELLS-1] + d_n_cell_pairs[D_N_CELLS-1];
+    /*{
     int tmp = 0;
     for(int cell_id = 0; cell_id < D_N_CELLS; cell_id++){
       printf("idx_head: cell:%d n_cp:%d head:%d diff:%d\n",
@@ -1256,7 +1258,7 @@ __device__ CellPair get_new_cell_pair(const int cell1_id, const int cell2_id,
 
 __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
 					   const real4* d_crd_chg,
-					   const int* d_idx_xy_head_cell,
+					   //const int* d_idx_xy_head_cell,
 					   const int* d_atomids,
 					   const int* d_nb15off_orig,
 					   const int* d_nb15off,
@@ -1463,7 +1465,7 @@ extern "C" int cuda_enumerate_cell_pairs(const int n_cells, const int n_uni,
 
   const int blocks4 = (n_neighbor_col * n_cells + REORDER_THREADS-1) / REORDER_THREADS;  
   kernel_enumerate_cell_pair<<<blocks4, REORDER_THREADS,0,stream2>>>(d_uni2cell_z, d_crd_chg,
-								     d_idx_xy_head_cell,
+								     //d_idx_xy_head_cell,
 								     d_atomids, d_nb15off_orig,
 								     d_nb15off,
 								     d_n_cell_pairs,
@@ -1474,6 +1476,7 @@ extern "C" int cuda_enumerate_cell_pairs(const int n_cells, const int n_uni,
   set_idx_head_cell_pairs<<<1, REORDER_THREADS, 0, stream2>>>
     (d_n_cell_pairs, d_idx_head_cell_pairs);
   //printf("aaaa\n");
+
   pack_cellpairs_array<<<blocks3, REORDER_THREADS, 0, stream2>>>
     (d_cell_pairs, d_cell_pairs_buf, 
      d_n_cell_pairs, d_idx_head_cell_pairs);
