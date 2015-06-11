@@ -229,7 +229,7 @@ int MiniCell::set_grid_xy(){
   n_cells_xyz[1] = floor(exbox_l[1] / min_cell_width_xy);
   L_cell_xy[0] = exbox_l[0] / (real_pw)n_cells_xyz[0];
   L_cell_xy[1] = exbox_l[1] / (real_pw)n_cells_xyz[1];
-
+  L_cell_xy[2] = 0.0;
   n_columns = (n_cells_xyz[0] * n_cells_xyz[1]);
 
   // the maximum number of atoms in each column is estimated as
@@ -269,6 +269,7 @@ int MiniCell::set_atoms_into_grid_xy(){
   //   idx_atom_cell_xy
   //   n_atoms_xy
   //   idx_xy_head_atom
+  //   L_cell_xy[3]
   // reorder atomids
 
   // idx_cell_atom
@@ -722,6 +723,7 @@ int MiniCell::set_idx_xy_head_atom_from_n_atoms_xy(){
   //   n_cells
   //   cell_crd
   //   idx_crd_cell
+  //   L_cell_xy[2]
   // reorder crd, atomids
   // require
   //   n_atoms_xy
@@ -730,11 +732,13 @@ int MiniCell::set_idx_xy_head_atom_from_n_atoms_xy(){
   int atom_index=0;
   int cur_cell_id = 0;
   int n_dummies_all = 0;
+  L_cell_xy[2] = 0.0;
   //cout << "set_idx_xy_head_atom_from_n_atoms_xy" <<endl;
   for(int column_id = 0; column_id < n_columns; column_id++){
     //    cout << "column_id " << column_id << endl;
     int column_x = column_id%n_cells_xyz[0];
     int column_y = column_id/n_cells_xyz[0];
+    real_pw lower_z = exbox_lower_bound[2];
     idx_xy_head_cell[column_id] = cur_cell_id;
     idx_xy_head_atom[column_id] = atom_index;
     n_cells_z[column_id] = (n_atoms_xy[column_id] + N_ATOM_CELL - 1)/N_ATOM_CELL;
@@ -745,7 +749,10 @@ int MiniCell::set_idx_xy_head_atom_from_n_atoms_xy(){
       cell_crd[cur_cell_id][0] = column_x;
       cell_crd[cur_cell_id][1] = column_y;
       cell_crd[cur_cell_id][2] = cur_cell_z;
-      
+      const real_pw upper_z = crd[(atom_index+N_ATOM_CELL*(cur_cell_z+1)-1)*3+2];
+      const real_pw dz = upper_z - lower_z;
+      if(L_cell_xy[2] < dz) L_cell_xy[2] = dz;
+      lower_z = upper_z;
     }
     int n_dummies = n_cells_z[column_id]*N_ATOM_CELL - n_atoms_xy[column_id];
     n_dummies_all += n_dummies;
@@ -766,6 +773,9 @@ int MiniCell::set_idx_xy_head_atom_from_n_atoms_xy(){
   //for(int cell_id=0; cell_id < n_cells; cell_id++)
   //idx_cell_head_atom[cell_id] = N_ATOM_CELL*cell_id;
   //cout << "n_dummies_all: " << n_dummies_all << endl;
+
+  n_neighbors_xy[2] = ceil(cutoff_pair/L_cell_xy[2]);
+
   return 0;
 }
 

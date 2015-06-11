@@ -39,13 +39,13 @@ class MiniCell : public CelesteObject{
 
   int max_n_cells;
   // L_cell_x, L_cell_y
-  real_pw L_cell_xy[2];
-
+  real_pw L_cell_xy[3];
+  
   // n_neighbors_x, _y
   //   the number of neighboring cells in X and Y axes
   //   "neighboring" means it can be included in 
   //   the cutoff sphere
-  int n_neighbors_xy[2];
+  int n_neighbors_xy[3];
   
   // cutoff_pair
   //   cutoff length for pair interactions

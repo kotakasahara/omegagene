@@ -28,8 +28,7 @@ extern "C" int cuda_set_cell_constant(const int n_cells,
 				      const real_pw l_cell_x,
 				      const real_pw l_cell_y,
 				      const real_pw L_uni_z,
-				      const int n_neighbor_col_x,
-				      const int n_neighbor_col_y);
+				      const int* n_neighbor_col_x);
 
 extern "C" int cuda_set_constant(int n_atoms, real_pw cutoff, real_pw cutoff_pairlist, int n_atomtypes);
 extern "C" int cuda_alloc_set_lj_params(real_pw* h_lj_6term,
@@ -527,6 +526,7 @@ int SubBox::nsgrid_crd_to_gpu(){
 }
 
 int SubBox::nsgrid_update(){
+  //cout << "nsgrid_update" << endl;
   const clock_t startTimeSet = clock();
   //nsgrid.init_variables_box();
   nsgrid.set_crds_to_homebox(crd,
@@ -1765,8 +1765,7 @@ int SubBox::update_device_cell_info(){
 			 nsgrid.get_L_cell_xy()[0],
 			 nsgrid.get_L_cell_xy()[1],
 			 nsgrid.get_l_uni_z(),
-			 nsgrid.get_n_neighbors_xy()[0],
-			 nsgrid.get_n_neighbors_xy()[1]);
+			 nsgrid.get_n_neighbors_xy());
   //cuda_memcpy_htod_cell_pairs(nsgrid.get_cell_pairs(),
   //nsgrid.get_idx_head_cell_pairs(),
   //nsgrid.get_n_cell_pairs(),

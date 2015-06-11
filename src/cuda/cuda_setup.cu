@@ -193,8 +193,7 @@ extern "C" int cuda_set_cell_constant(const int  n_cells,
 				      const real_pw l_cell_x,
 				      const real_pw l_cell_y,
 				      const real_pw L_uni_z,
-				      const int n_neighbor_col_x,
-				      const int n_neighbor_col_y){
+				      const int* n_neighbor_xyz){
   HANDLE_ERROR( cudaMemcpyToSymbol(D_N_CELL_PAIRS,
 				   &n_cell_pairs,
 				   sizeof(int) ) );
@@ -228,16 +227,18 @@ extern "C" int cuda_set_cell_constant(const int  n_cells,
   HANDLE_ERROR( cudaMemcpyToSymbol(D_L_UNI_Z,
 				   &L_uni_z,
 				   sizeof(real_pw) ));
-  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_NEIGHBOR_COL_X,
-				   &n_neighbor_col_x,
-				   sizeof(int) ) );
-  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_NEIGHBOR_COL_Y,
-				   &n_neighbor_col_y,
-				   sizeof(int) ) );
-  const int n_neighbor_col = (n_neighbor_col_x*2+1) * (n_neighbor_col_y*2+1);
+  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_NEIGHBOR_XYZ,
+				   n_neighbor_xyz,
+				   sizeof(int)*3 ) );
+  const int n_neighbor_col = (n_neighbor_xyz[0]*2+1) * (n_neighbor_xyz[1]*2+1);
   HANDLE_ERROR( cudaMemcpyToSymbol(D_N_NEIGHBOR_COL,
 				   &n_neighbor_col,
 				   sizeof(int) ) );
+  const int n_neighbor_cell = n_neighbor_col * n_neighbor_xyz[2]*2+1;
+  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_NEIGHBOR_CELL,
+				   &n_neighbor_cell,
+				   sizeof(int) ) );
+  
   const int max_n_cell_pairs_per_column = max_n_cell_pairs / (n_cells * n_neighbor_col);
   HANDLE_ERROR( cudaMemcpyToSymbol(D_MAX_N_CELL_PAIRS_PER_COLUMN,
 				   &max_n_cell_pairs_per_column,
@@ -246,6 +247,8 @@ extern "C" int cuda_set_cell_constant(const int  n_cells,
   HANDLE_ERROR( cudaMemcpyToSymbol(D_MAX_N_CELL_PAIRS_PER_CELL,
 				   &max_n_cell_pairs_per_cell,
 				   sizeof(int) ) );  
+  
+
   return 0;
 }
 
@@ -1324,8 +1327,8 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
   //neighbor_col_id, D_N_NEIGHBOR_COL);
     //}
 
-  const int dx = neighbor_col_id % (D_N_NEIGHBOR_COL_X*2+1) - D_N_NEIGHBOR_COL_X;
-  const int dy = neighbor_col_id / (D_N_NEIGHBOR_COL_X*2+1) - D_N_NEIGHBOR_COL_X;
+  const int dx = neighbor_col_id % (D_N_NEIGHBOR_XYZ[0]*2+1) - D_N_NEIGHBOR_XYZ[0];
+  const int dy = neighbor_col_id / (D_N_NEIGHBOR_XYZ[0]*2+1) - D_N_NEIGHBOR_XYZ[0];
   // for x
   image[0] = 0;
   const int rel_x = cell1_x + dx;
@@ -1468,7 +1471,7 @@ extern "C" int cuda_enumerate_cell_pairs(const int n_cells, const int n_uni,
   
   set_idx_head_cell_pairs<<<1, REORDER_THREADS, 0, stream2>>>
     (d_n_cell_pairs, d_idx_head_cell_pairs);
-  printf("aaaa\n");
+  //printf("aaaa\n");
   pack_cellpairs_array<<<blocks3, REORDER_THREADS, 0, stream2>>>
     (d_cell_pairs, d_cell_pairs_buf, 
      d_n_cell_pairs, d_idx_head_cell_pairs);

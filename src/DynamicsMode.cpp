@@ -389,7 +389,7 @@ int DynamicsModePresto::calc_in_each_step(){
 #ifndef F_WO_NS
   const clock_t startTimeHtod = clock();
   if(mmsys.cur_step%cfg->nsgrid_update_intvl==0){
-    //cout << "nsgrid_update"<<endl;
+    //cout << "nsgrid_update presto"<<endl;
     subbox.nsgrid_update();
   }else{
 #if defined(F_CUDA)  
@@ -514,7 +514,9 @@ int DynamicsModeZhang::calc_in_each_step(){
     //cout << "nsgrid_update"<<endl;
     subbox.nsgrid_update();
   }else{
+#if defined(F_CUDA)  
     subbox.nsgrid_crd_to_gpu();
+#endif
   }
   const clock_t endTimeHtod = clock();
   mmsys.ctime_cuda_htod_atomids += endTimeHtod - startTimeHtod;
