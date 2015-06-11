@@ -331,6 +331,7 @@ int MiniCell::set_atoms_into_grid_xy(){
 
   //cout << "reorder_atominfo_in_columns() " <<endl;
   reorder_atominfo_in_columns();
+  set_n_neighbors_z_cells();
   set_atomids_rev();
   //cout << " // set_atomids_rev"<<endl;
   //debug_set_atoms_into_grid();
@@ -539,11 +540,23 @@ int MiniCell::reorder_atominfo_in_columns(){
       idx_atom_cell[atom_id_grid] = idx_xy_head_cell[column_id] + i / N_ATOM_CELL;
     }
   }
+  n_neighbors_xy[2] = ceil(cutoff_pair/L_cell_xy[2]);
+  //cout << "L_cell_xy[2]:" << L_cell_xy[2] << " neighbors[2]:"<<n_neighbors_xy[2]<< endl;
+
   return 0;
 }
-
-int MiniCell::reset_cell_assignment(){
-  return 0;
+int MiniCell::set_n_neighbors_z_cells(){
+  real_pw lower_z = exbox_lower_bound[2];    
+  L_cell_xy[2] = 1e10;
+  real_pw ave_n_cells = 0.0;
+  for(int column_id=0; column_id < n_columns; column_id++){  
+    ave_n_cells += n_cells_z[column_id];
+  }
+  ave_n_cells /= n_columns;
+  real_pw ave_l_cell_z = exbox_l[2] / ave_n_cells;
+  L_cell_xy[2] = ave_l_cell_z;
+  n_neighbors_xy[2] = ceil(cutoff_pair/ave_l_cell_z * COEF_MAX_N_NEIGHBORS);
+  return n_neighbors_xy[2];
 }
 int MiniCell::swap_atomid_crd(const int i, const int j){
   //  cout << "swap " << i << "-" << j << endl;
@@ -732,13 +745,13 @@ int MiniCell::set_idx_xy_head_atom_from_n_atoms_xy(){
   int atom_index=0;
   int cur_cell_id = 0;
   int n_dummies_all = 0;
-  L_cell_xy[2] = 0.0;
   //cout << "set_idx_xy_head_atom_from_n_atoms_xy" <<endl;
   for(int column_id = 0; column_id < n_columns; column_id++){
     //    cout << "column_id " << column_id << endl;
     int column_x = column_id%n_cells_xyz[0];
     int column_y = column_id/n_cells_xyz[0];
-    real_pw lower_z = exbox_lower_bound[2];
+    //real_pw lower_z = exbox_lower_bound[2];
+    //cout << "lower_z col:" << column_id << " " << lower_z <<endl;
     idx_xy_head_cell[column_id] = cur_cell_id;
     idx_xy_head_atom[column_id] = atom_index;
     n_cells_z[column_id] = (n_atoms_xy[column_id] + N_ATOM_CELL - 1)/N_ATOM_CELL;
@@ -749,10 +762,6 @@ int MiniCell::set_idx_xy_head_atom_from_n_atoms_xy(){
       cell_crd[cur_cell_id][0] = column_x;
       cell_crd[cur_cell_id][1] = column_y;
       cell_crd[cur_cell_id][2] = cur_cell_z;
-      const real_pw upper_z = crd[(atom_index+N_ATOM_CELL*(cur_cell_z+1)-1)*3+2];
-      const real_pw dz = upper_z - lower_z;
-      if(L_cell_xy[2] < dz) L_cell_xy[2] = dz;
-      lower_z = upper_z;
     }
     int n_dummies = n_cells_z[column_id]*N_ATOM_CELL - n_atoms_xy[column_id];
     n_dummies_all += n_dummies;
@@ -773,8 +782,6 @@ int MiniCell::set_idx_xy_head_atom_from_n_atoms_xy(){
   //for(int cell_id=0; cell_id < n_cells; cell_id++)
   //idx_cell_head_atom[cell_id] = N_ATOM_CELL*cell_id;
   //cout << "n_dummies_all: " << n_dummies_all << endl;
-
-  n_neighbors_xy[2] = ceil(cutoff_pair/L_cell_xy[2]);
 
   return 0;
 }
