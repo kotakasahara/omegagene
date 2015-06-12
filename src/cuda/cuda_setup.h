@@ -61,6 +61,7 @@ __constant__ int D_MAX_N_NB15OFF;
 
 __constant__ real_pw  D_CUTOFF;
 __constant__ real_pw  D_CUTOFF_PAIRLIST;
+__constant__ real_pw  D_CUTOFF_PAIRLIST_2;
 
 __constant__ real_pw  D_ZCORE;
 __constant__ real_pw  D_BCOEFF;

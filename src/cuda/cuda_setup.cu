@@ -258,6 +258,10 @@ extern "C" int cuda_set_constant(int n_atoms, real_pw cutoff,
   HANDLE_ERROR( cudaMemcpyToSymbol(D_CUTOFF_PAIRLIST,
 				   &cutoff_pairlist,
 				   sizeof(real_pw) ));
+  const real_pw cutoff_pairlist_2 = cutoff_pairlist * cutoff_pairlist;
+  HANDLE_ERROR( cudaMemcpyToSymbol(D_CUTOFF_PAIRLIST_2,
+				   &cutoff_pairlist_2,
+				   sizeof(real_pw) ));
   return 0;
 }
 
@@ -1305,10 +1309,17 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
   if(neighbor_col_id >= D_N_NEIGHBOR_COL) return;
   //const int laneIdx = threadIdx.x%WARPSIZE;
   //const int warpIdx = threadIdx.x/WARPSIZE;
+  int cell1_crd[3];
+
   const real4 crd_chg11 = d_crd_chg[cell1_id*N_ATOM_CELL];
+  cell1_crd[0] = floor((crd_chg11.x - PBC_LOWER_BOUND[0]) / D_L_CELL_XYZ[0]);
+  cell1_crd[1] = floor((crd_chg11.y - PBC_LOWER_BOUND[1]) / D_L_CELL_XYZ[1]);
+  const real_pw z_bottom1 = crd_chg11.z;
+  const real_pw z_top1 = d_crd_chg[cell1_id*N_ATOM_CELL+N_ATOM_CELL-1].z;
+
   int first_uni_z[3] = {0, 0, 0};
   int last_uni_z[3] = {0, 0, 0};
-  int tmp_first = floor((crd_chg11.z-PBC_LOWER_BOUND[2]) / D_L_UNI_Z) - 2;
+  int tmp_first = floor((z_bottom1-PBC_LOWER_BOUND[2]) / D_L_UNI_Z) - 2;
   if(tmp_first < 0){
     first_uni_z[0] = D_N_UNI_Z + tmp_first;
     last_uni_z[0] = D_N_UNI_Z -1;
@@ -1318,7 +1329,8 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
     last_uni_z[0] = -1;
   }
   first_uni_z[1] = tmp_first;
-  int tmp_last = floor((d_crd_chg[cell1_id*N_ATOM_CELL+N_ATOM_CELL-1].z - PBC_LOWER_BOUND[2])/D_L_UNI_Z) + 2;
+
+  int tmp_last = floor((z_top1 - PBC_LOWER_BOUND[2])/D_L_UNI_Z) + 2;
   if(tmp_last >= D_N_UNI_Z){
     first_uni_z[2] = 0;
     last_uni_z[2] = tmp_last - D_N_UNI_Z;
@@ -1331,19 +1343,16 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
   int image[3] = {0,0,0};
 
   const int idx_cell_pair_head = D_MAX_N_CELL_PAIRS_PER_CELL * cell1_id;
-  int dx[3];
-  dx[0] = neighbor_col_id % (D_N_NEIGHBOR_XYZ[0]*2+1) - D_N_NEIGHBOR_XYZ[0];
-  dx[1] = neighbor_col_id / (D_N_NEIGHBOR_XYZ[0]*2+1) - D_N_NEIGHBOR_XYZ[0];
-  int cell1_crd[3];
-  cell1_crd[0] = floor((crd_chg11.x - PBC_LOWER_BOUND[0]) / D_L_CELL_XYZ[0]);
-  cell1_crd[1] = floor((crd_chg11.y - PBC_LOWER_BOUND[1]) / D_L_CELL_XYZ[1]);
-
+  int d_cell[3];
+  d_cell[0] = neighbor_col_id % (D_N_NEIGHBOR_XYZ[0]*2+1) - D_N_NEIGHBOR_XYZ[0];
+  d_cell[1] = neighbor_col_id / (D_N_NEIGHBOR_XYZ[0]*2+1) - D_N_NEIGHBOR_XYZ[0];
   // for x
   int rel_x[3];
   int cell2_crd[3];
+  real_pw dx[3] = {0.0, 0.0, 0.0};
   for(int d=0; d<2; d++){
     image[d] = 0;
-    rel_x[d] = cell1_crd[d] + dx[d];
+    rel_x[d] = cell1_crd[d] + d_cell[d];
     cell2_crd[d] = rel_x[d];
     if(rel_x[d] < 0){
       image[d] = -1;
@@ -1352,6 +1361,9 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
       image[d] = 1;
       cell2_crd[d] = rel_x[d] - D_N_CELLS_XYZ[d];
     }
+    if(d_cell[d] > 1) dx[d] = (d_cell[d] - 1) * D_L_CELL_XYZ[d];
+    else if(d_cell[d] < -1) dx[d] = (d_cell[d] + 1) * D_L_CELL_XYZ[d];
+    dx[d] = dx[d]*dx[d];
   }
   
   for(int i_img = 0; i_img < 3; i_img++){
@@ -1367,6 +1379,15 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
     const int last_cell = d_uni2cell_z[last_uni_id].y;
     for(int cell2_id = first_cell;
 	cell2_id <= last_cell; cell2_id++){      
+      dx[2] = 0.0;
+      const real_pw z_bottom2 = d_crd_chg[cell2_id * N_ATOM_CELL].z + image[2] * PBC_L[2];
+      const real_pw z_top2 = d_crd_chg[cell2_id * N_ATOM_CELL + N_ATOM_CELL - 1].z + image[2] * PBC_L[2];
+      if(z_top2 < z_bottom1) dx[2] = z_bottom1 - z_top2;
+      else if(z_bottom2 > z_top1) dx[2] = z_bottom2 - z_top1;
+      dx[2] = dx[2]*dx[2];
+      if(dx[0] + dx[1] + dx[2] > D_CUTOFF_PAIRLIST_2){
+	continue;
+      }
       if(check_valid_pair(cell1_id, cell2_id)){
 	const int cp_idx_cell = atomicAdd(&d_n_cell_pairs[cell1_id], 1);
 	if(cp_idx_cell >=  D_MAX_N_CELL_PAIRS_PER_CELL){
