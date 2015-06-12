@@ -1353,19 +1353,6 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
       cell2_crd[d] = rel_x[d] - D_N_CELLS_XYZ[d];
     }
   }
-  // for y
-  /*
-  image[1] = 0;
-  rel_x[1] = cell1_crd[1] + dx[1];
-  cell2_crd[1] = rel_x[1];
-  if(rel_x[1] < 0){
-    image[1] = -1;
-    cell2_crd[1] = D_N_CELLS_XYZ[1] + rel_x[1];
-  }else if(rel_x[1] >= D_N_CELLS_XYZ[1]){
-    image[1] = 1;
-    cell2_crd[1] = rel_x[1] - D_N_CELLS_XYZ[1];
-    }*/
-  //const int head_cell_id = d_idx_xy_head_cell[get_column_id_from_crd(cell2_x, cell2_y)];
   
   for(int i_img = 0; i_img < 3; i_img++){
     image[2] = i_img-1;
@@ -1378,32 +1365,9 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
     
     const int first_cell = d_uni2cell_z[first_uni_id].x;
     const int last_cell = d_uni2cell_z[last_uni_id].y;
-    //if(first_cell > last_cell || first_cell < 0|| last_cell >= D_N_CELLS || first_cell < 0 || last_cell >= D_N_CELLS){
-    //if(cell1_id == 0){
-    //printf("DGB!! cell:%d/%d img:%d uni:%d-%d cell:%d-%d\n", 
-    //cell1_id, D_N_CELLS, 
-    //i_img,
-    //first_uni_id, last_uni_id,
-    //first_cell, last_cell);
-    //}
-    //}
-    
     for(int cell2_id = first_cell;
 	cell2_id <= last_cell; cell2_id++){      
-      /*
-      int n_atom_cell2 = 0;
-
-      const int tail = (cell2_id+1) * N_ATOM_CELL;
-      for(int at2 = tail-N_ATOM_CELL; at2 < tail; at2++){
-	if(d_atomids[at2] >= 0) n_atom_cell2++;
-	else break;
-      }
-      */
-      //if (cell1_id == 0){
-      //printf("cell: %d-%d\n", cell1_id, cell2_id);
-      //}
       if(check_valid_pair(cell1_id, cell2_id)){
-	//d_cell_pairs[idx_cell_pair_head + added_col] = 
 	const int cp_idx_cell = atomicAdd(&d_n_cell_pairs[cell1_id], 1);
 	if(cp_idx_cell >=  D_MAX_N_CELL_PAIRS_PER_CELL){
 	  printf("Index exceeds the maximum value. %d / %d\n",
@@ -1414,25 +1378,7 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
 	  get_new_cell_pair(cell1_id, cell2_id,
 			    cell1_id_in_block,
 			    image);
-			    //s_nb15off, n_atom_cell2);
-			    //d_atomids, d_nb15off_orig,
-			    //d_nb15off,
-
-	//added_col++;
-	//if (cell1_id==0){
-	//printf("nb_col:%d i_col:%d i_img:%d cp_idx:%d mask: %d %d\n",
-	//neighbor_col_id,
-	//i_col, i_img,
-	//idx_cell_pair_head + added_col-1,
-	//d_cell_pairs[idx_cell_pair_head + added_col-1].pair_mask[0],
-	//d_cell_pairs[idx_cell_pair_head + added_col-1].pair_mask[1]);
-	//}
-	
-      }//else{
-      //	  if (threadIdx.x + blockIdx.x * blockDim.x == 0){
-      //printf("pair invalid\n");
-      //}
-      //}
+      }
     }
   }
 }
