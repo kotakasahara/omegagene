@@ -389,7 +389,6 @@ int DynamicsModePresto::calc_in_each_step(){
 #ifndef F_WO_NS
   const clock_t startTimeHtod = clock();
   if(mmsys.cur_step%cfg->nsgrid_update_intvl==0){
-    //cout << "nsgrid_update"<<endl;
     subbox.nsgrid_update();
   }else{
 #if defined(F_CUDA)  
@@ -400,7 +399,6 @@ int DynamicsModePresto::calc_in_each_step(){
   mmsys.ctime_cuda_htod_atomids += endTimeHtod - startTimeHtod;
 #endif
   const clock_t startTimeEne = clock();
-  //cout << "calc_energy()" << endl;
 
   subbox.calc_energy();
   //cout << "gather_energies()"<<endl;

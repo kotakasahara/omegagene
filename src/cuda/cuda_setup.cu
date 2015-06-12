@@ -660,8 +660,7 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
 				     real_fc* d_energy, real_fc* d_work,
 				     //int* d_pairs, real_pw* d_realbuf,
 				     const int offset_cells,
-				     const bool flg_mod_15mask,
-				     const int* d_n_cell_pairs){
+				     const bool flg_mod_15mask){
   real_fc ene_vdw = 0.0;
   real_fc ene_ele = 0.0;
 
@@ -671,8 +670,8 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
   const int warpIdx = threadIdx.x >> 5;  
   if(c1 >= D_N_CELLS){ return; }
   const int laneIdx = global_threadIdx & 31;
-  //const int n_loops = (d_idx_head_cell_pairs[c1+1] - d_idx_head_cell_pairs[c1])*2;
-  const int n_loops = d_n_cell_pairs[c1]*2;
+  const int n_loops = (d_idx_head_cell_pairs[c1+1] - d_idx_head_cell_pairs[c1])*2;
+  //const int n_loops = d_n_cell_pairs[c1]*2;
 
   const int ene_index_offset = global_threadIdx%N_MULTI_WORK;  
   
@@ -703,6 +702,7 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
       if(cp >= D_MAX_N_CELL_PAIRS) break;
       cellpair = d_cell_pairs[cp];
     }
+    if(cellpair.cell_id1 != c1) break;
     //atomicAdd(&d_pairs[3],1);
     const int c2 = cellpair.cell_id2;
 
@@ -897,8 +897,8 @@ __global__ void set_idx_head_cell_pairs(const int* d_n_cell_pairs,
     if(idx_write < D_N_CELLS){
       if(idx_write > 0){
 	const int idx = ((d_n_cell_pairs[idx_write - 1] + CP_PER_THREAD-1)/ CP_PER_THREAD)*CP_PER_THREAD;
-	//d_idx_head_cell_pairs[idx_write] = d_n_cell_pairs[idx_write - 1];
 	d_idx_head_cell_pairs[idx_write] = idx;
+	//d_idx_head_cell_pairs[idx_write] = d_n_cell_pairs[idx_write - 1];
       }else{
 	d_idx_head_cell_pairs[idx_write] = 0;
       }
@@ -922,16 +922,11 @@ __global__ void set_idx_head_cell_pairs(const int* d_n_cell_pairs,
   if(threadIdx.x == 0) {
     const int idx = ((d_n_cell_pairs[D_N_CELLS-1] + CP_PER_THREAD-1)/ CP_PER_THREAD)*CP_PER_THREAD;    
     d_idx_head_cell_pairs[D_N_CELLS] = d_idx_head_cell_pairs[D_N_CELLS-1] + idx;
-    /*
-    int tmp = 0;
-    for(int cell_id = 0; cell_id < D_N_CELLS; cell_id++){
-      printf("idx_head: cell:%d n_cp:%d head:%d diff:%d\n",
-	     cell_id, d_n_cell_pairs[cell_id], d_idx_head_cell_pairs[cell_id],
-	     tmp - d_idx_head_cell_pairs[cell_id]);
-      tmp += d_n_cell_pairs[cell_id];
-    }
-    printf("D_N_CELLS : %d\n" , D_N_CELLS);
-    */
+    //d_idx_head_cell_pairs[D_N_CELLS] = d_idx_head_cell_pairs[D_N_CELLS-1] + d_n_cell_pairs[D_N_CELLS-1];
+    //for(int i=0; i <= D_N_CELLS; i++){
+    //printf("n:%d head:%d\n",
+    //d_n_cell_pairs[i] , d_idx_head_cell_pairs[i]);
+    //}
   }
   //printf("max cp: %d\n",idx_cp);
 }
@@ -1056,7 +1051,6 @@ extern "C" int cuda_pairwise_ljzd(const int offset_cellpairs, const int n_cal_ce
   //
 
   const int blocks = (n_cal_cells+PW_THREADS/32-1) / (PW_THREADS/32);
-  //printf("kernel_pairwize_ljzd %d\n", n_cal_cells);
   
   kernel_pairwise_ljzd<<<blocks, PW_THREADS,
     0, stream_pair_home>>>(d_crd_chg,
@@ -1065,8 +1059,8 @@ extern "C" int cuda_pairwise_ljzd(const int offset_cellpairs, const int n_cal_ce
 			   d_atomtype,
 			   d_lj_6term, d_lj_12term,
 			   d_energy, d_work,// d_pairs, d_realbuf,
-			   offset_cells, flg_mod_15mask,
-			   d_n_cell_pairs);
+			   offset_cells, flg_mod_15mask);
+
 
 
   if(flg_mod_15mask){
@@ -1439,8 +1433,8 @@ __global__ void set_cell_pairs_nb15off(const int* d_idx_head_cell_pairs,
   
   const int cell1_id = d_cell_pairs[cp].cell_id1;
   const int cell2_id = d_cell_pairs[cp].cell_id2;
+  if(cell1_id < 0 || cell2_id < 0) return;
   const int cell1_id_in_block = cell1_id - d_cell_pairs[cp_block_first].cell_id1;
-
   if(cell1_id_in_block >= MAX_N_CELL_BLOCK) {
     printf("The number of cells in each block exceeds the constant MAX_N_CELL_BLOCK: %d / %d\ncell: %d %d - %d cp_block_first:%d c1_in_first:%d\n",
 	   cell1_id_in_block, MAX_N_CELL_BLOCK,
@@ -1502,16 +1496,15 @@ extern "C" int cuda_enumerate_cell_pairs(const int n_cells, const int n_uni,
   set_idx_head_cell_pairs<<<1, REORDER_THREADS, 0, stream2>>>
     (d_n_cell_pairs, d_idx_head_cell_pairs);
   //n_cell_pairs = d_idx_head_cell_pairs[n_cells+1];
-  //  printf("aaa\n");
   int tmp[1];
   HANDLE_ERROR(cudaMemcpy(&n_cell_pairs,
 			  &d_idx_head_cell_pairs[n_cells],
 			  sizeof(int),
 			  cudaMemcpyDeviceToHost));
-  //printf("ccc %d\n",n_cell_pairs);
   pack_cellpairs_array<<<blocks3, REORDER_THREADS, 0, stream2>>>
     (d_cell_pairs, d_cell_pairs_buf, 
      d_n_cell_pairs, d_idx_head_cell_pairs);
+
 
   const int blocks5 = (n_cell_pairs + REORDER_THREADS - 1) / REORDER_THREADS;
   set_cell_pairs_nb15off<<<blocks5, REORDER_THREADS, 0, stream2>>>
@@ -1519,7 +1512,6 @@ extern "C" int cuda_enumerate_cell_pairs(const int n_cells, const int n_uni,
      d_nb15off, d_atomids,
      n_cell_pairs,
      d_cell_pairs);
-
 
   cudaStreamDestroy(stream1);
   cudaStreamDestroy(stream2);

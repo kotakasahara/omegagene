@@ -502,7 +502,7 @@ int SubBox::set_nsgrid(){
   update_device_cell_info();  
 
   nsgrid_crd_to_gpu();
-
+  
   cuda_enumerate_cell_pairs(nsgrid.get_n_cells(),
 			    nsgrid.get_n_uni(),
 			    nsgrid.get_n_neighbor_cols());
@@ -516,6 +516,7 @@ int SubBox::set_nsgrid(){
 int SubBox::nsgrid_crd_to_gpu(){
 #ifdef F_CUDA
   nsgrid.init_energy_work();
+  
   cuda_memcpy_htod_crd(nsgrid.get_crd(),
 		       nsgrid.get_n_atom_array());
   cuda_set_crd(nsgrid.get_n_atom_array());
