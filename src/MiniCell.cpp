@@ -250,6 +250,7 @@ int MiniCell::set_grid_xy(){
   //cout << " neighbors: " << n_neighbors_xy[0] << " - " << n_neighbors_xy[1] << endl;
   // 
   max_n_cells = n_cells_xyz[0] * n_cells_xyz[1] * n_cells_xyz[2];
+  
   max_n_cell_pairs = ((n_neighbors_xy[0]*2+1) *
 		      (n_neighbors_xy[1]*2+1) * (n_neighbors_xy[0]+n_neighbors_xy[1]+2) )
     * 0.5 * max_n_cells;

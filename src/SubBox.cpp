@@ -17,7 +17,6 @@ extern "C" int cuda_memcpy_htod_atom_info(real_pw*& h_charge_orig,
 					  int*& h_atomtype_orig,
 					  int n_atoms);
 extern "C" int cuda_set_cell_constant(const int n_cells,
-				      const int max_n_cell_pairs,
 				      const int n_cell_pairs,
 				      const int n_atom_array,
 				      const int n_cells_x,
@@ -76,7 +75,6 @@ extern "C" int cuda_hostalloc_atom_type_charge(int*& h_atom_type,
 
 extern "C" int cuda_init_cellinfo(const int n_cells);
 extern "C" int cuda_enumerate_cell_pairs(const int n_cells, const int n_uni,
-					 const int max_n_cell_pairs,
 					 const int n_neighbor_cols);
 #endif
 
@@ -500,13 +498,16 @@ int SubBox::set_nsgrid(){
 #ifdef F_CUDA
   cout << "gpu_device_setup()"<<endl;
   gpu_device_setup();
+
   cuda_memcpy_htod_atom_info(charge, atom_type,
 			     max_n_atoms_exbox);
+
   update_device_cell_info();  
+
   nsgrid_crd_to_gpu();
+
   cuda_enumerate_cell_pairs(nsgrid.get_n_cells(),
 			    nsgrid.get_n_uni(),
-			    nsgrid.get_max_n_cell_pairs(),
 			    nsgrid.get_n_neighbor_cols());
 
 #else
@@ -542,7 +543,6 @@ int SubBox::nsgrid_update(){
   nsgrid_crd_to_gpu();
   cuda_enumerate_cell_pairs(nsgrid.get_n_cells(),
 			    nsgrid.get_n_uni(),
-			    nsgrid.get_max_n_cell_pairs(),
 			    nsgrid.get_n_neighbor_cols());
 #else
   nsgrid.enumerate_cell_pairs();
@@ -1733,11 +1733,11 @@ int SubBox::gpu_device_setup(){
 			   max_n_atoms_exbox,
 			   nsgrid.get_max_n_atom_array());
 
+  
   real_pw tmp_l[3] = {(real_pw)pbc->L[0], (real_pw)pbc->L[1], (real_pw)pbc->L[2]};
   real_pw tmp_lb[3] = {(real_pw)pbc->lower_bound[0], (real_pw)pbc->lower_bound[1], (real_pw)pbc->lower_bound[2]};
   //cuda_set_pbc((const real_pw*)pbc->L);
   cuda_set_pbc(tmp_l, tmp_lb);
-  //cout << "dbg 01 : l[0] "<< pbc->L[0]<<endl;   
   cuda_set_constant(n_atoms_exbox,
 		    (real_pw)cfg->cutoff,
 		    (real_pw)cfg->nsgrid_cutoff,
@@ -1754,7 +1754,6 @@ int SubBox::update_device_cell_info(){
   //cuda_memcpy_htod_atom_info(charge, atom_type,
   //max_n_atoms_exbox);
   cuda_set_cell_constant(nsgrid.get_n_cells(),
-			 nsgrid.get_max_n_cell_pairs(),
 			 nsgrid.get_n_cell_pairs(),
 			 nsgrid.get_n_atom_array(),
 			 nsgrid.get_n_cells_x(),

@@ -113,6 +113,9 @@ int2* d_uni2cell_z;
 int* d_nb15off;
 int* d_nb15off_orig;
 
+int max_n_cell_pairs;
+int n_cell_pairs;
+
 //texture<real, 2> tex_lj_6term;
 //texture<real, 2> tex_lj_12term;
 //texture<int, 2> tex_nb15off;
