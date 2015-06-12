@@ -227,8 +227,8 @@ int MiniCell::set_grid_xy(){
   //cout << " ... " << volume << ", "  << (real)n_atoms/volume << ", " << (real)N_ATOM_CELL / ((real)(n_atoms)/pbc->cal_volume()) << endl;
   n_cells_xyz[0] = floor(exbox_l[0] / min_cell_width_xy);
   n_cells_xyz[1] = floor(exbox_l[1] / min_cell_width_xy);
-  L_cell_xy[0] = exbox_l[0] / (real_pw)n_cells_xyz[0];
-  L_cell_xy[1] = exbox_l[1] / (real_pw)n_cells_xyz[1];
+  L_cell_xyz[0] = exbox_l[0] / (real_pw)n_cells_xyz[0];
+  L_cell_xyz[1] = exbox_l[1] / (real_pw)n_cells_xyz[1];
 
   n_columns = (n_cells_xyz[0] * n_cells_xyz[1]);
 
@@ -241,18 +241,14 @@ int MiniCell::set_grid_xy(){
   //cout << "max_n_atoms_column " << max_n_atoms_column << " max_n_atoms_exbox: " << max_n_atoms_exbox << endl;
   n_cells_xyz[2] = (max_n_atoms_column-N_ATOM_CELL+1)/N_ATOM_CELL;
 
-  n_neighbors_xy[0] = ceil(cutoff_pair/L_cell_xy[0]);
-  n_neighbors_xy[1] = ceil(cutoff_pair/L_cell_xy[1]);
+  n_neighbors_xyz[0] = ceil(cutoff_pair/L_cell_xyz[0]);
+  n_neighbors_xyz[1] = ceil(cutoff_pair/L_cell_xyz[1]);
 
-  //cout << " N_columns: " << n_columns << "  max_n_atoms_column: " << max_n_atoms_column <<endl;
-  //cout << " XY grid (n_cell): " << n_cells_xyz[0] << " - " << n_cells_xyz[1]<< " - " << n_cells_xyz[2] << endl;
-  //cout << " XY grid (L_cell): " << L_cell_xy[0] << " - " << L_cell_xy[1] << endl;
-  //cout << " neighbors: " << n_neighbors_xy[0] << " - " << n_neighbors_xy[1] << endl;
-  // 
+
   max_n_cells = n_cells_xyz[0] * n_cells_xyz[1] * n_cells_xyz[2];
   
-  max_n_cell_pairs = ((n_neighbors_xy[0]*2+1) *
-		      (n_neighbors_xy[1]*2+1) * (n_neighbors_xy[0]+n_neighbors_xy[1]+2) )
+  max_n_cell_pairs = ((n_neighbors_xyz[0]*2+1) *
+		      (n_neighbors_xyz[1]*2+1) * (n_neighbors_xyz[0]+n_neighbors_xyz[1]+2) )
     * 0.5 * max_n_cells;
   //max_n_cell_pairs = max_n_cells * max_n_cells;
   //cout << "max_n_cell_pairs : " << max_n_cell_pairs << endl;
@@ -306,8 +302,7 @@ int MiniCell::set_atoms_into_grid_xy(){
       while(x < 0.0) x += exbox_l[d];
       while(x >= exbox_l[d]) x -= exbox_l[d];
 
-      cell_crd_xy[d] = floor(x / L_cell_xy[d]);
-      //crd_in_cell[atom_id_g][d] = (x - L_cell_xy[d] * cell_crd_xy[d]) / L_cell_xy[d];
+      cell_crd_xy[d] = floor(x / L_cell_xyz[d]);
     }
 
     //int column_id = cell_crd_xy[0] + cell_crd_xy[1] * n_cells_xyz[0];
@@ -878,15 +873,9 @@ int MiniCell::enumerate_cell_pairs(){
     int image[3];
     int cell2[3];
     //cout << "dbg 4" << endl;
-    for(d_cell[0] = -n_neighbors_xy[0];
-	d_cell[0] <= n_neighbors_xy[0]; d_cell[0]++){
+    for(d_cell[0] = -n_neighbors_xyz[0];
+	d_cell[0] <= n_neighbors_xyz[0]; d_cell[0]++){
       cell_rel[0] = cell1[0] + d_cell[0];
-      //cout << "dbg 5 " << d_cell[0] << endl;
-      ////  val
-      //real_pw dx = 0.0;
-      //if (d_cell[0] > 1)        dx = (d_cell[0] - 1) * L_cell_xy[0];
-      //else if (d_cell[0] < -1)  dx = (d_cell[0] + 1) * L_cell_xy[0];
-      //real_pw dx2 = dx * dx;
       image[0] = 0; cell2[0] = cell_rel[0];
       if(cell_rel[0] < 0){
 	image[0] = -1; cell2[0] = n_cells_xyz[0] + cell_rel[0];
@@ -896,15 +885,9 @@ int MiniCell::enumerate_cell_pairs(){
 
 
       ////  --val
-      for(d_cell[1] = -n_neighbors_xy[1];
-	  d_cell[1] <= n_neighbors_xy[1]; d_cell[1]++){
+      for(d_cell[1] = -n_neighbors_xyz[1];
+	  d_cell[1] <= n_neighbors_xyz[1]; d_cell[1]++){
 	cell_rel[1] = cell1[1] + d_cell[1];
-	//cout << "dbg 30 " << d_cell[1] << endl;
-	////  val
-	//real_pw dy = 0.0;
-	//if (d_cell[1] > 1)        dy = (d_cell[1] - 1) * L_cell_xy[1];
-	//else if (d_cell[1] < -1)  dy = (d_cell[1] + 1) * L_cell_xy[1];
-	//real_pw dy2 = dy * dy;
 	image[1] = 0; cell2[1] = cell_rel[1];
 	if(cell_rel[1] < 0){
 	  image[1] = -1; cell2[1] = n_cells_xyz[1] + cell_rel[1];
@@ -1134,37 +1117,6 @@ int MiniCell::set_grid_parameters(const int in_n_atoms,
   return 0;
 }
 
-/*
-real MiniCell::move_crd_in_cell(const int atomid, const int dim, const real val){
-  // atomid : atomid (original)
-  // dim : dimension (0-1 : x-y)
-  // val : distance to be moved in Angstrome
-
-  crd_in_cell[atomid][dim] += val / L_cell_xy[dim];
-  if(val /  L_cell_xy[dim] >= 1.0 ){
-    cout << "update_coordinates error: atom:" << atomid << " dim:" << dim << endl;
-    cout << val << " - " << val/L_cell_xy[dim] << " - " << L_cell_xy[dim] << endl;
-  }
-  return crd_in_cell[atomid][dim];
-}
-*/
-/*
-int MiniCell::get_ene_forces(real_fc& in_ene_vdw,
-			     real_fc& in_ene_ele,
-			     real_fc**& in_force){
-  int i_grid=0;
-  for(int i=0; i < get_n_atom_array(); i++, i_grid+=3){
-    if(atomids_buf[i] != -1){
-      in_force[atomids_buf[i]][0] += work[i_grid];
-      in_force[atomids_buf[i]][1] += work[i_grid+1];
-      in_force[atomids_buf[i]][2] += work[i_grid+2];
-    }
-  }
-  in_ene_vdw += energy[0];
-  in_ene_ele += energy[1];
-  return 0;
-}
-*/
 int MiniCell::add_work(const int atomid_grid,
 			const real_fc in_w1, const real_fc in_w2, const real_fc in_w3){
   work[atomid_grid*3] += in_w1;

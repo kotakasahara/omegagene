@@ -39,13 +39,13 @@ class MiniCell : public CelesteObject{
 
   int max_n_cells;
   // L_cell_x, L_cell_y
-  real_pw L_cell_xy[2];
+  real_pw L_cell_xyz[3];
 
   // n_neighbors_x, _y
   //   the number of neighboring cells in X and Y axes
   //   "neighboring" means it can be included in 
   //   the cutoff sphere
-  int n_neighbors_xy[2];
+  int n_neighbors_xyz[3];
   
   // cutoff_pair
   //   cutoff length for pair interactions
@@ -203,8 +203,8 @@ class MiniCell : public CelesteObject{
   // pair
   real_pw get_cell_z_min(int cell_id);
   real_pw get_cell_z_max(int cell_id);
-  const int* get_n_neighbors_xy(){ return (const int*)n_neighbors_xy;};
-  int get_n_neighbor_cols(){ return (n_neighbors_xy[0]*2+1) * (n_neighbors_xy[1]*2+1);};
+  const int* get_n_neighbors_xyz(){ return (const int*)n_neighbors_xyz;};
+  int get_n_neighbor_cols(){ return (n_neighbors_xyz[0]*2+1) * (n_neighbors_xyz[1]*2+1);};
   int set_uniform_grid();
   int enumerate_cell_pairs();
   bool check_valid_pair(const int cell1_id, const int cell2_id,
@@ -213,7 +213,7 @@ class MiniCell : public CelesteObject{
   int set_cell_pair_bitmask(const int cell_id1, const int cell_id2, int* bitmask);
 
   // getter
-  const real_pw* get_L_cell_xy() {return L_cell_xy;};
+  const real_pw* get_L_cell_xyz() {return L_cell_xyz;};
   int get_n_cell_pairs(){return n_cell_pairs; };
   const CellPair get_cell_pair(const int cpid){return cell_pairs[cpid]; };
   CellPair*& get_cell_pairs(){return cell_pairs; };
@@ -246,6 +246,7 @@ class MiniCell : public CelesteObject{
   int get_max_n_cells(){ return max_n_cells; };
   int get_max_n_cell_pairs(){ return max_n_cell_pairs; };
 
+  const int* get_n_cells_xyz(){ return (const int*)n_cells_xyz; };
   int get_n_cells_x(){ return n_cells_xyz[0]; };
   int get_n_cells_y(){ return n_cells_xyz[1]; };
   int get_n_columns(){ return n_columns; };

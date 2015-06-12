@@ -185,16 +185,14 @@ extern "C" int cuda_zerodipole_constant(real_pw zcore,
 extern "C" int cuda_set_cell_constant(const int  n_cells,
 				      const int  n_cell_pairs,
 				      const int  n_atom_array,
-				      const int  n_cells_x,
-				      const int  n_cells_y,
+				      const int*  n_cells_xyz,
 				      const int  n_columns,
 				      const int  n_uni,
 				      const int  n_uni_z,
-				      const real_pw l_cell_x,
-				      const real_pw l_cell_y,
+				      const real_pw* l_cell_xyz,
 				      const real_pw L_uni_z,
-				      const int n_neighbor_col_x,
-				      const int n_neighbor_col_y){
+				      const int* n_neighbor_xyz){
+
   HANDLE_ERROR( cudaMemcpyToSymbol(D_N_CELL_PAIRS,
 				   &n_cell_pairs,
 				   sizeof(int) ) );
@@ -204,12 +202,9 @@ extern "C" int cuda_set_cell_constant(const int  n_cells,
   HANDLE_ERROR( cudaMemcpyToSymbol(D_N_ATOM_ARRAY,
 				   &n_atom_array,
 				   sizeof(int) ) );
-  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_CELLS_X,
-				   &n_cells_x,
-				   sizeof(int) ) );
-  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_CELLS_Y,
-				   &n_cells_y,
-				   sizeof(int) ) );
+  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_CELLS_XYZ,
+				   n_cells_xyz,
+				   sizeof(int)*3 ) );
   HANDLE_ERROR( cudaMemcpyToSymbol(D_N_COLUMNS,
 				   &n_columns,
 				   sizeof(int) ) );
@@ -219,22 +214,16 @@ extern "C" int cuda_set_cell_constant(const int  n_cells,
   HANDLE_ERROR( cudaMemcpyToSymbol(D_N_UNI_Z,
 				   &n_uni_z,
 				   sizeof(int) ) );
-  HANDLE_ERROR( cudaMemcpyToSymbol(D_L_CELL_X,
-				   &l_cell_x,
-				   sizeof(real_pw) ) );
-  HANDLE_ERROR( cudaMemcpyToSymbol(D_L_CELL_Y,
-				   &l_cell_y,
-				   sizeof(real_pw) ) );
+  HANDLE_ERROR( cudaMemcpyToSymbol(D_L_CELL_XYZ,
+				   l_cell_xyz,
+				   sizeof(real_pw)*3 ) );
   HANDLE_ERROR( cudaMemcpyToSymbol(D_L_UNI_Z,
 				   &L_uni_z,
 				   sizeof(real_pw) ));
-  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_NEIGHBOR_COL_X,
-				   &n_neighbor_col_x,
-				   sizeof(int) ) );
-  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_NEIGHBOR_COL_Y,
-				   &n_neighbor_col_y,
-				   sizeof(int) ) );
-  const int n_neighbor_col = (n_neighbor_col_x*2+1) * (n_neighbor_col_y*2+1);
+  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_NEIGHBOR_XYZ,
+				   n_neighbor_xyz,
+				   sizeof(int)*3 ) );
+  const int n_neighbor_col = (n_neighbor_xyz[0]*2+1) * (n_neighbor_xyz[1]*2+1);
   HANDLE_ERROR( cudaMemcpyToSymbol(D_N_NEIGHBOR_COL,
 				   &n_neighbor_col,
 				   sizeof(int) ) );
@@ -1136,10 +1125,10 @@ extern "C" int cuda_reset_work_ene(int n_atoms){
   return 0;
 }
 __device__ int get_column_id_from_crd(const int x, const int y){
-  return y*D_N_CELLS_X + x;
+  return y*D_N_CELLS_XYZ[0] + x;
 }
 __device__ int get_uni_id_from_crd(const int x, const int y, const int z){
-  return x * D_N_UNI_Z + y * (D_N_UNI_Z * D_N_CELLS_X) + z;  
+  return x * D_N_UNI_Z + y * (D_N_UNI_Z * D_N_CELLS_XYZ[0]) + z;  
 }
 __global__ void kernel_set_uniform_grid(const real4* d_crd_chg,
 					int2* d_uni2cell_z
@@ -1151,8 +1140,8 @@ __global__ void kernel_set_uniform_grid(const real4* d_crd_chg,
   const int warpIdx = threadIdx.x/WARPSIZE;
 
   const real4 crd_chg = d_crd_chg[cell_id * N_ATOM_CELL];
-  const int col_x = floor((crd_chg.x-PBC_LOWER_BOUND[0]) / D_L_CELL_X);
-  const int col_y = floor((crd_chg.y-PBC_LOWER_BOUND[1]) / D_L_CELL_Y);
+  const int col_x = floor((crd_chg.x-PBC_LOWER_BOUND[0]) / D_L_CELL_XYZ[0]);
+  const int col_y = floor((crd_chg.y-PBC_LOWER_BOUND[1]) / D_L_CELL_XYZ[1]);
 
   const int uni_z_min = (int)((d_crd_chg[cell_id*N_ATOM_CELL].z-PBC_LOWER_BOUND[2]) / D_L_UNI_Z);
   //const int uni_id_min = get_uni_id_from_crd(col_x, col_y, uni_z_min);
@@ -1166,8 +1155,8 @@ __global__ void kernel_set_uniform_grid(const real4* d_crd_chg,
 	     cell_id, D_N_CELLS,
 	     uni_z_min, uni_z_max,
 	     uni_id, D_N_UNI,
-	     col_x, D_N_CELLS_X,
-	     col_y, D_N_CELLS_Y,
+	     col_x, D_N_CELLS_XYZ[0],
+	     col_y, D_N_CELLS_XYZ[1],
 	     z, D_N_UNI_Z,
 	     crd_chg.x-PBC_LOWER_BOUND[0],PBC_L[0],
 	     crd_chg.y-PBC_LOWER_BOUND[1],PBC_L[1],
@@ -1343,11 +1332,11 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
 
   const int idx_cell_pair_head = D_MAX_N_CELL_PAIRS_PER_CELL * cell1_id;
   int dx[3];
-  dx[0] = neighbor_col_id % (D_N_NEIGHBOR_COL_X*2+1) - D_N_NEIGHBOR_COL_X;
-  dx[1] = neighbor_col_id / (D_N_NEIGHBOR_COL_X*2+1) - D_N_NEIGHBOR_COL_X;
+  dx[0] = neighbor_col_id % (D_N_NEIGHBOR_XYZ[0]*2+1) - D_N_NEIGHBOR_XYZ[0];
+  dx[1] = neighbor_col_id / (D_N_NEIGHBOR_XYZ[0]*2+1) - D_N_NEIGHBOR_XYZ[0];
   int cell1_crd[3];
-  cell1_crd[0] = floor((crd_chg11.x - PBC_LOWER_BOUND[0]) / D_L_CELL_X);
-  cell1_crd[1] = floor((crd_chg11.y - PBC_LOWER_BOUND[1]) / D_L_CELL_Y);
+  cell1_crd[0] = floor((crd_chg11.x - PBC_LOWER_BOUND[0]) / D_L_CELL_XYZ[0]);
+  cell1_crd[1] = floor((crd_chg11.y - PBC_LOWER_BOUND[1]) / D_L_CELL_XYZ[1]);
   // for x
   image[0] = 0;
   int rel_x[3];
@@ -1356,10 +1345,10 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
   cell2_crd[0] = rel_x[0];
   if(rel_x[0] < 0){
     image[0] = -1;
-    cell2_crd[0] = D_N_CELLS_X + rel_x[0];
-  }else if(rel_x[0] >= D_N_CELLS_X){
+    cell2_crd[0] = D_N_CELLS_XYZ[0] + rel_x[0];
+  }else if(rel_x[0] >= D_N_CELLS_XYZ[0]){
     image[0] = 1;
-    cell2_crd[0] = rel_x[0] - D_N_CELLS_X;
+    cell2_crd[0] = rel_x[0] - D_N_CELLS_XYZ[0];
   }
   // for y
   image[1] = 0;
@@ -1367,10 +1356,10 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
   cell2_crd[1] = rel_x[1];
   if(rel_x[1] < 0){
     image[1] = -1;
-    cell2_crd[1] = D_N_CELLS_Y + rel_x[1];
-  }else if(rel_x[1] >= D_N_CELLS_Y){
+    cell2_crd[1] = D_N_CELLS_XYZ[1] + rel_x[1];
+  }else if(rel_x[1] >= D_N_CELLS_XYZ[1]){
     image[1] = 1;
-    cell2_crd[1] = rel_x[1] - D_N_CELLS_Y;
+    cell2_crd[1] = rel_x[1] - D_N_CELLS_XYZ[1];
   }
   //const int head_cell_id = d_idx_xy_head_cell[get_column_id_from_crd(cell2_x, cell2_y)];
   
