@@ -1337,20 +1337,24 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
   int cell1_crd[3];
   cell1_crd[0] = floor((crd_chg11.x - PBC_LOWER_BOUND[0]) / D_L_CELL_XYZ[0]);
   cell1_crd[1] = floor((crd_chg11.y - PBC_LOWER_BOUND[1]) / D_L_CELL_XYZ[1]);
+
   // for x
-  image[0] = 0;
   int rel_x[3];
-  rel_x[0] = cell1_crd[0] + dx[0];
   int cell2_crd[3];
-  cell2_crd[0] = rel_x[0];
-  if(rel_x[0] < 0){
-    image[0] = -1;
-    cell2_crd[0] = D_N_CELLS_XYZ[0] + rel_x[0];
-  }else if(rel_x[0] >= D_N_CELLS_XYZ[0]){
-    image[0] = 1;
-    cell2_crd[0] = rel_x[0] - D_N_CELLS_XYZ[0];
+  for(int d=0; d<2; d++){
+    image[d] = 0;
+    rel_x[d] = cell1_crd[d] + dx[d];
+    cell2_crd[d] = rel_x[d];
+    if(rel_x[d] < 0){
+      image[d] = -1;
+      cell2_crd[d] = D_N_CELLS_XYZ[d] + rel_x[d];
+    }else if(rel_x[d] >= D_N_CELLS_XYZ[d]){
+      image[d] = 1;
+      cell2_crd[d] = rel_x[d] - D_N_CELLS_XYZ[d];
+    }
   }
   // for y
+  /*
   image[1] = 0;
   rel_x[1] = cell1_crd[1] + dx[1];
   cell2_crd[1] = rel_x[1];
@@ -1360,7 +1364,7 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
   }else if(rel_x[1] >= D_N_CELLS_XYZ[1]){
     image[1] = 1;
     cell2_crd[1] = rel_x[1] - D_N_CELLS_XYZ[1];
-  }
+    }*/
   //const int head_cell_id = d_idx_xy_head_cell[get_column_id_from_crd(cell2_x, cell2_y)];
   
   for(int i_img = 0; i_img < 3; i_img++){
