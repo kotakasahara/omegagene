@@ -896,7 +896,9 @@ __global__ void set_idx_head_cell_pairs(const int* d_n_cell_pairs,
     const int idx_write = idx_head + threadIdx.x ;
     if(idx_write < D_N_CELLS){
       if(idx_write > 0){
-	d_idx_head_cell_pairs[idx_write] = d_n_cell_pairs[idx_write - 1];
+	const int idx = ((d_n_cell_pairs[idx_write - 1] + CP_PER_THREAD-1)/ CP_PER_THREAD)*CP_PER_THREAD;
+	//d_idx_head_cell_pairs[idx_write] = d_n_cell_pairs[idx_write - 1];
+	d_idx_head_cell_pairs[idx_write] = idx;
       }else{
 	d_idx_head_cell_pairs[idx_write] = 0;
       }
@@ -918,7 +920,8 @@ __global__ void set_idx_head_cell_pairs(const int* d_n_cell_pairs,
   }
 
   if(threadIdx.x == 0) {
-    d_idx_head_cell_pairs[D_N_CELLS] = d_idx_head_cell_pairs[D_N_CELLS-1] + d_n_cell_pairs[D_N_CELLS-1];
+    const int idx = ((d_n_cell_pairs[D_N_CELLS-1] + CP_PER_THREAD-1)/ CP_PER_THREAD)*CP_PER_THREAD;    
+    d_idx_head_cell_pairs[D_N_CELLS] = d_idx_head_cell_pairs[D_N_CELLS-1] + idx;
     /*
     int tmp = 0;
     for(int cell_id = 0; cell_id < D_N_CELLS; cell_id++){
