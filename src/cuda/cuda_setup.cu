@@ -1586,11 +1586,14 @@ extern "C" int cuda_enumerate_cell_pairs(const int n_cells, const int n_uni,
   cudaStream_t stream2;
   cudaStreamCreate(&stream1);
   cudaStreamCreate(&stream2);
-
+  /*
   const int blocks1 = (n_uni + REORDER_THREADS-1) / REORDER_THREADS;  
   kernel_init_uni2cell<<<blocks1, REORDER_THREADS, 0, stream1>>>(n_uni, d_uni2cell_z);
   const int blocks2 = (n_cells + REORDER_THREADS-1) / REORDER_THREADS;  
   kernel_set_uniform_grid<<<blocks2, REORDER_THREADS, 0, stream1>>>(d_crd_chg, d_uni2cell_z);
+  */
+  HANDLE_ERROR( cudaMemset(d_cell_pairs, -1, sizeof(MiniCell)*D_MAX_N_CELL_PAIRS));
+  HANDLE_ERROR( cudaMemset(d_cell_pairs_buf, -1, sizeof(MiniCell)*D_MAX_N_CELL_PAIRS));
   const int blocks3 = (max_n_cell_pairs + REORDER_THREADS-1) / REORDER_THREADS;  
   kernel_init_cell_pairs<<<blocks3, REORDER_THREADS, 0, stream2>>>(d_cell_pairs,
 								   d_cell_pairs_buf);
