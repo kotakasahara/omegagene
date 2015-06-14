@@ -8,6 +8,7 @@
 #include "../MiniCell.h"
 
 #define real4 float4
+#define real2 float2
 #define real_fc3 double3
 
 #ifdef  THREADS128
@@ -70,7 +71,7 @@ __constant__ real_pw  D_FCOEFF;
 // x,y,z: Cartesian coordinate,
 // w: charge
 real4* d_crd_chg;
-
+real2* d_cell_z;
 real_pw* d_crd;
 
 CellPair* d_cell_pairs;

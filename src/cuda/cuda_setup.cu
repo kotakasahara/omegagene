@@ -29,6 +29,8 @@ extern "C" int cuda_alloc_atom_info(int in_max_n_atoms,
   // max_n_atoms ... maximum number of atoms for each grid cell
   HANDLE_ERROR( cudaMalloc((void**)&d_crd_chg,
 			   in_max_n_atom_array * sizeof(real4)) );
+  HANDLE_ERROR( cudaMalloc((void**)&d_cell_z,
+			   in_max_n_cells * sizeof(real2)) );
   HANDLE_ERROR( cudaMalloc((void**)&d_crd,
 			   in_max_n_atom_array * 3 * sizeof(real_pw)) );
   HANDLE_ERROR( cudaMalloc((void**)&d_charge_orig,
@@ -75,6 +77,7 @@ extern "C" int cuda_alloc_atom_info(int in_max_n_atoms,
 extern "C" int cuda_free_atom_info(){
   //printf("cuda_free_device_atom_info\n");
   HANDLE_ERROR( cudaFree(d_crd_chg) );
+  HANDLE_ERROR( cudaFree(d_cell_z) );
   HANDLE_ERROR( cudaFree(d_crd) );
   HANDLE_ERROR( cudaFree(d_atomids) );
   HANDLE_ERROR( cudaFree(d_atomids_rev) );
@@ -457,12 +460,19 @@ __global__ void kernel_set_atominfo(const int* d_atomids,
 }
 __global__ void kernel_set_crd(const int* d_atomids,
 			       const real_pw* d_crd,
-			       real4* d_crd_chg){
+			       real4* d_crd_chg,
+			       real2* d_cell_z){
   int atomid = threadIdx.x + blockIdx.x * blockDim.x;
   if(atomid < D_N_ATOM_ARRAY){
-    d_crd_chg[atomid].x = d_crd[atomid*3+0];
-    d_crd_chg[atomid].y = d_crd[atomid*3+1];
-    d_crd_chg[atomid].z = d_crd[atomid*3+2];
+    int at_idx = atomid*3;
+    d_crd_chg[atomid].x = d_crd[at_idx];
+    d_crd_chg[atomid].y = d_crd[at_idx+1];
+    d_crd_chg[atomid].z = d_crd[at_idx+2];
+    if(atomid % N_ATOM_CELL == 0){
+      d_cell_z[atomid/N_ATOM_CELL].x = d_crd[at_idx+2];
+    }else if(atomid % N_ATOM_CELL == N_ATOM_CELL-1){
+      d_cell_z[atomid/N_ATOM_CELL].y = d_crd[at_idx+2];
+    }
     /*if(d_crd_chg[atomid].x <= PBC_LOWER_BOUND[0] ||
        d_crd_chg[atomid].x > PBC_L[0]+  PBC_LOWER_BOUND[0] ||
        d_crd_chg[atomid].y <= PBC_LOWER_BOUND[1] ||
@@ -507,7 +517,8 @@ extern "C" int cuda_set_crd(int n_atom_array){
   int blocks = (n_atom_array + REORDER_THREADS-1) / REORDER_THREADS;
   kernel_set_crd<<<blocks, REORDER_THREADS>>>(d_atomids,
 					      d_crd,
-					      d_crd_chg);
+					      d_crd_chg,
+					      d_cell_z);
   return 0;
 }
 
@@ -1274,7 +1285,8 @@ __device__ CellPair get_new_cell_pair(const int cell1_id, const int cell2_id,
 
 __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
 					   const real4* d_crd_chg,
-					   //const int* d_idx_xy_head_cell,
+					   const real2* d_cell_z,
+					   const int* d_idx_xy_head_cell,
 					   const int* d_atomids,
 					   const int* d_nb15off_orig,
 					   const int* d_nb15off,
@@ -1303,7 +1315,7 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
   __syncthreads();
   */
 
-  if(neighbor_col_id >= D_N_NEIGHBOR_COL) return;
+  //if(neighbor_col_id >= D_N_NEIGHBOR_COL) return;
   //const int laneIdx = threadIdx.x%WARPSIZE;
   //const int warpIdx = threadIdx.x/WARPSIZE;
   int cell1_crd[3];
@@ -1311,9 +1323,12 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
   const real4 crd_chg11 = d_crd_chg[cell1_id*N_ATOM_CELL];
   cell1_crd[0] = floor((crd_chg11.x - PBC_LOWER_BOUND[0]) / D_L_CELL_XYZ[0]);
   cell1_crd[1] = floor((crd_chg11.y - PBC_LOWER_BOUND[1]) / D_L_CELL_XYZ[1]);
-  const real_pw z_bottom1 = crd_chg11.z;
-  const real_pw z_top1 = d_crd_chg[cell1_id*N_ATOM_CELL+N_ATOM_CELL-1].z;
-
+  const int col1_id = cell1_crd[0] + cell1_crd[1] * D_N_CELLS_XYZ[0];
+  cell1_crd[2] = cell1_id - d_idx_xy_head_cell[col1_id];
+    //g_thread_id - d_idx_xy_head_cell[cell1_id];
+  const real_pw cell1_z_bottom = crd_chg11.z;
+  const real_pw cell1_z_top = d_cell_z[cell1_id].y;
+  /*
   int first_uni_z[3] = {0, 0, 0};
   int last_uni_z[3] = {0, 0, 0};
   int tmp_first = floor((z_bottom1-PBC_LOWER_BOUND[2]) / D_L_UNI_Z) - 2;
@@ -1337,13 +1352,15 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
     last_uni_z[2] = -1;
     last_uni_z[1] = tmp_last;
   }
+  */
   int image[3] = {0,0,0};
+
 
   const int idx_cell_pair_head = D_MAX_N_CELL_PAIRS_PER_CELL * cell1_id;
   int d_cell[3];
   d_cell[0] = neighbor_col_id % (D_N_NEIGHBOR_XYZ[0]*2+1) - D_N_NEIGHBOR_XYZ[0];
   d_cell[1] = neighbor_col_id / (D_N_NEIGHBOR_XYZ[0]*2+1) - D_N_NEIGHBOR_XYZ[0];
-  // for x
+
   int rel_x[3];
   int cell2_crd[3];
   real_pw dx[3] = {0.0, 0.0, 0.0};
@@ -1358,11 +1375,105 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
       image[d] = 1;
       cell2_crd[d] = rel_x[d] - D_N_CELLS_XYZ[d];
     }
-    if(d_cell[d] > 1) dx[d] = (d_cell[d] - 1) * D_L_CELL_XYZ[d];
-    else if(d_cell[d] < -1) dx[d] = (d_cell[d] + 1) * D_L_CELL_XYZ[d];
+    if(d_cell[d] > 0) dx[d] = (d_cell[d] - 1) * D_L_CELL_XYZ[d];
+    else if(d_cell[d] < 0) dx[d] = (d_cell[d] + 1) * D_L_CELL_XYZ[d];
     dx[d] = dx[d]*dx[d];
   }
-  
+
+  /*  20150612-- */
+  const int col2_id = cell2_crd[0] + cell2_crd[1] * D_N_CELLS_XYZ[0];
+  const int n_cells_in_col2 = d_idx_xy_head_cell[col2_id+1] -
+    d_idx_xy_head_cell[col2_id];
+  int inc=1;
+  bool flg_up=true;
+  bool flg_down=true;
+
+  for(d_cell[2] = 0; flg_up || flg_down;
+      d_cell[2]+=inc){
+    rel_x[2] = cell1_crd[2] + d_cell[2];
+    image[2] = 0;
+    cell2_crd[2] = rel_x[2];
+    if(rel_x[2] < 0){
+      image[2] = -1;
+      cell2_crd[2] += n_cells_in_col2;
+    }else if(rel_x[2] >= n_cells_in_col2){
+      image[2] = 1;
+      cell2_crd[2] -= n_cells_in_col2;
+    }
+
+    const int cell2_id = d_idx_xy_head_cell[col2_id] + cell2_crd[2];
+
+    /*
+    if(cell2_id >= D_N_CELLS){
+      printf("Error! t:%d d_c2: %d cell: %d, %d / %d , col2: %d , nz_col2: %d head: %d crd.z: %d %d\n",
+	     g_thread_id, d_cell[2], cell1_id, cell2_id , D_N_CELLS,
+	     col2_id, n_cells_in_col2, d_idx_xy_head_cell[col2_id], cell1_crd[2], cell2_crd[2]);
+    }
+    flg_up = false;
+    flg_down = false;
+    */
+
+    const real_pw cell2_z_bottom = d_cell_z[cell2_id].x + image[2] * PBC_L[2];
+    const real_pw cell2_z_top = d_cell_z[cell2_id].y + image[2] * PBC_L[2];
+    /*
+    if(g_thread_id==0){
+      printf("loop: d_cell[2]:%d cell2_id:%d \n",//z_bt:%f z_tp:%f\n",
+	     d_cell[2],
+	     cell2_id);//, cell2_z_bottom, cell2_z_top);
+    }
+    */
+
+
+    if(cell2_z_top < cell1_z_bottom){
+      dx[2] = cell1_z_bottom - cell2_z_top;
+      dx[2] = dx[2] * dx[2];
+      if(inc == -1 && dx[0]+dx[1]+dx[2] > D_CUTOFF_PAIRLIST_2){
+	flg_down = false;
+      }
+    }else if(cell2_z_bottom > cell1_z_top){
+      dx[2] = cell2_z_bottom - cell1_z_top;
+      dx[2] = dx[2] * dx[2];
+      if(inc == 1 && dx[0]+dx[1]+dx[2] > D_CUTOFF_PAIRLIST_2){
+	d_cell[2] = 0;	
+	inc = -1;
+	flg_up = false;
+      }
+    }else{
+      dx[2] = 0.0;
+    }
+    //if(d_cell[2] < -10)flg_down=false;
+    /*if(g_thread_id==0){
+      printf("d_cell2:%d d: %f %f %f : %f - %f cell1:%f - %f cell2:%f - %f\n",
+	     d_cell[2], dx[0], dx[1], dx[2],
+	     dx[0]+dx[1]+dx[2], D_CUTOFF_PAIRLIST_2,
+	     cell1_z_top, cell1_z_bottom,
+	     cell2_z_top, cell2_z_bottom
+	     );
+	     }*/
+    /*    if(d_cell[2] > 100){
+    flg_down=false;    flg_up=false;
+    }*/
+
+    if(dx[0]+dx[1]+dx[2] < D_CUTOFF_PAIRLIST_2){
+
+      if(check_valid_pair(cell1_id, cell2_id)){
+	const int cp_idx_cell = atomicAdd(&d_n_cell_pairs[cell1_id], 1);
+	if(cp_idx_cell >=  D_MAX_N_CELL_PAIRS_PER_CELL){
+	  printf("Index exceeds the maximum value. %d / %d\n",
+		 cp_idx_cell, D_MAX_N_CELL_PAIRS_PER_CELL);
+	}
+	
+	d_cell_pairs[idx_cell_pair_head + cp_idx_cell] = 
+	  get_new_cell_pair(cell1_id, cell2_id,
+			    cell1_id_in_block,
+			    image);
+      
+      }
+    }
+
+
+  }
+  /*
   for(int i_img = 0; i_img < 3; i_img++){
     image[2] = i_img-1;
     if(first_uni_z[i_img] < 0) continue;
@@ -1397,8 +1508,8 @@ __global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
 			    cell1_id_in_block,
 			    image);
       }
-    }
-  }
+      }
+      }*/
 }
 
 
@@ -1485,8 +1596,8 @@ extern "C" int cuda_enumerate_cell_pairs(const int n_cells, const int n_uni,
 								   d_cell_pairs_buf);
 
   const int blocks4 = (n_neighbor_col * n_cells + REORDER_THREADS-1) / REORDER_THREADS; //  printf("bbb %d\n", max_n_cell_pairs); 
-  kernel_enumerate_cell_pair<<<blocks4, REORDER_THREADS,0,stream2>>>(d_uni2cell_z, d_crd_chg,
-								     //d_idx_xy_head_cell,
+  kernel_enumerate_cell_pair<<<blocks4, REORDER_THREADS,0,stream2>>>(d_uni2cell_z, d_crd_chg, d_cell_z,
+								     d_idx_xy_head_cell,
 								     d_atomids, d_nb15off_orig,
 								     d_nb15off,
 								     d_n_cell_pairs,
