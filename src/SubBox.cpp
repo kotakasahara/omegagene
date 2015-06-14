@@ -6,8 +6,8 @@ extern "C" int cuda_alloc_atom_info(int n_atoms,
 				    int n_atom_array,
 				    int max_n_cells,
 				    int max_n_cell_pairs,
-				    int n_columns,
-				    int n_uni);
+				    int n_columns);
+
 extern "C" int cuda_free_atom_info();
 //extern "C" int cuda_memcpy_htod_cell_pairs(CellPair*& h_cell_pairs,
 //int*& h_idx_head_cell_pairs,
@@ -21,10 +21,10 @@ extern "C" int cuda_set_cell_constant(const int  n_cells,
 				      const int  n_atom_array,
 				      const int*  n_cells_xyz,
 				      const int  n_columns,
-				      const int  n_uni,
-				      const int  n_uni_z,
+				      //const int  n_uni,
+				      //const int  n_uni_z,
 				      const real_pw* l_cell_xyz,
-				      const real_pw L_uni_z,
+				      //const real_pw L_uni_z,
 				      const int* n_neighbor_xyz);
 
 extern "C" int cuda_set_constant(int n_atoms, real_pw cutoff, real_pw cutoff_pairlist, int n_atomtypes);
@@ -1720,8 +1720,8 @@ int SubBox::gpu_device_setup(){
 		       nsgrid.get_max_n_atom_array(),
 		       nsgrid.get_max_n_cells(),
 		       nsgrid.get_max_n_cell_pairs(),
-		       nsgrid.get_n_columns()+1,
-		       nsgrid.get_n_uni());
+		       nsgrid.get_n_columns()+1);
+		       //     nsgrid.get_n_uni());
 
   cuda_alloc_set_lj_params(lj_6term,
 			   lj_12term,
@@ -1756,10 +1756,10 @@ int SubBox::update_device_cell_info(){
 			 nsgrid.get_n_atom_array(),
 			 nsgrid.get_n_cells_xyz(),
 			 nsgrid.get_n_columns(),
-			 nsgrid.get_n_uni(),
-			 nsgrid.get_n_uni_z(),
+			 //nsgrid.get_n_uni(),
+			 //nsgrid.get_n_uni_z(),
 			 nsgrid.get_L_cell_xyz(),
-			 nsgrid.get_l_uni_z(),
+			 //nsgrid.get_l_uni_z(),
 			 nsgrid.get_n_neighbors_xyz());
   //cuda_memcpy_htod_cell_pairs(nsgrid.get_cell_pairs(),
   //nsgrid.get_idx_head_cell_pairs(),

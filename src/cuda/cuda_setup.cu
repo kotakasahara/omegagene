@@ -23,8 +23,8 @@ extern "C" int cuda_alloc_atom_info(int in_max_n_atoms,
 				    int in_max_n_atom_array,
 				    int in_max_n_cells,
 				    int in_max_n_cell_pairs,
-				    int in_n_columns,
-				    int in_n_uni){
+				    int in_n_columns){
+				    //int in_n_uni){
   printf("cuda_alloc_atom_info\n");
   // max_n_atoms ... maximum number of atoms for each grid cell
   HANDLE_ERROR( cudaMalloc((void**)&d_crd_chg,
@@ -61,8 +61,8 @@ extern "C" int cuda_alloc_atom_info(int in_max_n_atoms,
 			   N_MULTI_WORK * in_max_n_atom_array * 3 * sizeof(real_fc) ) );
   HANDLE_ERROR( cudaMalloc((void**)&d_idx_xy_head_cell,
 			   in_n_columns * sizeof(int) ) );
-  HANDLE_ERROR( cudaMalloc((void**)&d_uni2cell_z,
-			   in_n_uni * sizeof(int2) ) );
+  //HANDLE_ERROR( cudaMalloc((void**)&d_uni2cell_z,
+  //in_n_uni * sizeof(int2) ) );
 
   HANDLE_ERROR( cudaMemcpyToSymbol(D_MAX_N_CELL_PAIRS,
 				   &in_max_n_cell_pairs,
@@ -92,7 +92,7 @@ extern "C" int cuda_free_atom_info(){
   HANDLE_ERROR( cudaFree(d_energy) );
   HANDLE_ERROR( cudaFree(d_work) );
   HANDLE_ERROR( cudaFree(d_idx_xy_head_cell));
-  HANDLE_ERROR( cudaFree(d_uni2cell_z));
+  //HANDLE_ERROR( cudaFree(d_uni2cell_z));
   //HANDLE_ERROR( cudaFree(d_work_orig) );
   return 0;
 }
@@ -190,10 +190,10 @@ extern "C" int cuda_set_cell_constant(const int  n_cells,
 				      const int  n_atom_array,
 				      const int*  n_cells_xyz,
 				      const int  n_columns,
-				      const int  n_uni,
-				      const int  n_uni_z,
+				      //const int  n_uni,
+				      //const int  n_uni_z,
 				      const real_pw* l_cell_xyz,
-				      const real_pw L_uni_z,
+				      //const real_pw L_uni_z,
 				      const int* n_neighbor_xyz){
 
   HANDLE_ERROR( cudaMemcpyToSymbol(D_N_CELL_PAIRS,
@@ -211,18 +211,18 @@ extern "C" int cuda_set_cell_constant(const int  n_cells,
   HANDLE_ERROR( cudaMemcpyToSymbol(D_N_COLUMNS,
 				   &n_columns,
 				   sizeof(int) ) );
-  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_UNI,
-				   &n_uni,
-				   sizeof(int) ) );
-  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_UNI_Z,
-				   &n_uni_z,
-				   sizeof(int) ) );
+  //  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_UNI,
+  //&n_uni,
+  //sizeof(int) ) );
+  //  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_UNI_Z,
+  //&n_uni_z,
+  //sizeof(int) ) );
   HANDLE_ERROR( cudaMemcpyToSymbol(D_L_CELL_XYZ,
 				   l_cell_xyz,
 				   sizeof(real_pw)*3 ) );
-  HANDLE_ERROR( cudaMemcpyToSymbol(D_L_UNI_Z,
-				   &L_uni_z,
-				   sizeof(real_pw) ));
+  //  HANDLE_ERROR( cudaMemcpyToSymbol(D_L_UNI_Z,
+  //&L_uni_z,
+  //sizeof(real_pw) ));
   HANDLE_ERROR( cudaMemcpyToSymbol(D_N_NEIGHBOR_XYZ,
 				   n_neighbor_xyz,
 				   sizeof(int)*3 ) );
@@ -1139,10 +1139,10 @@ extern "C" int cuda_reset_work_ene(int n_atoms){
 __device__ int get_column_id_from_crd(const int x, const int y){
   return y*D_N_CELLS_XYZ[0] + x;
 }
-__device__ int get_uni_id_from_crd(const int x, const int y, const int z){
-  return x * D_N_UNI_Z + y * (D_N_UNI_Z * D_N_CELLS_XYZ[0]) + z;  
-}
-__global__ void kernel_set_uniform_grid(const real4* d_crd_chg,
+//__device__ int get_uni_id_from_crd(const int x, const int y, const int z){
+//  return x * D_N_UNI_Z + y * (D_N_UNI_Z * D_N_CELLS_XYZ[0]) + z;  
+//}
+/*__global__ void kernel_set_uniform_grid(const real4* d_crd_chg,
 					int2* d_uni2cell_z
 					){
   
@@ -1182,7 +1182,7 @@ __global__ void kernel_set_uniform_grid(const real4* d_crd_chg,
   }
   
 }
-
+*/
 __device__ bool check_valid_pair(const int cell1_id, const int cell2_id){
   const bool cell1_odd = cell1_id%2!=0;
   const bool cell2_odd = cell2_id%2!=0;
@@ -1283,7 +1283,7 @@ __device__ CellPair get_new_cell_pair(const int cell1_id, const int cell2_id,
 }
 
 
-__global__ void kernel_enumerate_cell_pair(const int2* d_uni2cell_z,
+__global__ void kernel_enumerate_cell_pair(//const int2* d_uni2cell_z,
 					   const real4* d_crd_chg,
 					   const real2* d_cell_z,
 					   const int* d_idx_xy_head_cell,
@@ -1527,12 +1527,12 @@ __global__ void kernel_init_cell_pairs(CellPair* d_cell_pairs,
   d_cell_pairs[cp_id] = new_cp;
   d_cell_pairs_buf[cp_id] = new_cp;
 }
-__global__ void kernel_init_uni2cell(const int n_uni, int2* d_uni2cell_z){
+/*__global__ void kernel_init_uni2cell(const int n_uni, int2* d_uni2cell_z){
   const int uni_id = threadIdx.x + blockDim.x * blockIdx.x;
   if(uni_id >= n_uni) return;
   d_uni2cell_z[uni_id].x = MAX_INT;
   d_uni2cell_z[uni_id].y = -1;
-}
+  }*/
 __global__ void set_cell_pairs_nb15off(const int* d_idx_head_cell_pairs,
 				       const int* d_nb15off,
 				       const int* d_atomids,
@@ -1579,13 +1579,14 @@ __global__ void set_cell_pairs_nb15off(const int* d_idx_head_cell_pairs,
 			d_cell_pairs[cp].pair_mask);
   
 }
-extern "C" int cuda_enumerate_cell_pairs(const int n_cells, const int n_uni,
+extern "C" int cuda_enumerate_cell_pairs(const int n_cells,// const int n_uni,
 					 const int n_neighbor_col){
 
   cudaStream_t stream1;
-  cudaStream_t stream2;
+  //cudaStream_t stream2;
   cudaStreamCreate(&stream1);
-  cudaStreamCreate(&stream2);
+  //cudaStreamCreate(&stream2);
+
   /*
   const int blocks1 = (n_uni + REORDER_THREADS-1) / REORDER_THREADS;  
   kernel_init_uni2cell<<<blocks1, REORDER_THREADS, 0, stream1>>>(n_uni, d_uni2cell_z);
@@ -1595,11 +1596,12 @@ extern "C" int cuda_enumerate_cell_pairs(const int n_cells, const int n_uni,
   HANDLE_ERROR( cudaMemset(d_cell_pairs, -1, sizeof(MiniCell)*D_MAX_N_CELL_PAIRS));
   HANDLE_ERROR( cudaMemset(d_cell_pairs_buf, -1, sizeof(MiniCell)*D_MAX_N_CELL_PAIRS));
   const int blocks3 = (max_n_cell_pairs + REORDER_THREADS-1) / REORDER_THREADS;  
-  kernel_init_cell_pairs<<<blocks3, REORDER_THREADS, 0, stream2>>>(d_cell_pairs,
+  kernel_init_cell_pairs<<<blocks3, REORDER_THREADS, 0, stream1>>>(d_cell_pairs,
 								   d_cell_pairs_buf);
 
   const int blocks4 = (n_neighbor_col * n_cells + REORDER_THREADS-1) / REORDER_THREADS; //  printf("bbb %d\n", max_n_cell_pairs); 
-  kernel_enumerate_cell_pair<<<blocks4, REORDER_THREADS,0,stream2>>>(d_uni2cell_z, d_crd_chg, d_cell_z,
+  kernel_enumerate_cell_pair<<<blocks4, REORDER_THREADS,0,stream1>>>(//d_uni2cell_z,
+								     d_crd_chg, d_cell_z,
 								     d_idx_xy_head_cell,
 								     d_atomids, d_nb15off_orig,
 								     d_nb15off,
@@ -1607,28 +1609,27 @@ extern "C" int cuda_enumerate_cell_pairs(const int n_cells, const int n_uni,
 								     d_cell_pairs_buf);
 								     //d_cell_pairs);
 
-  set_idx_head_cell_pairs<<<1, REORDER_THREADS, 0, stream2>>>
+  set_idx_head_cell_pairs<<<1, REORDER_THREADS, 0, stream1>>>
     (d_n_cell_pairs, d_idx_head_cell_pairs);
   //n_cell_pairs = d_idx_head_cell_pairs[n_cells+1];
-  int tmp[1];
   HANDLE_ERROR(cudaMemcpy(&n_cell_pairs,
 			  &d_idx_head_cell_pairs[n_cells],
 			  sizeof(int),
 			  cudaMemcpyDeviceToHost));
-  pack_cellpairs_array<<<blocks3, REORDER_THREADS, 0, stream2>>>
+  pack_cellpairs_array<<<blocks3, REORDER_THREADS, 0, stream1>>>
     (d_cell_pairs, d_cell_pairs_buf, 
      d_n_cell_pairs, d_idx_head_cell_pairs);
 
 
   const int blocks5 = (n_cell_pairs + REORDER_THREADS - 1) / REORDER_THREADS;
-  set_cell_pairs_nb15off<<<blocks5, REORDER_THREADS, 0, stream2>>>
+  set_cell_pairs_nb15off<<<blocks5, REORDER_THREADS, 0, stream1>>>
     (d_idx_head_cell_pairs,
      d_nb15off, d_atomids,
      n_cell_pairs,
      d_cell_pairs);
 
   cudaStreamDestroy(stream1);
-  cudaStreamDestroy(stream2);
+  //  cudaStreamDestroy(stream2);
   
   return 0;
 }
