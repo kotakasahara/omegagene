@@ -33,7 +33,6 @@ cudaStream_t stream_pair_home;
 #define N_ATOM_CELL  8
 #define N_ATOM_CELL_3  24
 #define MAX_N_CELL_BLOCK 16
-#define MAX_N_CELL_BLOCK_PW 8
 
 #define WARPSIZE 32
 

@@ -677,48 +677,33 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
   real_fc ene_ele = 0.0;
 
   const int global_threadIdx = blockDim.x * blockIdx.x + threadIdx.x;
-  const int warpIdx = threadIdx.x >> 5;  
-  const int laneIdx = threadIdx.x & 31;
-
-  __shared__ int c1_block_f;
-  //__shared__ int c1_block_l;
-  if(threadIdx.x==0){
-    c1_block_f = d_cell_pairs[(blockDim.x*blockIdx.x/WARPSIZE)*CP_PER_WARP].cell_id1;
-    //c1_block_l = d_cell_pairs[((PW_THREADS-1+blockDim.x*blockIdx.x)/WARPSIZE)*CP_PER_WARP].cell_id1;
-  }
-  __syncthreads();
-
   int cp = (global_threadIdx/WARPSIZE)*CP_PER_WARP;
-  __shared__ CellPair cellpair[PW_THREADS/WARPSIZE];
-  if(laneIdx == 0) cellpair[warpIdx] = d_cell_pairs[cp];
-  __syncthreads();
 
   if(cp >= n_cell_pairs) return;
-  
-  const int c1 = cellpair[warpIdx].cell_id1;
+  CellPair cellpair = d_cell_pairs[cp];
+  const int c1 = cellpair.cell_id1;
+  const int warpIdx = threadIdx.x >> 5;  
   if(c1 < 0){ return; }
-  bool flg_c1_first_warp=false;
-  if(warpIdx==0 || (c1 >= 0 && c1 != cellpair[warpIdx-1].cell_id1)){
-    flg_c1_first_warp=true;
+  const int laneIdx = threadIdx.x & 31;
+  if(cp >= n_cell_pairs-32){
+    printf("g_thr:%d thr:%d block:%d cp: %d / %d c1:%d\n",
+	   global_threadIdx,
+	   threadIdx.x, blockIdx.x,
+	   cp, n_cell_pairs, c1);
   }
-
-  const int c1_in_block = c1 - c1_block_f;
   
+  //const int n_loops = (d_idx_head_cell_pairs[c1+1] - d_idx_head_cell_pairs[c1])*2;
   const int n_loops = CP_PER_WARP*2;
 
   const int ene_index_offset = global_threadIdx%N_MULTI_WORK;  
   
   real_fc work_c1[3] = {0.0, 0.0, 0.0};
-  
+
   const int atom_idx1 = (laneIdx & 7);  // laneIdx%8
-  const int atom_idx1_block = atom_idx1 + c1_in_block*N_ATOM_CELL;
   const int a1 = c1 * N_ATOM_CELL + atom_idx1;
   
   __shared__ real4 crd_chg1[N_ATOM_CELL * (PW_THREADS >> 5)];
   __shared__ int   atomtype1[N_ATOM_CELL * (PW_THREADS >> 5)];
-
-  __shared__ real4 s_crd_chg2[N_ATOM_CELL/2 * PW_THREADS/WARPSIZE];
-  __shared__ int   s_atomtype2[N_ATOM_CELL/2 * PW_THREADS/WARPSIZE];
 
   //__shared__ real4 crd_chg2[N_ATOM_CELL * PW_THREADS / 32];
   const int sharedmem_idx  = N_ATOM_CELL * warpIdx + atom_idx1;
@@ -728,35 +713,35 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
   }
   __syncthreads();
 
+  //CellPair cellpair;
+  //int cp;
+  cp--;
+  //if(c1 == 0) printf("c1:%d head_cp:%d n_cp:%d n_loops:%d\n", c1, d_idx_head_cell_pairs[c1], d_n_cell_pairs[c1], n_loops);
   for(int loopIdx=0; loopIdx < n_loops; loopIdx++){
-    if(loopIdx!=0 && loopIdx%2 == 0){
+    if(loopIdx%2 == 0){
+      //cp = d_idx_head_cell_pairs[c1] + (loopIdx >> 1);
       cp++;
+      //cp = D_MAX_N_CELL_PAIRS_PER_CELL * c1 + (loopIdx >> 1);
       if(cp >= n_cell_pairs) break;
-      if(laneIdx == 0) cellpair[warpIdx] = d_cell_pairs[cp];
+      cellpair = d_cell_pairs[cp];
     }
-    if(cellpair[warpIdx].cell_id1 > 0 && cellpair[warpIdx].cell_id1 != c1){
+    if(cellpair.cell_id1 > 0 && cellpair.cell_id1 != c1){
       printf("Error?: c1: %d cp: %d cell_id1:%d loop:%d th:%d bl:%d\n",
-	     c1, cp, cellpair[warpIdx].cell_id1, loopIdx, global_threadIdx, blockIdx.x);
+	     c1, cp, cellpair.cell_id1, loopIdx, global_threadIdx, blockIdx.x);
     }// break;
     //atomicAdd(&d_pairs[3],1);
-    const int c2 = cellpair[warpIdx].cell_id2;
+    const int c2 = cellpair.cell_id2;
 
     // atom_idx ... index in cell, 0-7
     const int atom_idx2 = (laneIdx / 8)  + 4 * (loopIdx % 2);  // laneIdx/8 + 4*(warpIdx%2)
-    const int a2 = c2 * N_ATOM_CELL + atom_idx2;
-    const int sharedmem_idx2 = warpIdx*N_ATOM_CELL/2+laneIdx/8;
-    if(laneIdx % 8 ==0){
-      s_crd_chg2[sharedmem_idx2] = d_crd_chg[a2];
-      s_atomtype2[sharedmem_idx2] = d_atomtype[a2];
-    }
-    __syncthreads();
-    // remove 1-2, 1-3, 1-4 pairs
 
+    // remove 1-2, 1-3, 1-4 pairs
+    const int a2 = c2 * N_ATOM_CELL + atom_idx2;
     //real4 crd_chg2;
     //int2 atominfo2;
     //if(atom_idx1 == 0){
-    real4 crd_chg2 = s_crd_chg2[sharedmem_idx2];
-    const int atomtype2 = s_atomtype2[sharedmem_idx2];
+    real4 crd_chg2 = d_crd_chg[a2];
+    const int atomtype2 = d_atomtype[a2];
     //}
     //int atomid2_top = laneIdx - laneIdx%8;
     //crd_chg2.x = __shfl(crd_chg2.x, laneIdx - atom_idx1);
@@ -766,12 +751,12 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
     //atominfo2.x = __shfl(atominfo2.x, laneIdx - atom_idx1);
     //atominfo2.y = __shfl(atominfo2.y, laneIdx - atom_idx1);
 
-    if      ( (cellpair[warpIdx].image & 1) == 1 )   crd_chg2.x -= PBC_L[0];
-    else if ( (cellpair[warpIdx].image & 2) == 2 )   crd_chg2.x += PBC_L[0];
-    if      ( (cellpair[warpIdx].image & 4) == 4 )   crd_chg2.y -= PBC_L[1];
-    else if ( (cellpair[warpIdx].image & 8) == 8 )   crd_chg2.y += PBC_L[1];
-    if      ( (cellpair[warpIdx].image & 16) == 16 ) crd_chg2.z -= PBC_L[2];
-    else if ( (cellpair[warpIdx].image & 32) == 32 ) crd_chg2.z += PBC_L[2];
+    if      ( (cellpair.image & 1) == 1 )   crd_chg2.x -= PBC_L[0];
+    else if ( (cellpair.image & 2) == 2 )   crd_chg2.x += PBC_L[0];
+    if      ( (cellpair.image & 4) == 4 )   crd_chg2.y -= PBC_L[1];
+    else if ( (cellpair.image & 8) == 8 )   crd_chg2.y += PBC_L[1];
+    if      ( (cellpair.image & 16) == 16 ) crd_chg2.z -= PBC_L[2];
+    else if ( (cellpair.image & 32) == 32 ) crd_chg2.z += PBC_L[2];
 
     real_pw w1=0.0, w2=0.0, w3=0.0;
     real_pw cur_ene_ele=0.0;
@@ -792,13 +777,71 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
 			     atomtype1[sharedmem_idx],
 			     atomtype2,
 			     d_lj_6term, d_lj_12term);
+      //if (threadIdx.x + blockIdx.x * blockDim.x == 0){
+      //printf("r %f ene %f %f\n", r12, cur_ene_vdw, cur_ene_ele);
+      //}      
+
+      /*
+      if(global_threadIdx == 0){
+	printf("c1:%d loop:%d - c2:%d a: %d - %d r:%f\n",
+	       c1, loopIdx, c2, a1, a2, r12);
+	printf("a1:(%f, %f %f) - a2(%f, %f, %f)\n",
+	       crd_chg1[sharedmem_idx].x,
+	       crd_chg1[sharedmem_idx].y,
+	       crd_chg1[sharedmem_idx].z,
+	       crd_chg2.z,crd_chg2.y,crd_chg2.z);
+	       }*/
       if(flg_mod_15mask && r12 < D_CUTOFF_PAIRLIST) interact_bit = 0;
+      //atomicAdd(&d_pairs[1],1);
+      
+      //debug
+      /*
+      const real_pw d12[3] = {
+	d_crd_chg[a1].x - crd_chg2.x,
+	d_crd_chg[a1].y - crd_chg2.y,
+	d_crd_chg[a1].z - crd_chg2.z
+      };
+      const real_pw r12_2 = d12[0]*d12[0] + d12[1]*d12[1] + d12[2]*d12[2];
+      const real_pw r12 = sqrt(r12_2);
+      if(r12 < D_CUTOFF){
+	atomicAdd(&d_pairs[4],1);
+      }
+      //atomicAdd(&d_realbuf[0], r12);
+      //if(global_threadIdx == 1){
+      //while(d_realbuf[0] > 100000){
+      //atomicAdd(&d_realbuf[0], -100000);
+      //}
+      //}
+      atomicAdd(&d_realbuf[1], d_crd_chg[a1].w*d_crd_chg[a2].w);
+      if(global_threadIdx == 1){
+	while(d_realbuf[1] > 100000){
+	  atomicAdd(&d_realbuf[1], -100000);
+	}
+      }
+      */
+      //
+  
+      //if(cur_ene_vdw!=0.0 || cur_ene_ele!=0.0) atomicAdd(&d_pairs[2],1);
+      //printf("dbg02ene %d a(%d-%d) c(%d-%d): %10e %10e %10e %10e\n",global_threadIdx, a1, a2,c1,c2,ene_vdw, ene_ele,cur_ene_vdw, cur_ene_ele);
+      //return;
+
       ene_vdw += cur_ene_vdw;
       ene_ele += cur_ene_ele;
+      //printf("dbg2 %d %d \n",atom_idx1, atom_idx2);
       
       work_c1[0] += w1;
       work_c1[1] += w2;
       work_c1[2] += w3;
+      //work_c1[atom_idx1 * 3 + 0] += w1;
+      //work_c1[atom_idx1 * 3 + 1] += w2;
+    //work_c1[atom_idx1 * 3 + 2] += w3;
+    
+    //work_c2[0] -= w1;
+    //work_c2[1] -= w2;
+    //work_c2[2] -= w3;
+    //printf("dbg3\n");
+    //    if(w1 != 0.0) printf("cp %d: %d-%d\n",cp, c1, c2);
+    //printf("SHFL wapridx:%d lane:%d a2:%d w:%12.8e %12.8e %12.8e\n", warpIdx, laneIdx, a2, w1, w2, w3);
     }    
     if(flg_mod_15mask){
       for(int i = 32; i >= 1; i/=2){
@@ -811,54 +854,29 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
       w1 += shfl_xor(w1, i, 8);
       w2 += shfl_xor(w2, i, 8);
       w3 += shfl_xor(w3, i, 8);
+      //printf("SHFL[%d] wapridx:%d lane:%d a2:%d w:%12.8e %12.8e %12.8e\n",i, warpIdx, laneIdx,  a2, w1, w2, w3);
     }
     if(laneIdx % 8 == 0 && w1 != 0.0 && w2 != 0.0 && w3 != 0.0){
       const int tmp_index = (((global_threadIdx/32)%N_MULTI_WORK)*D_N_ATOM_ARRAY + a2) * 3;
+      //const int tmp_index = ((ene_index_offset*D_N_ATOM_ARRAY + a2) * 3);
       atomicAdd(&(d_work[tmp_index+0]), -w1);
       atomicAdd(&(d_work[tmp_index+1]), -w2);
       atomicAdd(&(d_work[tmp_index+2]), -w3);
     }
+      //printf("dbg4\n");
   }
-
+  //printf("dbg5\n");
+  //int a1 = c1 * N_ATOM_CELL;
+  //for(int atom_idx1 = 0; atom_idx1 < N_ATOM_CELL; atom_idx1++, a1++){
+  //for(int i = 16; i <= 8; i/=2){
+  //work_c1[0] += shfl_xor(work_c1, i, 32);    
+  //}  
+  //const int tmp_index =  (((global_threadIdx%N_MULTI_WORK)*D_N_ATOM_ARRAY) + a1)*3;
   for(int i = 16; i >= 8; i/=2){
     work_c1[0] += shfl_xor(work_c1[0], i, 32);
     work_c1[1] += shfl_xor(work_c1[1], i, 32);
     work_c1[2] += shfl_xor(work_c1[2], i, 32);
   }
-  //__shared__ real_fc s_work_c1[3*MAX_N_CELL_BLOCK_PW*N_ATOM_CELL];
-  //if(threadIdx.x < 3*MAX_N_CELL_BLOCK_PW*N_ATOM_CELL) s_work_c1[threadIdx.x] = 0.0;
-  //const int a1_in_block3 = (c1_in_block*N_ATOM_CELL+atom_idx1)*3;
-  //if(a1_in_block3 >= 3*MAX_N_CELL_BLOCK_PW*N_ATOM_CELL){
-  //printf("c1_block_f:%d c1:%d c1_in_block:%d a1_in_block3:%d a1:%d max:%d\n",
-  //c1_block_f, c1, c1_in_block, 
-  //a1_in_block3,
-  //atom_idx1,
-  //3*MAX_N_CELL_BLOCK_PW*N_ATOM_CELL);
-  //}
-  //if(laneIdx < 8){
-  //atomicAdd(&(s_work_c1[a1_in_block3+0]), work_c1[0]);
-  //atomicAdd(&(s_work_c1[a1_in_block3+1]), work_c1[1]);
-  //atomicAdd(&(s_work_c1[a1_in_block3+2]), work_c1[2]);
-  //if(blockIdx.x==16){
-  //printf("r->s thread:%d blockIdx:%d warpIdx:%d laneIdx:%d c1:%d c1_block_f:%d c1_in_block:%d a1_in_block:%d a1:%d atomIdx:%d \n",
-  //global_threadIdx, blockIdx.x, warpIdx, laneIdx, c1,
-  //c1_block_f, c1_in_block, a1_in_block3, a1,
-  //atom_idx1);
-  //}
-  //}
-  //__syncthreads();
-  //if(flg_c1_first_warp && laneIdx < 8){
-  //if(blockIdx.x==16){
-  //printf("s->g thread:%d blockIdx:%d warpIdx:%d laneIdx:%d c1:%d c1_block_f:%d c1_in_block:%d a1_in_block:%d a1:%d atomIdx:%d to_a:%d\n",
-  //global_threadIdx, blockIdx.x, warpIdx, laneIdx, c1,
-  //c1_block_f, c1_in_block, a1_in_block3, a1,
-  //atom_idx1, c1_block_f*N_ATOM_CELL*3+threadIdx.x);
-  //}
-  //const int tmp_index =  a1*3;
-  //atomicAdd(&(d_work[c1_block_f*N_ATOM_CELL*3+threadIdx.x]), s_work_c1[threadIdx.x]);
-  //atomicAdd(&(d_work[tmp_index+1]), s_work_c1[a1_in_block3+1]);
-  //atomicAdd(&(d_work[tmp_index+2]), s_work_c1[a1_in_block3+2]);
-  //}
   if(laneIdx < 8){
     const int tmp_index =  ((ene_index_offset*D_N_ATOM_ARRAY) + a1)*3;
     atomicAdd(&(d_work[tmp_index+0]), work_c1[0]);
