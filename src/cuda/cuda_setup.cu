@@ -402,11 +402,11 @@ __global__ void kernel_set_crd(const int* d_atomids,
     d_crd_chg[atomid].x = d_crd[at_idx];
     d_crd_chg[atomid].y = d_crd[at_idx+1];
     d_crd_chg[atomid].z = d_crd[at_idx+2];
-    if(atomid % N_ATOM_CELL == 0){
+    /*if(atomid % N_ATOM_CELL == 0){
       d_cell_z[atomid/N_ATOM_CELL].x = d_crd[at_idx+2];
     }else if(atomid % N_ATOM_CELL == N_ATOM_CELL-1){
       d_cell_z[atomid/N_ATOM_CELL].y = d_crd[at_idx+2];
-    }
+      }*/
   }
 }
 
@@ -546,7 +546,6 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
   real_fc ene_ele = 0.0;
 
   const int global_threadIdx = blockDim.x * blockIdx.x + threadIdx.x;
-  
   const int c1 = global_threadIdx >> 5;
   const int warpIdx = threadIdx.x >> 5;  
   if(c1 >= D_N_CELLS){ return; }
@@ -563,59 +562,59 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
   __shared__ real4 crd_chg1[N_ATOM_CELL * (PW_THREADS >> 5)];
   __shared__ int   atomtype1[N_ATOM_CELL * (PW_THREADS >> 5)];
 
-  //__shared__ real4 crd_chg2[N_ATOM_CELL * PW_THREADS / 32];
   const int sharedmem_idx  = N_ATOM_CELL * warpIdx + atom_idx1;
-  if(laneIdx<N_ATOM_CELL){
+  if(laneIdx < N_ATOM_CELL){
     crd_chg1[sharedmem_idx] = d_crd_chg[c1*N_ATOM_CELL + laneIdx];
     atomtype1[sharedmem_idx] = d_atomtype[c1*N_ATOM_CELL + laneIdx];
   }
   __syncthreads();
 
-  CellPair cellpair;
+  __shared__ CellPair cellpair[PW_THREADS/WARPSIZE];
   int cp;
 
   for(int loopIdx=0; loopIdx < n_loops; loopIdx++){
     if(loopIdx%2 == 0){
-      cp = d_idx_head_cell_pairs[c1] + (loopIdx >> 1);
-      if(cp >= D_MAX_N_CELL_PAIRS) break;
-      cellpair = d_cell_pairs[cp];
+      if(laneIdx == 0){
+	cp = d_idx_head_cell_pairs[c1] + (loopIdx >> 1);
+	if(cp >= D_MAX_N_CELL_PAIRS) break;
+	cellpair[warpIdx] = d_cell_pairs[cp];
+      }
+      cp = __shfl(cp, 0);
     }
-    if(cellpair.cell_id1 != c1) break;
-    const int c2 = cellpair.cell_id2;
+    if(cellpair[warpIdx].cell_id1 != c1) break;
+    const int c2 = cellpair[warpIdx].cell_id2;
 
     // atom_idx ... index in cell, 0-7
     const int atom_idx2 = (laneIdx / 8)  + 4 * (loopIdx % 2);  // laneIdx/8 + 4*(warpIdx%2)
 
     // remove 1-2, 1-3, 1-4 pairs
     const int a2 = c2 * N_ATOM_CELL + atom_idx2;
-    //real4 crd_chg2;
-    //int2 atominfo2;
-    //if(atom_idx1 == 0){
-    real4 crd_chg2 = d_crd_chg[a2];
-    const int atomtype2 = d_atomtype[a2];
-    //}
-    //int atomid2_top = laneIdx - laneIdx%8;
-    //crd_chg2.x = __shfl(crd_chg2.x, laneIdx - atom_idx1);
-    //crd_chg2.y = __shfl(crd_chg2.y, laneIdx - atom_idx1);
-    //crd_chg2.z = __shfl(crd_chg2.z, laneIdx - atom_idx1);
-    //crd_chg2.w = __shfl(crd_chg2.w, laneIdx - atom_idx1);
-    //atominfo2.x = __shfl(atominfo2.x, laneIdx - atom_idx1);
-    //atominfo2.y = __shfl(atominfo2.y, laneIdx - atom_idx1);
-
-    if      ( (cellpair.image & 1) == 1 )   crd_chg2.x -= PBC_L[0];
-    else if ( (cellpair.image & 2) == 2 )   crd_chg2.x += PBC_L[0];
-    if      ( (cellpair.image & 4) == 4 )   crd_chg2.y -= PBC_L[1];
-    else if ( (cellpair.image & 8) == 8 )   crd_chg2.y += PBC_L[1];
-    if      ( (cellpair.image & 16) == 16 ) crd_chg2.z -= PBC_L[2];
-    else if ( (cellpair.image & 32) == 32 ) crd_chg2.z += PBC_L[2];
-
+    real4 crd_chg2;
+    int atomtype2;
+    if(atom_idx1 == 0){
+      crd_chg2 = d_crd_chg[a2];
+      atomtype2 = d_atomtype[a2];
+      if      ( (cellpair[warpIdx].image & 1) == 1 )   crd_chg2.x -= PBC_L[0];
+      else if ( (cellpair[warpIdx].image & 2) == 2 )   crd_chg2.x += PBC_L[0];
+      if      ( (cellpair[warpIdx].image & 4) == 4 )   crd_chg2.y -= PBC_L[1];
+      else if ( (cellpair[warpIdx].image & 8) == 8 )   crd_chg2.y += PBC_L[1];
+      if      ( (cellpair[warpIdx].image & 16) == 16 ) crd_chg2.z -= PBC_L[2];
+      else if ( (cellpair[warpIdx].image & 32) == 32 ) crd_chg2.z += PBC_L[2];
+    }
+    int atomid2_top = laneIdx - laneIdx%8;
+    crd_chg2.x = __shfl(crd_chg2.x, laneIdx - atom_idx1);
+    crd_chg2.y = __shfl(crd_chg2.y, laneIdx - atom_idx1);
+    crd_chg2.z = __shfl(crd_chg2.z, laneIdx - atom_idx1);
+    crd_chg2.w = __shfl(crd_chg2.w, laneIdx - atom_idx1);
+    atomtype2 = __shfl(atomtype2, laneIdx - atom_idx1);
+    
     real_pw w1=0.0, w2=0.0, w3=0.0;
     real_pw cur_ene_ele=0.0;
     real_pw cur_ene_vdw=0.0;
     int mask_id;
     int interact_bit;
 
-    if(!check_15off64(atom_idx1, atom_idx2, d_cell_pairs[cp].pair_mask,
+    if(!check_15off64(atom_idx1, atom_idx2, cellpair[warpIdx].pair_mask,
 		      mask_id, interact_bit)){
 
       real_pw r12 = cal_pair(w1, w2, w3, cur_ene_vdw, cur_ene_ele,
@@ -624,39 +623,37 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
 			     atomtype1[sharedmem_idx],
 			     atomtype2,
 			     d_lj_6term, d_lj_12term);
-
+      
       //if(flg_mod_15mask && r12 < D_CUTOFF_PAIRLIST) interact_bit = 0;
-
+      
       ene_vdw += cur_ene_vdw;
       ene_ele += cur_ene_ele;
-
+      
       work_c1[0] += w1;
       work_c1[1] += w2;
       work_c1[2] += w3;
     }    
     /*if(flg_mod_15mask){
       for(int i = 32; i >= 1; i/=2){
-	interact_bit |= __shfl_xor(interact_bit, i);
+      interact_bit |= __shfl_xor(interact_bit, i);
       }
       if(laneIdx == 0)
-	d_cell_pairs[cp].pair_mask[mask_id]  |= interact_bit;
-	}*/
+      d_cell_pairs[cp].pair_mask[mask_id]  |= interact_bit;
+      }*/
     for(int i = 4; i >= 1; i/=2){
       w1 += shfl_xor(w1, i, 8);
       w2 += shfl_xor(w2, i, 8);
       w3 += shfl_xor(w3, i, 8);
-
+      
     }
     if(laneIdx % 8 == 0 && w1 != 0.0 && w2 != 0.0 && w3 != 0.0){
-      const int tmp_index = (((global_threadIdx/32)%N_MULTI_WORK)*D_N_ATOM_ARRAY + a2) * 3;
-
+      const int tmp_index = (((global_threadIdx/WARPSIZE)%N_MULTI_WORK)*D_N_ATOM_ARRAY + a2) * 3;
       atomicAdd(&(d_work[tmp_index+0]), -w1);
       atomicAdd(&(d_work[tmp_index+1]), -w2);
       atomicAdd(&(d_work[tmp_index+2]), -w3);
     }
-
   }
-
+  
   for(int i = 16; i >= 8; i/=2){
     work_c1[0] += shfl_xor(work_c1[0], i, 32);
     work_c1[1] += shfl_xor(work_c1[1], i, 32);
@@ -984,7 +981,8 @@ __global__ void kernel_enumerate_cell_pair(const real4* d_crd_chg,
   cell1_crd[2] = cell1_id - d_idx_xy_head_cell[col1_id];
     //g_thread_id - d_idx_xy_head_cell[cell1_id];
   const real_pw cell1_z_bottom = crd_chg11.z;
-  const real_pw cell1_z_top = d_cell_z[cell1_id].y;
+  //const real_pw cell1_z_top = d_cell_z[cell1_id].y;
+  const real_pw cell1_z_top =  d_crd_chg[(cell1_id+1)*N_ATOM_CELL-1].z;
   int image[3] = {0,0,0};
 
   const int idx_cell_pair_head = D_MAX_N_CELL_PAIRS_PER_CELL * cell1_id;
@@ -1034,8 +1032,10 @@ __global__ void kernel_enumerate_cell_pair(const real4* d_crd_chg,
 
     const int cell2_id = d_idx_xy_head_cell[col2_id] + cell2_crd[2];
 
-    const real_pw cell2_z_bottom = d_cell_z[cell2_id].x + image[2] * PBC_L[2];
-    const real_pw cell2_z_top = d_cell_z[cell2_id].y + image[2] * PBC_L[2];
+    //const real_pw cell2_z_bottom = d_cell_z[cell2_id].x + image[2] * PBC_L[2];
+    //const real_pw cell2_z_top = d_cell_z[cell2_id].y + image[2] * PBC_L[2];
+    const real_pw cell2_z_bottom = d_crd_chg[cell2_id*N_ATOM_CELL].z + image[2] * PBC_L[2];
+    const real_pw cell2_z_top = d_crd_chg[(cell2_id+1)*N_ATOM_CELL-1].z + image[2] * PBC_L[2];
 
     if(cell2_z_top < cell1_z_bottom){
       dx[2] = cell1_z_bottom - cell2_z_top;
