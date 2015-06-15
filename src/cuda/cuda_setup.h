@@ -23,7 +23,7 @@
 
 #define PW_THREADS_DIAG PW_THREADS
 #define REORDER_THREADS 512
-#define CP_PER_WARP 8
+#define CP_PER_THREAD 8
 
 #define N_MULTI_WORK 8
 #define MAX_INT 99999999

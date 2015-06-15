@@ -671,29 +671,18 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
 				     real_fc* d_energy, real_fc* d_work,
 				     //int* d_pairs, real_pw* d_realbuf,
 				     const int offset_cells,
-				     const bool flg_mod_15mask,
-				     const int n_cell_pairs){
+				     const bool flg_mod_15mask){
   real_fc ene_vdw = 0.0;
   real_fc ene_ele = 0.0;
 
   const int global_threadIdx = blockDim.x * blockIdx.x + threadIdx.x;
-  int cp = (global_threadIdx/WARPSIZE)*CP_PER_WARP;
-
-  if(cp >= n_cell_pairs) return;
-  CellPair cellpair = d_cell_pairs[cp];
-  const int c1 = cellpair.cell_id1;
-  const int warpIdx = threadIdx.x >> 5;  
-  if(c1 < 0){ return; }
-  const int laneIdx = threadIdx.x & 31;
-  if(cp >= n_cell_pairs-32){
-    printf("g_thr:%d thr:%d block:%d cp: %d / %d c1:%d\n",
-	   global_threadIdx,
-	   threadIdx.x, blockIdx.x,
-	   cp, n_cell_pairs, c1);
-  }
   
-  //const int n_loops = (d_idx_head_cell_pairs[c1+1] - d_idx_head_cell_pairs[c1])*2;
-  const int n_loops = CP_PER_WARP*2;
+  const int c1 = global_threadIdx >> 5;
+  const int warpIdx = threadIdx.x >> 5;  
+  if(c1 >= D_N_CELLS){ return; }
+  const int laneIdx = global_threadIdx & 31;
+  const int n_loops = (d_idx_head_cell_pairs[c1+1] - d_idx_head_cell_pairs[c1])*2;
+  //const int n_loops = d_n_cell_pairs[c1]*2;
 
   const int ene_index_offset = global_threadIdx%N_MULTI_WORK;  
   
@@ -713,22 +702,18 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
   }
   __syncthreads();
 
-  //CellPair cellpair;
-  //int cp;
-  cp--;
+  CellPair cellpair;
+  int cp;
+
   //if(c1 == 0) printf("c1:%d head_cp:%d n_cp:%d n_loops:%d\n", c1, d_idx_head_cell_pairs[c1], d_n_cell_pairs[c1], n_loops);
   for(int loopIdx=0; loopIdx < n_loops; loopIdx++){
     if(loopIdx%2 == 0){
-      //cp = d_idx_head_cell_pairs[c1] + (loopIdx >> 1);
-      cp++;
+      cp = d_idx_head_cell_pairs[c1] + (loopIdx >> 1);
       //cp = D_MAX_N_CELL_PAIRS_PER_CELL * c1 + (loopIdx >> 1);
-      if(cp >= n_cell_pairs) break;
+      if(cp >= D_MAX_N_CELL_PAIRS) break;
       cellpair = d_cell_pairs[cp];
     }
-    if(cellpair.cell_id1 > 0 && cellpair.cell_id1 != c1){
-      printf("Error?: c1: %d cp: %d cell_id1:%d loop:%d th:%d bl:%d\n",
-	     c1, cp, cellpair.cell_id1, loopIdx, global_threadIdx, blockIdx.x);
-    }// break;
+    if(cellpair.cell_id1 != c1) break;
     //atomicAdd(&d_pairs[3],1);
     const int c2 = cellpair.cell_id2;
 
@@ -913,7 +898,7 @@ __global__ void set_idx_head_cell_pairs(const int* d_n_cell_pairs,
   //for(int cell_id = 0; cell_id < D_N_CELLS; cell_id++){
   //d_idx_head_cell_pairs[cell_id] = idx_cp;
   //idx_cp += d_n_cell_pairs[cell_id];
-  //idx_cp = ((idx_cp + CP_PER_WARP -1)/CP_PER_WARP) * CP_PER_WARP;
+  //idx_cp = ((idx_cp + CP_PER_THREAD -1)/CP_PER_THREAD) * CP_PER_THREAD;
   //}
   int n_rep = (D_N_CELLS + REORDER_THREADS - 1) / REORDER_THREADS;
   for(int i=0; i < n_rep; i++){
@@ -922,9 +907,7 @@ __global__ void set_idx_head_cell_pairs(const int* d_n_cell_pairs,
     const int idx_write = idx_head + threadIdx.x ;
     if(idx_write < D_N_CELLS){
       if(idx_write > 0){
-	//const int block_unit = PW_THREADS/WARPSIZE * CP_PER_WARP;
-	const int block_unit = CP_PER_WARP;
-	const int idx = ((d_n_cell_pairs[idx_write - 1] + block_unit-1)/ block_unit)*block_unit;
+	const int idx = ((d_n_cell_pairs[idx_write - 1] + CP_PER_THREAD-1)/ CP_PER_THREAD)*CP_PER_THREAD;
 	d_idx_head_cell_pairs[idx_write] = idx;
 	//d_idx_head_cell_pairs[idx_write] = d_n_cell_pairs[idx_write - 1];
       }else{
@@ -948,7 +931,7 @@ __global__ void set_idx_head_cell_pairs(const int* d_n_cell_pairs,
   }
 
   if(threadIdx.x == 0) {
-    const int idx = ((d_n_cell_pairs[D_N_CELLS-1] + CP_PER_WARP-1)/ CP_PER_WARP)*CP_PER_WARP;    
+    const int idx = ((d_n_cell_pairs[D_N_CELLS-1] + CP_PER_THREAD-1)/ CP_PER_THREAD)*CP_PER_THREAD;    
     d_idx_head_cell_pairs[D_N_CELLS] = d_idx_head_cell_pairs[D_N_CELLS-1] + idx;
     //d_idx_head_cell_pairs[D_N_CELLS] = d_idx_head_cell_pairs[D_N_CELLS-1] + d_n_cell_pairs[D_N_CELLS-1];
     //for(int i=0; i <= D_N_CELLS; i++){
@@ -1078,8 +1061,7 @@ extern "C" int cuda_pairwise_ljzd(const int offset_cellpairs, const int n_cal_ce
   //HANDLE_ERROR(cudaMemcpy(d_realbuf, h_realbuf, sizeof(real)*4, cudaMemcpyHostToDevice));
   //
 
-  //const int blocks = (n_cal_cells+PW_THREADS/32-1) / (PW_THREADS/32);
-  const int blocks = (n_cell_pairs/CP_PER_WARP*WARPSIZE+PW_THREADS-1)/ PW_THREADS;
+  const int blocks = (n_cal_cells+PW_THREADS/32-1) / (PW_THREADS/32);
   
   kernel_pairwise_ljzd<<<blocks, PW_THREADS,
     0, stream_pair_home>>>(d_crd_chg,
@@ -1088,7 +1070,7 @@ extern "C" int cuda_pairwise_ljzd(const int offset_cellpairs, const int n_cal_ce
 			   d_atomtype,
 			   d_lj_6term, d_lj_12term,
 			   d_energy, d_work,// d_pairs, d_realbuf,
-			   offset_cells, flg_mod_15mask, n_cell_pairs);
+			   offset_cells, flg_mod_15mask);
 
 
 
@@ -1611,8 +1593,8 @@ extern "C" int cuda_enumerate_cell_pairs(const int n_cells,// const int n_uni,
   const int blocks2 = (n_cells + REORDER_THREADS-1) / REORDER_THREADS;  
   kernel_set_uniform_grid<<<blocks2, REORDER_THREADS, 0, stream1>>>(d_crd_chg, d_uni2cell_z);
   */
-  HANDLE_ERROR( cudaMemset(d_cell_pairs, -1, sizeof(CellPair)*D_MAX_N_CELL_PAIRS));
-  HANDLE_ERROR( cudaMemset(d_cell_pairs_buf, -1, sizeof(CellPair)*D_MAX_N_CELL_PAIRS));
+  HANDLE_ERROR( cudaMemset(d_cell_pairs, -1, sizeof(MiniCell)*D_MAX_N_CELL_PAIRS));
+  HANDLE_ERROR( cudaMemset(d_cell_pairs_buf, -1, sizeof(MiniCell)*D_MAX_N_CELL_PAIRS));
   const int blocks3 = (max_n_cell_pairs + REORDER_THREADS-1) / REORDER_THREADS;  
   kernel_init_cell_pairs<<<blocks3, REORDER_THREADS, 0, stream1>>>(d_cell_pairs,
 								   d_cell_pairs_buf);
