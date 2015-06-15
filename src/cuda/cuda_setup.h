@@ -77,6 +77,7 @@ real_pw* d_crd;
 CellPair* d_cell_pairs;
 CellPair* d_cell_pairs_buf;
 int* d_idx_head_cell_pairs;
+int* d_idx_head_cell_pairs_buf;
 int* d_n_cell_pairs;
 int* d_cell_pair_removed;
 
