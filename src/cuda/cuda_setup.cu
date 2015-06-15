@@ -1091,7 +1091,6 @@ __global__ void kernel_init_cell_pairs(CellPair* d_cell_pairs,
   d_cell_pairs[cp_id] = new_cp;
   d_cell_pairs_buf[cp_id] = new_cp;
 }
-
 __global__ void set_cell_pairs_nb15off(const int* d_idx_head_cell_pairs,
 				       const int* d_nb15off,
 				       const int* d_atomids,
@@ -1144,8 +1143,8 @@ extern "C" int cuda_enumerate_cell_pairs(const int n_cells,// const int n_uni,
   cudaStreamCreate(&stream1);
   //cudaStreamCreate(&stream2);
 
-  HANDLE_ERROR( cudaMemset(d_cell_pairs, -1, sizeof(MiniCell)*D_MAX_N_CELL_PAIRS));
-  HANDLE_ERROR( cudaMemset(d_cell_pairs_buf, -1, sizeof(MiniCell)*D_MAX_N_CELL_PAIRS));
+  //HANDLE_ERROR( cudaMemset(d_cell_pairs, -1, sizeof(int)*5*D_MAX_N_CELL_PAIRS));
+  //HANDLE_ERROR( cudaMemset(d_cell_pairs_buf, -1, sizeof(int)*5*D_MAX_N_CELL_PAIRS));
   const int blocks3 = (max_n_cell_pairs + REORDER_THREADS-1) / REORDER_THREADS;  
   kernel_init_cell_pairs<<<blocks3, REORDER_THREADS, 0, stream1>>>(d_cell_pairs,
 								   d_cell_pairs_buf);
@@ -1180,7 +1179,6 @@ extern "C" int cuda_enumerate_cell_pairs(const int n_cells,// const int n_uni,
      d_cell_pairs);
 
   cudaStreamDestroy(stream1);
-  //  cudaStreamDestroy(stream2);
   
   return 0;
 }
