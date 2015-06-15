@@ -729,6 +729,13 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
     const int atomtype2 = d_atomtype[a2];
     //}
     //int atomid2_top = laneIdx - laneIdx%8;
+<<<<<<< HEAD
+    crd_chg2.x = __shfl(crd_chg2.x, laneIdx - atom_idx1);
+    crd_chg2.y = __shfl(crd_chg2.y, laneIdx - atom_idx1);
+    crd_chg2.z = __shfl(crd_chg2.z, laneIdx - atom_idx1);
+    crd_chg2.w = __shfl(crd_chg2.w, laneIdx - atom_idx1);
+    atominfo2.x = __shfl(atominfo2.x, laneIdx - atom_idx1);
+=======
     //crd_chg2.x = __shfl(crd_chg2.x, laneIdx - atom_idx1);
     //crd_chg2.y = __shfl(crd_chg2.y, laneIdx - atom_idx1);
     //crd_chg2.z = __shfl(crd_chg2.z, laneIdx - atom_idx1);
@@ -742,6 +749,7 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
     else if ( (cellpair.image & 8) == 8 )   crd_chg2.y += PBC_L[1];
     if      ( (cellpair.image & 16) == 16 ) crd_chg2.z -= PBC_L[2];
     else if ( (cellpair.image & 32) == 32 ) crd_chg2.z += PBC_L[2];
+>>>>>>> parent of e6f952e... ver.0.35.p.2
 
     real_pw w1=0.0, w2=0.0, w3=0.0;
     real_pw cur_ene_ele=0.0;
