@@ -732,7 +732,7 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
     if(loopIdx!=0 && loopIdx%2 == 0){
       cp++;
       if(cp >= n_cell_pairs) break;
-      if(laneIdx == 0) cellpair[warpIdx] = d_cell_pairs[cp];
+      if(cp < n_cell_pairs && laneIdx == 0) cellpair[warpIdx] = d_cell_pairs[cp];
     }
     if(cellpair[warpIdx].cell_id1 > 0 && cellpair[warpIdx].cell_id1 != c1){
       printf("Error?: c1: %d cp: %d cell_id1:%d loop:%d th:%d bl:%d\n",
@@ -748,49 +748,35 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
     if(laneIdx % 8 ==0){
       s_crd_chg2[sharedmem_idx2] = d_crd_chg[a2];
       s_atomtype2[sharedmem_idx2] = d_atomtype[a2];
+      if      ( (cellpair[warpIdx].image & 1) == 1 )
+	s_crd_chg2[sharedmem_idx2].x -= PBC_L[0];
+      else if ( (cellpair[warpIdx].image & 2) == 2 )
+	s_crd_chg2[sharedmem_idx2].x += PBC_L[0];
+      if      ( (cellpair[warpIdx].image & 4) == 4 )
+	s_crd_chg2[sharedmem_idx2].y -= PBC_L[1];
+      else if ( (cellpair[warpIdx].image & 8) == 8 ) 
+	s_crd_chg2[sharedmem_idx2].y += PBC_L[1];
+      if      ( (cellpair[warpIdx].image & 16) == 16 ) 
+	s_crd_chg2[sharedmem_idx2].z -= PBC_L[2];
+      else if ( (cellpair[warpIdx].image & 32) == 32 )
+	s_crd_chg2[sharedmem_idx2].z += PBC_L[2];
     }
     __syncthreads();
-    // remove 1-2, 1-3, 1-4 pairs
-
-    //real4 crd_chg2;
-    //int2 atominfo2;
-    //if(atom_idx1 == 0){
-    real4 crd_chg2 = s_crd_chg2[sharedmem_idx2];
-    const int atomtype2 = s_atomtype2[sharedmem_idx2];
-    //}
-    //int atomid2_top = laneIdx - laneIdx%8;
-    //crd_chg2.x = __shfl(crd_chg2.x, laneIdx - atom_idx1);
-    //crd_chg2.y = __shfl(crd_chg2.y, laneIdx - atom_idx1);
-    //crd_chg2.z = __shfl(crd_chg2.z, laneIdx - atom_idx1);
-    //crd_chg2.w = __shfl(crd_chg2.w, laneIdx - atom_idx1);
-    //atominfo2.x = __shfl(atominfo2.x, laneIdx - atom_idx1);
-    //atominfo2.y = __shfl(atominfo2.y, laneIdx - atom_idx1);
-
-    if      ( (cellpair[warpIdx].image & 1) == 1 )   crd_chg2.x -= PBC_L[0];
-    else if ( (cellpair[warpIdx].image & 2) == 2 )   crd_chg2.x += PBC_L[0];
-    if      ( (cellpair[warpIdx].image & 4) == 4 )   crd_chg2.y -= PBC_L[1];
-    else if ( (cellpair[warpIdx].image & 8) == 8 )   crd_chg2.y += PBC_L[1];
-    if      ( (cellpair[warpIdx].image & 16) == 16 ) crd_chg2.z -= PBC_L[2];
-    else if ( (cellpair[warpIdx].image & 32) == 32 ) crd_chg2.z += PBC_L[2];
 
     real_pw w1=0.0, w2=0.0, w3=0.0;
     real_pw cur_ene_ele=0.0;
     real_pw cur_ene_vdw=0.0;
     int mask_id;
     int interact_bit;
-    //if (threadIdx.x + blockIdx.x * blockDim.x == 0){
-    //printf("cp: %d (%d-%d) at: %d-%d mask: %d %d \n", cp, c1, c2, atom_idx1, atom_idx2,
-    //d_cell_pairs[cp].pair_mask[0], d_cell_pairs[cp].pair_mask[1]);
-    //}      
 
-    if(!check_15off64(atom_idx1, atom_idx2, d_cell_pairs[cp].pair_mask,
+    if(!check_15off64(atom_idx1, atom_idx2, cellpair[warpIdx].pair_mask,
 		      mask_id, interact_bit)){
       //if(d_atominfo[a1].x == -1 || d_atominfo[a2].x == -1) continue;
       real_pw r12 = cal_pair(w1, w2, w3, cur_ene_vdw, cur_ene_ele,
 			     crd_chg1[sharedmem_idx],
-			     crd_chg2,
+			     s_crd_chg2[sharedmem_idx2],
 			     atomtype1[sharedmem_idx],
-			     atomtype2,
+			     s_atomtype2[sharedmem_idx2],
 			     d_lj_6term, d_lj_12term);
       if(flg_mod_15mask && r12 < D_CUTOFF_PAIRLIST) interact_bit = 0;
       ene_vdw += cur_ene_vdw;
