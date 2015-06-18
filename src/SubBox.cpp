@@ -71,8 +71,15 @@ extern "C" int cuda_hostalloc_atom_type_charge(int*& h_atom_type,
 					       int n_atoms);
 
 extern "C" int cuda_init_cellinfo(const int n_cells);
-extern "C" int cuda_enumerate_cell_pairs(const int n_cells, //const int n_uni,
-					 const int n_neighbor_cols);
+extern "C" int cuda_enumerate_cell_pairs(int*& h_atomids,
+					 int*& h_idx_xy_head_cell,
+					 const int max_n_atoms,
+					 const int n_atom_array,
+					 const int n_columns,
+					 const int n_cells,// const int n_uni,
+					 const int n_neighbor_col,
+					 const int* idx_atom_cell_xy);
+
 #endif
 
 SubBox::SubBox(){
@@ -499,13 +506,7 @@ int SubBox::set_nsgrid(){
   cuda_memcpy_htod_atom_info(charge, atom_type,
 			     max_n_atoms_exbox);
 
-  update_device_cell_info();  
-
-  nsgrid_crd_to_gpu();
-  
-  cuda_enumerate_cell_pairs(nsgrid.get_n_cells(),
-			    //nsgrid.get_n_uni(),
-			    nsgrid.get_n_neighbor_cols());
+  update_cell_pairs_gpu();
 
 #else
     nsgrid.enumerate_cell_pairs();
@@ -519,6 +520,7 @@ int SubBox::nsgrid_crd_to_gpu(){
   
   cuda_memcpy_htod_crd(nsgrid.get_crd(),
 		       nsgrid.get_n_atom_array());
+  
   cuda_set_crd(nsgrid.get_n_atom_array());
   //nsgrid.update_crd((const real**)crd);
 #endif
@@ -535,13 +537,10 @@ int SubBox::nsgrid_update(){
   nsgrid.set_atoms_into_grid_xy();
   const clock_t endTimeSet = clock();
   //nsgrid.enumerate_cell_pairs();
-
+  
 #if defined(F_CUDA)  
-  update_device_cell_info();  
-  nsgrid_crd_to_gpu();
-  cuda_enumerate_cell_pairs(nsgrid.get_n_cells(),
-			    //nsgrid.get_n_uni(),
-			    nsgrid.get_n_neighbor_cols());
+  update_cell_pairs_gpu();
+
 #else
   nsgrid.enumerate_cell_pairs();
 #endif
@@ -1746,11 +1745,7 @@ int SubBox::gpu_device_setup(){
 
   return 0;
 }
-
-int SubBox::update_device_cell_info(){
-  //cout << "cuda_memcpy_htod_atom_info"<<endl;
-  //cuda_memcpy_htod_atom_info(charge, atom_type,
-  //max_n_atoms_exbox);
+int SubBox::update_cell_pairs_gpu(){
   cuda_set_cell_constant(nsgrid.get_n_cells(),
 			 nsgrid.get_n_cell_pairs(),
 			 nsgrid.get_n_atom_array(),
@@ -1761,19 +1756,16 @@ int SubBox::update_device_cell_info(){
 			 nsgrid.get_L_cell_xyz(),
 			 //nsgrid.get_l_uni_z(),
 			 nsgrid.get_n_neighbors_xyz());
-  //cuda_memcpy_htod_cell_pairs(nsgrid.get_cell_pairs(),
-  //nsgrid.get_idx_head_cell_pairs(),
-  //nsgrid.get_n_cell_pairs(),
-  //nsgrid.get_n_cells());
-  cuda_memcpy_htod_atomids(nsgrid.get_atomids(),
-			   nsgrid.get_idx_xy_head_cell(),
-			   nsgrid.get_max_n_atom_array(),
-			   nsgrid.get_n_columns()+1);
-  //cuda_init_cellinfo(nsgrid.get_n_cells());
-  cuda_set_atominfo(nsgrid.get_n_atom_array(),
-		    MAX_N_NB15OFF,
-		    nsgrid.get_max_n_cells());
+  nsgrid_crd_to_gpu();
 
+  cuda_enumerate_cell_pairs(nsgrid.get_atomids(),
+			    nsgrid.get_idx_xy_head_cell(),
+			    n_atoms_exbox,
+			    nsgrid.get_max_n_atom_array(),
+			    nsgrid.get_n_columns()+1,
+			    nsgrid.get_n_cells(),
+			    nsgrid.get_n_neighbor_cols(),
+			    nsgrid.get_idx_atom_cell_xy());
   return 0;
 }
 
@@ -1791,6 +1783,7 @@ int SubBox::calc_energy_pairwise_cuda(){
 }
 
 #endif
+
 int SubBox::apply_constraint(){
   constraint->apply_constraint(crd, crd_prev, mass_inv, pbc);
   set_velocity_from_crd();

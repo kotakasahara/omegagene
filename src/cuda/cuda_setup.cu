@@ -49,8 +49,14 @@ extern "C" int cuda_alloc_atom_info(int in_max_n_atoms,
 			   in_max_n_cell_pairs * sizeof(CellPair)) );
   HANDLE_ERROR( cudaMalloc((void**)&d_idx_head_cell_pairs,
 			   (in_max_n_cells+1) * sizeof(int)) );
-  HANDLE_ERROR( cudaMalloc((void**)&d_cell_pair_removed,
-			   (in_max_n_cells+1) * sizeof(int)) );
+  HANDLE_ERROR( cudaMalloc((void**)&d_idx_cell_column,
+			   (in_max_n_cells) * sizeof(int)) );
+  HANDLE_ERROR( cudaHostAlloc( (void**)&h_idx_cell_column,
+			       in_max_n_cells * sizeof(int),
+			       cudaHostAllocDefault));
+  
+  //HANDLE_ERROR( cudaMalloc((void**)&d_cell_pair_removed,
+  //(in_max_n_cells+1) * sizeof(int)) );
   HANDLE_ERROR( cudaMalloc((void**)&d_n_cell_pairs,
 			   (in_max_n_cells) * sizeof(int)) );
   //HANDLE_ERROR( cudaMalloc((void**)&d_grid_atom_index,
@@ -87,7 +93,9 @@ extern "C" int cuda_free_atom_info(){
   HANDLE_ERROR( cudaFree(d_cell_pairs) );
   HANDLE_ERROR( cudaFree(d_cell_pairs_buf) );
   HANDLE_ERROR( cudaFree(d_idx_head_cell_pairs) );
-  HANDLE_ERROR( cudaFree(d_cell_pair_removed) );
+  HANDLE_ERROR( cudaFree(d_idx_cell_column) );
+  HANDLE_ERROR( cudaFreeHost(h_idx_cell_column) );
+  //HANDLE_ERROR( cudaFree(d_cell_pair_removed) );
   HANDLE_ERROR( cudaFree(d_n_cell_pairs) );  
   HANDLE_ERROR( cudaFree(d_energy) );
   HANDLE_ERROR( cudaFree(d_work) );
@@ -111,18 +119,6 @@ extern "C" int cuda_free_atom_info(){
   //cudaMemcpyHostToDevice));
 //  return 0;
 //}
-extern "C" int cuda_memcpy_htod_atomids(int*& h_atomids,
-					int*& h_idx_xy_head_cell,
-					int n_atom_array,
-					int n_columns){
-  HANDLE_ERROR(cudaMemcpy(d_atomids, h_atomids,
-			  n_atom_array * sizeof(int),
-			  cudaMemcpyHostToDevice));
-  HANDLE_ERROR(cudaMemcpy(d_idx_xy_head_cell, h_idx_xy_head_cell,
-  			  n_columns * sizeof(int),
-  			  cudaMemcpyHostToDevice));
-  return 0;
-}
 
 // cuda_memcpy_htod_atom_info
 //   Arrays of charges and atomtypes of all atoms in the process are sent to
@@ -230,11 +226,12 @@ extern "C" int cuda_set_cell_constant(const int  n_cells,
   HANDLE_ERROR( cudaMemcpyToSymbol(D_N_NEIGHBOR_COL,
 				   &n_neighbor_col,
 				   sizeof(int) ) );
-  const int max_n_cell_pairs_per_column = max_n_cell_pairs / (n_cells * n_neighbor_col);
-  HANDLE_ERROR( cudaMemcpyToSymbol(D_MAX_N_CELL_PAIRS_PER_COLUMN,
-				   &max_n_cell_pairs_per_column,
-				   sizeof(int) ) );  
-  const int max_n_cell_pairs_per_cell = max_n_cell_pairs_per_column * n_neighbor_col;
+  //const int max_n_cell_pairs_per_column = max_n_cell_pairs / (n_cells * n_neighbor_col);
+  //  HANDLE_ERROR( cudaMemcpyToSymbol(D_MAX_N_CELL_PAIRS_PER_COLUMN,
+  //&max_n_cell_pairs_per_column,
+  //sizeof(int) ) );  
+  //const int max_n_cell_pairs_per_cell = max_n_cell_pairs_per_column * n_neighbor_col;
+  const int max_n_cell_pairs_per_cell = max_n_cell_pairs / n_cells;
   HANDLE_ERROR( cudaMemcpyToSymbol(D_MAX_N_CELL_PAIRS_PER_CELL,
 				   &max_n_cell_pairs_per_cell,
 				   sizeof(int) ) );  
@@ -473,15 +470,16 @@ __global__ void kernel_set_crd(const int* d_atomids,
     }else if(atomid % N_ATOM_CELL == N_ATOM_CELL-1){
       d_cell_z[atomid/N_ATOM_CELL].y = d_crd[at_idx+2];
     }
-    /*if(d_crd_chg[atomid].x <= PBC_LOWER_BOUND[0] ||
-       d_crd_chg[atomid].x > PBC_L[0]+  PBC_LOWER_BOUND[0] ||
-       d_crd_chg[atomid].y <= PBC_LOWER_BOUND[1] ||
-       d_crd_chg[atomid].y > PBC_L[1]+  PBC_LOWER_BOUND[2] ||
-       d_crd_chg[atomid].z <= PBC_LOWER_BOUND[2] ||
-       d_crd_chg[atomid].z > PBC_L[2]+  PBC_LOWER_BOUND[2]){
-      printf("crd !? %d %f %f %f\n",atomid,d_crd_chg[atomid].x,
-	     d_crd_chg[atomid].y, d_crd_chg[atomid].z);
-	     }*/
+    
+    //if(d_crd_chg[atomid].x <= PBC_LOWER_BOUND[0] ||
+    //d_crd_chg[atomid].x > PBC_L[0]+  PBC_LOWER_BOUND[0] ||
+    //d_crd_chg[atomid].y <= PBC_LOWER_BOUND[1] ||
+    //d_crd_chg[atomid].y > PBC_L[1]+  PBC_LOWER_BOUND[2] ||
+    //d_crd_chg[atomid].z <= PBC_LOWER_BOUND[2] ||
+    //d_crd_chg[atomid].z > PBC_L[2]+  PBC_LOWER_BOUND[2]){
+    //printf("crd !? %d %f %f %f\n",atomid,d_crd_chg[atomid].x,
+    //d_crd_chg[atomid].y, d_crd_chg[atomid].z);
+    //}
   }
 }
 /*
@@ -494,27 +492,11 @@ __Global__ void kernel_set_atomids_rev(const int* d_atomids, int* d_atomids_rev)
 */
 extern "C" int cuda_set_atominfo(const int n_atom_array,
 				 const int max_n_nb15off, const int max_n_cells){
-  HANDLE_ERROR( cudaMemset(d_atomids_rev, -1, sizeof(int)*n_atom_array ));
-  HANDLE_ERROR( cudaMemset(d_nb15off, -1, sizeof(int)*n_atom_array*max_n_nb15off ));
-  HANDLE_ERROR( cudaMemset(d_n_cell_pairs, 0, sizeof(int)*max_n_cells ));
-  HANDLE_ERROR( cudaMemset(d_cell_pair_removed, 0, sizeof(int)*max_n_cells ));
-
-  int blocks1 = (n_atom_array + REORDER_THREADS-1) / REORDER_THREADS;
-  kernel_set_atominfo<<<blocks1, REORDER_THREADS>>>(d_atomids,
-						   d_atomtype_orig,
-						   d_charge_orig,
-						   d_atomtype,
-						    d_crd_chg,
-						    d_atomids_rev);
-  int blocks2 = (n_atom_array*max_n_nb15off + REORDER_THREADS-1) / REORDER_THREADS;
-  kernel_set_nb15off<<<blocks2, REORDER_THREADS>>>(d_atomids,
-						   d_atomids_rev,
-						   d_nb15off_orig,
-						   d_nb15off);
   return 0;
 }
 extern "C" int cuda_set_crd(int n_atom_array){
   int blocks = (n_atom_array + REORDER_THREADS-1) / REORDER_THREADS;
+  //printf("cuda_set_crd %d %d \n", n_atom_array, blocks);
   kernel_set_crd<<<blocks, REORDER_THREADS>>>(d_atomids,
 					      d_crd,
 					      d_crd_chg,
@@ -770,56 +752,13 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
 	       crd_chg2.z,crd_chg2.y,crd_chg2.z);
 	       }*/
       if(flg_mod_15mask && r12 < D_CUTOFF_PAIRLIST) interact_bit = 0;
-      //atomicAdd(&d_pairs[1],1);
-      
-      //debug
-      /*
-      const real_pw d12[3] = {
-	d_crd_chg[a1].x - crd_chg2.x,
-	d_crd_chg[a1].y - crd_chg2.y,
-	d_crd_chg[a1].z - crd_chg2.z
-      };
-      const real_pw r12_2 = d12[0]*d12[0] + d12[1]*d12[1] + d12[2]*d12[2];
-      const real_pw r12 = sqrt(r12_2);
-      if(r12 < D_CUTOFF){
-	atomicAdd(&d_pairs[4],1);
-      }
-      //atomicAdd(&d_realbuf[0], r12);
-      //if(global_threadIdx == 1){
-      //while(d_realbuf[0] > 100000){
-      //atomicAdd(&d_realbuf[0], -100000);
-      //}
-      //}
-      atomicAdd(&d_realbuf[1], d_crd_chg[a1].w*d_crd_chg[a2].w);
-      if(global_threadIdx == 1){
-	while(d_realbuf[1] > 100000){
-	  atomicAdd(&d_realbuf[1], -100000);
-	}
-      }
-      */
-      //
-  
-      //if(cur_ene_vdw!=0.0 || cur_ene_ele!=0.0) atomicAdd(&d_pairs[2],1);
-      //printf("dbg02ene %d a(%d-%d) c(%d-%d): %10e %10e %10e %10e\n",global_threadIdx, a1, a2,c1,c2,ene_vdw, ene_ele,cur_ene_vdw, cur_ene_ele);
-      //return;
 
       ene_vdw += cur_ene_vdw;
       ene_ele += cur_ene_ele;
-      //printf("dbg2 %d %d \n",atom_idx1, atom_idx2);
       
       work_c1[0] += w1;
       work_c1[1] += w2;
       work_c1[2] += w3;
-      //work_c1[atom_idx1 * 3 + 0] += w1;
-      //work_c1[atom_idx1 * 3 + 1] += w2;
-    //work_c1[atom_idx1 * 3 + 2] += w3;
-    
-    //work_c2[0] -= w1;
-    //work_c2[1] -= w2;
-    //work_c2[2] -= w3;
-    //printf("dbg3\n");
-    //    if(w1 != 0.0) printf("cp %d: %d-%d\n",cp, c1, c2);
-    //printf("SHFL wapridx:%d lane:%d a2:%d w:%12.8e %12.8e %12.8e\n", warpIdx, laneIdx, a2, w1, w2, w3);
     }    
     if(flg_mod_15mask){
       for(int i = 32; i >= 1; i/=2){
@@ -1280,79 +1219,35 @@ __global__ void kernel_enumerate_cell_pair(//const int2* d_uni2cell_z,
 					   const real4* d_crd_chg,
 					   const real2* d_cell_z,
 					   const int* d_idx_xy_head_cell,
-					   const int* d_atomids,
-					   const int* d_nb15off_orig,
-					   const int* d_nb15off,
+					   const int* d_idx_cell_column,
 					   int * d_n_cell_pairs,
 					   CellPair* d_cell_pairs
 					   ){
-  // 1 warp calculates pairs with a cell
+  // 1 warp calculates pairs with a column
+
   const int g_thread_id = (threadIdx.x + blockIdx.x * blockDim.x);
   const int cell1_id = g_thread_id/D_N_NEIGHBOR_COL; 
   if(cell1_id >= D_N_CELLS) return;
   const int neighbor_col_id = g_thread_id%D_N_NEIGHBOR_COL; 
   const int cell1_id_in_block = cell1_id - blockIdx.x*blockDim.x/D_N_NEIGHBOR_COL;
-  /*
-  if(cell1_id_in_block >= MAX_N_CELL_BLOCK) {
-    printf("The number of cells in each block exceeds the constant MAX_N_CELL_BLOCK: %d / %d",
-	   cell1_id_in_block, MAX_N_CELL_BLOCK);
-  }
 
-  __shared__ int s_nb15off[MAX_N_CELL_BLOCK*N_ATOM_CELL*MAX_N_NB15OFF];
-
-  if(threadIdx.x == 0 || neighbor_col_id == 0){
-    for(int i=0; i<N_ATOM_CELL*MAX_N_NB15OFF; i++){
-      s_nb15off[cell1_id_in_block*N_ATOM_CELL*MAX_N_NB15OFF + i] = d_nb15off[cell1_id*N_ATOM_CELL*MAX_N_NB15OFF+i];
-    }
-  }
-  __syncthreads();
-  */
-
-  //if(neighbor_col_id >= D_N_NEIGHBOR_COL) return;
-  //const int laneIdx = threadIdx.x%WARPSIZE;
-  //const int warpIdx = threadIdx.x/WARPSIZE;
   int cell1_crd[3];
-
-  const real4 crd_chg11 = d_crd_chg[cell1_id*N_ATOM_CELL];
-  cell1_crd[0] = floor((crd_chg11.x - PBC_LOWER_BOUND[0]) / D_L_CELL_XYZ[0]);
-  cell1_crd[1] = floor((crd_chg11.y - PBC_LOWER_BOUND[1]) / D_L_CELL_XYZ[1]);
-  const int col1_id = cell1_crd[0] + cell1_crd[1] * D_N_CELLS_XYZ[0];
+  const int col1_id = d_idx_cell_column[cell1_id];
+  //const real4 crd_chg11 = d_crd_chg[cell1_id*N_ATOM_CELL];
+  cell1_crd[0] = col1_id%D_N_CELLS_XYZ[0];
+  cell1_crd[1] = col1_id/D_N_CELLS_XYZ[0];
+  //const int col1_id = cell1_crd[0] + cell1_crd[1] * D_N_CELLS_XYZ[0];
   cell1_crd[2] = cell1_id - d_idx_xy_head_cell[col1_id];
-    //g_thread_id - d_idx_xy_head_cell[cell1_id];
-  const real_pw cell1_z_bottom = crd_chg11.z;
+  //g_thread_id - d_idx_xy_head_cell[cell1_id];
+  const real_pw cell1_z_bottom = d_cell_z[cell1_id].x;
   const real_pw cell1_z_top = d_cell_z[cell1_id].y;
-  /*
-  int first_uni_z[3] = {0, 0, 0};
-  int last_uni_z[3] = {0, 0, 0};
-  int tmp_first = floor((z_bottom1-PBC_LOWER_BOUND[2]) / D_L_UNI_Z) - 2;
-  if(tmp_first < 0){
-    first_uni_z[0] = D_N_UNI_Z + tmp_first;
-    last_uni_z[0] = D_N_UNI_Z -1;
-    tmp_first = 0;
-  }else{
-    first_uni_z[0] = -1;
-    last_uni_z[0] = -1;
-  }
-  first_uni_z[1] = tmp_first;
 
-  int tmp_last = floor((z_top1 - PBC_LOWER_BOUND[2])/D_L_UNI_Z) + 2;
-  if(tmp_last >= D_N_UNI_Z){
-    first_uni_z[2] = 0;
-    last_uni_z[2] = tmp_last - D_N_UNI_Z;
-    last_uni_z[1] = D_N_UNI_Z -1;
-  }else{
-    first_uni_z[2] = -1;
-    last_uni_z[2] = -1;
-    last_uni_z[1] = tmp_last;
-  }
-  */
   int image[3] = {0,0,0};
-
 
   const int idx_cell_pair_head = D_MAX_N_CELL_PAIRS_PER_CELL * cell1_id;
   int d_cell[3];
   d_cell[0] = neighbor_col_id % (D_N_NEIGHBOR_XYZ[0]*2+1) - D_N_NEIGHBOR_XYZ[0];
-  d_cell[1] = neighbor_col_id / (D_N_NEIGHBOR_XYZ[0]*2+1) - D_N_NEIGHBOR_XYZ[0];
+  d_cell[1] = neighbor_col_id / (D_N_NEIGHBOR_XYZ[0]*2+1) - D_N_NEIGHBOR_XYZ[1];
 
   int rel_x[3];
   int cell2_crd[3];
@@ -1375,8 +1270,8 @@ __global__ void kernel_enumerate_cell_pair(//const int2* d_uni2cell_z,
 
   /*  20150612-- */
   const int col2_id = cell2_crd[0] + cell2_crd[1] * D_N_CELLS_XYZ[0];
-  const int n_cells_in_col2 = d_idx_xy_head_cell[col2_id+1] -
-    d_idx_xy_head_cell[col2_id];
+  const int bottom_cell2_id = d_idx_xy_head_cell[col2_id];
+  const int n_cells_in_col2 = d_idx_xy_head_cell[col2_id+1] - bottom_cell2_id;
   int inc=1;
   bool flg_up=true;
   bool flg_down=true;
@@ -1394,18 +1289,7 @@ __global__ void kernel_enumerate_cell_pair(//const int2* d_uni2cell_z,
       cell2_crd[2] -= n_cells_in_col2;
     }
 
-    const int cell2_id = d_idx_xy_head_cell[col2_id] + cell2_crd[2];
-
-    /*
-    if(cell2_id >= D_N_CELLS){
-      printf("Error! t:%d d_c2: %d cell: %d, %d / %d , col2: %d , nz_col2: %d head: %d crd.z: %d %d\n",
-	     g_thread_id, d_cell[2], cell1_id, cell2_id , D_N_CELLS,
-	     col2_id, n_cells_in_col2, d_idx_xy_head_cell[col2_id], cell1_crd[2], cell2_crd[2]);
-    }
-    flg_up = false;
-    flg_down = false;
-    */
-
+    const int cell2_id = bottom_cell2_id + cell2_crd[2];
     const real_pw cell2_z_bottom = d_cell_z[cell2_id].x + image[2] * PBC_L[2];
     const real_pw cell2_z_top = d_cell_z[cell2_id].y + image[2] * PBC_L[2];
     /*
@@ -1415,8 +1299,6 @@ __global__ void kernel_enumerate_cell_pair(//const int2* d_uni2cell_z,
 	     cell2_id);//, cell2_z_bottom, cell2_z_top);
     }
     */
-
-
     if(cell2_z_top < cell1_z_bottom){
       dx[2] = cell1_z_bottom - cell2_z_top;
       dx[2] = dx[2] * dx[2];
@@ -1448,12 +1330,23 @@ __global__ void kernel_enumerate_cell_pair(//const int2* d_uni2cell_z,
     }*/
 
     if(dx[0]+dx[1]+dx[2] < D_CUTOFF_PAIRLIST_2){
-
       if(check_valid_pair(cell1_id, cell2_id)){
 	const int cp_idx_cell = atomicAdd(&d_n_cell_pairs[cell1_id], 1);
 	if(cp_idx_cell >=  D_MAX_N_CELL_PAIRS_PER_CELL){
-	  printf("Index exceeds the maximum value. %d / %d\n",
-		 cp_idx_cell, D_MAX_N_CELL_PAIRS_PER_CELL);
+	//if(blockIdx.x==0&&threadIdx.x==10){
+	  const real4 crd_chg11 = d_crd_chg[cell1_id*N_ATOM_CELL];
+ 
+	  printf("DBG ! Index exceeds the maximum value. %d / %d - cell: %d %d c1_in_block: %d \n cell_crd:[%d %d %d] - [%d %d %d] col:%d (head:%d) neighb:%d c1z:[%f %f] c2z:[%f %f]\ncrd:[%f %f %f] pbc[%f %f %f] lb[%f %f %f] L_CELL[%f %f]\n",
+		 cp_idx_cell, D_MAX_N_CELL_PAIRS_PER_CELL,
+		 cell1_id, cell2_id, cell1_id_in_block,
+		 cell1_crd[0], cell1_crd[1], cell1_crd[2], 
+		 cell2_crd[0], cell2_crd[1], cell2_crd[2],
+		 col1_id, d_idx_xy_head_cell[col1_id], neighbor_col_id,
+		 cell1_z_bottom, cell1_z_top, cell2_z_bottom, cell2_z_top,
+		 crd_chg11.x, crd_chg11.y, crd_chg11.z,
+		 PBC_L[0], PBC_L[1], PBC_L[2], PBC_LOWER_BOUND[0], PBC_LOWER_BOUND[1], PBC_LOWER_BOUND[2],
+		 D_L_CELL_XYZ[0],D_L_CELL_XYZ[1]
+		 );
 	}
 	
 	d_cell_pairs[idx_cell_pair_head + cp_idx_cell] = 
@@ -1463,8 +1356,6 @@ __global__ void kernel_enumerate_cell_pair(//const int2* d_uni2cell_z,
       
       }
     }
-
-
   }
   /*
   for(int i_img = 0; i_img < 3; i_img++){
@@ -1572,8 +1463,54 @@ __global__ void set_cell_pairs_nb15off(const int* d_idx_head_cell_pairs,
 			d_cell_pairs[cp].pair_mask);
   
 }
-extern "C" int cuda_enumerate_cell_pairs(const int n_cells,// const int n_uni,
-					 const int n_neighbor_col){
+int set_idx_cell_column(const int* idx_atom_cell_xy,
+			const int n_cells, const int* h_atomids
+			){
+  for(int cell_id = 0; cell_id < n_cells; cell_id++ ){
+    h_idx_cell_column[cell_id] = idx_atom_cell_xy[cell_id*N_ATOM_CELL];
+    //printf("cell: %d col: %d atid: %d \n",
+    //cell_id, h_idx_cell_column[cell_id],
+    //h_atomids[cell_id*N_ATOM_CELL]);
+  }
+  return 0;
+}
+extern "C" int cuda_enumerate_cell_pairs(int*& h_atomids,
+					 int*& h_idx_xy_head_cell,
+					 const int max_n_atoms,
+					 const int n_atom_array,
+					 const int n_columns,
+					 const int n_cells,// const int n_uni,
+					 const int n_neighbor_col,
+					 const int* idx_atom_cell_xy){
+  HANDLE_ERROR(cudaMemcpy(d_atomids, h_atomids,
+			  n_atom_array * sizeof(int),
+			  cudaMemcpyHostToDevice));
+  HANDLE_ERROR(cudaMemcpy(d_idx_xy_head_cell, h_idx_xy_head_cell,
+  			  n_columns * sizeof(int),
+  			  cudaMemcpyHostToDevice));
+  HANDLE_ERROR( cudaMemset(d_atomids_rev, -1, sizeof(int)*max_n_atoms ));
+  HANDLE_ERROR( cudaMemset(d_nb15off, -1, sizeof(int)*max_n_atoms*MAX_N_NB15OFF ));
+  set_idx_cell_column(idx_atom_cell_xy, n_cells, h_atomids);
+  HANDLE_ERROR(cudaMemcpy(d_idx_cell_column, h_idx_cell_column,
+  			  n_cells * sizeof(int),
+  			  cudaMemcpyHostToDevice));
+  
+  int blocks1 = (n_atom_array + REORDER_THREADS-1) / REORDER_THREADS;
+  kernel_set_atominfo<<<blocks1, REORDER_THREADS>>>(d_atomids,
+						    d_atomtype_orig,
+						    d_charge_orig,
+						    d_atomtype,
+						    d_crd_chg,
+						    d_atomids_rev);
+
+  int blocks2 = (n_atom_array*MAX_N_NB15OFF + REORDER_THREADS-1) / REORDER_THREADS;
+
+  kernel_set_nb15off<<<blocks2, REORDER_THREADS>>>(d_atomids,
+						   d_atomids_rev,
+						   d_nb15off_orig,
+						   d_nb15off);
+
+  
 
   cudaStream_t stream1;
   //cudaStream_t stream2;
@@ -1586,8 +1523,12 @@ extern "C" int cuda_enumerate_cell_pairs(const int n_cells,// const int n_uni,
   const int blocks2 = (n_cells + REORDER_THREADS-1) / REORDER_THREADS;  
   kernel_set_uniform_grid<<<blocks2, REORDER_THREADS, 0, stream1>>>(d_crd_chg, d_uni2cell_z);
   */
-  HANDLE_ERROR( cudaMemset(d_cell_pairs, -1, sizeof(MiniCell)*D_MAX_N_CELL_PAIRS));
-  HANDLE_ERROR( cudaMemset(d_cell_pairs_buf, -1, sizeof(MiniCell)*D_MAX_N_CELL_PAIRS));
+  //HANDLE_ERROR( cudaMemset(d_cell_pairs, -1, sizeof(MiniCell)*D_MAX_N_CELL_PAIRS));
+  //HANDLE_ERROR( cudaMemset(d_cell_pairs_buf, -1, sizeof(MiniCell)*D_MAX_N_CELL_PAIRS));
+
+  HANDLE_ERROR( cudaMemset(d_n_cell_pairs, 0, sizeof(int)*n_cells ));
+  HANDLE_ERROR( cudaMemset(d_idx_head_cell_pairs, -1, sizeof(int)*n_cells+1 ));
+
   const int blocks3 = (max_n_cell_pairs + REORDER_THREADS-1) / REORDER_THREADS;  
   kernel_init_cell_pairs<<<blocks3, REORDER_THREADS, 0, stream1>>>(d_cell_pairs,
 								   d_cell_pairs_buf);
@@ -1596,8 +1537,7 @@ extern "C" int cuda_enumerate_cell_pairs(const int n_cells,// const int n_uni,
   kernel_enumerate_cell_pair<<<blocks4, REORDER_THREADS,0,stream1>>>(//d_uni2cell_z,
 								     d_crd_chg, d_cell_z,
 								     d_idx_xy_head_cell,
-								     d_atomids, d_nb15off_orig,
-								     d_nb15off,
+								     d_idx_cell_column,
 								     d_n_cell_pairs,
 								     d_cell_pairs_buf);
 								     //d_cell_pairs);
@@ -1613,14 +1553,12 @@ extern "C" int cuda_enumerate_cell_pairs(const int n_cells,// const int n_uni,
     (d_cell_pairs, d_cell_pairs_buf, 
      d_n_cell_pairs, d_idx_head_cell_pairs);
 
-
   const int blocks5 = (n_cell_pairs + REORDER_THREADS - 1) / REORDER_THREADS;
   set_cell_pairs_nb15off<<<blocks5, REORDER_THREADS, 0, stream1>>>
     (d_idx_head_cell_pairs,
      d_nb15off, d_atomids,
      n_cell_pairs,
      d_cell_pairs);
-
   cudaStreamDestroy(stream1);
   //  cudaStreamDestroy(stream2);
   

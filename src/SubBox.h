@@ -309,8 +309,9 @@ class SubBox : public CelesteObject {
   real_fc get_pote_14ele(){return pote_14ele;};
 
 #ifdef F_CUDA
+  int update_cell_pairs_gpu();
   int gpu_device_setup();
-  int update_device_cell_info();
+  //int update_device_cell_info();
   int calc_energy_pairwise_cuda();
 #endif
   

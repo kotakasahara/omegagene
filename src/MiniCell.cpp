@@ -75,13 +75,13 @@ int MiniCell::alloc_variables(){
   cell_pairs = new CellPair[max_n_cell_pairs];
   idx_head_cell_pairs = new int[max_n_cells+1];
   idx_xy_head_cell = new int[n_columns+1];
+
 #endif
   // region
   region_atoms = new int*[125];
   for(int i=0; i < 125; i++){
     region_atoms[i] = new int[max_n_atoms_region[i]];
   }
-
   uni2cell_z = new int*[n_uni];
   for(int i=0; i < n_uni; i++){
     uni2cell_z[i] = new int[2];
@@ -90,9 +90,9 @@ int MiniCell::alloc_variables(){
   for(int i=0; i < max_n_cells; i++){
     cell2uni_z[i] = new int[2];
   }
-
   return 0;
 }
+
 int MiniCell::init_variables(){
   for(int i=0; i < max_n_cells; i++)
     for(int j=0; j < 3; j++)
@@ -249,7 +249,7 @@ int MiniCell::set_grid_xy(){
   
   max_n_cell_pairs = ((n_neighbors_xyz[0]*2+1) *
 		      (n_neighbors_xyz[1]*2+1) * (n_neighbors_xyz[0]+n_neighbors_xyz[1]+2) )
-    * 0.5 * max_n_cells;
+    * 0.5 * max_n_cells * COEF_MAX_N_CELL_PAIRS;
   //max_n_cell_pairs = max_n_cells * max_n_cells;
   //cout << "max_n_cell_pairs : " << max_n_cell_pairs << endl;
 

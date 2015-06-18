@@ -6,7 +6,7 @@ CelesteObject::CelesteObject(){
 //const int CelesteObject::MAX_N_ATOMTYPE = 40;
 
 const string CelesteObject::EXE = "celeste";
-const string CelesteObject::ABOUT_ME = "celeste ver.0.35.r.2 16-jun-2015";
+const string CelesteObject::ABOUT_ME = "celeste ver.0.35.s 18-jun-2015";
 const string CelesteObject::DESCRIPTION = "Enumerate CellPair on GPU";
 //const int CelesteObject::REAL_BYTE = 4;
 const int CelesteObject::REAL_BYTE = 8;

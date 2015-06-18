@@ -32,7 +32,7 @@ cudaStream_t stream_pair_home;
 
 #define N_ATOM_CELL  8
 #define N_ATOM_CELL_3  24
-#define MAX_N_CELL_BLOCK 16
+#define MAX_N_CELL_BLOCK 24
 
 #define WARPSIZE 32
 
@@ -43,7 +43,7 @@ __constant__ int      D_N_CELL_PAIRS;
 __constant__ int      D_MAX_N_CELL_PAIRS;
 __constant__ int      D_N_CELLS;
 __constant__ int      D_MAX_N_CELL_PAIRS_PER_CELL;
-__constant__ int      D_MAX_N_CELL_PAIRS_PER_COLUMN;
+//__constant__ int      D_MAX_N_CELL_PAIRS_PER_COLUMN;
 __constant__ int      D_N_CELLS_XYZ[3];
 __constant__ int      D_N_COLUMNS;
 __constant__ int      D_N_NEIGHBOR_XYZ[3];
@@ -71,6 +71,7 @@ __constant__ real_pw  D_FCOEFF;
 // x,y,z: Cartesian coordinate,
 // w: charge
 real4* d_crd_chg;
+real4* h_crd_chg;
 real2* d_cell_z;
 real_pw* d_crd;
 
@@ -114,6 +115,9 @@ int* d_nb15off_orig;
 
 int max_n_cell_pairs;
 int n_cell_pairs;
+
+int* d_idx_cell_column;
+int* h_idx_cell_column;
 
 //texture<real, 2> tex_lj_6term;
 //texture<real, 2> tex_lj_12term;
