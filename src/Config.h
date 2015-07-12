@@ -71,6 +71,8 @@ class Config : public CelesteObject {
   int dist_restraint_type;
   real dist_restraint_weight;
 
+  int gpu_device_id;
+
   Config();
   ~Config();
   int set_defaults();

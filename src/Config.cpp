@@ -60,6 +60,8 @@ int Config::set_defaults(){
   dist_restraint_type = DISTREST_NONE;
   dist_restraint_weight = 0.0;
 
+  gpu_device_id = 0;
+
   return 0;
 }
 void Config::setAll(int argn, char* argv[]){
@@ -194,6 +196,7 @@ void Config::setAll(vector<string> arg){
       else{ dist_restraint_type = DISTREST_DUMMY; }
     }
     else if(*itr=="--dist-restraint-weight"){ dist_restraint_weight = atof((*++itr).c_str()); }
+    else if(*itr=="--gpu-device-id"){ gpu_device_id = atof((*++itr).c_str()); }
     else{
       cerr<<"unknown keyword <"<<(*itr)<<">"<<endl;
     }

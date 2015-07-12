@@ -1,7 +1,8 @@
 #include "SubBox.h"
 
 #ifdef F_CUDA
-
+extern "C" int cuda_set_device(int device_id);
+extern "C" int cuda_print_device_info(int myrank=0, bool verbose=false);
 extern "C" int cuda_alloc_atom_info(int n_atoms,
 				    int n_atom_array,
 				    int max_n_cells,
@@ -472,8 +473,8 @@ int SubBox::set_parameters(int in_n_atoms, PBC* in_pbc,
 }
 
 int SubBox::set_nsgrid(){
-  // #ifdef F_CUDA  
-  //  cuda_print_device_info(0, true);
+  //#ifdef F_CUDA  
+  //cuda_print_device_info(0, true);
   //#endif
 
   //cout << "set_grid_parameters" << endl;
@@ -1711,8 +1712,8 @@ int SubBox::init_thermostat(const int in_thermostat_type,
 
 #ifdef F_CUDA
 int SubBox::gpu_device_setup(){
-  
-  //cuda_print_device_info();
+  cuda_set_device(cfg->gpu_device_id);
+  cuda_print_device_info(0, true);
   //cuda_memcpy_htod_grid_pairs(mmsys.nsgrid.grid_pairs,
   //mmsys.nsgrid.n_grid_pairs);
   cuda_alloc_atom_info(max_n_atoms_exbox,
