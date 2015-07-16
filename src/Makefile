@@ -1,6 +1,6 @@
-EXECUTABLE = celeste
+#EXECUTABLE = celeste
 #EXECUTABLE = celeste_wons
-#EXECUTABLE = celeste_gpu
+EXECUTABLE = celeste_gpu
 
 ICCFLAGS = -ansi -fast -w1 
 #ICCFLAGS = -ansi -O0 -g #-w1 # -std=c++11

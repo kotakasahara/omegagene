@@ -31,7 +31,7 @@ class Config : public CelesteObject {
   real time_step;
   int electrostatic;
   real ele_alpha;
-  int center_of_motion;
+  int com_cancel;
   int n_com_cancel_groups;
   int com_cancel_groups[MAX_N_COM_GROUPS];
   int n_com_cancel_groups_name;

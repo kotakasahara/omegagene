@@ -26,7 +26,7 @@ int Config::set_defaults(){
   thermostat_type = THMSTT_NONE;
   temperature = 300;
 
-  center_of_motion = COM_NONE;
+  com_cancel = COM_NONE;
   n_com_cancel_groups = 0;
   n_com_cancel_groups_name = 0;
   
@@ -60,7 +60,7 @@ int Config::set_defaults(){
   dist_restraint_type = DISTREST_NONE;
   dist_restraint_weight = 0.0;
 
-  gpu_device_id = 0;
+  gpu_device_id = -1;
 
   return 0;
 }
@@ -136,10 +136,10 @@ void Config::setAll(vector<string> arg){
       else{ expanded_ensemble = EXPAND_DUMMY; } 
     }
     else if(*itr=="--temperature"){ temperature = atof((*++itr).c_str()); }
-    else if(*itr=="--center-of-motion"){
+    else if(*itr=="--center-of-mass"){
       itr++;
-      if(*itr=="none"){ center_of_motion = COM_NONE; }
-      else if(*itr=="cancel"){ center_of_motion = COM_CANCEL; }
+      if(*itr=="none"){ com_cancel = COM_NONE; }
+      else if(*itr=="cancel"){ com_cancel = COM_CANCEL; }
       //itr++;
       //if(*itr=="all"){ center_of_motion = ; }
     }
