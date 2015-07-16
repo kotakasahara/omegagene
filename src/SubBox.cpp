@@ -1712,8 +1712,9 @@ int SubBox::init_thermostat(const int in_thermostat_type,
 
 #ifdef F_CUDA
 int SubBox::gpu_device_setup(){
-  cuda_set_device(cfg->gpu_device_id);
-  cuda_print_device_info(0, true);
+  if(cfg->gpu_device_id >= 0)
+    cuda_set_device(cfg->gpu_device_id);
+  //cuda_print_device_info(0, true);
   //cuda_memcpy_htod_grid_pairs(mmsys.nsgrid.grid_pairs,
   //mmsys.nsgrid.n_grid_pairs);
   cuda_alloc_atom_info(max_n_atoms_exbox,

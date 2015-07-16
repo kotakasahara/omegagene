@@ -83,8 +83,8 @@ class MiniCell : public CelesteObject{
   int *idx_xy_head_atom;
 
   // number of atoms in each xy column
-  //   n_atoms_xy[cell xy id] = N
-  int *n_atoms_xy;
+  //   n_atoms_col[cell xy id] = N
+  int *n_atoms_col;
 
 
   // the maximum number of atos for each column
@@ -193,7 +193,7 @@ class MiniCell : public CelesteObject{
   int debug_set_atoms_into_grid();
   //int update_cell_assign(const real** in_crd);
   int update_crd(real** in_crd);
-  int set_idx_xy_head_atom_from_n_atoms_xy();
+  int set_idx_xy_head();
   int set_atomids_rev();
 
   int set_atomids_buf();
@@ -228,7 +228,7 @@ class MiniCell : public CelesteObject{
   int get_n_atoms_in_cell(const int cid){
     int col = get_column_id_from_crd(cell_crd[cid][0], cell_crd[cid][1]);
     if(cell_crd[cid][2] < n_cells_z[col]) return N_ATOM_CELL;
-    else return n_atoms_xy[col]%N_ATOM_CELL;
+    else return n_atoms_col[col]%N_ATOM_CELL;
   }
   int*& get_atomids(){return atomids;}
   int*& get_atomids_rev(){return atomids_rev;}
