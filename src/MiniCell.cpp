@@ -300,8 +300,8 @@ int MiniCell::set_atoms_into_grid_xy(){
       }
 
       real_pw x = crd[atom_id_g*3+d] - box_lower_bound[d];
-      //while(x < 0.0) x += exbox_l[d];
-      //while(x >= exbox_l[d]) x -= exbox_l[d];
+      while(x < 0.0) x += exbox_l[d];
+      while(x >= exbox_l[d]) x -= exbox_l[d];
 
       cell_crd_xy[d] = floor(x / L_cell_xyz[d]);
     }

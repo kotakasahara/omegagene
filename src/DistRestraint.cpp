@@ -1,7 +1,6 @@
 #include "DistRestraint.h"
 
 DRUnit::DRUnit(){
-
 }
 DRUnit::~DRUnit(){
 }

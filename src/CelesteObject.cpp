@@ -6,8 +6,8 @@ CelesteObject::CelesteObject(){
 //const int CelesteObject::MAX_N_ATOMTYPE = 40;
 
 const string CelesteObject::EXE = "celeste";
-const string CelesteObject::ABOUT_ME = "celeste ver.0.35.s6 15-jul-2015";
-const string CelesteObject::DESCRIPTION = "minor revision";
+const string CelesteObject::ABOUT_ME = "celeste ver.0.35.s6-com_remove 17-jul-2015";
+const string CelesteObject::DESCRIPTION = "COMMotion class";
 //const int CelesteObject::REAL_BYTE = 4;
 const int CelesteObject::REAL_BYTE = 8;
 const real CelesteObject::PI = 3.14159265;

@@ -9,6 +9,7 @@
 #include "ConstraintShake.h"
 #include "ExpandVMcMD.h"
 #include "Thermostat.h"
+#include "COMMotion.h"
 #include <ctime>
 
 using namespace std;
@@ -157,6 +158,8 @@ class SubBox : public CelesteObject {
 
   bool flg_mod_15mask;
   
+  COMMotion commotion;
+
   clock_t ctime_setgrid;
   clock_t ctime_enumerate_cellpairs;
   clock_t ctime_calc_energy_pair;
@@ -323,11 +326,11 @@ class SubBox : public CelesteObject {
   int expand_apply_bias(unsigned long cur_step, real in_lambda);
   void expand_enable_vs_transition();
 
-  int cancel_com_motion(int n_groups, int* group_ids,
+  int set_com_motion(int n_groups, int* group_ids,
 			int*  n_atoms_in_groups, 
 			int** groups,
 			real* mass_inv_groups);
-
+  int cancel_com_motion();
   //int set_box_region_info(const real** in_crd);  
   //int set_max_n_atoms_region();
   //int get_region_id_from_crd(int width, int rx, int ry, int rz);
