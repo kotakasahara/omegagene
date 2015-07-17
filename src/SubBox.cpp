@@ -1807,8 +1807,9 @@ int SubBox::apply_thermostat_with_shake(const int max_loops,
 					  mass, mass_inv,
 					  constraint,
 					  pbc, buf_crd,
-					  max_loops, tolerance);
-
+					  max_loops, tolerance,
+					  &commotion, atomids_rev);
+  
   return 0;
 }
 

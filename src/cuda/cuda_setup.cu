@@ -1332,6 +1332,7 @@ __global__ void kernel_enumerate_cell_pair(//const int2* d_uni2cell_z,
     if(dx[0]+dx[1]+dx[2] < D_CUTOFF_PAIRLIST_2){
       if(check_valid_pair(cell1_id, cell2_id)){
 	const int cp_idx_cell = atomicAdd(&d_n_cell_pairs[cell1_id], 1);
+	/*
 	if(cp_idx_cell >=  D_MAX_N_CELL_PAIRS_PER_CELL){
 	//if(blockIdx.x==0&&threadIdx.x==10){
 	  const real4 crd_chg11 = d_crd_chg[cell1_id*N_ATOM_CELL];
@@ -1348,7 +1349,7 @@ __global__ void kernel_enumerate_cell_pair(//const int2* d_uni2cell_z,
 		 D_L_CELL_XYZ[0],D_L_CELL_XYZ[1]
 		 );
 	}
-	
+	*/
 	d_cell_pairs[idx_cell_pair_head + cp_idx_cell] = 
 	  get_new_cell_pair(cell1_id, cell2_id,
 			    cell1_id_in_block,

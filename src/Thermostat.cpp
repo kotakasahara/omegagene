@@ -27,16 +27,18 @@ int ThermostatObject::apply_thermostat(const int n_atoms,
   return 0;
 }
 int ThermostatObject::apply_thermostat_with_shake(int n_atoms,
-					  real_fc* work,
-					  real* crd, real* crd_prev,
-					  real* vel, real* vel_next,
-					  real_pw* mass,
-					  real_pw* mass_inv,
-					  ConstraintObject* constraint,
-					  PBC* pbc,
+						  real_fc* work,
+						  real* crd, real* crd_prev,
+						  real* vel, real* vel_next,
+						  real_pw* mass,
+						  real_pw* mass_inv,
+						  ConstraintObject* constraint,
+						  PBC* pbc,
 						  real* buf_crd,
-						   const int max_loops,
-						  const real tolerance){
+						  const int max_loops,
+						  const real tolerance,
+						  COMMotion* commotion,
+						  int* atomids_rev){
 
   return 0;
 }
@@ -92,7 +94,9 @@ int ThermostatScaling::apply_thermostat_with_shake(int n_atoms,
 						   PBC* pbc,
 						   real* buf_crd,
 						   const int max_loops,
-						   const real tolerance){
+						   const real tolerance,
+						   COMMotion* commotion,
+						   int* atomids_rev){
   //DBG
   bool converge = false;
   for(int idx = 0; idx < n_atoms*3; idx++)
@@ -157,7 +161,7 @@ int ThermostatScaling::apply_thermostat_with_shake(int n_atoms,
       }
       kine_pre += vel_norm * mass[i_atom];
     }
-    
+    commotion->cancel_translation(atomids_rev, vel_next);
     for(int i_atom = 0, i_atom_3 = 0;
 	i_atom < n_atoms; i_atom++, i_atom_3+=3){
       for(int d=0; d < 3; d++){
@@ -237,7 +241,9 @@ int ThermostatHooverEvans::apply_thermostat_with_shake(int n_atoms,
 						   PBC* pbc,
 						   real* buf_crd,
 						   const int max_loops,
-						   const real tolerance){
+						       const real tolerance,
+						       COMMotion* commotion,
+						       int* atomids_rev){
   cout << "Warning: This function does nothing. ThermostatHooverEvans::apply_thermostat_with_shake " << endl;
   return 0;
 }
@@ -262,16 +268,18 @@ int ThermostatNoseHoover::apply_thermostat(int n_atoms,
   return 0;
 }
 int ThermostatNoseHoover::apply_thermostat_with_shake(int n_atoms,
-						   real_fc* work,
-						   real* crd, real* crd_prev,
-						   real* vel, real* vel_next,
-						   real_pw* mass,
-						   real_pw* mass_inv,
-						   ConstraintObject* constraint,
-						   PBC* pbc,
-						   real* buf_crd,
-						   const int max_loops,
-						   const real tolerance){
+						      real_fc* work,
+						      real* crd, real* crd_prev,
+						      real* vel, real* vel_next,
+						      real_pw* mass,
+						      real_pw* mass_inv,
+						      ConstraintObject* constraint,
+						      PBC* pbc,
+						      real* buf_crd,
+						      const int max_loops,
+						      const real tolerance,
+						      COMMotion* commotion,
+						      int* atomids_rev){
   cout << "Warning: This function does nothing. ThermostatNoseHoover::apply_thermostat_with_shake " << endl;
   return 0;
 }
