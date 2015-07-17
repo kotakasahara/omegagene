@@ -1,0 +1,303 @@
+SHAKE> SHAKE
+trpcage
+    4     1     2     3     4 -> ;     N  ASN   H1  ASN   H2  ASN   H3  ASN
+   1.0193   1.6415   1.0128   1.0090   1.6394   1.6494
+
+    2     5     6 -> ;    CA  ASN   HA  ASN
+   1.0858
+
+    3     7     8     9 -> ;    CB  ASN  HB2  ASN  HB3  ASN
+   1.0851   1.7425   1.0899
+
+    3    12    13    14 -> ;   ND2  ASN HD21  ASN HD22  ASN
+   1.0205   1.7669   1.0092
+
+    2    17    18 -> ;     N  LEU    H  LEU
+   1.0154
+
+    2    19    20 -> ;    CA  LEU   HA  LEU
+   1.0970
+
+    3    21    22    23 -> ;    CB  LEU  HB2  LEU  HB3  LEU
+   1.0924   1.7469   1.0920
+
+    2    24    25 -> ;    CG  LEU   HG  LEU
+   1.0885
+
+    4    26    27    28    29 -> ;   CD1  LEU HD11  LEU HD12  LEU HD13  LEU
+   1.0871   1.7846   1.0900   1.0924   1.7779   1.7483
+
+    4    30    31    32    33 -> ;   CD2  LEU HD21  LEU HD22  LEU HD23  LEU
+   1.0893   1.7628   1.0892   1.0928   1.7754   1.7851
+
+    2    36    37 -> ;     N  TYR    H  TYR
+   1.0195
+
+    2    38    39 -> ;    CA  TYR   HA  TYR
+   1.0872
+
+    3    40    41    42 -> ;    CB  TYR  HB2  TYR  HB3  TYR
+   1.0860   1.7508   1.0887
+
+    2    44    45 -> ;   CD1  TYR  HD1  TYR
+   1.0773
+
+    2    46    47 -> ;   CE1  TYR  HE1  TYR
+   1.0801
+
+    2    49    50 -> ;    OH  TYR   HH  TYR
+   0.9795
+
+    2    51    52 -> ;   CE2  TYR  HE2  TYR
+   1.0795
+
+    2    53    54 -> ;   CD2  TYR  HD2  TYR
+   1.0797
+
+    2    57    58 -> ;     N  ILE    H  ILE
+   1.0192
+
+    2    59    60 -> ;    CA  ILE   HA  ILE
+   1.0957
+
+    2    61    62 -> ;    CB  ILE   HB  ILE
+   1.0880
+
+    4    63    64    65    66 -> ;   CG2  ILE HG21  ILE HG22  ILE HG23  ILE
+   1.0933   1.7753   1.0892   1.0839   1.7723   1.7635
+
+    3    67    68    69 -> ;   CG1  ILE HG12  ILE HG13  ILE
+   1.0956   1.7556   1.0907
+
+    4    70    71    72    73 -> ;   CD1  ILE HD11  ILE HD12  ILE HD13  ILE
+   1.0913   1.7759   1.0860   1.0893   1.7682   1.7746
+
+    2    76    77 -> ;     N  GLN    H  GLN
+   1.0097
+
+    2    78    79 -> ;    CA  GLN   HA  GLN
+   1.0893
+
+    3    80    81    82 -> ;    CB  GLN  HB2  GLN  HB3  GLN
+   1.0933   1.7627   1.0961
+
+    3    83    84    85 -> ;    CG  GLN  HG2  GLN  HG3  GLN
+   1.0902   1.7550   1.0917
+
+    3    88    89    90 -> ;   NE2  GLN HE21  GLN HE22  GLN
+   1.0168   1.7647   1.0145
+
+    2    93    94 -> ;     N  TRP    H  TRP
+   1.0103
+
+    2    95    96 -> ;    CA  TRP   HA  TRP
+   1.0913
+
+    3    97    98    99 -> ;    CB  TRP  HB2  TRP  HB3  TRP
+   1.0901   1.7558   1.0933
+
+    2   101   102 -> ;   CD1  TRP  HD1  TRP
+   1.0801
+
+    2   103   104 -> ;   NE1  TRP  HE1  TRP
+   1.0136
+
+    2   106   107 -> ;   CZ2  TRP  HZ2  TRP
+   1.0800
+
+    2   108   109 -> ;   CH2  TRP  HH2  TRP
+   1.0845
+
+    2   110   111 -> ;   CZ3  TRP  HZ3  TRP
+   1.0828
+
+    2   112   113 -> ;   CE3  TRP  HE3  TRP
+   1.0802
+
+    2   117   118 -> ;     N  LEU    H  LEU
+   1.0136
+
+    2   119   120 -> ;    CA  LEU   HA  LEU
+   1.0921
+
+    3   121   122   123 -> ;    CB  LEU  HB2  LEU  HB3  LEU
+   1.0914   1.7555   1.0963
+
+    2   124   125 -> ;    CG  LEU   HG  LEU
+   1.0924
+
+    4   126   127   128   129 -> ;   CD1  LEU HD11  LEU HD12  LEU HD13  LEU
+   1.0948   1.7782   1.0878   1.0874   1.7685   1.7767
+
+    4   130   131   132   133 -> ;   CD2  LEU HD21  LEU HD22  LEU HD23  LEU
+   1.0893   1.7589   1.0876   1.0911   1.7786   1.7824
+
+    2   136   137 -> ;     N LYS+    H LYS+
+   1.0129
+
+    2   138   139 -> ;    CA LYS+   HA LYS+
+   1.0965
+
+    3   140   141   142 -> ;    CB LYS+  HB2 LYS+  HB3 LYS+
+   1.0984   1.7481   1.0880
+
+    3   143   144   145 -> ;    CG LYS+  HG2 LYS+  HG3 LYS+
+   1.0906   1.7591   1.0917
+
+    3   146   147   148 -> ;    CD LYS+  HD2 LYS+  HD3 LYS+
+   1.0896   1.7768   1.0926
+
+    3   149   150   151 -> ;    CE LYS+  HE2 LYS+  HE3 LYS+
+   1.0897   1.7610   1.0918
+
+    4   152   153   154   155 -> ;    NZ LYS+  HZ1 LYS+  HZ2 LYS+  HZ3 LYS+
+   1.0168   1.6283   1.0116   1.0221   1.6629   1.6358
+
+    2   158   159 -> ;     N ASP-    H ASP-
+   1.0142
+
+    2   160   161 -> ;    CA ASP-   HA ASP-
+   1.0917
+
+    3   162   163   164 -> ;    CB ASP-  HB2 ASP-  HB3 ASP-
+   1.0941   1.7603   1.0912
+
+    2   170   171 -> ;     N  GLY    H  GLY
+   1.0120
+
+    3   172   173   174 -> ;    CA  GLY  HA2  GLY  HA3  GLY
+   1.0867   1.7629   1.0911
+
+    2   177   178 -> ;     N  GLY    H  GLY
+   1.0191
+
+    3   179   180   181 -> ;    CA  GLY  HA2  GLY  HA3  GLY
+   1.0867   1.7563   1.0825
+
+    3   185   186   187 -> ;    CD  PRO  HD2  PRO  HD3  PRO
+   1.0883   1.7842   1.0933
+
+    3   188   189   190 -> ;    CG  PRO  HG2  PRO  HG3  PRO
+   1.0871   1.7859   1.0847
+
+    3   191   192   193 -> ;    CB  PRO  HB2  PRO  HB3  PRO
+   1.0867   1.7840   1.0906
+
+    2   194   195 -> ;    CA  PRO   HA  PRO
+   1.0913
+
+    2   198   199 -> ;     N  SER    H  SER
+   1.0215
+
+    2   200   201 -> ;    CA  SER   HA  SER
+   1.0892
+
+    3   202   203   204 -> ;    CB  SER  HB2  SER  HB3  SER
+   1.0921   1.7720   1.0879
+
+    2   205   206 -> ;    OG  SER   HG  SER
+   0.9795
+
+    2   209   210 -> ;     N  SER    H  SER
+   1.0154
+
+    2   211   212 -> ;    CA  SER   HA  SER
+   1.0957
+
+    3   213   214   215 -> ;    CB  SER  HB2  SER  HB3  SER
+   1.0817   1.7576   1.0864
+
+    2   216   217 -> ;    OG  SER   HG  SER
+   0.9816
+
+    2   220   221 -> ;     N  GLY    H  GLY
+   1.0163
+
+    3   222   223   224 -> ;    CA  GLY  HA2  GLY  HA3  GLY
+   1.0890   1.7698   1.0918
+
+    2   227   228 -> ;     N ARG+    H ARG+
+   1.0151
+
+    2   229   230 -> ;    CA ARG+   HA ARG+
+   1.0924
+
+    3   231   232   233 -> ;    CB ARG+  HB2 ARG+  HB3 ARG+
+   1.0933   1.7730   1.1001
+
+    3   234   235   236 -> ;    CG ARG+  HG2 ARG+  HG3 ARG+
+   1.0911   1.7538   1.0801
+
+    3   237   238   239 -> ;    CD ARG+  HD2 ARG+  HD3 ARG+
+   1.0890   1.7565   1.0825
+
+    2   240   241 -> ;    NE ARG+   HE ARG+
+   1.0173
+
+    3   243   244   245 -> ;   NH1 ARG+ HH11 ARG+ HH12 ARG+
+   1.0116   1.7521   1.0104
+
+    3   246   247   248 -> ;   NH2 ARG+ HH21 ARG+ HH22 ARG+
+   1.0050   1.7342   1.0071
+
+    3   252   253   254 -> ;    CD  PRO  HD2  PRO  HD3  PRO
+   1.0889   1.7893   1.0882
+
+    3   255   256   257 -> ;    CG  PRO  HG2  PRO  HG3  PRO
+   1.0906   1.7989   1.0905
+
+    3   258   259   260 -> ;    CB  PRO  HB2  PRO  HB3  PRO
+   1.0888   1.7824   1.0849
+
+    2   261   262 -> ;    CA  PRO   HA  PRO
+   1.0821
+
+    3   266   267   268 -> ;    CD  PRO  HD2  PRO  HD3  PRO
+   1.0889   1.7882   1.0946
+
+    3   269   270   271 -> ;    CG  PRO  HG2  PRO  HG3  PRO
+   1.0889   1.7854   1.0874
+
+    3   272   273   274 -> ;    CB  PRO  HB2  PRO  HB3  PRO
+   1.0957   1.7754   1.0856
+
+    2   275   276 -> ;    CA  PRO   HA  PRO
+   1.0842
+
+    3   280   281   282 -> ;    CD  PRO  HD2  PRO  HD3  PRO
+   1.0914   1.7887   1.0927
+
+    3   283   284   285 -> ;    CG  PRO  HG2  PRO  HG3  PRO
+   1.0922   1.7891   1.0935
+
+    3   286   287   288 -> ;    CB  PRO  HB2  PRO  HB3  PRO
+   1.0940   1.7929   1.0862
+
+    2   289   290 -> ;    CA  PRO   HA  PRO
+   1.0923
+
+    2   293   294 -> ;     N  SER    H  SER
+   1.0232
+
+    2   295   296 -> ;    CA  SER   HA  SER
+   1.0885
+
+    3   297   298   299 -> ;    CB  SER  HB2  SER  HB3  SER
+   1.0869   1.7783   1.0949
+
+    2   300   301 -> ;    OG  SER   HG  SER
+   0.9804
+
+SHAKE> SHAKE
+CIP
+    0 -> ; 
+
+SHAKE> SHAKE
+CIM
+    0 -> ; 
+
+SHAKE> SHAKE
+WAT
+      3      1      2      3       ->  ; O       H1      H2                WAT
+   0.95720  1.51360  0.95720
+
