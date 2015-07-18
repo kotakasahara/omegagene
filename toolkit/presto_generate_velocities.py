@@ -72,6 +72,12 @@ def get_options():
     print "----------------------------"
     return opts,args
 
+def average_mass_of_rigid_units(rigid_units):
+    total_mass = 0.0
+    for unit in rigid_units:
+        total_mass += unit.total_mass
+    return total_mass / float(len(rigid_units))
+
 def cal_freedom_of_rigid_units(rigid_units):
     freedom = 0
     for unit in rigid_units:
@@ -150,9 +156,9 @@ def make_rigid_units(model, tpl, shk):
         if not tmp_unit.atom_ids[0] in processed_atom_id:
             processed_atom_id.add(tmp_unit.atom_ids[0])
             rigid_units.append(tmp_unit)                    
-
     if DEBUG:
         print "Number of rigid units: " + str(len(rigid_units))
+
     return rigid_units, atom_id_mass
 
 def cal_total_moment(rigid_units, unit_vel):
@@ -378,6 +384,8 @@ def generate_velocities(model, tpl, shk,
         atom_vel.append(numpy.array([0.0, 0.0, 0.0]))
 
     rigid_units, atom_id_mass = make_rigid_units(model, tpl, shk)
+    average_unit_mass = average_mass_of_rigid_units(rigid_units)
+    print "Average mass of rigid units: " + str(average_unit_mass)
         
     if mol:
         mol_names = []
