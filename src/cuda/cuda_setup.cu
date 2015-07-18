@@ -1239,8 +1239,18 @@ __global__ void kernel_enumerate_cell_pair(//const int2* d_uni2cell_z,
   //const int col1_id = cell1_crd[0] + cell1_crd[1] * D_N_CELLS_XYZ[0];
   cell1_crd[2] = cell1_id - d_idx_xy_head_cell[col1_id];
   //g_thread_id - d_idx_xy_head_cell[cell1_id];
-  const real_pw cell1_z_bottom = d_cell_z[cell1_id].x;
-  const real_pw cell1_z_top = d_cell_z[cell1_id].y;
+  //const real_pw cell1_z_bottom = d_cell_z[cell1_id].x;
+  //const real_pw cell1_z_top = d_cell_z[cell1_id].y;
+
+  // add 
+  const real4 crd_chg11 = d_crd_chg[cell1_id*N_ATOM_CELL];
+  //cell1_crd[0] = floor((crd_chg11.x - PBC_LOWER_BOUND[0]) / D_L_CELL_XYZ[0]);
+  //cell1_crd[1] = floor((crd_chg11.y - PBC_LOWER_BOUND[1]) / D_L_CELL_XYZ[1]);
+  //const int col1_id = cell1_crd[0] + cell1_crd[1] * D_N_CELLS_XYZ[0];
+  cell1_crd[2] = cell1_id - d_idx_xy_head_cell[col1_id];
+    //g_thread_id - d_idx_xy_head_cell[cell1_id];
+  const real_pw cell1_z_bottom = crd_chg11.z;
+  const real_pw cell1_z_top =  d_crd_chg[(cell1_id+1)*N_ATOM_CELL-1].z;
 
   int image[3] = {0,0,0};
 
@@ -1290,8 +1300,10 @@ __global__ void kernel_enumerate_cell_pair(//const int2* d_uni2cell_z,
     }
 
     const int cell2_id = bottom_cell2_id + cell2_crd[2];
-    const real_pw cell2_z_bottom = d_cell_z[cell2_id].x + image[2] * PBC_L[2];
-    const real_pw cell2_z_top = d_cell_z[cell2_id].y + image[2] * PBC_L[2];
+    //const real_pw cell2_z_bottom = d_cell_z[cell2_id].x + image[2] * PBC_L[2];
+    //    const real_pw cell2_z_top = d_cell_z[cell2_id].y + image[2] * PBC_L[2];
+    const real_pw cell2_z_bottom = d_crd_chg[cell2_id*N_ATOM_CELL].z + image[2] * PBC_L[2];
+    const real_pw cell2_z_top = d_crd_chg[(cell2_id+1)*N_ATOM_CELL-1].z + image[2] * PBC_L[2];
     /*
     if(g_thread_id==0){
       printf("loop: d_cell[2]:%d cell2_id:%d \n",//z_bt:%f z_tp:%f\n",
