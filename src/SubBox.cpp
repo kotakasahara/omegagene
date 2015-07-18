@@ -1,8 +1,8 @@
 #include "SubBox.h"
 
 #ifdef F_CUDA
+
 extern "C" int cuda_set_device(int device_id);
-extern "C" int cuda_print_device_info(int myrank=0, bool verbose=false);
 extern "C" int cuda_alloc_atom_info(int n_atoms,
 				    int n_atom_array,
 				    int max_n_cells,
@@ -51,8 +51,8 @@ extern "C" int cuda_set_atominfo(const int n_atom_array, const int max_n_nb15off
 				 const int max_n_cells);
 extern "C" int cuda_set_crd(int n_atom_array);
 
-extern "C" int cuda_pairwise_ljzd(const int offset_cellpairs, const int n_cal_cellpairs,
-				  const int offset_cells,     const int n_cal_cells,
+extern "C" int cuda_pairwise_ljzd(const int n_cal_cellpairs,
+				  const int n_cal_cells,
 				  const bool flg_mod_15mask);
 
 extern "C" int cuda_memcpy_dtoh_work(real_fc*& h_work, real_fc*& h_energy,
@@ -72,15 +72,8 @@ extern "C" int cuda_hostalloc_atom_type_charge(int*& h_atom_type,
 					       int n_atoms);
 
 extern "C" int cuda_init_cellinfo(const int n_cells);
-extern "C" int cuda_enumerate_cell_pairs(int*& h_atomids,
-					 int*& h_idx_xy_head_cell,
-					 const int max_n_atoms,
-					 const int n_atom_array,
-					 const int n_columns,
-					 const int n_cells,// const int n_uni,
-					 const int n_neighbor_col,
-					 const int* idx_atom_cell_xy);
-
+extern "C" int cuda_enumerate_cell_pairs(const int n_cells, //const int n_uni,
+					 const int n_neighbor_cols);
 #endif
 
 SubBox::SubBox(){
@@ -473,8 +466,8 @@ int SubBox::set_parameters(int in_n_atoms, PBC* in_pbc,
 }
 
 int SubBox::set_nsgrid(){
-  //#ifdef F_CUDA  
-  //cuda_print_device_info(0, true);
+  // #ifdef F_CUDA  
+  //  cuda_print_device_info(0, true);
   //#endif
 
   //cout << "set_grid_parameters" << endl;
@@ -501,13 +494,21 @@ int SubBox::set_nsgrid(){
   nsgrid.set_atomids_buf();
 
 #ifdef F_CUDA
+  if(cfg->gpu_device_id >= 0)
+    cuda_set_device(cfg->gpu_device_id);
   cout << "gpu_device_setup()"<<endl;
   gpu_device_setup();
 
   cuda_memcpy_htod_atom_info(charge, atom_type,
 			     max_n_atoms_exbox);
 
-  update_cell_pairs_gpu();
+  update_device_cell_info();  
+
+  nsgrid_crd_to_gpu();
+  
+  cuda_enumerate_cell_pairs(nsgrid.get_n_cells(),
+			    //nsgrid.get_n_uni(),
+			    nsgrid.get_n_neighbor_cols());
 
 #else
     nsgrid.enumerate_cell_pairs();
@@ -521,7 +522,6 @@ int SubBox::nsgrid_crd_to_gpu(){
   
   cuda_memcpy_htod_crd(nsgrid.get_crd(),
 		       nsgrid.get_n_atom_array());
-  
   cuda_set_crd(nsgrid.get_n_atom_array());
   //nsgrid.update_crd((const real**)crd);
 #endif
@@ -538,10 +538,13 @@ int SubBox::nsgrid_update(){
   nsgrid.set_atoms_into_grid_xy();
   const clock_t endTimeSet = clock();
   //nsgrid.enumerate_cell_pairs();
-  
-#if defined(F_CUDA)  
-  update_cell_pairs_gpu();
 
+#if defined(F_CUDA)  
+  update_device_cell_info();  
+  nsgrid_crd_to_gpu();
+  cuda_enumerate_cell_pairs(nsgrid.get_n_cells(),
+			    //nsgrid.get_n_uni(),
+			    nsgrid.get_n_neighbor_cols());
 #else
   nsgrid.enumerate_cell_pairs();
 #endif
@@ -1712,9 +1715,8 @@ int SubBox::init_thermostat(const int in_thermostat_type,
 
 #ifdef F_CUDA
 int SubBox::gpu_device_setup(){
-  if(cfg->gpu_device_id >= 0)
-    cuda_set_device(cfg->gpu_device_id);
-  //cuda_print_device_info(0, true);
+  
+  //cuda_print_device_info();
   //cuda_memcpy_htod_grid_pairs(mmsys.nsgrid.grid_pairs,
   //mmsys.nsgrid.n_grid_pairs);
   cuda_alloc_atom_info(max_n_atoms_exbox,
@@ -1747,7 +1749,11 @@ int SubBox::gpu_device_setup(){
 
   return 0;
 }
-int SubBox::update_cell_pairs_gpu(){
+
+int SubBox::update_device_cell_info(){
+  //cout << "cuda_memcpy_htod_atom_info"<<endl;
+  //cuda_memcpy_htod_atom_info(charge, atom_type,
+  //max_n_atoms_exbox);
   cuda_set_cell_constant(nsgrid.get_n_cells(),
 			 nsgrid.get_n_cell_pairs(),
 			 nsgrid.get_n_atom_array(),
@@ -1758,24 +1764,25 @@ int SubBox::update_cell_pairs_gpu(){
 			 nsgrid.get_L_cell_xyz(),
 			 //nsgrid.get_l_uni_z(),
 			 nsgrid.get_n_neighbors_xyz());
-  nsgrid_crd_to_gpu();
+  //cuda_memcpy_htod_cell_pairs(nsgrid.get_cell_pairs(),
+  //nsgrid.get_idx_head_cell_pairs(),
+  //nsgrid.get_n_cell_pairs(),
+  //nsgrid.get_n_cells());
+  cuda_memcpy_htod_atomids(nsgrid.get_atomids(),
+			   nsgrid.get_idx_xy_head_cell(),
+			   nsgrid.get_max_n_atom_array(),
+			   nsgrid.get_n_columns()+1);
+  //cuda_init_cellinfo(nsgrid.get_n_cells());
+  cuda_set_atominfo(nsgrid.get_n_atom_array(),
+		    MAX_N_NB15OFF,
+		    nsgrid.get_max_n_cells());
 
-  cuda_enumerate_cell_pairs(nsgrid.get_atomids(),
-			    nsgrid.get_idx_xy_head_cell(),
-			    n_atoms_exbox,
-			    nsgrid.get_max_n_atom_array(),
-			    nsgrid.get_n_columns()+1,
-			    nsgrid.get_n_cells(),
-			    nsgrid.get_n_neighbor_cols(),
-			    nsgrid.get_idx_atom_cell_xy());
   return 0;
 }
 
 int SubBox::calc_energy_pairwise_cuda(){
   nsgrid.init_energy_work();
-  cuda_pairwise_ljzd(0, // offset_paridpairs,
-		     nsgrid.get_max_n_cell_pairs(), // n_cal_gridpairs,
-		     0, // offset_grids,
+  cuda_pairwise_ljzd(nsgrid.get_max_n_cell_pairs(), // n_cal_gridpairs,
 		     nsgrid.get_n_cells(),
 		     flg_mod_15mask
 		     ); // n_cal_grids);
@@ -1785,7 +1792,6 @@ int SubBox::calc_energy_pairwise_cuda(){
 }
 
 #endif
-
 int SubBox::apply_constraint(){
   constraint->apply_constraint(crd, crd_prev, mass_inv, pbc);
   set_velocity_from_crd();
@@ -1807,9 +1813,9 @@ int SubBox::apply_thermostat_with_shake(const int max_loops,
 					  mass, mass_inv,
 					  constraint,
 					  pbc, buf_crd,
-					  max_loops, tolerance,
+					  max_loops, tolerance,	
 					  &commotion, atomids_rev);
-  
+
   return 0;
 }
 
@@ -1819,6 +1825,10 @@ int SubBox::expand_apply_bias(unsigned long cur_step,  real in_lambda){
 }
 void SubBox::expand_enable_vs_transition(){
   expand->enable_vs_transition();
+}
+
+int SubBox::cancel_com_motion(){
+  return commotion.cancel_translation(atomids_rev, vel_next);
 }
 
 int SubBox::set_com_motion(int n_groups, int* group_ids,
@@ -1831,10 +1841,6 @@ int SubBox::set_com_motion(int n_groups, int* group_ids,
 			      mass);
   
 }
-int SubBox::cancel_com_motion(){
-  return commotion.cancel_translation(atomids_rev, vel_next);
-}
-
 /*
 int SubBox::set_bonding_info
 ( int** in_bond_atomid_pairs,

@@ -157,9 +157,9 @@ class SubBox : public CelesteObject {
   ThermostatObject* thermostat;
 
   bool flg_mod_15mask;
-  
-  COMMotion commotion;
 
+  COMMotion commotion;
+  
   clock_t ctime_setgrid;
   clock_t ctime_enumerate_cellpairs;
   clock_t ctime_calc_energy_pair;
@@ -312,9 +312,8 @@ class SubBox : public CelesteObject {
   real_fc get_pote_14ele(){return pote_14ele;};
 
 #ifdef F_CUDA
-  int update_cell_pairs_gpu();
   int gpu_device_setup();
-  //int update_device_cell_info();
+  int update_device_cell_info();
   int calc_energy_pairwise_cuda();
 #endif
   
@@ -325,12 +324,12 @@ class SubBox : public CelesteObject {
   void set_expand(ExpandVMcMD* in_exp){ expand =in_exp; };
   int expand_apply_bias(unsigned long cur_step, real in_lambda);
   void expand_enable_vs_transition();
+  int cancel_com_motion();
 
   int set_com_motion(int n_groups, int* group_ids,
-			int*  n_atoms_in_groups, 
-			int** groups,
-			real* mass_inv_groups);
-  int cancel_com_motion();
+			   int*  n_atoms_in_groups, 
+			   int** groups,
+			   real* mass_inv_groups);
   //int set_box_region_info(const real** in_crd);  
   //int set_max_n_atoms_region();
   //int get_region_id_from_crd(int width, int rx, int ry, int rz);
