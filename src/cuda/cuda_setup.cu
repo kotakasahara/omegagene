@@ -410,11 +410,11 @@ __global__ void kernel_set_crd(const int* d_atomids,
     d_crd_chg[atomid].x = d_crd[at_idx];
     d_crd_chg[atomid].y = d_crd[at_idx+1];
     d_crd_chg[atomid].z = d_crd[at_idx+2];
-    /*if(atomid % N_ATOM_CELL == 0){
+    if(atomid % N_ATOM_CELL == 0){
       d_cell_z[atomid/N_ATOM_CELL].x = d_crd[at_idx+2];
     }else if(atomid % N_ATOM_CELL == N_ATOM_CELL-1){
       d_cell_z[atomid/N_ATOM_CELL].y = d_crd[at_idx+2];
-      }*/
+    }
   }
 }
 
@@ -946,8 +946,7 @@ __device__ CellPair get_new_cell_pair(const int cell1_id, const int cell2_id,
 }
 
 
-__global__ void kernel_enumerate_cell_pair(const real4* d_crd_chg,
-					   const real2* d_cell_z,
+__global__ void kernel_enumerate_cell_pair(const real2* d_cell_z,
 					   const int* d_idx_xy_head_cell,
 					   const int* d_idx_cell_column,
 					   const int* d_atomids,
@@ -987,13 +986,14 @@ __global__ void kernel_enumerate_cell_pair(const real4* d_crd_chg,
   cell1_crd[1] = col1_id/D_N_CELLS_XYZ[0];
   cell1_crd[2] = cell1_id - d_idx_xy_head_cell[col1_id];
 
-  const real4 crd_chg11 = d_crd_chg[cell1_id*N_ATOM_CELL];
+  //const real4 crd_chg11 = d_crd_chg[cell1_id*N_ATOM_CELL];
   //const int col1_id = cell1_crd[0] + cell1_crd[1] * D_N_CELLS_XYZ[0];
   cell1_crd[2] = cell1_id - d_idx_xy_head_cell[col1_id];
     //g_thread_id - d_idx_xy_head_cell[cell1_id];
-  const real_pw cell1_z_bottom = crd_chg11.z;
-  //const real_pw cell1_z_top = d_cell_z[cell1_id].y;
-  const real_pw cell1_z_top =  d_crd_chg[(cell1_id+1)*N_ATOM_CELL-1].z;
+  //const real_pw cell1_z_bottom = crd_chg11.z;
+  const real_pw cell1_z_bottom = d_cell_z[cell1_id].x;
+  const real_pw cell1_z_top = d_cell_z[cell1_id].y;
+  //const real_pw cell1_z_top =  d_crd_chg[(cell1_id+1)*N_ATOM_CELL-1].z;
   int image[3] = {0,0,0};
 
   const int idx_cell_pair_head = D_MAX_N_CELL_PAIRS_PER_CELL * cell1_id;
@@ -1043,10 +1043,10 @@ __global__ void kernel_enumerate_cell_pair(const real4* d_crd_chg,
 
     const int cell2_id = d_idx_xy_head_cell[col2_id] + cell2_crd[2];
 
-    //const real_pw cell2_z_bottom = d_cell_z[cell2_id].x + image[2] * PBC_L[2];
-    //const real_pw cell2_z_top = d_cell_z[cell2_id].y + image[2] * PBC_L[2];
-    const real_pw cell2_z_bottom = d_crd_chg[cell2_id*N_ATOM_CELL].z + image[2] * PBC_L[2];
-    const real_pw cell2_z_top = d_crd_chg[(cell2_id+1)*N_ATOM_CELL-1].z + image[2] * PBC_L[2];
+    const real_pw cell2_z_bottom = d_cell_z[cell2_id].x + image[2] * PBC_L[2];
+    const real_pw cell2_z_top = d_cell_z[cell2_id].y + image[2] * PBC_L[2];
+    //const real_pw cell2_z_bottom = d_crd_chg[cell2_id*N_ATOM_CELL].z + image[2] * PBC_L[2];
+    //const real_pw cell2_z_top = d_crd_chg[(cell2_id+1)*N_ATOM_CELL-1].z + image[2] * PBC_L[2];
 
     if(cell2_z_top < cell1_z_bottom){
       dx[2] = cell1_z_bottom - cell2_z_top;
@@ -1179,7 +1179,7 @@ extern "C" int cuda_enumerate_cell_pairs(int*& h_atomids,
 
   const int blocks4 = (n_neighbor_col * n_cells + REORDER_THREADS-1) / REORDER_THREADS; //  printf("bbb %d\n", max_n_cell_pairs); 
   kernel_enumerate_cell_pair<<<blocks4, REORDER_THREADS,0,stream1>>>(//d_uni2cell_z,
-								     d_crd_chg, d_cell_z,
+								     d_cell_z,
 								     d_idx_xy_head_cell,
 								     d_idx_cell_column,
 								     d_atomids, d_nb15off_orig,
