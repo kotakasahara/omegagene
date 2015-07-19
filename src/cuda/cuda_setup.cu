@@ -344,7 +344,31 @@ extern "C" int cuda_hostalloc_cell_info(int*& h_idx_xy_head_cell,
   return 0;
 }
 
-
+extern "C" int cuda_hostalloc_cellpair_info(CellPair*& h_cell_pairs,
+					    int*& h_idx_head_cell_pairs,
+					    int*& h_n_cells_z,
+					    int max_n_cell_pairs,
+					    int max_n_cells,
+					    int n_columns){
+  printf("cuda_hostalloc_cellpair_info cu\n");
+  HANDLE_ERROR( cudaHostAlloc( (void**)&h_cell_pairs,
+			       max_n_cell_pairs * sizeof(CellPair),
+			       cudaHostAllocDefault));
+  HANDLE_ERROR( cudaHostAlloc( (void**)&h_idx_head_cell_pairs,
+			       (max_n_cells) * sizeof(int),
+			       cudaHostAllocDefault));
+  HANDLE_ERROR( cudaHostAlloc( (void**)&h_n_cells_z,
+			       (n_columns) * sizeof(int),
+                               cudaHostAllocDefault));
+  return 0;
+}
+extern "C" int cuda_hostfree_cellpair_info(CellPair* h_cell_pairs,
+					   int* h_idx_head_cell_pairs,
+					   int*& h_n_cells_z){
+  HANDLE_ERROR( cudaFreeHost(h_cell_pairs));
+  HANDLE_ERROR( cudaFreeHost(h_idx_head_cell_pairs));
+  HANDLE_ERROR( cudaFreeHost(h_n_cells_z));
+}
 
 extern "C" int cuda_hostfree_atom_type_charge(int* h_atom_type, real_pw* h_charge){
   HANDLE_ERROR( cudaFreeHost(h_atom_type));
@@ -1212,3 +1236,17 @@ extern "C" int cuda_enumerate_cell_pairs(int*& h_atomids,
   return 0;
 }
 		
+extern "C" int cuda_memcpy_htod_cell_pairs(CellPair*& h_cell_pairs,
+					   int*& h_idx_head_cell_pairs,
+					   int n_cell_pairs,
+					   int n_cells){
+  //printf("cuda_memcpy_htod_cell_pairs\n");
+  HANDLE_ERROR(cudaMemcpy(d_cell_pairs, h_cell_pairs,
+			  n_cell_pairs * sizeof(CellPair),
+			  cudaMemcpyHostToDevice));
+  HANDLE_ERROR(cudaMemcpy(d_idx_head_cell_pairs,
+			  h_idx_head_cell_pairs,
+			  (n_cells+1) * sizeof(int),
+			  cudaMemcpyHostToDevice));
+  return 0;
+}

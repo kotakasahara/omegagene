@@ -148,7 +148,6 @@ class MiniCell : public CelesteObject{
   int max_n_cell_pairs;
   int n_cell_pairs;
   CellPair* cell_pairs;  
-
   // idx_head_cell_pairs[cell_id] = 
   //   index in the array cell_pairs
   //   for the first element of 
