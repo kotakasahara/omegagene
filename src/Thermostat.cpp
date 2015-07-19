@@ -36,7 +36,9 @@ int ThermostatObject::apply_thermostat_with_shake(int n_atoms,
 					  PBC* pbc,
 						  real* buf_crd,
 						   const int max_loops,
-						  const real tolerance){
+						  const real tolerance,
+						  COMMotion* commotion,
+						  int* atomids_rev){
 
   return 0;
 }
@@ -71,6 +73,7 @@ int ThermostatScaling::apply_thermostat(int n_atoms,
     }
     kine_pre += mass[i] * vel_norm;
   }
+  
   real dt_temperature = kine_pre * temperature_coeff; 
   real scale = sqrt(temperature / dt_temperature);
   for(int i=0, i_3=0; i < n_atoms; i++, i_3+=3){
@@ -92,7 +95,9 @@ int ThermostatScaling::apply_thermostat_with_shake(int n_atoms,
 						   PBC* pbc,
 						   real* buf_crd,
 						   const int max_loops,
-						   const real tolerance){
+						   const real tolerance,
+						   COMMotion* commotion,
+						   int* atomids_rev){
   //DBG
   bool converge = false;
   for(int idx = 0; idx < n_atoms*3; idx++)
@@ -157,7 +162,7 @@ int ThermostatScaling::apply_thermostat_with_shake(int n_atoms,
       }
       kine_pre += vel_norm * mass[i_atom];
     }
-    
+    commotion->cancel_translation(atomids_rev, vel_next);    
     for(int i_atom = 0, i_atom_3 = 0;
 	i_atom < n_atoms; i_atom++, i_atom_3+=3){
       for(int d=0; d < 3; d++){
@@ -237,7 +242,9 @@ int ThermostatHooverEvans::apply_thermostat_with_shake(int n_atoms,
 						   PBC* pbc,
 						   real* buf_crd,
 						   const int max_loops,
-						   const real tolerance){
+						       const real tolerance,
+						       COMMotion* commotion,
+						       int* atomids_rev){
   cout << "Warning: This function does nothing. ThermostatHooverEvans::apply_thermostat_with_shake " << endl;
   return 0;
 }
@@ -271,7 +278,9 @@ int ThermostatNoseHoover::apply_thermostat_with_shake(int n_atoms,
 						   PBC* pbc,
 						   real* buf_crd,
 						   const int max_loops,
-						   const real tolerance){
+						      const real tolerance,
+						      COMMotion* commotion,
+						      int* atomids_rev){
   cout << "Warning: This function does nothing. ThermostatNoseHoover::apply_thermostat_with_shake " << endl;
   return 0;
 }

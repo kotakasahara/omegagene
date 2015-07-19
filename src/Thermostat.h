@@ -4,6 +4,7 @@
 #include "CelesteObject.h"
 #include <cmath>
 #include "Constraint.h"
+#include "COMMotion.h"
 using namespace std;
 
 class ThermostatObject : public CelesteObject{
@@ -38,7 +39,9 @@ class ThermostatObject : public CelesteObject{
 					  PBC* pbc,
 					  real* buf_crd,
 					  const int max_loops,
-					  const real tolerance);
+					  const real tolerance,
+					  COMMotion* commotion,
+					  int* atomids_rev);
 
   inline void set_temperature(real in_t){temperature=in_t;};
   inline real get_temperature(){return temperature;};
@@ -66,7 +69,10 @@ class ThermostatScaling : public ThermostatObject {
 					  PBC* pbc,
 					  real* buf_crd,
 					  const int max_loops,
-					  const real tolerance);
+					  const real tolerance,
+					  COMMotion* commotion,
+					  int* atomids_rev);
+
 
 };
 
@@ -92,7 +98,9 @@ class ThermostatHooverEvans : public ThermostatObject {
 					  PBC* pbc,
 					  real* buf_crd,
 					  const int max_loops,
-					  const real tolerance);
+					  const real tolerance,
+					  COMMotion* commotion,
+					  int* atomids_rev);
 
 };
 
@@ -118,8 +126,9 @@ class ThermostatNoseHoover : public ThermostatObject {
 					  PBC* pbc,
 					  real* buf_crd,
 					  const int max_loops,
-					  const real tolerance);
-
+					  const real tolerance,
+					  COMMotion* commotion,
+					  int* atomids_rev);
 };
 
 #endif

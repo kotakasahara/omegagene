@@ -1,5 +1,10 @@
 #include "cuda_common.h"
 
+extern "C" int cuda_set_device(int device_id){
+  cudaSetDevice(device_id);
+  return 0;
+}
+
 extern "C" int cuda_print_device_info(int myrank=0, bool verbose=false){
   cudaDeviceProp prop;
   int count;

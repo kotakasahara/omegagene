@@ -47,7 +47,7 @@ OBJS = CelesteObject.o Celeste.o     Config.o \
        Constraint.o ConstraintShake.o \
        Expand.o ExpandVMcMD.o \
        Thermostat.o \
-       DistRestraint.o \
+       DistRestraint.o COMMotion.o \
        main.o
 
 ## endif

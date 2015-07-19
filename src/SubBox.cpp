@@ -1,6 +1,7 @@
 #include "SubBox.h"
 
 #ifdef F_CUDA
+extern "C" int cuda_set_device(int device_id);
 
 extern "C" int cuda_alloc_atom_info(int n_atoms,
 				    int n_atom_array,
@@ -1809,18 +1810,18 @@ int SubBox::apply_thermostat(){
 }
 
 int SubBox::apply_thermostat_with_shake(const int max_loops,
-				      const real tolerance){
+					const real tolerance){
   thermostat->apply_thermostat_with_shake(n_atoms_box,
 					  work, crd, crd_prev,
 					  vel, vel_next,
 					  mass, mass_inv,
 					  constraint,
 					  pbc, buf_crd,
-					  max_loops, tolerance);
+					  max_loops, tolerance,
+					  &commotion, atomids_rev);
 
   return 0;
 }
-
 int SubBox::expand_apply_bias(unsigned long cur_step,  real in_lambda){
   expand->apply_bias(cur_step, in_lambda, work, n_atoms_box);
   return 0;
@@ -1829,36 +1830,20 @@ void SubBox::expand_enable_vs_transition(){
   expand->enable_vs_transition();
 }
 
-int SubBox::cancel_com_motion(int n_groups, int* group_ids,
-			      int*  n_atoms_in_groups, 
-			      int** groups,
-			      real* mass_inv_groups){
-  for(int i_grp=0; i_grp < n_groups; i_grp++){
-    //real center[3] = {0.0, 0.0, 0.0};
-    real moment[3] = {0.0, 0.0, 0.0};
-    for(int i_atom=0; i_atom < n_atoms_in_groups[i_grp]; i_atom++){
-      int idx = atomids_rev[groups[i_grp][i_atom]];
-      int idx_3 = idx * 3;
-      for(int d=0; d < 3; d++){
-	//center[d] += crd[idx_3+d] * mass[idx];
-	moment[d] += vel_next[idx_3+d] * mass[idx];
-      }
-    }
-    for(int d=0; d < 3; d++){
-      //center[d] *= mass_inv_groups[i_grp];
-      moment[d] *= mass_inv_groups[i_grp];
-    }
-    for(int i_atom=0; i_atom < n_atoms_in_groups[i_grp]; i_atom++){
-      int idx = atomids_rev[groups[i_grp][i_atom]];
-      int idx_3 = idx * 3;
-      for(int d=0; d < 3; d++){
-	vel_next[idx_3+d] -= moment[d];
-      }
-    }
-  }
-  return 0;
+int SubBox::cancel_com_motion(){
+  return commotion.cancel_translation(atomids_rev, vel_next);
 }
 
+int SubBox::set_com_motion(int n_groups, int* group_ids,
+			   int*  n_atoms_in_groups, 
+			   int** groups,
+			   real* mass_inv_groups){
+  return commotion.set_groups(n_groups,
+			      group_ids, n_atoms_in_groups,
+			      groups, mass_inv_groups,
+			      mass);
+  
+}
 /*
 int SubBox::set_bonding_info
 ( int** in_bond_atomid_pairs,

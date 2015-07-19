@@ -77,6 +77,12 @@ int DynamicsMode::initial_preprocess(){
   //cout << "DBG MmSystem.n_bonds: " << mmsys.n_bonds << endl;
   
   subbox.copy_vel_next(mmsys.vel_just);
+  subbox.set_com_motion(cfg->n_com_cancel_groups,
+			   cfg->com_cancel_groups,
+			   mmsys.n_atoms_in_groups,
+			   mmsys.atom_groups,
+			   mmsys.mass_inv_groups);
+
 
   cal_kinetic_energy((const real**)mmsys.vel_just);
   cout << "Initial kinetic energy : " << mmsys.kinetic_e << endl;
@@ -424,7 +430,7 @@ int DynamicsModePresto::calc_in_each_step(){
   mmsys.ctime_update_velo += endTimeVel - startTimeVel;
 
   const clock_t startTimeCoord = clock();
-
+  subbox.cancel_com_motion();
   //if(mmsys.leapfrog_coef == 1.0){
   if(cfg->thermostat_type == THMSTT_SCALING && 
      cfg->constraint_type == CONST_NONE){
@@ -432,12 +438,6 @@ int DynamicsModePresto::calc_in_each_step(){
     subbox.apply_thermostat();
   }
   //}
-  
-  subbox.cancel_com_motion(cfg->n_com_cancel_groups,
-			   cfg->com_cancel_groups,
-			   mmsys.n_atoms_in_groups,
-			   mmsys.atom_groups,
-			   mmsys.mass_inv_groups);
 
   //cout << "update_coordinates"<<endl;  
   subbox.cpy_crd_prev();

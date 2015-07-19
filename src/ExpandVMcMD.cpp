@@ -11,7 +11,7 @@ VirtualState::~VirtualState(){
 }
 int VirtualState::set_order(int in_order){
   poly_order = in_order;
-  poly_params = new real[poly_order];
+  poly_params = new real[poly_order+1];
   return 0;
 }
 

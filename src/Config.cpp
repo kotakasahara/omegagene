@@ -15,6 +15,7 @@ int Config::set_defaults(){
   mode = M_TEST;
   fn_cfg = "md_i.cfg";
   fn_inp = "md_i.inp";
+  gpu_device_id = -1;
   processor = PRCS_SINGLE;
   integrator_type = INTGRTR_LEAPFROG_PRESTO;
   constraint_type = CONST_NONE;
@@ -26,7 +27,7 @@ int Config::set_defaults(){
   thermostat_type = THMSTT_NONE;
   temperature = 300;
 
-  center_of_motion = COM_NONE;
+  com_motion = COM_NONE;
   n_com_cancel_groups = 0;
   n_com_cancel_groups_name = 0;
   
@@ -134,12 +135,10 @@ void Config::setAll(vector<string> arg){
       else{ expanded_ensemble = EXPAND_DUMMY; } 
     }
     else if(*itr=="--temperature"){ temperature = atof((*++itr).c_str()); }
-    else if(*itr=="--center-of-motion"){
+    else if(*itr=="--com-motion"){
       itr++;
-      if(*itr=="none"){ center_of_motion = COM_NONE; }
-      else if(*itr=="cancel"){ center_of_motion = COM_CANCEL; }
-      //itr++;
-      //if(*itr=="all"){ center_of_motion = ; }
+      if(*itr=="none"){ com_motion = COM_NONE; }
+      else if(*itr=="cancel"){ com_motion = COM_CANCEL; }
     }
     else if(*itr=="--com-cancel-group-name"){
       com_cancel_groups_name[n_com_cancel_groups] = ((*++itr).c_str());
@@ -194,6 +193,7 @@ void Config::setAll(vector<string> arg){
       else{ dist_restraint_type = DISTREST_DUMMY; }
     }
     else if(*itr=="--dist-restraint-weight"){ dist_restraint_weight = atof((*++itr).c_str()); }
+   else if(*itr=="--gpu-device-id"){ gpu_device_id = atof((*++itr).c_str()); }
     else{
       cerr<<"unknown keyword <"<<(*itr)<<">"<<endl;
     }
