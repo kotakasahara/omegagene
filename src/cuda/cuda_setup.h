@@ -71,6 +71,7 @@ __constant__ real_pw  D_FCOEFF;
 // x,y,z: Cartesian coordinate,
 // w: charge
 real4* d_crd_chg;
+real4* h_crd_chg;
 real2* d_cell_z;
 real_pw* d_crd;
 
@@ -114,6 +115,8 @@ int* d_nb15off_orig;
 
 int max_n_cell_pairs;
 int n_cell_pairs;
+int* d_idx_cell_column;
+int* h_idx_cell_column;
 
 //texture<real, 2> tex_lj_6term;
 //texture<real, 2> tex_lj_12term;
