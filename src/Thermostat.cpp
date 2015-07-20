@@ -73,6 +73,7 @@ int ThermostatScaling::apply_thermostat(int n_atoms,
     }
     kine_pre += mass[i] * vel_norm;
   }
+  
   real dt_temperature = kine_pre * temperature_coeff; 
   real scale = sqrt(temperature / dt_temperature);
   for(int i=0, i_3=0; i < n_atoms; i++, i_3+=3){
@@ -161,7 +162,7 @@ int ThermostatScaling::apply_thermostat_with_shake(int n_atoms,
       }
       kine_pre += vel_norm * mass[i_atom];
     }
-    commotion->cancel_translation(atomids_rev, vel_next);
+    commotion->cancel_translation(atomids_rev, vel_next);    
     for(int i_atom = 0, i_atom_3 = 0;
 	i_atom < n_atoms; i_atom++, i_atom_3+=3){
       for(int d=0; d < 3; d++){
@@ -268,15 +269,15 @@ int ThermostatNoseHoover::apply_thermostat(int n_atoms,
   return 0;
 }
 int ThermostatNoseHoover::apply_thermostat_with_shake(int n_atoms,
-						      real_fc* work,
-						      real* crd, real* crd_prev,
-						      real* vel, real* vel_next,
-						      real_pw* mass,
-						      real_pw* mass_inv,
-						      ConstraintObject* constraint,
-						      PBC* pbc,
-						      real* buf_crd,
-						      const int max_loops,
+						   real_fc* work,
+						   real* crd, real* crd_prev,
+						   real* vel, real* vel_next,
+						   real_pw* mass,
+						   real_pw* mass_inv,
+						   ConstraintObject* constraint,
+						   PBC* pbc,
+						   real* buf_crd,
+						   const int max_loops,
 						      const real tolerance,
 						      COMMotion* commotion,
 						      int* atomids_rev){

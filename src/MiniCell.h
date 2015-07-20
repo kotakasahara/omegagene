@@ -220,9 +220,7 @@ class MiniCell : public CelesteObject{
   void get_crd(int atomid_grid, real_pw& x, real_pw& y, real_pw& z);
   real_fc*& get_work(){return work;};
   real_fc*& get_energy(){return energy;};
-  
-  int* get_idx_atom_cell_xy(){return idx_atom_cell_xy;};
-
+  int* get_idx_atom_cell_xy(){return idx_atom_cell_xy;};  
   int get_idx_cell_head_atom(const int cid){return cid*N_ATOM_CELL; }
   int get_n_atoms_in_cell(const int cid){
     int col = get_column_id_from_crd(cell_crd[cid][0], cell_crd[cid][1]);

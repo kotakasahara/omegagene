@@ -157,7 +157,6 @@ class SubBox : public CelesteObject {
   ThermostatObject* thermostat;
 
   bool flg_mod_15mask;
-
   COMMotion commotion;
   
   clock_t ctime_setgrid;
@@ -330,6 +329,7 @@ class SubBox : public CelesteObject {
 			   int*  n_atoms_in_groups, 
 			   int** groups,
 			   real* mass_inv_groups);
+
   //int set_box_region_info(const real** in_crd);  
   //int set_max_n_atoms_region();
   //int get_region_id_from_crd(int width, int rx, int ry, int rz);

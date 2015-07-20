@@ -128,7 +128,6 @@ class ThermostatNoseHoover : public ThermostatObject {
 					  const real tolerance,
 					  COMMotion* commotion,
 					  int* atomids_rev);
-
 };
 
 #endif

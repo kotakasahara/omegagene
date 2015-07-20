@@ -1,9 +1,9 @@
 #EXECUTABLE = celeste
 #EXECUTABLE = celeste_wons
   # without neighbor search
-EXECUTABLE = celeste_gpu_ecp
+#EXECUTABLE = celeste_gpu_ecp
   # enumerate cell-pairs on cpu
-#EXECUTABLE = celeste_gpu
+EXECUTABLE = celeste_gpu
 
 ICCFLAGS = -ansi -fast -w1 
 #ICCFLAGS = -ansi -O0 -g #-w1 # -std=c++11
@@ -55,7 +55,7 @@ OBJS = CelesteObject.o Celeste.o     Config.o \
        Constraint.o ConstraintShake.o \
        Expand.o ExpandVMcMD.o \
        Thermostat.o \
-       DistRestraint.o COMMotion.o\
+       DistRestraint.o COMMotion.o \
        main.o
 
 ## endif

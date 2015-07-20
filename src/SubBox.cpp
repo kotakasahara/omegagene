@@ -1,6 +1,7 @@
 #include "SubBox.h"
 
 #ifdef F_CUDA
+extern "C" int cuda_set_device(int device_id);
 
 extern "C" int cuda_set_device(int device_id);
 extern "C" int cuda_alloc_atom_info(int n_atoms,
@@ -79,6 +80,7 @@ extern "C" int cuda_enumerate_cell_pairs(int*& h_atomids,
 					   int n_cells);
 
   #endif
+
 #endif
 
 SubBox::SubBox(){
@@ -511,6 +513,7 @@ int SubBox::set_nsgrid(){
 
   nsgrid_crd_to_gpu();
   
+
   #ifdef F_ECP
     nsgrid.enumerate_cell_pairs();
     cuda_memcpy_htod_cell_pairs(nsgrid.get_cell_pairs(),
@@ -518,12 +521,15 @@ int SubBox::set_nsgrid(){
 				nsgrid.get_n_cell_pairs(),
 				nsgrid.get_n_cells());
   #else
+
   cuda_enumerate_cell_pairs(nsgrid.get_atomids(),
 			    nsgrid.get_n_cells(),
 			    //nsgrid.get_n_uni(),
 			    nsgrid.get_n_neighbor_cols(),
 			    nsgrid.get_idx_atom_cell_xy());
+
   #endif
+
 #else
     nsgrid.enumerate_cell_pairs();
 #endif
@@ -569,7 +575,9 @@ int SubBox::nsgrid_update(){
 			    //nsgrid.get_n_uni(),
 			    nsgrid.get_n_neighbor_cols(),
 			    nsgrid.get_idx_atom_cell_xy());
+
   #endif
+
 #else
   nsgrid.enumerate_cell_pairs();
 #endif
@@ -1831,19 +1839,18 @@ int SubBox::apply_thermostat(){
 }
 
 int SubBox::apply_thermostat_with_shake(const int max_loops,
-				      const real tolerance){
+					const real tolerance){
   thermostat->apply_thermostat_with_shake(n_atoms_box,
 					  work, crd, crd_prev,
 					  vel, vel_next,
 					  mass, mass_inv,
 					  constraint,
 					  pbc, buf_crd,
-					  max_loops, tolerance,	
+					  max_loops, tolerance,
 					  &commotion, atomids_rev);
 
   return 0;
 }
-
 int SubBox::expand_apply_bias(unsigned long cur_step,  real in_lambda){
   expand->apply_bias(cur_step, in_lambda, work, n_atoms_box);
   return 0;

@@ -14,7 +14,8 @@ class RunMode : public CelesteObject {
   int integrator;
   int electrostatic;
 
-  int com_cancel;
+
+  int com_motion;
   int print_intvl_crd;
   int print_intvl_vel;
   int print_intvl_log;

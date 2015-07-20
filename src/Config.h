@@ -16,6 +16,8 @@ class Config : public CelesteObject {
   string fn_cfg;
   string fn_inp;
   int processor;
+  int gpu_device_id;
+
   int integrator_type;
   int constraint_type;
   real constraint_tolerance;
@@ -31,7 +33,7 @@ class Config : public CelesteObject {
   real time_step;
   int electrostatic;
   real ele_alpha;
-  int com_cancel;
+  int com_motion;
   int n_com_cancel_groups;
   int com_cancel_groups[MAX_N_COM_GROUPS];
   int n_com_cancel_groups_name;
@@ -71,7 +73,6 @@ class Config : public CelesteObject {
   int dist_restraint_type;
   real dist_restraint_weight;
 
-  int gpu_device_id;
 
   Config();
   ~Config();

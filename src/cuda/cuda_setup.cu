@@ -678,7 +678,9 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
       w3 += shfl_xor(w3, i, 8);
       
     }
-    if(laneIdx % 8 == 0 && w1 != 0.0 && w2 != 0.0 && w3 != 0.0){
+
+    if(laneIdx % 8 == 0 && (w1 != 0.0 || w2 != 0.0 || w3 != 0.0)){
+
       const int tmp_index = (((global_threadIdx/WARPSIZE)%N_MULTI_WORK)*D_N_ATOM_ARRAY + a2) * 3;
       atomicAdd(&(d_work[tmp_index+0]), -w1);
       atomicAdd(&(d_work[tmp_index+1]), -w2);
@@ -841,8 +843,6 @@ extern "C" int cuda_pairwise_ljzd(const int n_cal_cellpairs,
 			   d_atomtype,
 			   d_lj_6term, d_lj_12term,
 			   d_energy, d_work);
-
-
   //if(flg_mod_15mask){
   //const int blocks2 = (n_cal_cells+PW_THREADS-1) / PW_THREADS;
     //kernel_reset_cellpairs<<<blocks2, PW_THREADS, 0, stream_pair_home>>>
@@ -1012,9 +1012,6 @@ __global__ void kernel_enumerate_cell_pair(const real4* d_crd_chg,
   cell1_crd[2] = cell1_id - d_idx_xy_head_cell[col1_id];
 
   const real4 crd_chg11 = d_crd_chg[cell1_id*N_ATOM_CELL];
-  //const int col1_id = cell1_crd[0] + cell1_crd[1] * D_N_CELLS_XYZ[0];
-  cell1_crd[2] = cell1_id - d_idx_xy_head_cell[col1_id];
-    //g_thread_id - d_idx_xy_head_cell[cell1_id];
   const real_pw cell1_z_bottom = crd_chg11.z;
   //const real_pw cell1_z_top = d_cell_z[cell1_id].y;
   const real_pw cell1_z_top =  d_crd_chg[(cell1_id+1)*N_ATOM_CELL-1].z;
@@ -1170,6 +1167,7 @@ __global__ void set_cell_pairs_nb15off(const int* d_idx_head_cell_pairs,
 			d_cell_pairs[cp].pair_mask);
   
 }
+
 int set_idx_cell_column(const int* idx_atom_cell_xy,
 			const int n_cells, const int* h_atomids
 			){
@@ -1181,15 +1179,16 @@ int set_idx_cell_column(const int* idx_atom_cell_xy,
   }
   return 0;
 }
+
 extern "C" int cuda_enumerate_cell_pairs(int*& h_atomids,
 					 const int n_cells,// const int n_uni,
 					 const int n_neighbor_col,
 					 const int* idx_atom_cell_xy){
+
   set_idx_cell_column(idx_atom_cell_xy, n_cells, h_atomids);
   HANDLE_ERROR(cudaMemcpy(d_idx_cell_column, h_idx_cell_column,
 			  n_cells * sizeof(int),
 			  cudaMemcpyHostToDevice));
-
   cudaStream_t stream1;
   //cudaStream_t stream2;
   cudaStreamCreate(&stream1);

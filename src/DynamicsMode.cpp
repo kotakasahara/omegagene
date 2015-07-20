@@ -77,6 +77,12 @@ int DynamicsMode::initial_preprocess(){
   //cout << "DBG MmSystem.n_bonds: " << mmsys.n_bonds << endl;
   
   subbox.copy_vel_next(mmsys.vel_just);
+  subbox.set_com_motion(cfg->n_com_cancel_groups,
+			   cfg->com_cancel_groups,
+			   mmsys.n_atoms_in_groups,
+			   mmsys.atom_groups,
+			   mmsys.mass_inv_groups);
+
 
   subbox.set_com_motion(cfg->n_com_cancel_groups,
 			   cfg->com_cancel_groups,
@@ -439,7 +445,6 @@ int DynamicsModePresto::calc_in_each_step(){
     subbox.apply_thermostat();
   }
   //}
-  
   //cout << "update_coordinates"<<endl;  
   subbox.cpy_crd_prev();
   subbox.update_coordinates_cur(cfg->time_step);
