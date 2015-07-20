@@ -653,7 +653,7 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
       w3 += shfl_xor(w3, i, 8);
       
     }
-    if(laneIdx % 8 == 0 && w1 != 0.0 && w2 != 0.0 && w3 != 0.0){
+    if(laneIdx % 8 == 0 && (w1 != 0.0 || w2 != 0.0 || w3 != 0.0)){
       const int tmp_index = (((global_threadIdx/WARPSIZE)%N_MULTI_WORK)*D_N_ATOM_ARRAY + a2) * 3;
       atomicAdd(&(d_work[tmp_index+0]), -w1);
       atomicAdd(&(d_work[tmp_index+1]), -w2);
