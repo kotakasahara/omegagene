@@ -398,18 +398,6 @@ int DynamicsModePresto::calc_in_each_step(){
   const clock_t endTimeReset = clock();
   mmsys.ctime_cuda_reset_work_ene += endTimeReset - startTimeReset;
 
-#ifndef F_WO_NS
-  const clock_t startTimeHtod = clock();
-  if(mmsys.cur_step%cfg->nsgrid_update_intvl==0){
-    subbox.nsgrid_update();
-  }else{
-#if defined(F_CUDA)  
-    subbox.nsgrid_crd_to_gpu();
-#endif
-  }
-  const clock_t endTimeHtod = clock();
-  mmsys.ctime_cuda_htod_atomids += endTimeHtod - startTimeHtod;
-#endif
   const clock_t startTimeEne = clock();
 
   subbox.calc_energy();
@@ -471,6 +459,19 @@ int DynamicsModePresto::calc_in_each_step(){
 
   const clock_t endTimeStep = clock();
   mmsys.ctime_per_step += endTimeStep - startTimeStep;
+
+#ifndef F_WO_NS
+  const clock_t startTimeHtod = clock();
+  if(mmsys.cur_step%cfg->nsgrid_update_intvl==0){
+    subbox.nsgrid_update();
+  }else{
+#if defined(F_CUDA)  
+    subbox.nsgrid_crd_to_gpu();
+#endif
+  }
+  const clock_t endTimeHtod = clock();
+  mmsys.ctime_cuda_htod_atomids += endTimeHtod - startTimeHtod;
+#endif
 
   return 0;
 }
