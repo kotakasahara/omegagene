@@ -25,8 +25,8 @@
 #define REORDER_THREADS 512
 #define CP_PER_THREAD 8
 
-#define N_MULTI_WORK 8
-//#define N_MULTI_WORK 1
+//#define N_MULTI_WORK 8
+#define N_MULTI_WORK 1
 #define MAX_INT 99999999
 
 cudaStream_t stream_pair_home;
@@ -49,7 +49,7 @@ __constant__ int      D_N_CELLS_XYZ[3];
 __constant__ int      D_N_COLUMNS;
 __constant__ int      D_N_NEIGHBOR_XYZ[3];
 __constant__ int      D_N_NEIGHBOR_COL;
-__constant__ int      D_N_ATOMS;
+__constant__ int      D_N_ATOMS_SYSTEM;
 __constant__ int      D_N_ATOM_ARRAY;
 __constant__ int      D_N_ATOMTYPES;
 __constant__ int      D_N_UNI;
@@ -114,12 +114,22 @@ int2* d_uni2cell_z;
 int* d_nb15off;
 int* d_nb15off_orig;
 
+int max_n_cells;
 int max_n_cell_pairs;
 int n_cell_pairs;
 
 int* d_idx_cell_column;
 int* h_idx_cell_column;
 
+int n_atoms_system;
+int n_atoms_exbox;
+int n_atom_array;
+int n_columns;
+int n_cells;
+int max_n_atoms_exbox;
+int max_n_atom_array;
+int size_nb15off;
+int max_n_nb15off;
 //texture<real, 2> tex_lj_6term;
 //texture<real, 2> tex_lj_12term;
 //texture<int, 2> tex_nb15off;

@@ -19,33 +19,36 @@ __device__ double atomicAdd(double* address, double val){
 }
 
 
-extern "C" int cuda_alloc_atom_info(int in_max_n_atoms,
-				    int in_max_n_atom_array,
+extern "C" int cuda_alloc_atom_info(int in_max_n_atoms_exbox,
+				    //int in_max_n_atom_array,
 				    int in_max_n_cells,
 				    int in_max_n_cell_pairs,
 				    int in_n_columns){
   printf("cuda_alloc_atom_info\n");
-  // max_n_atoms ... maximum number of atoms for each grid cell
+  max_n_atoms_exbox = in_max_n_atoms_exbox;
+  //max_n_atom_array = in_max_n_atom_array;
+  max_n_cell_pairs = in_max_n_cell_pairs;
+  max_n_cells = in_max_n_cells;
   HANDLE_ERROR( cudaMalloc((void**)&d_crd_chg,
-			   in_max_n_atom_array * sizeof(real4)) );
+			   max_n_atom_array * sizeof(real4)) );
   HANDLE_ERROR( cudaMalloc((void**)&d_cell_z,
-			   in_max_n_cells * sizeof(real2)) );
+			   max_n_cells * sizeof(real2)) );
   HANDLE_ERROR( cudaMalloc((void**)&d_crd,
-			   in_max_n_atom_array * 3 * sizeof(real_pw)) );
+			   max_n_atom_array * 3 * sizeof(real_pw)) );
   HANDLE_ERROR( cudaMalloc((void**)&d_charge_orig,
-			   in_max_n_atoms * sizeof(real_pw) ));
+			   max_n_atoms_exbox * sizeof(real_pw) ));
   HANDLE_ERROR( cudaMalloc((void**)&d_atomtype,
-			   in_max_n_atom_array * sizeof(int) ));
+			   max_n_atom_array * sizeof(int) ));
   HANDLE_ERROR( cudaMalloc((void**)&d_atomids,
-			   in_max_n_atom_array * sizeof(int)) );
+			   max_n_atom_array * sizeof(int)) );
   HANDLE_ERROR( cudaMalloc((void**)&d_atomids_rev,
-			   in_max_n_atoms * sizeof(int)) );
+			   max_n_atoms_exbox * sizeof(int)) );
   HANDLE_ERROR( cudaMalloc((void**)&d_atomtype_orig,
-			   in_max_n_atoms * sizeof(int) ));
+			   max_n_atoms_exbox * sizeof(int) ));
   HANDLE_ERROR( cudaMalloc((void**)&d_cell_pairs,
-			   in_max_n_cell_pairs * sizeof(CellPair)) );
+			   max_n_cell_pairs * sizeof(CellPair)) );
   HANDLE_ERROR( cudaMalloc((void**)&d_cell_pairs_buf,
-			   in_max_n_cell_pairs * sizeof(CellPair)) );
+			   max_n_cell_pairs * sizeof(CellPair)) );
   HANDLE_ERROR( cudaMalloc((void**)&d_idx_head_cell_pairs,
 			   (in_max_n_cells+1) * sizeof(int)) );
   HANDLE_ERROR( cudaMalloc((void**)&d_idx_cell_column,
@@ -53,8 +56,8 @@ extern "C" int cuda_alloc_atom_info(int in_max_n_atoms,
   HANDLE_ERROR( cudaHostAlloc( (void**)&h_idx_cell_column,
 			       in_max_n_cells * sizeof(int),
 			       cudaHostAllocDefault));
-  HANDLE_ERROR( cudaMalloc((void**)&d_cell_pair_removed,
-			   (in_max_n_cells+1) * sizeof(int)) );
+  //HANDLE_ERROR( cudaMalloc((void**)&d_cell_pair_removed,
+  //(in_max_n_cells+1) * sizeof(int)) );
   HANDLE_ERROR( cudaMalloc((void**)&d_n_cell_pairs,
 			   (in_max_n_cells) * sizeof(int)) );
   //HANDLE_ERROR( cudaMalloc((void**)&d_grid_atom_index,
@@ -62,13 +65,13 @@ extern "C" int cuda_alloc_atom_info(int in_max_n_atoms,
   HANDLE_ERROR( cudaMalloc((void**)&d_energy,
 			   N_MULTI_WORK * 2 * sizeof(real_fc) ) );
   HANDLE_ERROR( cudaMalloc((void**)&d_work,
-			   N_MULTI_WORK * in_max_n_atom_array * 3 * sizeof(real_fc) ) );
+			   N_MULTI_WORK * max_n_atom_array * 3 * sizeof(real_fc) ) );
   HANDLE_ERROR( cudaMalloc((void**)&d_idx_xy_head_cell,
 			   in_n_columns * sizeof(int) ) );
   HANDLE_ERROR( cudaMemcpyToSymbol(D_MAX_N_CELL_PAIRS,
 				   &in_max_n_cell_pairs,
 				   sizeof(int) ) );  
-  max_n_cell_pairs = in_max_n_cell_pairs;
+
   return 0;
 }
 
@@ -87,7 +90,7 @@ extern "C" int cuda_free_atom_info(){
   HANDLE_ERROR( cudaFree(d_idx_head_cell_pairs) );
   HANDLE_ERROR( cudaFree(d_idx_cell_column) );
   HANDLE_ERROR( cudaFreeHost(h_idx_cell_column) );
-  HANDLE_ERROR( cudaFree(d_cell_pair_removed) );
+  //HANDLE_ERROR( cudaFree(d_cell_pair_removed) );
   HANDLE_ERROR( cudaFree(d_n_cell_pairs) );  
   HANDLE_ERROR( cudaFree(d_energy) );
   HANDLE_ERROR( cudaFree(d_work) );
@@ -97,14 +100,12 @@ extern "C" int cuda_free_atom_info(){
   return 0;
 }
 extern "C" int cuda_memcpy_htod_atomids(int*& h_atomids,
-					int*& h_idx_xy_head_cell,
-					int n_atom_array,
-					int n_columns){
+					int*& h_idx_xy_head_cell){
   HANDLE_ERROR(cudaMemcpy(d_atomids, h_atomids,
 			  n_atom_array * sizeof(int),
 			  cudaMemcpyHostToDevice));
   HANDLE_ERROR(cudaMemcpy(d_idx_xy_head_cell, h_idx_xy_head_cell,
-  			  n_columns * sizeof(int),
+  			  (n_columns+1) * sizeof(int),
   			  cudaMemcpyHostToDevice));
   return 0;
 }
@@ -113,26 +114,26 @@ extern "C" int cuda_memcpy_htod_atomids(int*& h_atomids,
 //   Arrays of charges and atomtypes of all atoms in the process are sent to
 //   the device.
 extern "C" int cuda_memcpy_htod_atom_info(real_pw*& h_charge_orig,
-					  int*& h_atomtype_orig,
-					  int n_atoms){
+					  int*& h_atomtype_orig){
+
+
   HANDLE_ERROR(cudaMemcpy(d_charge_orig, h_charge_orig,
-			  n_atoms * sizeof(real_pw),
+			  n_atoms_system * sizeof(real_pw),
 			  cudaMemcpyHostToDevice));
   HANDLE_ERROR(cudaMemcpy(d_atomtype_orig, h_atomtype_orig,
-			  n_atoms * sizeof(int),
+			  n_atoms_system * sizeof(int),
 			  cudaMemcpyHostToDevice));
   return 0;
 }
 
 // cuda_memcpy_htod_crd
 //  Sending nsgrid.crd to device
-extern "C" int cuda_memcpy_htod_crd(real_pw*& h_crd,
-				    int n_atom_array){
+extern "C" int cuda_memcpy_htod_crd(real_pw*& h_crd){
   HANDLE_ERROR(cudaMemcpy(d_crd, h_crd,
 			  n_atom_array * 3 * sizeof(real_pw),
 			  cudaMemcpyHostToDevice));
   HANDLE_ERROR( cudaMemset(d_energy, 0.0, sizeof(real_fc)*2*N_MULTI_WORK ));
-  HANDLE_ERROR( cudaMemset(d_work, 0.0, sizeof(real_fc)*n_atom_array*3*N_MULTI_WORK ));
+  HANDLE_ERROR( cudaMemset(d_work, 0.0, sizeof(real_fc)*max_n_atom_array*3*N_MULTI_WORK ));
   
   return 0;
 }
@@ -162,17 +163,17 @@ extern "C" int cuda_zerodipole_constant(real_pw zcore,
 
 // cuda_set_cell_constant
 //  These constants are updated when the cell grid is updated
-extern "C" int cuda_set_cell_constant(const int  n_cells,
-				      const int  n_cell_pairs,
-				      const int  n_atom_array,
-				      const int*  n_cells_xyz,
-				      const int  n_columns,
-				      const real_pw* l_cell_xyz,
-				      const int* n_neighbor_xyz){
-
-  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_CELL_PAIRS,
-				   &n_cell_pairs,
-				   sizeof(int) ) );
+extern "C" int cuda_set_cell_constant(const int  in_n_cells,
+				      const int  in_n_atoms_exbox,
+				      const int  in_n_atom_array,
+				      const int*  in_n_cells_xyz,
+				      const int  in_n_columns,
+				      const real_pw* in_l_cell_xyz,
+				      const int* in_n_neighbor_xyz){
+  n_atoms_exbox = in_n_atoms_exbox;
+  n_cells = in_n_cells;
+  n_atom_array = in_n_atom_array;
+  n_columns = in_n_columns;
   HANDLE_ERROR( cudaMemcpyToSymbol(D_N_CELLS,
 				   &n_cells,
 				   sizeof(int) ) );
@@ -180,27 +181,23 @@ extern "C" int cuda_set_cell_constant(const int  n_cells,
 				   &n_atom_array,
 				   sizeof(int) ) );
   HANDLE_ERROR( cudaMemcpyToSymbol(D_N_CELLS_XYZ,
-				   n_cells_xyz,
+				   in_n_cells_xyz,
 				   sizeof(int)*3 ) );
   HANDLE_ERROR( cudaMemcpyToSymbol(D_N_COLUMNS,
 				   &n_columns,
 				   sizeof(int) ) );
   HANDLE_ERROR( cudaMemcpyToSymbol(D_L_CELL_XYZ,
-				   l_cell_xyz,
+				   in_l_cell_xyz,
 				   sizeof(real_pw)*3 ) );
   HANDLE_ERROR( cudaMemcpyToSymbol(D_N_NEIGHBOR_XYZ,
-				   n_neighbor_xyz,
+				   in_n_neighbor_xyz,
 				   sizeof(int)*3 ) );
-  const int n_neighbor_col = (n_neighbor_xyz[0]*2+1) * (n_neighbor_xyz[1]*2+1);
+  const int n_neighbor_col = (in_n_neighbor_xyz[0]*2+1) * 
+    (in_n_neighbor_xyz[1]*2+1);
   HANDLE_ERROR( cudaMemcpyToSymbol(D_N_NEIGHBOR_COL,
 				   &n_neighbor_col,
 				   sizeof(int) ) );
-  //const int max_n_cell_pairs_per_column = max_n_cell_pairs / (n_cells * n_neighbor_col);
-  //HANDLE_ERROR( cudaMemcpyToSymbol(D_MAX_N_CELL_PAIRS_PER_COLUMN,
-  //&max_n_cell_pairs_per_column,
-  //sizeof(int) ) );  
   const int max_n_cell_pairs_per_cell = max_n_cell_pairs / n_cells;
-  //const int max_n_cell_pairs_per_cell = max_n_cell_pairs_per_column * n_neighbor_col;
   HANDLE_ERROR( cudaMemcpyToSymbol(D_MAX_N_CELL_PAIRS_PER_CELL,
 				   &max_n_cell_pairs_per_cell,
 				   sizeof(int) ) );  
@@ -209,15 +206,14 @@ extern "C" int cuda_set_cell_constant(const int  n_cells,
 
 // cuda_set_constant
 //   called only onece at the beginning of simulation
-extern "C" int cuda_set_constant(int n_atoms, real_pw cutoff,
+extern "C" int cuda_set_constant(
+				 real_pw cutoff,
 				 real_pw cutoff_pairlist, int n_atomtypes){
   real_pw tmp_charge_coeff = (real_pw)CelesteObject::CHARGE_COEFF;
   HANDLE_ERROR( cudaMemcpyToSymbol(D_CHARGE_COEFF,
 				   &tmp_charge_coeff,
 				   sizeof(real_pw) ) );
-  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_ATOMS,
-				   &n_atoms,
-				   sizeof(int) ) );
+  
   HANDLE_ERROR( cudaMemcpyToSymbol(D_N_ATOMTYPES,
 				   &n_atomtypes,
 				   sizeof(int) ) );
@@ -239,9 +235,7 @@ extern "C" int cuda_alloc_set_lj_params(real_pw* h_lj_6term,
 					real_pw* h_lj_12term,
 					int n_lj_types,
 					int* h_nb15off,
-					const int max_n_nb15off,
-					const int max_n_atoms,
-					const int max_n_atom_array){
+					const int in_max_n_nb15off){
   //printf("threads : %d\n", PW_THREADS);
   printf("cuda_alloc_set_lj_params\n");
   const unsigned int size_lj_matrix = sizeof(real_pw) * n_lj_types * n_lj_types;
@@ -250,16 +244,17 @@ extern "C" int cuda_alloc_set_lj_params(real_pw* h_lj_6term,
 			    size_lj_matrix ) );
   HANDLE_ERROR( cudaMalloc( (void**)&d_lj_12term,
 			    size_lj_matrix ) );
+  max_n_nb15off = in_max_n_nb15off;
   HANDLE_ERROR( cudaMemcpyToSymbol(D_MAX_N_NB15OFF,
 				   &max_n_nb15off,
 				   sizeof(int) ) );  
 
-  const unsigned int size_nb15off_orig = sizeof(int)*max_n_nb15off*max_n_atoms;
+  const unsigned int size_nb15off_orig = sizeof(int)*max_n_nb15off*max_n_atoms_exbox;
   HANDLE_ERROR( cudaMalloc( (void**)&d_nb15off_orig,
 			    size_nb15off_orig));
-  const unsigned int size_nb15off = sizeof(int)*max_n_nb15off*max_n_atom_array;
+  size_nb15off = max_n_nb15off*max_n_atom_array;
   HANDLE_ERROR( cudaMalloc( (void**)&d_nb15off,
-			    size_nb15off));
+			    sizeof(int)*size_nb15off));
   // cudaBindTexture2D
   /*
     cudaChannelFormatDesc desc = cudaCreateChannelDesc<real>();
@@ -302,13 +297,17 @@ extern "C" int cuda_free_lj_params(){
 // cuda_hostalloc_atom_type_charge
 extern "C" int cuda_hostalloc_atom_type_charge(int*& h_atom_type,
 					       real_pw*& h_charge,
-					       int n_atoms){
-  printf("hostalloc atom_type_charge cu\n");
+					       const int in_n_atoms_system){
+  n_atoms_system = in_n_atoms_system;
+  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_ATOMS_SYSTEM,
+				   &in_n_atoms_system,
+				   sizeof(int) ) );
+  printf("hostalloc atom_type_charge cu %d\n", in_n_atoms_system);
   HANDLE_ERROR( cudaHostAlloc( (void**)&h_atom_type,
-			       n_atoms * sizeof(int),
+			       n_atoms_system * sizeof(int),
 			       cudaHostAllocDefault));
   HANDLE_ERROR( cudaHostAlloc( (void**)&h_charge,
-			       n_atoms * sizeof(real_pw),
+			       n_atoms_system * sizeof(real_pw),
 			       cudaHostAllocDefault));
   return 0;
 }
@@ -317,16 +316,17 @@ extern "C" int cuda_hostalloc_atom_type_charge(int*& h_atom_type,
 //   Allocation for MiniCell members
 extern "C" int cuda_hostalloc_atom_info(real_pw*& h_crd, int*& h_atomids,
 					real_fc*& h_work, real_fc*& h_energy,
-					int n_atom_array){
-  printf("hostalloc_atom_info %d\n", n_atom_array);
+					int in_max_n_atom_array){
+  max_n_atom_array = in_max_n_atom_array;
+  printf("hostalloc_atom_info %d\n", max_n_atom_array);
   HANDLE_ERROR( cudaHostAlloc( (void**)&h_crd,
-			       n_atom_array * 3 * sizeof(real_pw),
+			       max_n_atom_array * 3 * sizeof(real_pw),
 			       cudaHostAllocDefault));
   HANDLE_ERROR( cudaHostAlloc( (void**)&h_atomids,
-			       n_atom_array * sizeof(int),
+			       max_n_atom_array * sizeof(int),
 			       cudaHostAllocDefault));
   HANDLE_ERROR( cudaHostAlloc( (void**)&h_work,
-			       n_atom_array * 3 * sizeof(real_fc),
+			       max_n_atom_array * 3 * sizeof(real_fc),
 			       cudaHostAllocDefault));
   HANDLE_ERROR( cudaHostAlloc( (void**)&h_energy,
 			       2 * sizeof(real_fc),
@@ -442,12 +442,12 @@ __global__ void kernel_set_crd(const int* d_atomids,
   }
 }
 
-extern "C" int cuda_set_atominfo(const int n_atom_array,
-				 const int max_n_nb15off, const int max_n_cells){
-  HANDLE_ERROR( cudaMemset(d_atomids_rev, -1, sizeof(int)*n_atom_array ));
-  HANDLE_ERROR( cudaMemset(d_nb15off, -1, sizeof(int)*n_atom_array*max_n_nb15off ));
-  HANDLE_ERROR( cudaMemset(d_n_cell_pairs, 0, sizeof(int)*max_n_cells ));
-  HANDLE_ERROR( cudaMemset(d_cell_pair_removed, 0, sizeof(int)*max_n_cells ));
+extern "C" int cuda_set_atominfo(){
+  
+  HANDLE_ERROR( cudaMemset(d_atomids_rev, -1, sizeof(int)*max_n_atoms_exbox));
+  HANDLE_ERROR( cudaMemset(d_nb15off, -1, sizeof(int)*size_nb15off));
+  HANDLE_ERROR( cudaMemset(d_n_cell_pairs, 0, sizeof(int)*max_n_cells));
+  //HANDLE_ERROR( cudaMemset(d_cell_pair_removed, 0, sizeof(int)*max_n_cells ));
 
   int blocks1 = (n_atom_array + REORDER_THREADS-1) / REORDER_THREADS;
   kernel_set_atominfo<<<blocks1, REORDER_THREADS>>>(d_atomids,
@@ -892,8 +892,8 @@ extern "C" int cuda_memcpy_dtoh_work(real_fc*& h_work, real_fc*& h_energy,
 
   return 0;
 }
-extern "C" int cuda_reset_work_ene(int n_atoms){
-  HANDLE_ERROR(cudaMemset(d_work, 0.0, sizeof(real_fc)*n_atoms*3*N_MULTI_WORK));
+extern "C" int cuda_reset_work_ene(){
+  HANDLE_ERROR(cudaMemset(d_work, 0.0, sizeof(real_fc)*max_n_atom_array*3*N_MULTI_WORK));
   HANDLE_ERROR(cudaMemset(d_energy, 0.0, sizeof(real_pw)*2*N_MULTI_WORK));
   return 0;
 }
