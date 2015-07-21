@@ -1788,7 +1788,7 @@ int SubBox::update_device_cell_info(){
   //max_n_atoms_exbox);
   cuda_set_cell_constant(nsgrid.get_n_cells(),
 			 nsgrid.get_n_cell_pairs(),
-			 nsgrid.get_n_atom_array(),
+			 nsgrid.get_max_n_atom_array(),
 			 nsgrid.get_n_cells_xyz(),
 			 nsgrid.get_n_columns(),
 			 //nsgrid.get_n_uni(),

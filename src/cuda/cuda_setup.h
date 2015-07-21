@@ -26,6 +26,7 @@
 #define CP_PER_THREAD 8
 
 #define N_MULTI_WORK 8
+//#define N_MULTI_WORK 1
 #define MAX_INT 99999999
 
 cudaStream_t stream_pair_home;
