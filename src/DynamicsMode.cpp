@@ -301,7 +301,6 @@ int DynamicsMode::subbox_setup(){
   subbox.alloc_variables_for_nb14(mmsys.n_nb14);
   subbox.alloc_variables_for_excess(mmsys.n_excess);
   subbox.alloc_variables_for_nb15off(mmsys.max_n_nb15off);
-  //cout << "initial_division" << endl;
   subbox.initial_division(mmsys.crd,
 			  mmsys.vel_just,
 			  mmsys.charge,
@@ -321,13 +320,13 @@ int DynamicsMode::subbox_setup(){
     subbox.set_subset_constraint(mmsys.constraint,
 				 mmsys.settle);
   }
- subbox.init_thermostat(cfg->thermostat_type, cfg->temperature,
+  subbox.init_thermostat(cfg->thermostat_type, cfg->temperature,
 			 mmsys.d_free);
   if(cfg->expanded_ensemble == EXPAND_VMCMD){
     subbox.set_expand(&mmsys.vmcmd);
   }
 
-  //  cout << "set_nsgrid" << endl;
+  //cout << "set_nsgrid" << endl;
   subbox.revise_coordinates_pbc();
 
 #ifndef F_WO_NS
@@ -454,7 +453,7 @@ int DynamicsModePresto::calc_in_each_step(){
   }
   //cout << "revise_coordinates"<<endl;  
   #ifndef F_WO_NS
-  subbox.update_coordinates_nsgrid();
+    subbox.update_coordinates_nsgrid();
   #endif
   subbox.revise_coordinates_pbc();
 

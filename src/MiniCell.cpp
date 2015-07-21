@@ -4,7 +4,7 @@
 #ifdef F_CUDA
 extern "C" int cuda_hostalloc_atom_info(real_pw*& h_crd, int*& h_atomids,
 					real_fc*& h_work, real_fc*& h_energy,
-					int n_atom_array);
+					int max_n_atom_array);
 extern "C" int cuda_hostalloc_cell_info(//CellPair*& h_cell_pairs, 
 					//int*& h_idx_head_cell_pairs,
 					int*& h_idx_xy_head_cell,
