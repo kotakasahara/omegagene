@@ -1,9 +1,9 @@
 #EXECUTABLE = celeste
 #EXECUTABLE = celeste_wons
   # without neighbor search
-#EXECUTABLE = celeste_gpu_ecp
+EXECUTABLE = celeste_gpuecp
   # enumerate cell-pairs on cpu
-EXECUTABLE = celeste_gpu
+#EXECUTABLE = celeste_gpu
 
 ICCFLAGS = -ansi -fast -w1 
 #ICCFLAGS = -ansi -O0 -g #-w1 # -std=c++11
@@ -32,7 +32,7 @@ ifeq ($(EXECUTABLE), celeste_gpu)
 	MODE_FLAG = -DF_CUDA
 	CUDALIB = -L$(CUDALOC) -Lcuda -lcudart -lcelestecuda
 endif
-ifeq ($(EXECUTABLE), celeste_gpu_ecp)
+ifeq ($(EXECUTABLE), celeste_gpuecp)
 #	MODE_FLAG = -DF_CUDA
 	MODE_FLAG = -DF_CUDA -DF_ECP
 	CUDALIB = -L$(CUDALOC) -Lcuda -lcudart -lcelestecuda
@@ -74,7 +74,7 @@ $(EXECUTABLE) : $(OBJS) cuda/*.cu cuda/*.h
 ifeq ($(EXECUTABLE), celeste_gpu)
 	$(MAKE) -C cuda/ 
 endif
-ifeq ($(EXECUTABLE), celeste_gpu_ecp)
+ifeq ($(EXECUTABLE), celeste_gpuecp)
 	$(MAKE) -C cuda/ 
 endif
 	$(CCEXE) -o $(EXECUTABLE) $(OBJS) $(CUDALIB) $(ICCLIB) $(MPILIB)
