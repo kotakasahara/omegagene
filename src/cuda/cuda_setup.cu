@@ -609,7 +609,7 @@ __global__ void kernel_pairwise_ljzd(const real4* d_crd_chg,
     if(loopIdx%2 == 0){
       if(laneIdx == 0){
 	cp = d_idx_head_cell_pairs[c1] + (loopIdx >> 1);
-	if(cp >= D_MAX_N_CELL_PAIRS) break;
+	if(cp >= D_N_CELL_PAIRS) break;
 	cellpair = d_cell_pairs[cp];
       }
       cp = __shfl(cp, 0);
@@ -1202,6 +1202,10 @@ extern "C" int cuda_enumerate_cell_pairs(int*& h_atomids,
 			  &d_idx_head_cell_pairs[n_cells],
 			  sizeof(int),
 			  cudaMemcpyDeviceToHost));
+  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_CELL_PAIRS,
+				   &n_cell_pairs,
+				   sizeof(int) ) );
+
   pack_cellpairs_array<<<blocks3, REORDER_THREADS, 0, stream1>>>
     (d_cell_pairs, d_cell_pairs_buf, 
      d_n_cell_pairs, d_idx_head_cell_pairs);
@@ -1231,5 +1235,10 @@ extern "C" int cuda_memcpy_htod_cell_pairs(CellPair*& h_cell_pairs,
 			  h_idx_head_cell_pairs,
 			  (n_cells+1) * sizeof(int),
 			  cudaMemcpyHostToDevice));
+  HANDLE_ERROR( cudaMemcpyToSymbol(D_N_CELL_PAIRS,
+				   &n_cell_pairs,
+				   sizeof(int) ) );
+
+
   return 0;
 }
