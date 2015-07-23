@@ -41,7 +41,6 @@ extern "C" int cuda_reset_work_ene(int n_atoms);
 extern "C" int cuda_memcpy_htod_crd(real_pw*& h_crd,
 				    int n_atom_array, int max_n_atom_array);
 extern "C" int cuda_set_atominfo();
-
 extern "C" int cuda_set_crd();
 extern "C" int cuda_pairwise_ljzd(const int n_cal_cellpairs,
 				  const int n_cal_cells,
@@ -540,6 +539,7 @@ int SubBox::nsgrid_crd_to_gpu(){
 		       nsgrid.get_n_atom_array(),
 		       nsgrid.get_max_n_atom_array());
   cuda_set_crd();
+
   //nsgrid.update_crd((const real**)crd);
 #endif
   return 0;
