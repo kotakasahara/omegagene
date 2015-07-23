@@ -37,14 +37,11 @@ extern "C" int cuda_free_lj_params();
 extern "C" int cuda_memcpy_htod_atomids(int*& h_atomids,
 					int*& h_idx_xy_head_cell);
 extern "C" int cuda_set_pbc(real_pw* l, real_pw* lb);
-extern "C" int cuda_reset_work_ene(int n_atoms);
-extern "C" int cuda_memcpy_htod_crd(real_pw*& h_crd,
-				    int n_atom_array, int max_n_atom_array);
+extern "C" int cuda_memcpy_htod_crd(real_pw*& h_crd);
+				    
 extern "C" int cuda_set_atominfo();
 extern "C" int cuda_set_crd();
-extern "C" int cuda_pairwise_ljzd(const int n_cal_cellpairs,
-				  const int n_cal_cells,
-				  const bool flg_mod_15mask);
+extern "C" int cuda_pairwise_ljzd(const bool flg_mod_15mask);
 
 extern "C" int cuda_memcpy_dtoh_work(real_fc*& h_work, real_fc*& h_energy,
 				     int n_atoms, int n_atom_array);
@@ -73,8 +70,8 @@ extern "C" int cuda_enumerate_cell_pairs(int*& h_atomids,
   #ifdef F_ECP
   extern "C" int cuda_memcpy_htod_cell_pairs(CellPair*& h_cell_pairs,
 					   int*& h_idx_head_cell_pairs,
-					   int n_cell_pairs,
-					   int n_cells);
+					     int n_cell_pairs);
+
 
   #endif
 
@@ -513,15 +510,15 @@ int SubBox::set_nsgrid(){
     nsgrid.enumerate_cell_pairs();
     cuda_memcpy_htod_cell_pairs(nsgrid.get_cell_pairs(),
 				nsgrid.get_idx_head_cell_pairs(),
-				nsgrid.get_n_cell_pairs(),
-				nsgrid.get_n_cells());
+				nsgrid.get_n_cell_pairs());
+
   #else
 
-  cuda_enumerate_cell_pairs(nsgrid.get_atomids(),
-			    nsgrid.get_n_cells(),
-			    //nsgrid.get_n_uni(),
-			    nsgrid.get_n_neighbor_cols(),
-			    nsgrid.get_idx_atom_cell_xy());
+    cuda_enumerate_cell_pairs(nsgrid.get_atomids(),
+			      nsgrid.get_n_cells(),
+			      //nsgrid.get_n_uni(),
+			      nsgrid.get_n_neighbor_cols(),
+			      nsgrid.get_idx_atom_cell_xy());
 
   #endif
 
@@ -535,9 +532,7 @@ int SubBox::nsgrid_crd_to_gpu(){
 #ifdef F_CUDA
   //nsgrid.init_energy_work();
   
-  cuda_memcpy_htod_crd(nsgrid.get_crd(),
-		       nsgrid.get_n_atom_array(),
-		       nsgrid.get_max_n_atom_array());
+  cuda_memcpy_htod_crd(nsgrid.get_crd());
   cuda_set_crd();
 
   //nsgrid.update_crd((const real**)crd);
@@ -558,14 +553,14 @@ int SubBox::nsgrid_update(){
 
 #if defined(F_CUDA)  
   update_device_cell_info();  
+  nsgrid_crd_to_gpu();
   #ifdef F_ECP
     nsgrid.enumerate_cell_pairs();
     cuda_memcpy_htod_cell_pairs(nsgrid.get_cell_pairs(),
 				nsgrid.get_idx_head_cell_pairs(),
-				nsgrid.get_n_cell_pairs(),
-				nsgrid.get_n_cells());
+				nsgrid.get_n_cell_pairs());
+			
   #else
-  nsgrid_crd_to_gpu();
   cuda_enumerate_cell_pairs(nsgrid.get_atomids(),
 			    nsgrid.get_n_cells(),
 			    //nsgrid.get_n_uni(),
@@ -939,9 +934,6 @@ int SubBox::set_lj_param(const int in_n_lj_types,
 int SubBox::calc_energy(){
   init_energy();
   init_work();
-#if defined(F_CUDA)
-  cuda_reset_work_ene(nsgrid.get_max_n_atom_array());
-#endif
 
   const clock_t start_time_pair = clock();
 #if defined(F_WO_NS)
@@ -1800,11 +1792,7 @@ int SubBox::update_device_cell_info(){
 
 int SubBox::calc_energy_pairwise_cuda(){
   nsgrid.init_energy_work();
-  cuda_pairwise_ljzd(nsgrid.get_max_n_cell_pairs(), // n_cal_gridpairs,
-		     nsgrid.get_n_cells(),
-		     flg_mod_15mask
-		     ); // n_cal_grids);
-  
+  cuda_pairwise_ljzd(flg_mod_15mask);
   flg_mod_15mask = false;
   return 0;
 }

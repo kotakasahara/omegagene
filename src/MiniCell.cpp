@@ -186,7 +186,7 @@ int MiniCell::free_variables(){
   delete[] idx_atom_cell;
   
   delete[] n_atoms_col;
-  delete[] n_cells_z;
+
 
   //for(int i=0; i < n_atoms; i++){
   //delete[] crd_in_cell[i];
@@ -212,7 +212,10 @@ int MiniCell::free_variables(){
   cuda_hostfree_cellpair_info(cell_pairs,
 			      idx_head_cell_pairs,
 			      n_cells_z);
+  #else
+  delete[] n_cells_z;
   #endif
+
 #else
   delete[] crd;
   delete[] work;
