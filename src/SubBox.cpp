@@ -558,6 +558,7 @@ int SubBox::nsgrid_update(){
 
 #if defined(F_CUDA)  
   update_device_cell_info();  
+  nsgrid_crd_to_gpu();
   #ifdef F_ECP
     nsgrid.enumerate_cell_pairs();
     cuda_memcpy_htod_cell_pairs(nsgrid.get_cell_pairs(),
@@ -565,7 +566,6 @@ int SubBox::nsgrid_update(){
 				nsgrid.get_n_cell_pairs(),
 				nsgrid.get_n_cells());
   #else
-  nsgrid_crd_to_gpu();
   cuda_enumerate_cell_pairs(nsgrid.get_atomids(),
 			    nsgrid.get_n_cells(),
 			    //nsgrid.get_n_uni(),
