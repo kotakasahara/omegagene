@@ -517,7 +517,9 @@ int DynamicsModeZhang::calc_in_each_step(){
     //cout << "nsgrid_update"<<endl;
     subbox.nsgrid_update();
   }else{
+  #if defined(F_CUDA)  
     subbox.nsgrid_crd_to_gpu();
+  #endif
   }
   const clock_t endTimeHtod = clock();
   mmsys.ctime_cuda_htod_atomids += endTimeHtod - startTimeHtod;
@@ -549,13 +551,13 @@ int DynamicsModeZhang::calc_in_each_step(){
   if(cfg->constraint_type != CONST_NONE){
     // subbox.update_velocities(cfg->time_step);
     // vel_next 
-    subbox.update_coordinates_cur(cfg->time_step);
-    apply_constraint();
-    subbox.set_force_from_velocity(cfg->time_step);    
-    subbox.cpy_crd_from_prev();
+    //subbox.update_coordinates_cur(cfg->time_step);
+    //apply_constraint();
+    //subbox.set_force_from_velocity(cfg->time_step);    
+    //subbox.cpy_crd_from_prev();
     //subbox.update_velocities(cfg->time_step);    
     //subbox.update_coordinates_cur(cfg->time_step);
-    subbox.apply_thermostat();
+    //subbox.apply_thermostat();
   }
 
   subbox.apply_thermostat();  
@@ -566,7 +568,6 @@ int DynamicsModeZhang::calc_in_each_step(){
   const clock_t startTimeCoord = clock();
 
   subbox.update_coordinates_cur(time_step_half);
-
   //cout << "revise_coordinates"<<endl;  
   #ifndef F_WO_NS
   subbox.update_coordinates_nsgrid();
