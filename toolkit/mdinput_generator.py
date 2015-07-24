@@ -27,8 +27,9 @@ import kkmmff as mmff
 import kkmmconfig 
 import kkpresto_shake as shk
 import kkmm_expand
-import define_atom_groups as atgrp
+#import define_atom_groups as atgrp
 import kkpresto_distrest as disres
+import kkatomgroup as atgrp
 
 def get_options():
     p = OptionParser()
