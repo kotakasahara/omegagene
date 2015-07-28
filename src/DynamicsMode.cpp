@@ -414,6 +414,9 @@ int DynamicsModePresto::calc_in_each_step(){
   subbox.calc_energy();
   //cout << "gather_energies()"<<endl;
   gather_energies();
+  if(cfg->dist_restraint_type != DISTREST_NONE){
+    apply_dist_restraint();
+  }
   const clock_t endTimeEne = clock();
   mmsys.ctime_calc_energy += endTimeEne - startTimeEne;
 
@@ -423,9 +426,6 @@ int DynamicsModePresto::calc_in_each_step(){
       + mmsys.pote_14vdw + mmsys.pote_14ele
       + mmsys.pote_vdw + mmsys.pote_ele;
     subbox.expand_apply_bias(mmsys.cur_step, potential_e);
-  }
-  if(cfg->dist_restraint_type != DISTREST_NONE){
-    apply_dist_restraint();
   }
   const clock_t startTimeVel = clock();
   //cout << "update_velocities"<<endl;
