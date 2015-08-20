@@ -11,6 +11,9 @@ int WriteTrr::write_trr(int n_atoms,
 			int cur_step, real cur_time,
 			real lx, real ly, real lz, 
 			real** crd, real** vel_just, real_fc** force,
+			real cpu_time, real total_e, real kinetic_e,
+			real temperature, real potential_e,
+			real vdw_e,
 			bool out_box,
 			bool out_crd, bool out_vel, bool out_force){
   return 0;
@@ -27,6 +30,9 @@ int WriteTrrGromacs::write_trr(int n_atoms,
 			int cur_step, real cur_time,
 			real lx, real ly, real lz, 
 			real** crd, real** vel_just, real_fc** force,
+			real cpu_time, real total_e, real kinetic_e,
+			real temperature, real potential_e,
+			real vdw_e,
 			bool out_box,
 			bool out_crd, bool out_vel, bool out_force){
 
@@ -134,6 +140,9 @@ int WriteTrrPresto::write_trr(int n_atoms,
 			      int cur_step, real cur_time,
 			      real lx, real ly, real lz, 
 			      real** crd, real** vel_just, real_fc** force,
+			      real cpu_time, real total_e, real kinetic_e,
+			      real temperature, real potential_e,
+			      real vdw_e,
 			      bool out_box,
 			      bool out_crd, bool out_vel, bool out_force){
   
@@ -143,13 +152,13 @@ int WriteTrrPresto::write_trr(int n_atoms,
   float buf_cur_time = cur_time;
   ofs.write((const char*)&buf_cur_time, sizeof(float));
   float buf_f = 0.0;
-  ofs.write((const char*)&buf_f, sizeof(float));   //cpu_time
-  ofs.write((const char*)&buf_f, sizeof(float));   //total e
-  ofs.write((const char*)&buf_f, sizeof(float));   //kinetic e  
-  ofs.write((const char*)&buf_f, sizeof(float));   //temperature  
-  ofs.write((const char*)&buf_f, sizeof(float));   //potential e
+  ofs.write((const char*)&cpu_time, sizeof(float));   //cpu_time
+  ofs.write((const char*)&total_e, sizeof(float));   //total e
+  ofs.write((const char*)&kinetic_e, sizeof(float));   //kinetic e  
+  ofs.write((const char*)&temperature, sizeof(float));   //temperature  
+  ofs.write((const char*)&potential_e, sizeof(float));   //potential e
   ofs.write((const char*)&buf_f, sizeof(float));   //rmsf
-  ofs.write((const char*)&buf_f, sizeof(float));   //vdw
+  ofs.write((const char*)&vdw_e, sizeof(float));   //vdw
   ofs.write((const char*)&buf_f, sizeof(float));   //hyd
   ofs.write((const char*)&buf_f, sizeof(float));   //rmsd
   ofs.write((const char*)&buf, sizeof(int));

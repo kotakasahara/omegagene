@@ -180,12 +180,22 @@ int DynamicsMode::sub_output(){
   if(out_crd) subbox.copy_crd(mmsys.crd);
   if(out_vel) subbox.copy_vel(mmsys.vel_just);
   if(out_crd || out_vel || out_force){
+    real potential_e = mmsys.pote_bond + mmsys.pote_angle
+      + mmsys.pote_torsion + mmsys.pote_impro
+      + mmsys.pote_14vdw + mmsys.pote_14ele
+      + mmsys.pote_vdw + mmsys.pote_ele;
+    real total_e = potential_e + mmsys.kinetic_e + mmsys.pote_dist_rest;
+
     writer_trr->write_trr(mmsys.n_atoms,
 			 (int)mmsys.cur_step, mmsys.cur_time,
 			 mmsys.pbc.L[0], mmsys.pbc.L[1], mmsys.pbc.L[2],
 			 mmsys.crd, mmsys.vel_just, mmsys.force,
-			 true,
-			 out_crd, out_vel, out_force);
+			  (float)mmsys.ctime_per_step/(float)CLOCKS_PER_SEC,
+			  total_e, mmsys.kinetic_e,
+			  mmsys.temperature, potential_e,
+			  mmsys.pote_vdw,
+			  true,
+			  out_crd, out_vel, out_force);
   }
   return 0;
 }

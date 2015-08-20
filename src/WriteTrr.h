@@ -12,6 +12,9 @@ class WriteTrr : public Write {
 			int cur_step, real cur_time,
 			real lx, real ly, real lz, 
 			real** crd, real** vel_just, real_fc** force,
+			real cpu_time, real total_e, real kinetic_e,
+			real temperature, real potential_e,
+			real vdw_e,
 			bool out_box,
 			bool out_crd, bool out_vel, bool out_force);
 };
@@ -25,6 +28,9 @@ class WriteTrrGromacs : public WriteTrr {
 			int cur_step, real cur_time,
 			real lx, real ly, real lz, 
 			real** crd, real** vel_just, real_fc** force,
+			real cpu_time, real total_e, real kinetic_e,
+			real temperature, real potential_e,
+			real vdw_e,
 			bool out_box,
 			bool out_crd, bool out_vel, bool out_force);
   
@@ -38,6 +44,9 @@ class WriteTrrPresto : public WriteTrr {
 			int cur_step, real cur_time,
 			real lx, real ly, real lz, 
 			real** crd, real** vel_just, real_fc** force,
+			real cpu_time, real total_e, real kinetic_e,
+			real temperature, real potential_e,
+			real vdw_e,
 			bool out_box,
 			bool out_crd, bool out_vel, bool out_force);
   
