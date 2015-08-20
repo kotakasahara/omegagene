@@ -617,6 +617,14 @@ int MmSystem::set_excess_pairs(){
   return 0;  
 }
 
+real_fc MmSystem::set_potential_e(){
+  potential_e = pote_bond + pote_angle
+    + pote_torsion + pote_impro
+    + pote_14vdw + pote_14ele
+    + pote_vdw + pote_ele
+    + pote_dist_rest;
+  return potential_e;
+}
 int MmSystem::reset_energy(){
   pote_bond = 0.0;
   pote_angle = 0.0;

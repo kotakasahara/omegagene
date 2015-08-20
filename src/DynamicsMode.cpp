@@ -180,11 +180,7 @@ int DynamicsMode::sub_output(){
   if(out_crd) subbox.copy_crd(mmsys.crd);
   if(out_vel) subbox.copy_vel(mmsys.vel_just);
   if(out_crd || out_vel || out_force){
-    real potential_e = mmsys.pote_bond + mmsys.pote_angle
-      + mmsys.pote_torsion + mmsys.pote_impro
-      + mmsys.pote_14vdw + mmsys.pote_14ele
-      + mmsys.pote_vdw + mmsys.pote_ele;
-    real total_e = potential_e + mmsys.kinetic_e + mmsys.pote_dist_rest;
+    real total_e = mmsys.set_potential_e() + mmsys.kinetic_e;
 
     writer_trr->write_trr(mmsys.n_atoms,
 			 (int)mmsys.cur_step, mmsys.cur_time,
@@ -192,7 +188,7 @@ int DynamicsMode::sub_output(){
 			 mmsys.crd, mmsys.vel_just, mmsys.force,
 			  (float)mmsys.ctime_per_step/(float)CLOCKS_PER_SEC,
 			  total_e, mmsys.kinetic_e,
-			  mmsys.temperature, potential_e,
+			  mmsys.temperature, mmsys.potential_e,
 			  mmsys.pote_vdw,
 			  true,
 			  out_crd, out_vel, out_force);
@@ -206,14 +202,10 @@ int DynamicsMode::sub_output_log(){
   char buf[1024];
     sprintf(buf, "Step: %8lu    Time: %10.4f\n", mmsys.cur_step, mmsys.cur_time);
     ss << string(buf);
-    real potential_e = mmsys.pote_bond + mmsys.pote_angle
-      + mmsys.pote_torsion + mmsys.pote_impro
-      + mmsys.pote_14vdw + mmsys.pote_14ele
-      + mmsys.pote_vdw + mmsys.pote_ele;
-    real total_e = potential_e + mmsys.kinetic_e + mmsys.pote_dist_rest;
+    real total_e = mmsys.set_potential_e() + mmsys.kinetic_e;
     sprintf(buf, "Total:     %14.10e\n", total_e);
     ss << string(buf);
-    sprintf(buf, "Potential: %14.10e    Kinetic:  %14.10e\n", potential_e, mmsys.kinetic_e);
+    sprintf(buf, "Potential: %14.10e    Kinetic:  %14.10e\n", mmsys.potential_e, mmsys.kinetic_e);
     ss << string(buf);    
     sprintf(buf, "Bond:      %14.10e    Angle:    %14.10e\n", mmsys.pote_bond, mmsys.pote_angle);
     ss << string(buf);    
@@ -431,11 +423,7 @@ int DynamicsModePresto::calc_in_each_step(){
   mmsys.ctime_calc_energy += endTimeEne - startTimeEne;
 
   if(cfg->expanded_ensemble == EXPAND_VMCMD){
-    real potential_e = mmsys.pote_bond + mmsys.pote_angle
-      + mmsys.pote_torsion + mmsys.pote_impro
-      + mmsys.pote_14vdw + mmsys.pote_14ele
-      + mmsys.pote_vdw + mmsys.pote_ele;
-    subbox.expand_apply_bias(mmsys.cur_step, potential_e);
+    subbox.expand_apply_bias(mmsys.cur_step, mmsys.set_potential_e());
   }
   const clock_t startTimeVel = clock();
   //cout << "update_velocities"<<endl;
@@ -544,11 +532,7 @@ int DynamicsModeZhang::calc_in_each_step(){
   mmsys.ctime_calc_energy += endTimeEne - startTimeEne;
 
   if(cfg->expanded_ensemble == EXPAND_VMCMD){
-    real potential_e = mmsys.pote_bond + mmsys.pote_angle
-      + mmsys.pote_torsion + mmsys.pote_impro
-      + mmsys.pote_14vdw + mmsys.pote_14ele
-      + mmsys.pote_vdw + mmsys.pote_ele;
-    subbox.expand_apply_bias(mmsys.cur_step, potential_e);
+    subbox.expand_apply_bias(mmsys.cur_step, mmsys.set_potential_e());
   }
   if(cfg->dist_restraint_type != DISTREST_NONE){
     apply_dist_restraint();

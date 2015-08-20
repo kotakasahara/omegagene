@@ -97,6 +97,7 @@ class MmSystem : public CelesteObject{
   real* energy_self;  
   real energy_self_sum;
 
+  real_fc potential_e;
   real_fc pote_bond;
   real_fc pote_angle;
   real_fc pote_torsion;
@@ -222,6 +223,8 @@ class MmSystem : public CelesteObject{
   int set_vel_from_box();
 
   int ff_setup(const Config* cfg);
+
+  real_fc set_potential_e();
 };
 
 #endif
