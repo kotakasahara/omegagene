@@ -12,6 +12,7 @@ class ThermostatObject : public CelesteObject{
  protected:
   int d_free;
   real temperature;
+  real temperature_target;
   real temperature_coeff;
   real time_step;
   real time_step_inv_sq;
@@ -43,7 +44,9 @@ class ThermostatObject : public CelesteObject{
 					  COMMotion* commotion,
 					  int* atomids_rev);
 
-  inline void set_temperature(real in_t){temperature=in_t;};
+  inline void set_temperature(const real in_t){
+    temperature=in_t;
+  };
   inline real get_temperature(){return temperature;};
 };
 

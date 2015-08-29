@@ -24,6 +24,8 @@ class Config : public CelesteObject {
   int constraint_max_loops;
   int thermostat_type;
   real temperature;
+  real temperature_init;
+  int heating_steps;
   real thermo_const_tolerance;
   int thermo_const_max_loops;
 

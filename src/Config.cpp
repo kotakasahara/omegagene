@@ -25,7 +25,10 @@ int Config::set_defaults(){
   electrostatic =  ELCTRST_ZERODIPOLE;
   ele_alpha = 0.0;
   thermostat_type = THMSTT_NONE;
-  temperature = 300;
+
+  temperature = 300.0;
+  temperature_init = -1.0;
+  heating_steps = 0;
 
   com_motion = COM_NONE;
   n_com_cancel_groups = 0;
@@ -137,6 +140,8 @@ void Config::setAll(vector<string> arg){
       else{ expanded_ensemble = EXPAND_DUMMY; } 
     }
     else if(*itr=="--temperature"){ temperature = atof((*++itr).c_str()); }
+    else if(*itr=="--temperature-init"){ temperature_init = atof((*++itr).c_str()); }
+    else if(*itr=="--heating-steps"){ heating_steps = atoi((*++itr).c_str()); }
 
     else if(*itr=="--com-motion"){
       itr++;
@@ -203,5 +208,7 @@ void Config::setAll(vector<string> arg){
       cerr<<"unknown keyword <"<<(*itr)<<">"<<endl;
     }
   }
+  if(temperature_init < 0) temperature_init = temperature;
+
 }
 

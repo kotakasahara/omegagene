@@ -2,6 +2,7 @@
 
 ThermostatObject::ThermostatObject()
   : CelesteObject(){
+
 }
 ThermostatObject::~ThermostatObject(){
 }

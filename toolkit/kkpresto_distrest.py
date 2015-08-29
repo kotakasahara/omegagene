@@ -81,6 +81,11 @@ class PrestoDistRestReader(kkpresto.PrestoAsciiReader):
             if line[0:len("RDDSTC> LIST")] == "RDDSTC> LIST":
                 read_mode = 1                
                 continue
+            elif line[0:len("END")] == "END":
+                read_mode = 0
+                continue
+            elif line[0:len("RDDSTC> STOP")] == "RDDSTC> STOP":
+                break
             elif read_mode == 1:
                 terms = line.strip().split()
                 molid1 = int(terms[0]) - 1 

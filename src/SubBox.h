@@ -300,7 +300,6 @@ class SubBox : public CelesteObject {
   int init_thermostat(const int in_thermostat_type,
 		      const real in_temperature,
 		      const int d_free);
-
   real_fc get_pote_vdw(){return pote_vdw;};
   real_fc get_pote_ele(){return pote_ele;};
   real_fc get_pote_bond(){return pote_bond;};
@@ -317,6 +316,7 @@ class SubBox : public CelesteObject {
 #endif
   
   int apply_constraint();
+  int update_thermostat(const int cur_step);
   int apply_thermostat();
   int apply_thermostat_with_shake(const int max_loop,
 				  const real tolerance);

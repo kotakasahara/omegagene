@@ -1717,7 +1717,7 @@ int SubBox::set_subset_constraint(ConstraintObject& in_cst,
   return 0;
 }
 int SubBox::init_thermostat(const int in_thermostat_type,
-			    const real in_temperature,
+			    const real in_temperature_init,
 			    const int d_free){
   if(in_thermostat_type == THMSTT_NONE){
     thermostat = new ThermostatObject();
@@ -1726,7 +1726,7 @@ int SubBox::init_thermostat(const int in_thermostat_type,
   }else if(in_thermostat_type == THMSTT_HOOVER_EVANS){
     thermostat = new ThermostatHooverEvans();
   }
-  thermostat->set_temperature(in_temperature);
+  thermostat->set_temperature(in_temperature_init);
   thermostat->set_temperature_coeff(d_free);
 
   thermostat->set_time_step(cfg->time_step);
@@ -1804,7 +1804,22 @@ int SubBox::apply_constraint(){
   return 0;
 }
 
+int SubBox::update_thermostat(const int cur_step){
+  //cout << "update thermostat " << cur_step << " / " << cfg->heating_steps<< endl;
+  if(cur_step < cfg->heating_steps){
+    real new_temp = cfg->temperature_init + 
+      ((cfg->temperature - cfg->temperature_init) /
+       (real)cfg->heating_steps) * cur_step;
+    thermostat->set_temperature(new_temp);
+    //cout << "set temperature : " << new_temp << " " << cfg->temperature_init << " - " << cfg->temperature << endl;
+  }else{
+    thermostat->set_temperature(cfg->temperature);
+  }
+  return 0;
+}
+
 int SubBox::apply_thermostat(){
+
   thermostat->apply_thermostat(n_atoms_box,
 			       work, vel, vel_next,
 			       mass, mass_inv);

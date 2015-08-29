@@ -111,7 +111,9 @@ int DynamicsMode::main_stream(){
   for(mmsys.cur_step = 1;
       mmsys.cur_step <= cfg->n_steps;
       mmsys.cur_step++){
+
     calc_in_each_step();
+
     if((cfg->print_intvl_log > 0 &&
 	mmsys.cur_step % cfg->print_intvl_log == 0) ||
        mmsys.cur_step == 1 ||
@@ -322,7 +324,8 @@ int DynamicsMode::subbox_setup(){
     subbox.set_subset_constraint(mmsys.constraint,
 				 mmsys.settle);
   }
-  subbox.init_thermostat(cfg->thermostat_type, cfg->temperature,
+  subbox.init_thermostat(cfg->thermostat_type,
+			 cfg->temperature_init, 
 			 mmsys.d_free);
   if(cfg->expanded_ensemble == EXPAND_VMCMD){
     subbox.set_expand(&mmsys.vmcmd);
@@ -391,6 +394,7 @@ DynamicsModePresto::~DynamicsModePresto(){
 } 
 
 int DynamicsModePresto::calc_in_each_step(){
+
   const clock_t startTimeStep = clock();
 
   const clock_t startTimeReset = clock();
@@ -436,10 +440,12 @@ int DynamicsModePresto::calc_in_each_step(){
 
   subbox.cancel_com_motion();
   //if(mmsys.leapfrog_coef == 1.0){
-  if(cfg->thermostat_type == THMSTT_SCALING && 
-     cfg->constraint_type == CONST_NONE){
-     //mmsys.leapfrog_coef == 1.0){
-    subbox.apply_thermostat();
+  if(cfg->thermostat_type == THMSTT_SCALING){
+    subbox.update_thermostat(mmsys.cur_step);
+    if(cfg->constraint_type == CONST_NONE){
+      //mmsys.leapfrog_coef == 1.0){
+      subbox.apply_thermostat();
+    }
   }
   //}
   //cout << "update_coordinates"<<endl;  
@@ -554,7 +560,7 @@ int DynamicsModeZhang::calc_in_each_step(){
     //subbox.apply_thermostat();
   }
 
-  subbox.apply_thermostat();  
+  subbox.apply_thermostat();
   
   const clock_t endTimeVel = clock();
   mmsys.ctime_update_velo += endTimeVel - startTimeVel;
