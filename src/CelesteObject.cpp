@@ -6,7 +6,7 @@ CelesteObject::CelesteObject(){
 //const int CelesteObject::MAX_N_ATOMTYPE = 40;
 
 const string CelesteObject::EXE = "celeste";
-const string CelesteObject::ABOUT_ME = "celeste ver.0.35.w.1 29-aug-2015";
+const string CelesteObject::ABOUT_ME = "celeste ver.0.35.w.3 1-sep-2015";
 const string CelesteObject::DESCRIPTION = "";
 //const int CelesteObject::REAL_BYTE = 4;
 const int CelesteObject::REAL_BYTE = 8;
@@ -35,5 +35,15 @@ int CelesteObject::cross(const float* a, const float* b, float* ret){
   ret[0] = a[1]*b[2] - a[2]*b[1];
   ret[1] = a[2]*b[0] - a[0]*b[2];
   ret[2] = a[0]*b[1] - a[1]*b[0];
+  return 0;
+}
+int CelesteObject::error_exit(const string msg,
+			      const string error_code){
+  stringstream ss;
+  ss <<  "[ Error : " << error_code << " ]" << endl;
+  ss << msg;
+
+  cout << ss.str();
+  cerr << ss.str();
   return 0;
 }

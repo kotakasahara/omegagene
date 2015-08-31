@@ -39,6 +39,7 @@ typedef double real_cst;
 //typedef pair<int,int> int_pair;
 //typedef pair<int,int> real3d;
 #include <string> 
+#include <sstream> 
 #include <iostream>
 #include <iomanip>
 using namespace std;
@@ -143,6 +144,9 @@ class CelesteObject {
   template <typename TYPE> inline const TYPE& min(const TYPE& a, const TYPE& b){ return a > b ? b : a; }
   int cross(const double* a, const double* b, double* ret);
   int cross(const float* a, const float* b, float* ret);
+
+  int error_exit(const string msg,
+		 const string error_code);
 };
 
 #endif

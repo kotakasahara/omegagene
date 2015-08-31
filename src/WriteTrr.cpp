@@ -95,7 +95,6 @@ int WriteTrrGromacs::write_trr(int n_atoms,
     ofs.write((const char*)&z, sizeof z);
   }
   if(out_crd){
-    cout << "WRITETRR CRD" <<endl;
     for(int atomid=0; atomid < n_atoms; atomid++){
       real x = crd[atomid][0]*0.1;
       real y = crd[atomid][1]*0.1;
@@ -152,15 +151,25 @@ int WriteTrrPresto::write_trr(int n_atoms,
   float buf_cur_time = cur_time;
   ofs.write((const char*)&buf_cur_time, sizeof(float));
   float buf_f = 0.0;
-  ofs.write((const char*)&cpu_time, sizeof(float));   //cpu_time
-  ofs.write((const char*)&total_e, sizeof(float));   //total e
-  ofs.write((const char*)&kinetic_e, sizeof(float));   //kinetic e  
-  ofs.write((const char*)&temperature, sizeof(float));   //temperature  
-  ofs.write((const char*)&potential_e, sizeof(float));   //potential e
+  buf_f = (float)cpu_time;
+  ofs.write((const char*)&buf_f, sizeof(float));   //cpu_time
+  buf_f = (float)total_e;
+  ofs.write((const char*)&buf_f, sizeof(float));   //total e
+  buf_f = (float)kinetic_e;
+  ofs.write((const char*)&buf_f, sizeof(float));   //kinetic e  
+  buf_f = (float)temperature;
+  ofs.write((const char*)&buf_f, sizeof(float));   //temperature  
+  buf_f = (float)potential_e;
+  ofs.write((const char*)&buf_f, sizeof(float));   //potential e
+  buf_f = 0.0;
   ofs.write((const char*)&buf_f, sizeof(float));   //rmsf
-  ofs.write((const char*)&vdw_e, sizeof(float));   //vdw
+  buf_f = (float)vdw_e;
+  ofs.write((const char*)&buf_f, sizeof(float));   //vdw
+  buf_f = 0.0;  
   ofs.write((const char*)&buf_f, sizeof(float));   //hyd
+  buf_f = 0.0;  
   ofs.write((const char*)&buf_f, sizeof(float));   //rmsd
+  buf = 0;
   ofs.write((const char*)&buf, sizeof(int));
   
   buf = n_atoms * 3 * 4;

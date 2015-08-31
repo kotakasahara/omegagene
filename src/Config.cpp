@@ -205,7 +205,10 @@ void Config::setAll(vector<string> arg){
 
     else if(*itr=="--gpu-device-id"){ gpu_device_id = atof((*++itr).c_str()); }
     else{
-      cerr<<"unknown keyword <"<<(*itr)<<">"<<endl;
+      stringstream ss;
+      ss<<"Configuration file: Unknown keyword <"<<(*itr)<<">";
+      error_exit(ss.str(), "1A00001");
+      
     }
   }
   if(temperature_init < 0) temperature_init = temperature;
