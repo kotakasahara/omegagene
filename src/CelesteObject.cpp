@@ -43,7 +43,6 @@ int CelesteObject::error_exit(const string msg,
   ss <<  "[ Error : " << error_code << " ]" << endl;
   ss << msg << endl;
 
-  cout << ss.str();
   cerr << ss.str();
   exit(1);
   return 0;

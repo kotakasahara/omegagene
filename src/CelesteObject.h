@@ -38,6 +38,7 @@ typedef double real_cst;
 
 //typedef pair<int,int> int_pair;
 //typedef pair<int,int> real3d;
+#include <cstdlib>
 #include <string> 
 #include <sstream> 
 #include <iostream>
