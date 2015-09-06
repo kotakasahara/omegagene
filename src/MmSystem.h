@@ -119,14 +119,19 @@ class MmSystem : public CelesteObject{
 
   ConstraintObject constraint;
   ConstraintObject settle;
-  ExpandVMcMD vmcmd;
+  ExpandVMcMD* vmcmd;
 
   int n_groups;
   int* n_atoms_in_groups;
   int** atom_groups;
   real* mass_groups;
   real* mass_inv_groups;
-  vector<string> atom_groups_names;
+  vector<string> atom_group_names;
+
+  int n_com_cancel_groups;
+  int com_cancel_groups[MAX_N_COM_GROUPS];
+  int n_enhance_groups;
+  int enhance_groups[MAX_N_COM_GROUPS];
   
   DistRestraintObject*  dist_restraint;
 
@@ -204,7 +209,13 @@ class MmSystem : public CelesteObject{
 
   int add_excess_pairs(int atomid1, int atomid2);
   int set_excess_pairs();
-  int set_atom_group_info();
+  int set_atom_group_info(const Config* cfg);
+  int get_atom_group_id_from_name(const string name);
+  int set_com_cancel_groups(const Config* cfg);
+  int set_enhance_groups(const Config* cfg);
+  int print_com_cancel_groups();
+  int print_enhance_groups();
+
   // calc
   
   int reset_energy();

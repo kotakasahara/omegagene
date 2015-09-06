@@ -1486,7 +1486,7 @@ int SubBox::update_velocities(const real time_step){
 	( time_step * 
 	 //	 FORCE_VEL * 
 	 work[atomid_b3+d] 
-	 * mass_inv[atomid_b]);
+	  * mass_inv[atomid_b]);
     }
   }
   return 0;
@@ -1841,6 +1841,11 @@ int SubBox::apply_thermostat_with_shake(const int max_loops,
 }
 int SubBox::expand_apply_bias(unsigned long cur_step,  real in_lambda){
   expand->apply_bias(cur_step, in_lambda, work, n_atoms_box);
+  return 0;
+}
+int SubBox::expand_apply_bias_struct_param(unsigned long cur_step){
+  real param = expand->cal_struct_parameters(crd, pbc);
+  expand->apply_bias(cur_step, param, work, n_atoms_box);
   return 0;
 }
 void SubBox::expand_enable_vs_transition(){

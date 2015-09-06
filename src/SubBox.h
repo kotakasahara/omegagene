@@ -248,6 +248,7 @@ class SubBox : public CelesteObject {
   int calc_energy_impros();
   int calc_energy_14nb();
   int calc_energy_ele_excess();
+  real_pw* get_mass(){return mass;};
   int get_box_id_from_crd(const int box_crd[]);
   int get_box_crd_from_id(const int box_id, 
 			  int *box_crd);
@@ -322,6 +323,7 @@ class SubBox : public CelesteObject {
 				  const real tolerance);
   void set_expand(ExpandVMcMD* in_exp){ expand =in_exp; };
   int expand_apply_bias(unsigned long cur_step, real in_lambda);
+  int expand_apply_bias_struct_param(unsigned long cur_step);
   void expand_enable_vs_transition();
   int cancel_com_motion();
 

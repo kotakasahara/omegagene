@@ -245,3 +245,15 @@ int WriteRestart::write_restart(int n_atoms, int n_steps,
   close();
   return 0;
 }
+
+WriteAUSRestart::WriteAUSRestart(){
+}
+WriteAUSRestart::~WriteAUSRestart(){
+}
+int WriteAUSRestart::write_aus_restart(const int aus_type,
+				       vector<int> group_id,
+				       int** atom_groups,
+				       real** crd){
+  
+  return 0;
+}

@@ -3,6 +3,7 @@
 
 #include "Expand.h"
 #include "Write.h"
+#include "PBC.h"
 
 #include <cmath>
 using namespace std;
@@ -53,6 +54,21 @@ class ExpandVMcMD : public Expand {
 
   WriteTableLog* writer_lambda;
 
+  real_pw* mass;
+  real_pw mass_sum;
+  //real* mass_groups;
+  //real* mass_inv_groups;
+  real sigma;
+  real sigma_half;
+  real sigma_sq;
+  //
+  int* n_atoms_in_groups;
+  int** atom_groups;
+  int n_enhance_groups;
+  int* enhance_groups;
+  int n_enhance_group_pairs;
+  int** enhance_group_pairs;
+
  public:
   ExpandVMcMD();
   ~ExpandVMcMD();
@@ -65,7 +81,7 @@ class ExpandVMcMD : public Expand {
   int apply_bias(unsigned long cur_step,
 		 real in_lambda,
 		 real_fc* work,
-		 int n_atoms_box);
+ 		 int n_atoms_box);
 
   VirtualState& get_vstate(int vs_id){ return vstates[vs_id]; };
 
@@ -77,7 +93,7 @@ class ExpandVMcMD : public Expand {
 		       real lambda);
   
   int set_current_vstate(real lambda);
-  int scale_force(real lambda, real_fc* work, int n_atoms);
+  virtual int scale_force(real lambda, real_fc* work, int n_atoms);
 
   // files
   int set_files(string fn_vslog, string fn_lambda, int format_lambda);
@@ -93,6 +109,89 @@ class ExpandVMcMD : public Expand {
 		    real alpha_low, real alpha_high);
   int set_vs_poly_param(int vs_id, int ord, real param);
   int print_info();
+  virtual real cal_struct_parameters(real* crd, PBC* pbc);  
+  virtual int set_enhance_groups(int* in_n_atoms_in_groups,
+				 int** in_atom_groups,
+				    int in_n_enhance_groups,
+				 int* in_enhance_groups);
+  int set_mass(real* in_mass);
+  int set_params(real in_recover_range);
+};
+
+
+class ExpandVAUS : public ExpandVMcMD {
+ private:
+ protected:
+  //int n_vstates;
+  //int trans_interval;
+  //real temperature;
+  //real const_k;
+
+  //VirtualState *vstates;
+  //int init_vs;
+  //int random_seed;
+  //bool flg_vs_transition;
+
+  //int cur_vs;
+
+  //WriteTTPVMcMDLog writer_vslog;
+
+  //WriteTableLog* writer_lambda;
+  
+  // from MmSystem
+
+  real** crd_centers;
+  real** unit_vec;
+
+ public:
+  ExpandVAUS();
+  ~ExpandVAUS();
+  
+  int alloc_crd_centers();
+  int free_crd_centers();
+  real set_crd_centers(real* crd, PBC* pbc);
+  virtual real cal_struct_parameters(real* crd, PBC* pbc);
+
+  //int set_n_vstates(int in_n_vstates);
+  //void set_trans_interval(int in_trans_interval);
+  //void set_temperature(real in_tmp);
+  //int get_trans_interval();
+  //int get_temperature();
+  //int apply_bias(unsigned long cur_step,
+  //real in_lambda,
+  //real_fc* work,
+  //int n_atoms_box);
+  
+  //VirtualState& get_vstate(int vs_id){ return vstates[vs_id]; };
+  
+  //int get_init_vs(){ return init_vs; };
+  //void set_init_vs(int in_init_vs){ init_vs = in_init_vs; cur_vs = init_vs;};
+  //int get_random_seed(){ return random_seed; };
+  //void set_random_seed(int in_seed){ random_seed = in_seed; };
+  //int trial_transition(int source, int rel_dest,
+  //real lambda);
+  
+  //int set_current_vstate(real lambda);
+  virtual int scale_force(real lambda, real_fc* work, int n_atoms);
+
+  // files
+  //int set_files(string fn_vslog, string fn_lambda, int format_lambda);
+  //int close_files();
+  //int write_vslog(int cur_steps);
+  //int write_lambda(real lambda);
+
+  //void enable_vs_transition(){flg_vs_transition = true;}
+  //int set_vs_order(int vs_id, int ord);
+  //int set_vs_params(int vs_id,
+  //real lambda_low, real lambda_high,
+  //real prob_low, real prob_high,
+  //real alpha_low, real alpha_high);
+  //int set_vs_poly_param(int vs_id, int ord, real param);
+  //int print_info();
+  virtual int set_enhance_groups(int* in_n_atoms_in_groups,
+				 int** in_atom_groups,
+				    int in_n_enhance_groups,
+				 int* in_enhance_groups);
 };
 
 #endif

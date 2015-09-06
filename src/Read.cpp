@@ -65,7 +65,7 @@ vector<string> Read::load_strings(){
 }
 
 int Read::load_launch_set(MmSystem& mmsys){
-  open();
+  if(open()==1){ exit(1); }
   cout << "-- Load Celeste input package." << endl;
   load_ls_header(mmsys);
   if(size_box>0){
@@ -94,7 +94,7 @@ int Read::load_launch_set(MmSystem& mmsys){
   }
   if(size_expand > 0){
     cout << "--- Load expanded ensemble definition : " << size_expand << " bytes." << endl;
-    load_ls_vmcmd(&mmsys.vmcmd);
+    load_ls_vmcmd(mmsys.vmcmd);
   }
   if(size_groups > 0){
     cout << "--- Load atom group definition : " << size_groups << " bytes." << endl;
@@ -520,7 +520,6 @@ int Read::load_ls_vmcmd(ExpandVMcMD* vmcmd){
   vmcmd->set_trans_interval(interval);
   vmcmd->set_temperature((real)temperature);
 
-
   for(int i = 0; i < n_vs; i++){
     int ord;
     read_bin_values(&ord, 1);
@@ -564,12 +563,18 @@ int Read::load_ls_atom_groups(MmSystem& mmsys){
     ifs.read(name, len_name);
     int n_atoms;
     read_bin_values(&n_atoms_in_group[i], 1);
+    mmsys.atom_group_names.push_back(string(name));
+    cout << "read atom groups : " << i << " " 
+	 << n_atoms_in_group[i] << " " 
+	 << name << " "
+	 << mmsys.atom_group_names[i] << endl;
   }
   mmsys.alloc_atom_groups(n_groups, n_atoms_in_group);
-  
+  int buf;
   for(int i=0; i < n_groups; i++){  
     for(int j = 0; j < n_atoms_in_group[i]; j++){
-      read_bin_values(&mmsys.atom_groups[i][j], 1);      
+      read_bin_values(&buf, 1);
+      mmsys.atom_groups[i][j] = buf-1;
     }
   }  
   delete[] n_atoms_in_group;

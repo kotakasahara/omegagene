@@ -11,7 +11,6 @@ using namespace std;
 class Config : public CelesteObject {
  private:
  public:
-  enum { MAX_N_COM_GROUPS = 32 };
   int mode;
   string fn_cfg;
   string fn_inp;
@@ -40,6 +39,8 @@ class Config : public CelesteObject {
   int com_cancel_groups[MAX_N_COM_GROUPS];
   int n_com_cancel_groups_name;
   string com_cancel_groups_name[MAX_N_COM_GROUPS];
+  int n_enhance_groups_name;
+  string enhance_groups_name[MAX_N_COM_GROUPS];
   int random_seed;
   int expanded_ensemble;
 
@@ -74,7 +75,7 @@ class Config : public CelesteObject {
 
   int dist_restraint_type;
   real dist_restraint_weight;
-
+  real enhance_sigma = 2.0;
 
   Config();
   ~Config();

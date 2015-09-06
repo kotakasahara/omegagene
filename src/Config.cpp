@@ -33,6 +33,7 @@ int Config::set_defaults(){
   com_motion = COM_NONE;
   n_com_cancel_groups = 0;
   n_com_cancel_groups_name = 0;
+  n_enhance_groups_name = 0;
   
   box_div[0] = 1;
   box_div[1] = 1;
@@ -137,6 +138,7 @@ void Config::setAll(vector<string> arg){
       itr++;
       if(*itr == "none"){ expanded_ensemble = EXPAND_NONE; }
       else if(*itr == "v-mcmd"){ expanded_ensemble = EXPAND_VMCMD; }
+      else if(*itr == "v-aus"){ expanded_ensemble = EXPAND_VAUS; }
       else{ expanded_ensemble = EXPAND_DUMMY; } 
     }
     else if(*itr=="--temperature"){ temperature = atof((*++itr).c_str()); }
@@ -204,6 +206,10 @@ void Config::setAll(vector<string> arg){
     else if(*itr=="--dist-restraint-weight"){ dist_restraint_weight = atof((*++itr).c_str()); }
 
     else if(*itr=="--gpu-device-id"){ gpu_device_id = atof((*++itr).c_str()); }
+    else if(*itr=="--enhance-group-name"){
+      enhance_groups_name[n_enhance_groups_name] = ((*++itr).c_str());
+      n_enhance_groups_name++;
+    }
     else{
       stringstream ss;
       ss<<"Configuration file: Unknown keyword <"<<(*itr)<<">";
@@ -212,6 +218,7 @@ void Config::setAll(vector<string> arg){
     }
   }
   if(temperature_init < 0) temperature_init = temperature;
-
 }
+
+
 

@@ -1,9 +1,9 @@
-#EXECUTABLE = celeste
+EXECUTABLE = celeste
 #EXECUTABLE = celeste_wons
   # without neighbor search
 #EXECUTABLE = celeste_gpuecp
   # enumerate cell-pairs on cpu
-EXECUTABLE = celeste_gpu
+#EXECUTABLE = celeste_gpu
 
 ICCFLAGS = -ansi -fast -w1 
 #ICCFLAGS = -ansi -O0 -g #-w1 # -std=c++11

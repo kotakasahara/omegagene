@@ -544,13 +544,71 @@ int MmSystem::alloc_atom_groups(int in_n_groups,
   }
   return 0;
 }
-int MmSystem::set_atom_group_info(){
+
+int MmSystem::set_atom_group_info(const Config* cfg){
   for(int i_grp=0; i_grp < n_groups; i_grp++){
     mass_groups[i_grp] = 0.0;
     for(int i_atom = 0; i_atom < n_atoms_in_groups[i_grp]; i_atom++){
       mass_groups[i_grp] += mass[atom_groups[i_grp][i_atom]];
     }
     mass_inv_groups[i_grp] = 1.0 / mass_groups[i_grp];
+  }
+  set_com_cancel_groups(cfg);
+  set_enhance_groups(cfg);
+  return 0;
+}
+int MmSystem::get_atom_group_id_from_name(const string name){
+  for(int i=0; i<n_groups; i++){
+    if(name==atom_group_names[i]) return i;
+  }
+  return -1;
+}
+int MmSystem::set_com_cancel_groups(const Config* cfg){
+  n_com_cancel_groups = 0;
+  for(int i=0; i<cfg->n_com_cancel_groups; i++){
+    com_cancel_groups[n_com_cancel_groups] = cfg->com_cancel_groups[i];
+    n_com_cancel_groups++;
+  }
+  for(int i=0; i<cfg->n_com_cancel_groups_name; i++){
+    com_cancel_groups[n_com_cancel_groups] = get_atom_group_id_from_name(cfg->com_cancel_groups_name[i]);
+    if (com_cancel_groups[n_com_cancel_groups] < 0){
+      cout << "Invalid atom group : " << cfg->com_cancel_groups_name[i] << endl;
+      exit(1);
+    }
+    n_com_cancel_groups++; 
+
+  }    
+  return 0;
+}
+int MmSystem::print_com_cancel_groups(){
+  if(n_com_cancel_groups <= 0) return 1;
+  cout << "COM cancel atom groups: " << endl;
+  for(int i=0; i<n_com_cancel_groups; i++){
+    cout << "  Group " << com_cancel_groups[i] << " " ;
+    cout << atom_group_names[com_cancel_groups[i]] << " : " ;
+    cout << n_atoms_in_groups[com_cancel_groups[i]] << " atoms." << endl;
+  }
+  return 0;
+}
+int MmSystem::set_enhance_groups(const Config* cfg){
+  n_enhance_groups = 0;
+  for(int i=0; i<cfg->n_enhance_groups_name; i++){
+    enhance_groups[n_enhance_groups] = get_atom_group_id_from_name(cfg->enhance_groups_name[i]);
+    if (enhance_groups[n_enhance_groups] < 0){
+      cout << "Invalid atom group : " << cfg->enhance_groups_name[i] << endl;
+      exit(1);
+    }
+    n_enhance_groups++; 
+  }    
+  return 0;
+}
+int MmSystem::print_enhance_groups(){
+  if(n_enhance_groups <= 0) return 1;
+  cout << "Enhance atom groups: " << endl;
+  for(int i=0; i<n_enhance_groups; i++){
+    cout << "  Group " << enhance_groups[i] << " " ;
+    cout << atom_group_names[enhance_groups[i]] << " : " ;
+    cout << n_atoms_in_groups[enhance_groups[i]] << " atoms." << endl;
   }
   return 0;
 }

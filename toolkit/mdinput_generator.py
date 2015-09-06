@@ -486,8 +486,8 @@ class MDInputGen(object):
         buf = ""
         buf += st.pack("@i", len(atom_groups.keys()))
         for name, atoms in atom_groups.items():
-            buf += st.pack("@i", len(name))
-            buf += name
+            buf += st.pack("@i", len(name)+1)
+            buf += name+"\0"
             buf += st.pack("@i", len(atoms))
         for name, atoms in atom_groups.items():
             for atomid in atoms:

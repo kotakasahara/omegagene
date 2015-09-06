@@ -2,6 +2,7 @@
 #define __WRITE_TRR_H__
 #include <cstring>
 #include "Write.h"
+#include <vector>
 
 class WriteTrr : public Write {
  private:
@@ -61,6 +62,18 @@ class WriteRestart : public Write{
   int write_restart(int n_atoms, int n_steps,
 		    double time, double e_potential, double e_kinetic,
 		    real** crd, real** vel);
+};
+
+class WriteAUSRestart : public Write{
+ private:
+ protected:
+ public:
+  WriteAUSRestart();
+  ~WriteAUSRestart();
+  int write_aus_restart(const int aus_type,
+			vector<int> group_id,
+			int** atom_groups,
+			real** crd);
 };
 
 #endif

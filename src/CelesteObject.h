@@ -54,6 +54,7 @@ class CelesteObject {
 
  public:
   CelesteObject();
+  enum { MAX_N_COM_GROUPS = 32 };
   
   enum {
     M_TEST=0,
@@ -96,6 +97,7 @@ class CelesteObject {
   enum {
     EXPAND_NONE = 0,
     EXPAND_VMCMD,
+    EXPAND_VAUS,
     EXPAND_DUMMY
   };
   enum {
