@@ -84,11 +84,11 @@ class SubBox : public CelesteObject {
   int* all_n_atoms;
 
   // for bonded potential
-  int* bp_bonds;
-  int* bp_angles;
-  int* bp_torsions;
-  int* bp_impros;
-  int* bp_nb14;
+  //int* bp_bonds;
+  //int* bp_angles;
+  //int* bp_torsions;
+  //int* bp_impros;
+  //int* bp_nb14;
   int max_n_bonds;
 
   int max_n_angles;

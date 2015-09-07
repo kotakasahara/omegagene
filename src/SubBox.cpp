@@ -324,11 +324,11 @@ int SubBox::free_variables(){
   //delete[] region_atoms;
   //delete[] n_region_atoms;
 
-  delete[] bp_bonds;
-  delete[] bp_angles;
-  delete[] bp_torsions;
-  delete[] bp_impros;
-  delete[] bp_nb14;
+  //delete[] bp_bonds;
+  //delete[] bp_angles;
+  //delete[] bp_torsions;
+  //delete[] bp_impros;
+  //delete[] bp_nb14;
 
   if(rank==0)
     rank0_free_variables();
