@@ -66,7 +66,7 @@ int Config::set_defaults(){
   dist_restraint_weight = 0.0;
 
   gpu_device_id = -1;
-
+  enhance_sigma = 2.0;
   return 0;
 }
 void Config::setAll(int argn, char* argv[]){
@@ -205,11 +205,12 @@ void Config::setAll(vector<string> arg){
     }
     else if(*itr=="--dist-restraint-weight"){ dist_restraint_weight = atof((*++itr).c_str()); }
 
-    else if(*itr=="--gpu-device-id"){ gpu_device_id = atof((*++itr).c_str()); }
+    else if(*itr=="--gpu-device-id"){ gpu_device_id = atoi((*++itr).c_str()); }
     else if(*itr=="--enhance-group-name"){
       enhance_groups_name[n_enhance_groups_name] = ((*++itr).c_str());
       n_enhance_groups_name++;
     }
+    else if(*itr=="--enhance-sigma"){  enhance_sigma = atof((*++itr).c_str()); }
     else{
       stringstream ss;
       ss<<"Configuration file: Unknown keyword <"<<(*itr)<<">";

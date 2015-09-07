@@ -75,7 +75,7 @@ class Config : public CelesteObject {
 
   int dist_restraint_type;
   real dist_restraint_weight;
-  real enhance_sigma = 2.0;
+  real enhance_sigma;
 
   Config();
   ~Config();
