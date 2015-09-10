@@ -124,8 +124,8 @@ class MmSystem : public CelesteObject{
   int n_groups;
   int* n_atoms_in_groups;
   int** atom_groups;
-  real* mass_groups;
-  real* mass_inv_groups;
+  real_pw* mass_groups;
+  real_pw* mass_inv_groups;
   vector<string> atom_group_names;
 
   int n_com_cancel_groups;

@@ -14,9 +14,11 @@ Contents:
    introduction
    installation
    run_md
-   in_out_files
+   input_files
+   output_files
    analysis
    samples
+   theory
    pairwise_code   
    
 

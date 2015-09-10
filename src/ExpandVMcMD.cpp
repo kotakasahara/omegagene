@@ -241,7 +241,7 @@ int ExpandVMcMD::set_enhance_groups(int* in_n_atoms_in_groups,
   return 0;
 }
 
-int ExpandVMcMD::set_mass(real_pw* in_mass){
+int ExpandVMcMD::set_mass(real_pw* in_mass, real_pw* in_mass_groups, real_pw* in_mass_groups_inv){
   mass = in_mass;
 
   mass_sum = 0.0;
@@ -252,12 +252,15 @@ int ExpandVMcMD::set_mass(real_pw* in_mass){
       mass_sum += mass[aid];
     }
   }
+  mass_groups = in_mass_groups;
+  mass_groups_inv = in_mass_groups_inv;
+
   return 0;
 }
 int ExpandVMcMD::set_params(real in_sigma){
   sigma = in_sigma;
   sigma_half = sigma * 0.5;  
-  sigma_sq = sigma * sigma;
+  sigma_sq_inv = 1.0 / (sigma * sigma);
   return 0;
 }
 
@@ -342,13 +345,13 @@ int ExpandVAUS::scale_force(real lambda, real_fc* work, int n_atoms){
   
   if (param <= vstates[cur_vs].get_lambda_low() - sigma_half ){
     recovery = 2.0 * ( param - vstates[cur_vs].get_lambda_low() 
-		       - sigma_half) / sigma_sq;
+		       + sigma_half) * sigma_sq_inv;
     param = vstates[cur_vs].get_lambda_low();
       //reparam = vstates[cur_vs].get_lambda_low();
 
   }else if(param >= vstates[cur_vs].get_lambda_high() + sigma_half){
     recovery = 2.0 * ( param - vstates[cur_vs].get_lambda_high() 
-		       + sigma_half) / sigma_sq;
+		       - sigma_half) * sigma_sq_inv;
     param = vstates[cur_vs].get_lambda_high();
   }
   //cout << " param " << param << endl;
@@ -361,7 +364,7 @@ int ExpandVAUS::scale_force(real lambda, real_fc* work, int n_atoms){
   }
   
   //real k = (GAS_CONST / JOULE_CAL) * 1e-3;
-  real dew = const_k * ( d_ln_p + recovery );
+  real dew = 2.0 * const_k * ( d_ln_p + recovery );
   //cout << "dbg0522 "<<dew << endl;
   int n_atoms_3 = n_atoms * 3;
   for(int i_pair = 0; i_pair < n_enhance_group_pairs; i_pair++){
@@ -379,7 +382,8 @@ int ExpandVAUS::scale_force(real lambda, real_fc* work, int n_atoms){
       //<< " " << unit_vec[i_pair][2] << endl;
       real bias[3];
       for(int d=0; d<3; d++)
-	bias[d] = dew / (real)n_atoms_in_groups[grp_id] * unit_vec[i_pair][d];
+	bias[d] = dew * (real)mass_groups_inv[grp_id] 
+	  * unit_vec[i_pair][d];
       
       for(int i_at = 0; i_at < n_atoms_in_groups[grp_id]; i_at++){
 	int atom_id3 = atom_groups[grp_id][i_at] * 3;

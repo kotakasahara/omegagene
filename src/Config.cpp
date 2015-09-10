@@ -152,7 +152,7 @@ void Config::setAll(vector<string> arg){
 
     }
     else if(*itr=="--com-cancel-group-name"){
-      com_cancel_groups_name[n_com_cancel_groups] = ((*++itr).c_str());
+      com_cancel_groups_name[n_com_cancel_groups_name] = ((*++itr).c_str());
       n_com_cancel_groups_name++;
     }
     else if(*itr=="--com-cancel-group-id"){

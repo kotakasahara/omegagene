@@ -536,8 +536,8 @@ int MmSystem::alloc_atom_groups(int in_n_groups,
   n_groups = in_n_groups;
   n_atoms_in_groups = new int[n_groups];
   atom_groups = new int*[n_groups];
-  mass_groups = new real[n_groups];
-  mass_inv_groups = new real[n_groups];
+  mass_groups = new real_pw[n_groups];
+  mass_inv_groups = new real_pw[n_groups];
   for(int i = 0; i < n_groups; i++){
     n_atoms_in_groups[i] = in_n_atoms_in_groups[i];
     atom_groups[i] = new int[n_atoms_in_groups[i]];

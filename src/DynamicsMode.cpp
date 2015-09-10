@@ -84,7 +84,9 @@ int DynamicsMode::initial_preprocess(){
 				   mmsys.n_enhance_groups,
 				   mmsys.enhance_groups);
 
-    mmsys.vmcmd->set_mass(subbox.get_mass());
+    mmsys.vmcmd->set_mass(subbox.get_mass(),
+			  mmsys.mass_groups,
+			  mmsys.mass_inv_groups);
   }
 
   //cout << "DBG MmSystem.n_bonds: " << mmsys.n_bonds << endl;

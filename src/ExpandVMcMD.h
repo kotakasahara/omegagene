@@ -56,11 +56,11 @@ class ExpandVMcMD : public Expand {
 
   real_pw* mass;
   real_pw mass_sum;
-  //real* mass_groups;
-  //real* mass_inv_groups;
+  real_pw* mass_groups;
+  real_pw* mass_inv_groups;
   real sigma;
   real sigma_half;
-  real sigma_sq;
+  real sigma_sq_inv;
   //
   int* n_atoms_in_groups;
   int** atom_groups;
@@ -114,7 +114,7 @@ class ExpandVMcMD : public Expand {
 				 int** in_atom_groups,
 				    int in_n_enhance_groups,
 				 int* in_enhance_groups);
-  int set_mass(real* in_mass);
+  int set_mass(real_pw* in_mass, real_pw* in_mass_groups, real_pw* in_mass_groups_inv);
   int set_params(real in_recover_range);
 };
 

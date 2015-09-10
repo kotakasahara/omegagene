@@ -11,8 +11,8 @@ class COMMotion : public CelesteObject{
   int* group_ids;
   int* n_atoms_in_groups;
   int** groups;
-  real* mass;
-  real* mass_inv_groups;
+  real_pw* mass;
+  real_pw* mass_inv_groups;
  protected:
  public:
   COMMotion();
