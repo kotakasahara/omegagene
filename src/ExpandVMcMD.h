@@ -57,7 +57,7 @@ class ExpandVMcMD : public Expand {
   real_pw* mass;
   real_pw mass_sum;
   real_pw* mass_groups;
-  real_pw* mass_inv_groups;
+  real_pw* mass_groups_inv;
   real sigma;
   real sigma_half;
   real sigma_sq_inv;
