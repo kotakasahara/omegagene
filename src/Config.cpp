@@ -76,10 +76,12 @@ void Config::setAll(int argn, char* argv[]){
     arg.push_back(string(argv[i]));
   setAll(arg);
 }
+
 void Config::setAll(vector<string> arg){
   vector<string>::iterator itr;
   string type,val;
   for(itr=arg.begin(); itr!=arg.end(); itr++){
+    //cout << *itr << endl;
     if(*itr=="--mode"){
       itr++;
       if(*itr=="test")        { mode=M_TEST; }
@@ -153,6 +155,7 @@ void Config::setAll(vector<string> arg){
     }
     else if(*itr=="--com-cancel-group-name"){
       com_cancel_groups_name[n_com_cancel_groups_name] = ((*++itr).c_str());
+      //cout << "name " << com_cancel_groups_name[n_com_cancel_groups_name] << endl;
       n_com_cancel_groups_name++;
     }
     else if(*itr=="--com-cancel-group-id"){
@@ -215,7 +218,6 @@ void Config::setAll(vector<string> arg){
       stringstream ss;
       ss<<"Configuration file: Unknown keyword <"<<(*itr)<<">";
       error_exit(ss.str(), "1A00001");
-      
     }
   }
   if(temperature_init < 0) temperature_init = temperature;

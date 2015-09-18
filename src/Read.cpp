@@ -28,13 +28,27 @@ vector<string> Read::load_config(){
   vector<string> vconf;
   open();
   string buf;
+  cout << "Configuration:" << endl;
+  cout << "-----------------------------------"<<endl;
   while(ifs && getline(ifs, buf)){
+    int pos1 = buf.find_first_of("#;");
+    //int pos2 = buf.find_first_of(";");
+    //if(pos1 > pos2) pos1 = pos2;
+    if(pos1 != string::npos){
+      //cout << "cut : " << pos1 << endl;
+      buf = buf.substr(0, pos1);
+    }
+    if(buf.size()==0) continue;
+    cout <<buf<<endl;
     stringstream ss(buf);
     while(ss>>buf){
-      if(buf[0] == '#' || buf[0] == ';') break;
+      //if(buf[0] == '#' || buf[0] == ';') break;
       vconf.push_back(buf);
+      //cout << "[" << buf << "]"<< endl;
+      
     }
   }
+  cout << "-----------------------------------"<<endl;
   close();
   return vconf;
 }
