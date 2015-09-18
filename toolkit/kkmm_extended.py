@@ -2,7 +2,7 @@
 
 import kkkit
 
-class ExpandConf():
+class ExtendedConf():
     def __init__(self):
         self.vmcmd_range = {}
         self.vmcmd_params = {}
@@ -19,7 +19,7 @@ class ExpandConf():
     def read_init(self, fn):
         self.init_vs, self.seed = \
             McMDInitialDef(fn).read()
-        print "kkmm_expand.py read_init " + str(self.init_vs) + " " + str(self.seed)
+        print "kkmm_extended.py read_init " + str(self.init_vs) + " " + str(self.seed)
         return 
 
 class McMDParamsReader(kkkit.FileI):

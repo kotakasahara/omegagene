@@ -264,7 +264,7 @@ class MiniCell : public CelesteObject{
   void add_energy(const real_fc in_vdw, const real_fc in_ele){ energy[0] += in_vdw; energy[1] += in_ele; };
   int add_work(const int atomid_grid,
 	       const real_fc in_w1, const real_fc in_w2, const real_fc in_w3);
-  int move_atom(const int& atomid, const int& d, const real& diff);
+  int move_atom(int n_atom, real* in_crd, real* in_prev_crd);
   //int update_coordinates(const real** vel_next, const real& time_step);
 
   int set_box_info(int* in_n_boxes_xyz, real* in_box_l);

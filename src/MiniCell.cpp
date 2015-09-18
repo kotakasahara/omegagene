@@ -1170,11 +1170,18 @@ int MiniCell::add_work(const int atomid_grid,
 }
 
 
-int MiniCell::move_atom(const int& atomid, const int& d, const real& diff){
+int MiniCell::move_atom(int n_atom, real* in_crd, real* in_prev_crd){
   ///
   /// Called by SubBox::update_coordinates()
   ///
-  crd[atomids_rev[atomid]*3+d] += diff;
+  for(int atomid=0, atomid_b3=0; atomid<n_atom; atomid++, atomid_b3+=3){
+    int atomid_mc3 = atomids_rev[atomid]*3;
+    for(int d=0; d<3; d++){
+      real diff = in_crd[atomid_b3+d] - in_prev_crd[atomid_b3+d];
+      crd[atomid_mc3+d] += diff;
+    }
+    //crd[atomids_rev[atomid]*3+d] += diff;
+  }
   return 0;
 }
 

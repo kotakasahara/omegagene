@@ -530,12 +530,10 @@ int SubBox::set_nsgrid(){
 }
 int SubBox::nsgrid_crd_to_gpu(){
 #ifdef F_CUDA
-  //nsgrid.init_energy_work();
   
   cuda_memcpy_htod_crd(nsgrid.get_crd());
   cuda_set_crd();
 
-  //nsgrid.update_crd((const real**)crd);
 #endif
   return 0;
 }
@@ -715,9 +713,9 @@ int SubBox::rank0_send_init_data(real** in_crd,
 int SubBox::recv_init_data(){
   return 0;
 }
-int SubBox::set_bond_potentials(const int** in_bond_atomid_pairs,
-				const real* in_bond_epsiron,
-				const real* in_bond_r0){
+int SubBox::set_bond_potentials(int** in_bond_atomid_pairs,
+				real* in_bond_epsiron,
+				real* in_bond_r0){
   n_bonds = 0;
   for(int i=0; i < max_n_bonds; i++){
     int aid1_b = atomids_rev[in_bond_atomid_pairs[i][0]];
@@ -740,9 +738,9 @@ int SubBox::set_bond_potentials(const int** in_bond_atomid_pairs,
   }
   return 0;
 }
-int SubBox::set_angle_potentials(const int** in_angle_atomid_triads,
-				 const real* in_angle_epsiron,
-				 const real* in_angle_theta0){
+int SubBox::set_angle_potentials(int** in_angle_atomid_triads,
+				 real* in_angle_epsiron,
+				 real* in_angle_theta0){
   n_angles = 0;
   for(int i=0; i < max_n_angles; i++){
     int aid1_b = atomids_rev[in_angle_atomid_triads[i][0]];
@@ -767,12 +765,12 @@ int SubBox::set_angle_potentials(const int** in_angle_atomid_triads,
   }
   return 0;
 }
-int SubBox::set_torsion_potentials(const int** in_torsion_atomid_quads,
-				   const real* in_torsion_energy,
-				   const int* in_torsion_overlaps,
-				   const int* in_torsion_symmetry,
-				   const real* in_torsion_phase,
-				   const int* in_torsion_nb14){
+int SubBox::set_torsion_potentials(int** in_torsion_atomid_quads,
+				   real* in_torsion_energy,
+				   int* in_torsion_overlaps,
+				   int* in_torsion_symmetry,
+				   real* in_torsion_phase,
+				   int* in_torsion_nb14){
   n_torsions = 0;
   for(int i=0; i < max_n_torsions; i++){
     int aid1_b = atomids_rev[in_torsion_atomid_quads[i][0]];
@@ -805,12 +803,12 @@ int SubBox::set_torsion_potentials(const int** in_torsion_atomid_quads,
   return 0;
 }
 
-int SubBox::set_impro_potentials(const int** in_impro_atomid_quads,
-				 const real* in_impro_energy,
-				 const int* in_impro_overlaps,
-				 const int* in_impro_symmetry,
-				 const real* in_impro_phase,
-				 const int* in_impro_nb14){
+int SubBox::set_impro_potentials(int** in_impro_atomid_quads,
+				 real* in_impro_energy,
+				 int* in_impro_overlaps,
+				 int* in_impro_symmetry,
+				 real* in_impro_phase,
+				 int* in_impro_nb14){
   n_impros=0;
   for(int i=0; i < max_n_impros; i++){
     int aid1_b = atomids_rev[in_impro_atomid_quads[i][0]];
@@ -843,10 +841,10 @@ int SubBox::set_impro_potentials(const int** in_impro_atomid_quads,
   return 0;
 }
 
-int SubBox::set_nb14_potentials(const int** in_nb14_atomid_pairs,
-				const int** in_nb14_atomtype_pairs,
-				const real* in_nb14_coeff_vdw,
-				const real* in_nb14_coeff_ele){
+int SubBox::set_nb14_potentials(int** in_nb14_atomid_pairs,
+				int** in_nb14_atomtype_pairs,
+				real* in_nb14_coeff_vdw,
+				real* in_nb14_coeff_ele){
   n_nb14 = 0;
   for(int i=0; i < max_n_nb14; i++){
     int aid1_b = atomids_rev[in_nb14_atomid_pairs[i][0]];
@@ -871,7 +869,7 @@ int SubBox::set_nb14_potentials(const int** in_nb14_atomid_pairs,
   return 0;
 }
 
-int SubBox::set_ele_excess(const int** in_excess_pairs){
+int SubBox::set_ele_excess(int** in_excess_pairs){
   n_excess = 0;
   for(int i=0; i < max_n_excess; i++){
     int aid1_b = atomids_rev[in_excess_pairs[i][0]];
@@ -892,7 +890,7 @@ int SubBox::set_ele_excess(const int** in_excess_pairs){
   return 0;
 }
 
-int SubBox::set_nb15off(const int* in_nb15off){
+int SubBox::set_nb15off(int* in_nb15off){
   int nball = 0;
   for(int i=0; i < n_atoms* max_n_nb15off; i++)
     if(in_nb15off[i] != -1) nball++;
@@ -1632,19 +1630,14 @@ int SubBox::update_coordinates_nsgrid(){
   // this method should be called 
   //   after update_coordinates(), before revise_coordinates_pbc()
 
-  for(int atomid_b=0, atomid_b3=0;
-      atomid_b < all_n_atoms[rank];
-      atomid_b++, atomid_b3+=3){
-    //real d_crd[3];
-    //real crd1[3] = {crd[atomid_b3], crd[atomid_b3+1], crd[atomid_b3+2]};
-    //real crd2[3] = {crd_prev[atomid_b3], crd_prev[atomid_b3+1], crd_prev[atomid_b3+2]};
-    //pbc->diff_crd_minim_image(d_crd,crd1,crd2);
-    for(int d=0; d<3; d++){
-      nsgrid.move_atom(atomid_b, d, crd[atomid_b3+d]-crd_prev[atomid_b3+d]);      
-      //nsgrid.move_atom(atomid_b, d, d_crd[d]);
-    }
-  }
-
+  //for(int atomid_b=0, atomid_b3=0;
+  //atomid_b < all_n_atoms[rank];
+  //atomid_b++, atomid_b3+=3){
+  //for(int d=0; d<3; d++){
+  //nsgrid.move_atom(atomid_b, d, crd[atomid_b3+d]-crd_prev[atomid_b3+d]);      
+  //}
+  //}
+  nsgrid.move_atom(all_n_atoms[rank], crd, crd_prev);
   return 0;
 }
 
@@ -1839,17 +1832,17 @@ int SubBox::apply_thermostat_with_shake(const int max_loops,
 
   return 0;
 }
-int SubBox::expand_apply_bias(unsigned long cur_step,  real in_lambda){
-  expand->apply_bias(cur_step, in_lambda, work, n_atoms_box);
+int SubBox::extended_apply_bias(unsigned long cur_step,  real in_lambda){
+  extended->apply_bias(cur_step, in_lambda, work, n_atoms_box);
   return 0;
 }
-int SubBox::expand_apply_bias_struct_param(unsigned long cur_step){
-  real param = expand->cal_struct_parameters(crd, pbc);
-  expand->apply_bias(cur_step, param, work, n_atoms_box);
+int SubBox::extended_apply_bias_struct_param(unsigned long cur_step){
+  real param = extended->cal_struct_parameters(crd, pbc);
+  extended->apply_bias(cur_step, param, work, n_atoms_box);
   return 0;
 }
-void SubBox::expand_enable_vs_transition(){
-  expand->enable_vs_transition();
+void SubBox::extended_enable_vs_transition(){
+  extended->enable_vs_transition();
 }
 
 int SubBox::cancel_com_motion(){

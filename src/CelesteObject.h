@@ -95,10 +95,10 @@ class CelesteObject {
     COM_CANCEL
   };
   enum {
-    EXPAND_NONE = 0,
-    EXPAND_VMCMD,
-    EXPAND_VAUS,
-    EXPAND_DUMMY
+    EXTENDED_NONE = 0,
+    EXTENDED_VMCMD,
+    EXTENDED_VAUS,
+    EXTENDED_DUMMY
   };
   enum {
     LAMBDAOUT_BIN = 0,

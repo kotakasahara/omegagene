@@ -26,7 +26,7 @@ import kkmmsystem as mmsys
 import kkmmff as mmff
 import kkmmconfig 
 import kkpresto_shake as shk
-import kkmm_expand
+import kkmm_extended
 #import define_atom_groups as atgrp
 import kkpresto_distrest as disres
 import kkatomgroup as atgrp
@@ -64,7 +64,7 @@ class MDInputGen(object):
         self.restart = None
         self.tpl = None
         self.settle = None
-        self.expand = None
+        self.extended = None
         self.atom_groups = {}
         self.dist_rest = []
         return 
@@ -112,7 +112,7 @@ class MDInputGen(object):
     #system.store_self_energy(system.ff.energy_self)
         self.read_shake()
         self.read_settle()
-        self.read_expand()
+        self.read_extended()
 
         if self.config.get_val("fn-i-atom-groups"):
             atom_groups_reader = atgrp.AtomGroupsReader(self.config.get_val("fn-i-atom-groups"))
@@ -152,21 +152,21 @@ class MDInputGen(object):
             shkreader.print_shake_info()
         return
         
-    def read_expand(self):
-        self.expand = None
+    def read_extended(self):
+        self.extended = None
         if self.config.get_val("fn-i-ttp-v-mcmd-inp"):
-            self.expand = kkmm_expand.ExpandConf()
-            self.expand.read_mcmdparams(self.config.get_val("fn-i-ttp-v-mcmd-inp"))
+            self.extended = kkmm_extended.ExtendedConf()
+            self.extended.read_mcmdparams(self.config.get_val("fn-i-ttp-v-mcmd-inp"))
             if self.config.get_val("fn-i-ttp-v-mcmd-initial"):
-                self.expand.read_init(self.config.get_val("fn-i-ttp-v-mcmd-initial"))
+                self.extended.read_init(self.config.get_val("fn-i-ttp-v-mcmd-initial"))
                 if self.config.get_val("ttp-v-mcmd-initial-vs"):
                     print "Definition conflicts:"
                     print "The options \"--fn-i-ttp-v-mcmd-initial\" and \"--ttp-v-mcmd-initial-vs\" are mutually exclusive."
                     sys.exit(1)
             elif self.config.get_val("ttp-v-mcmd-initial-vs") and \
                     self.config.get_val("ttp-v-mcmd-seed"):
-                self.expand.init_vs = self.config.get_val("ttp-v-mcmd-initial-vs")
-                self.expand.seed = self.config.get_val("ttp-v-mcmd-seed")
+                self.extended.init_vs = self.config.get_val("ttp-v-mcmd-initial-vs")
+                self.extended.seed = self.config.get_val("ttp-v-mcmd-seed")
             else:
                 print "For mcmd, --ttp-v-mcmd-initial or the two options --ttp-v-mcmd-initial-vs and --ttp-v-mcmd-seed are required."
                 sys.exit(1)
@@ -189,15 +189,15 @@ class MDInputGen(object):
         buf_topol = self.dump_topol(self.system, self.tpl)
         buf_shake = ""
         buf_settle = ""
-        buf_expand = ""
+        buf_extended = ""
         if self.system.shake:
             buf_shake = self.dump_shake(self.system.model, self.tpl,
                                         self.system.shake)
         if self.settle:
             buf_settle = self.dump_shake(self.system.model, self.tpl,
                                          self.settle)
-        if self.expand:
-            buf_expand = self.dump_expand(self.expand)
+        if self.extended:
+            buf_extended = self.dump_extended(self.extended)
 
         buf_atom_groups = self.dump_atom_groups(self.atom_groups)
 
@@ -210,7 +210,7 @@ class MDInputGen(object):
         f.write(st.pack("@i", len(buf_topol)))
         f.write(st.pack("@i", len(buf_shake)))
         f.write(st.pack("@i", len(buf_settle)))
-        f.write(st.pack("@i", len(buf_expand)))
+        f.write(st.pack("@i", len(buf_extended)))
         f.write(st.pack("@i", len(buf_atom_groups)))
         f.write(st.pack("@i", len(buf_dist_rest)))
         print "size: buf_box        : " + str(len(buf_box))
@@ -219,7 +219,7 @@ class MDInputGen(object):
         print "size: buf_topol      : " + str(len(buf_topol))
         print "size: buf_shake      : " + str(len(buf_shake))
         print "size: buf_settle     : " + str(len(buf_settle))
-        print "size: buf_expand     : " + str(len(buf_expand))
+        print "size: buf_extended     : " + str(len(buf_extended))
         print "size: buf_atom_groups: " + str(len(buf_atom_groups))
         print "size: buf_dist_rest: " + str(len(buf_dist_rest))
 
@@ -230,7 +230,7 @@ class MDInputGen(object):
         f.write(buf_topol)
         f.write(buf_shake)
         f.write(buf_settle)
-        f.write(buf_expand)
+        f.write(buf_extended)
     #f.write(buf_pcluster)
         f.write(buf_atom_groups)
         f.write(buf_dist_rest)
@@ -460,27 +460,27 @@ class MDInputGen(object):
                 
         return buf
 
-    def dump_expand(self, expand):
+    def dump_extended(self, extended):
         buf = ""
-        n_vs = len(expand.vmcmd_range.keys())
+        n_vs = len(extended.vmcmd_range.keys())
         buf += st.pack("@i", n_vs)
-        #print "DBG2: "+ str(expand.temperature)
-        buf += st.pack("@i", expand.interval)
-        buf += st.pack("@d", expand.temperature)
+        #print "DBG2: "+ str(extended.temperature)
+        buf += st.pack("@i", extended.interval)
+        buf += st.pack("@d", extended.temperature)
         for i in range(1,n_vs+1):
-            buf += st.pack("@i", len(expand.vmcmd_params[i])-3)
-            #print "Expand: " + str(i)
-            #print expand.vmcmd_range[i]
+            buf += st.pack("@i", len(extended.vmcmd_params[i])-3)
+            #print "Extended: " + str(i)
+            #print extended.vmcmd_range[i]
             buf += st.pack("@dddd",
-                           expand.vmcmd_range[i][0], # lambda_min
-                           expand.vmcmd_range[i][1], # lambda_max
-                           expand.vmcmd_range[i][2], # prob
-                           expand.vmcmd_range[i][3]) # prob
+                           extended.vmcmd_range[i][0], # lambda_min
+                           extended.vmcmd_range[i][1], # lambda_max
+                           extended.vmcmd_range[i][2], # prob
+                           extended.vmcmd_range[i][3]) # prob
         #for i in range(1,n_vs+1):
 
-            for prm in expand.vmcmd_params[i]:
+            for prm in extended.vmcmd_params[i]:
                 buf += st.pack("@d", float(prm))
-        buf += st.pack("@ii", expand.init_vs, expand.seed)
+        buf += st.pack("@ii", extended.init_vs, extended.seed)
         return buf
     def dump_atom_groups(self, atom_groups):
         buf = ""

@@ -42,7 +42,7 @@ class Config : public CelesteObject {
   int n_enhance_groups_name;
   string enhance_groups_name[MAX_N_COM_GROUPS];
   int random_seed;
-  int expanded_ensemble;
+  int extended_ensemble;
 
   int box_div[3];
   
@@ -52,7 +52,7 @@ class Config : public CelesteObject {
   int print_intvl_force;
   int print_intvl_energy;
   int print_intvl_energyflow;
-  int print_intvl_expand_lambda;
+  int print_intvl_extended_lambda;
 
   string fn_o_restart;
   string fn_o_crd;
@@ -60,8 +60,8 @@ class Config : public CelesteObject {
   string fn_o_log;
   string fn_o_energy;
   string fn_o_vmcmd_log;
-  string fn_o_expand_lambda;
-  int format_o_expand_lambda;
+  string fn_o_extended_lambda;
+  int format_o_extended_lambda;
   string fn_o_energyflow;
 
   int init_vel_just;

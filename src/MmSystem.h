@@ -18,7 +18,7 @@ using namespace std;
 #include "PBC.h"
 #include "ForceField.h"
 #include "Constraint.h"
-#include "ExpandVMcMD.h"
+#include "Extend.h"
 #include "DistRestraint.h"
 
 class MmSystem : public CelesteObject{
@@ -119,7 +119,7 @@ class MmSystem : public CelesteObject{
 
   ConstraintObject constraint;
   ConstraintObject settle;
-  ExpandVMcMD* vmcmd;
+  ExtendedVMcMD* vmcmd;
 
   int n_groups;
   int* n_atoms_in_groups;

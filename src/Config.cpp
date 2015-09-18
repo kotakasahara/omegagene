@@ -59,8 +59,8 @@ int Config::set_defaults(){
   thermo_const_max_loops = 0.000001;
 
   init_vel_just = 0;
-  expanded_ensemble = EXPAND_NONE;
-  format_o_expand_lambda = LAMBDAOUT_BIN;
+  extended_ensemble = EXTENDED_NONE;
+  format_o_extended_lambda = LAMBDAOUT_BIN;
 
   dist_restraint_type = DISTREST_NONE;
   dist_restraint_weight = 0.0;
@@ -136,12 +136,12 @@ void Config::setAll(vector<string> arg){
       else if(*itr=="hoover-evans"){ thermostat_type = THMSTT_HOOVER_EVANS; }
       else { thermostat_type = THMSTT_DUMMY; }
     }
-    else if(*itr=="--expanded-ensemble"){
+    else if(*itr=="--extended-ensemble"){
       itr++;
-      if(*itr == "none"){ expanded_ensemble = EXPAND_NONE; }
-      else if(*itr == "v-mcmd"){ expanded_ensemble = EXPAND_VMCMD; }
-      else if(*itr == "v-aus"){ expanded_ensemble = EXPAND_VAUS; }
-      else{ expanded_ensemble = EXPAND_DUMMY; } 
+      if(*itr == "none"){ extended_ensemble = EXTENDED_NONE; }
+      else if(*itr == "v-mcmd"){ extended_ensemble = EXTENDED_VMCMD; }
+      else if(*itr == "v-aus"){ extended_ensemble = EXTENDED_VAUS; }
+      else{ extended_ensemble = EXTENDED_DUMMY; } 
     }
     else if(*itr=="--temperature"){ temperature = atof((*++itr).c_str()); }
     else if(*itr=="--temperature-init"){ temperature_init = atof((*++itr).c_str()); }
@@ -179,7 +179,7 @@ void Config::setAll(vector<string> arg){
     else if(*itr=="--print-interval-log"){ print_intvl_log = atoi((*++itr).c_str()); }
     else if(*itr=="--print-interval-energy"){ print_intvl_energy = atoi((*++itr).c_str()); }
     else if(*itr=="--print-interval-energyflow"){ print_intvl_energyflow = atoi((*++itr).c_str()); }
-    else if(*itr=="--print-interval-expand-lambda"){ print_intvl_expand_lambda = atoi((*++itr).c_str()); }
+    else if(*itr=="--print-interval-extended-lambda"){ print_intvl_extended_lambda = atoi((*++itr).c_str()); }
     else if(*itr=="--fn-o-restart"){ fn_o_restart = *++itr; }
     else if(*itr=="--fn-o-coord"){ fn_o_crd = *++itr; }
     else if(*itr=="--format-o-coord"){
@@ -191,12 +191,12 @@ void Config::setAll(vector<string> arg){
     else if(*itr=="--fn-o-log"){ fn_o_log = *++itr; }
     else if(*itr=="--fn-o-energy"){ fn_o_energy = *++itr; }
     else if(*itr=="--fn-o-vmcmd-log"){ fn_o_vmcmd_log = *++itr; }
-    else if(*itr=="--fn-o-expand-lambda"){ fn_o_expand_lambda = *++itr; }
-    else if(*itr=="--format-o-expand-lambda"){
+    else if(*itr=="--fn-o-extended-lambda"){ fn_o_extended_lambda = *++itr; }
+    else if(*itr=="--format-o-extended-lambda"){
       itr++;
-      if(*itr == "binary"){ format_o_expand_lambda = LAMBDAOUT_BIN; }
-      else if(*itr == "ascii"){  format_o_expand_lambda = LAMBDAOUT_ASC; }
-      else{ format_o_expand_lambda = LAMBDAOUT_DUMMY; }
+      if(*itr == "binary"){ format_o_extended_lambda = LAMBDAOUT_BIN; }
+      else if(*itr == "ascii"){  format_o_extended_lambda = LAMBDAOUT_ASC; }
+      else{ format_o_extended_lambda = LAMBDAOUT_DUMMY; }
     }
 
     else if(*itr=="--fn-o-energyflow"){ fn_o_energyflow = *++itr; }

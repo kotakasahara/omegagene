@@ -21,10 +21,10 @@ int DynamicsMode::set_config_parameters(Config* in_cfg){
   //enecal = new EnergyCalc(&mmsys, &subbox);
   cfg = in_cfg;
   RunMode::set_config_parameters(cfg);
-  if(cfg->expanded_ensemble == EXPAND_VMCMD){    
-    mmsys.vmcmd = new ExpandVMcMD();
-  }else if(cfg->expanded_ensemble == EXPAND_VAUS){    
-    mmsys.vmcmd = new ExpandVAUS();
+  if(cfg->extended_ensemble == EXTENDED_VMCMD){    
+    mmsys.vmcmd = new ExtendedVMcMD();
+  }else if(cfg->extended_ensemble == EXTENDED_VAUS){    
+    mmsys.vmcmd = new ExtendedVAUS();
   }
   return 0;
 }
@@ -69,14 +69,14 @@ int DynamicsMode::initial_preprocess(){
   //cout << "nsgrid_setup" << endl;
   //subbox.nsgrid_set(nsgrid_cutoff);
 
-  if(cfg->expanded_ensemble != EXPAND_NONE){
+  if(cfg->extended_ensemble != EXTENDED_NONE){
     cout << "V_McMD: " << endl;
     cout << "  VS log output ... " << cfg->fn_o_vmcmd_log << endl;
-    cout << "  Lambda output ... " << cfg->fn_o_expand_lambda << endl;
+    cout << "  Lambda output ... " << cfg->fn_o_extended_lambda << endl;
     mmsys.vmcmd->set_files(cfg->fn_o_vmcmd_log,
-			  cfg->fn_o_expand_lambda,
-			  cfg->format_o_expand_lambda);
-    mmsys.vmcmd->set_lambda_interval(cfg->print_intvl_expand_lambda);
+			  cfg->fn_o_extended_lambda,
+			  cfg->format_o_extended_lambda);
+    mmsys.vmcmd->set_lambda_interval(cfg->print_intvl_extended_lambda);
     mmsys.vmcmd->print_info();
     mmsys.vmcmd->set_params(cfg->enhance_sigma);
     mmsys.vmcmd->set_enhance_groups(mmsys.n_atoms_in_groups,
@@ -118,7 +118,7 @@ int DynamicsMode::initial_preprocess(){
 int DynamicsMode::terminal_process(){
   cout << "DynamicsMode::terminal_process()"<<endl;  
   writer_trr->close();
-  if(cfg->expanded_ensemble != EXPAND_NONE)
+  if(cfg->extended_ensemble != EXTENDED_NONE)
     mmsys.vmcmd->close_files();
   return 0;
 }
@@ -344,8 +344,8 @@ int DynamicsMode::subbox_setup(){
   subbox.init_thermostat(cfg->thermostat_type,
 			 cfg->temperature_init, 
 			 mmsys.d_free);
-  if(cfg->expanded_ensemble != EXPAND_NONE){
-    subbox.set_expand(mmsys.vmcmd);
+  if(cfg->extended_ensemble != EXTENDED_NONE){
+    subbox.set_extended(mmsys.vmcmd);
   }
 
   //cout << "set_nsgrid" << endl;
@@ -359,30 +359,30 @@ int DynamicsMode::subbox_setup(){
   return 0;
 }
 int DynamicsMode::subbox_set_bonding_potentials(){
-  subbox.set_bond_potentials((const int**)mmsys.bond_atomid_pairs,
-			     (const real*)mmsys.bond_epsiron,
-			     (const real*)mmsys.bond_r0);
-  subbox.set_angle_potentials((const int**)mmsys.angle_atomid_triads,
-			      (const real*)mmsys.angle_epsiron,
-			      (const real*)mmsys.angle_theta0);
-  subbox.set_torsion_potentials((const int**)mmsys.torsion_atomid_quads,
-				(const real*)mmsys.torsion_energy,
-				(const int*)mmsys.torsion_overlaps,
-				(const int*)mmsys.torsion_symmetry,
-				(const real*)mmsys.torsion_phase,
-				(const int*)mmsys.torsion_nb14);
-  subbox.set_impro_potentials((const int**)mmsys.impro_atomid_quads,
-			      (const real*)mmsys.impro_energy,
-			      (const int*)mmsys.impro_overlaps,
-			      (const int*)mmsys.impro_symmetry,
-			      (const real*)mmsys.impro_phase,
-			      (const int*)mmsys.impro_nb14);
-  subbox.set_nb14_potentials((const int**)mmsys.nb14_atomid_pairs,
-			     (const int**)mmsys.nb14_atomtype_pairs,
-			     (const real*)mmsys.nb14_coeff_vdw,
-			     (const real*)mmsys.nb14_coeff_ele);
-  subbox.set_ele_excess((const int**)mmsys.excess_pairs);
-  subbox.set_nb15off((const int*)mmsys.nb15off);
+  subbox.set_bond_potentials(mmsys.bond_atomid_pairs,
+			     mmsys.bond_epsiron,
+			     mmsys.bond_r0);
+  subbox.set_angle_potentials(mmsys.angle_atomid_triads,
+			      mmsys.angle_epsiron,
+			      mmsys.angle_theta0);
+  subbox.set_torsion_potentials(mmsys.torsion_atomid_quads,
+				mmsys.torsion_energy,
+				mmsys.torsion_overlaps,
+				mmsys.torsion_symmetry,
+				mmsys.torsion_phase,
+				mmsys.torsion_nb14);
+  subbox.set_impro_potentials(mmsys.impro_atomid_quads,
+			      mmsys.impro_energy,
+			      mmsys.impro_overlaps,
+			      mmsys.impro_symmetry,
+			      mmsys.impro_phase,
+			      mmsys.impro_nb14);
+  subbox.set_nb14_potentials(mmsys.nb14_atomid_pairs,
+			     mmsys.nb14_atomtype_pairs,
+			     mmsys.nb14_coeff_vdw,
+			     mmsys.nb14_coeff_ele);
+  subbox.set_ele_excess(mmsys.excess_pairs);
+  subbox.set_nb15off(mmsys.nb15off);
   return 0;
 }
 int DynamicsMode::gather_energies(){
@@ -443,10 +443,10 @@ int DynamicsModePresto::calc_in_each_step(){
   const clock_t endTimeEne = clock();
   mmsys.ctime_calc_energy += endTimeEne - startTimeEne;
 
-  if(cfg->expanded_ensemble == EXPAND_VMCMD){
-    subbox.expand_apply_bias(mmsys.cur_step, mmsys.set_potential_e());
-  }else if(cfg->expanded_ensemble == EXPAND_VAUS){
-    subbox.expand_apply_bias_struct_param(mmsys.cur_step);
+  if(cfg->extended_ensemble == EXTENDED_VMCMD){
+    subbox.extended_apply_bias(mmsys.cur_step, mmsys.set_potential_e());
+  }else if(cfg->extended_ensemble == EXTENDED_VAUS){
+    subbox.extended_apply_bias_struct_param(mmsys.cur_step);
   }
   const clock_t startTimeVel = clock();
   //cout << "update_velocities"<<endl;
@@ -556,8 +556,8 @@ int DynamicsModeZhang::calc_in_each_step(){
   const clock_t endTimeEne = clock();
   mmsys.ctime_calc_energy += endTimeEne - startTimeEne;
 
-  if(cfg->expanded_ensemble != EXPAND_NONE){
-    subbox.expand_apply_bias(mmsys.cur_step, mmsys.set_potential_e());
+  if(cfg->extended_ensemble != EXTENDED_NONE){
+    subbox.extended_apply_bias(mmsys.cur_step, mmsys.set_potential_e());
   }
   if(cfg->dist_restraint_type != DISTREST_NONE){
     apply_dist_restraint();

@@ -53,7 +53,7 @@ OBJS = CelesteObject.o Celeste.o     Config.o \
        ElectrostaticObject.o  ZeroMultipoleSum.o \
        MiniCell.o SubBox.o \
        Constraint.o ConstraintShake.o \
-       Expand.o ExpandVMcMD.o \
+       Extend.o \
        Thermostat.o \
        DistRestraint.o COMMotion.o \
        main.o

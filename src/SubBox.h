@@ -7,7 +7,7 @@
 #include "Config.h"
 #include "ForceField.h"
 #include "ConstraintShake.h"
-#include "ExpandVMcMD.h"
+#include "Extend.h"
 #include "Thermostat.h"
 #include "COMMotion.h"
 #include <ctime>
@@ -151,7 +151,7 @@ class SubBox : public CelesteObject {
   int  flg_settle;
   ConstraintObject* constraint;
   ConstraintObject* settle;
-  ExpandVMcMD* expand;
+  ExtendedVMcMD* extended;
   
   int flg_thermostat;
   ThermostatObject* thermostat;
@@ -210,30 +210,30 @@ class SubBox : public CelesteObject {
 			   int* in_atom_type);
   int recv_init_data();
 
-  int set_bond_potentials(const int** in_bond_atomid_pairs,
-			  const real* in_bond_epsiron,
-			  const real* in_bond_r0);
-  int set_angle_potentials(const int** in_angle_atomid_triads,
-			   const real* in_angle_epsiron,
-			   const real* in_angle_theta0);
-  int set_torsion_potentials(const int** in_torsion_atomid_quads,
-			     const real* in_torsion_energy,
-			     const int* in_torsion_overlaps,
-			     const int* in_torsion_symmetry,
-			     const real* in_torsion_phase,
-			     const int* in_torsion_nb14);
-  int set_impro_potentials(const int** in_impro_atomid_quads,
-			   const real* in_impro_energy,
-			   const int* in_impro_overlaps,
-			   const int* in_impro_symmetry,
-			   const real* in_impro_phase,
-			   const int* in_impro_nb14);
-  int set_nb14_potentials(const int** in_nb14_atomid_pairs,
-			  const int** in_nb14_atomtype_pairs,
-			  const real* in_nb14_coeff_vdw,
-			  const real* in_nb14_coeff_ele);
-  int set_ele_excess(const int** in_excess_pairs);
-  int set_nb15off(const int* in_nb15off);
+  int set_bond_potentials(int** in_bond_atomid_pairs,
+			  real* in_bond_epsiron,
+			  real* in_bond_r0);
+  int set_angle_potentials(int** in_angle_atomid_triads,
+			   real* in_angle_epsiron,
+			   real* in_angle_theta0);
+  int set_torsion_potentials(int** in_torsion_atomid_quads,
+			     real* in_torsion_energy,
+			     int* in_torsion_overlaps,
+			     int* in_torsion_symmetry,
+			     real* in_torsion_phase,
+			     int* in_torsion_nb14);
+  int set_impro_potentials(int** in_impro_atomid_quads,
+			   real* in_impro_energy,
+			   int* in_impro_overlaps,
+			   int* in_impro_symmetry,
+			   real* in_impro_phase,
+			   int* in_impro_nb14);
+  int set_nb14_potentials(int** in_nb14_atomid_pairs,
+			  int** in_nb14_atomtype_pairs,
+			  real* in_nb14_coeff_vdw,
+			  real* in_nb14_coeff_ele);
+  int set_ele_excess(int** in_excess_pairs);
+  int set_nb15off(int* in_nb15off);
   int set_lj_param(const int in_n_lj_types,
 		   real_pw* in_lj_6term,
 		   real_pw* in_lj_12term);
@@ -321,10 +321,10 @@ class SubBox : public CelesteObject {
   int apply_thermostat();
   int apply_thermostat_with_shake(const int max_loop,
 				  const real tolerance);
-  void set_expand(ExpandVMcMD* in_exp){ expand =in_exp; };
-  int expand_apply_bias(unsigned long cur_step, real in_lambda);
-  int expand_apply_bias_struct_param(unsigned long cur_step);
-  void expand_enable_vs_transition();
+  void set_extended(ExtendedVMcMD* in_exp){ extended =in_exp; };
+  int extended_apply_bias(unsigned long cur_step, real in_lambda);
+  int extended_apply_bias_struct_param(unsigned long cur_step);
+  void extended_enable_vs_transition();
   int cancel_com_motion();
 
   int set_com_motion(int n_groups, int* group_ids,

@@ -106,8 +106,8 @@ int Read::load_launch_set(MmSystem& mmsys){
     cout << "--- Load SETTLE definition : " << size_settle << " bytes." << endl;
     load_ls_constraint(&mmsys.settle);
   }
-  if(size_expand > 0){
-    cout << "--- Load expanded ensemble definition : " << size_expand << " bytes." << endl;
+  if(size_extended > 0){
+    cout << "--- Load extendeded ensemble definition : " << size_extended << " bytes." << endl;
     load_ls_vmcmd(mmsys.vmcmd);
   }
   if(size_groups > 0){
@@ -154,7 +154,7 @@ int Read::load_ls_header(MmSystem& mmsys){
   read_bin_values(&size_topol, 1);
   read_bin_values(&size_constraint, 1);
   read_bin_values(&size_settle, 1);
-  read_bin_values(&size_expand, 1);
+  read_bin_values(&size_extended, 1);
   read_bin_values(&size_groups, 1);
   read_bin_values(&size_dist_restraint, 1);
   //int size_pcluster;
@@ -167,7 +167,7 @@ int Read::load_ls_header(MmSystem& mmsys){
     cout << "size_topol:          " << size_topol << endl;
     cout << "size_constraint:     " << size_constraint << endl;
     cout << "size_settle:         " << size_settle << endl;
-    cout << "size_expand:         " << size_expand << endl;
+    cout << "size_extended:         " << size_extended << endl;
     cout << "size_groups:         " << size_groups << endl;
     cout << "size_dist_restraint: " << size_dist_restraint << endl;
     //cout << "size_pcluster: " << size_pcluster << endl;
@@ -522,7 +522,7 @@ int Read::load_ls_constraint(ConstraintObject* cst){
 
   return 0;
 }
-int Read::load_ls_vmcmd(ExpandVMcMD* vmcmd){
+int Read::load_ls_vmcmd(ExtendedVMcMD* vmcmd){
   int n_vs;
   read_bin_values(&n_vs, 1);
   int interval;
