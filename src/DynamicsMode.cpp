@@ -100,6 +100,8 @@ int DynamicsMode::initial_preprocess(){
   
   mmsys.print_com_cancel_groups();
   mmsys.print_enhance_groups();
+  mmsys.print_out_group();
+
   //subbox.set_com_motion(cfg->n_com_cancel_groups,
   //cfg->com_cancel_groups,
   //mmsys.n_atoms_in_groups,
@@ -210,7 +212,9 @@ int DynamicsMode::sub_output(){
 			  mmsys.temperature, mmsys.potential_e,
 			  mmsys.pote_vdw,
 			  true,
-			  out_crd, out_vel, out_force);
+			  out_crd, out_vel, out_force,
+			  mmsys.n_atoms_in_groups[mmsys.out_group],
+			  mmsys.atom_groups[mmsys.out_group]);
   }
   return 0;
 }

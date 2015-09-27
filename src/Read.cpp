@@ -568,9 +568,12 @@ int Read::load_ls_atom_groups(MmSystem& mmsys){
   int n_groups;
   int* n_atoms_in_group;
   read_bin_values(&n_groups, 1);
+  n_groups ++;
   n_atoms_in_group = new int[n_groups];
-
-  for(int i=0; i < n_groups; i++){
+  n_atoms_in_group[0] = 0;
+  cout << "n_groups " << n_groups << endl;
+  mmsys.atom_group_names.push_back(string("NULL"));
+  for(int i=1; i < n_groups; i++){
     int len_name;
     char name[MAX_LEN_NAME];
     read_bin_values(&len_name, 1);

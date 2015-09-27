@@ -17,7 +17,8 @@ class WriteTrr : public Write {
 			real temperature, real potential_e,
 			real vdw_e,
 			bool out_box,
-			bool out_crd, bool out_vel, bool out_force);
+			bool out_crd, bool out_vel, bool out_force,
+			int n_atoms_group, int* atom_group);
 };
 
 class WriteTrrGromacs : public WriteTrr {
@@ -33,7 +34,8 @@ class WriteTrrGromacs : public WriteTrr {
 			real temperature, real potential_e,
 			real vdw_e,
 			bool out_box,
-			bool out_crd, bool out_vel, bool out_force);
+			bool out_crd, bool out_vel, bool out_force,
+			int n_atoms_group, int* atom_group);
   
 };
 class WriteTrrPresto : public WriteTrr {
@@ -49,8 +51,8 @@ class WriteTrrPresto : public WriteTrr {
 			real temperature, real potential_e,
 			real vdw_e,
 			bool out_box,
-			bool out_crd, bool out_vel, bool out_force);
-  
+			bool out_crd, bool out_vel, bool out_force,
+			int n_atoms_group, int* atom_group);
 };
 
 class WriteRestart : public Write{

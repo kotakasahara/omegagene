@@ -132,6 +132,7 @@ class MmSystem : public CelesteObject{
   int com_cancel_groups[MAX_N_COM_GROUPS];
   int n_enhance_groups;
   int enhance_groups[MAX_N_COM_GROUPS];
+  int out_group;
   
   DistRestraintObject*  dist_restraint;
 
@@ -209,12 +210,15 @@ class MmSystem : public CelesteObject{
 
   int add_excess_pairs(int atomid1, int atomid2);
   int set_excess_pairs();
-  int set_atom_group_info(const Config* cfg);
+  int set_atom_group_info(Config* cfg);
   int get_atom_group_id_from_name(const string name);
-  int set_com_cancel_groups(const Config* cfg);
-  int set_enhance_groups(const Config* cfg);
   int print_com_cancel_groups();
+  int set_com_cancel_groups(Config* cfg);
+  int set_enhance_groups(Config* cfg);
   int print_enhance_groups();
+  int set_out_group(Config* cfg);
+  int print_out_group();
+  int get_out_group(){return out_group;};
 
   // calc
   

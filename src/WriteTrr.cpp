@@ -15,7 +15,8 @@ int WriteTrr::write_trr(int n_atoms,
 			real temperature, real potential_e,
 			real vdw_e,
 			bool out_box,
-			bool out_crd, bool out_vel, bool out_force){
+			bool out_crd, bool out_vel, bool out_force,
+			int n_atoms_group, int* atom_group){
   return 0;
 }
 
@@ -27,14 +28,15 @@ WriteTrrGromacs::~WriteTrrGromacs(){
 }
 
 int WriteTrrGromacs::write_trr(int n_atoms,
-			int cur_step, real cur_time,
-			real lx, real ly, real lz, 
-			real** crd, real** vel_just, real_fc** force,
-			real cpu_time, real total_e, real kinetic_e,
-			real temperature, real potential_e,
-			real vdw_e,
-			bool out_box,
-			bool out_crd, bool out_vel, bool out_force){
+			       int cur_step, real cur_time,
+			       real lx, real ly, real lz, 
+			       real** crd, real** vel_just, real_fc** force,
+			       real cpu_time, real total_e, real kinetic_e,
+			       real temperature, real potential_e,
+			       real vdw_e,
+			       bool out_box,
+			       bool out_crd, bool out_vel, bool out_force,
+			       int n_atoms_group, int* atom_group){
 
 
   int box_size = 0;
@@ -95,33 +97,66 @@ int WriteTrrGromacs::write_trr(int n_atoms,
     ofs.write((const char*)&z, sizeof z);
   }
   if(out_crd){
-    for(int atomid=0; atomid < n_atoms; atomid++){
-      real x = crd[atomid][0]*0.1;
-      real y = crd[atomid][1]*0.1;
-      real z = crd[atomid][2]*0.1;
-      ofs.write((const char*)&x, sizeof(real));
-      ofs.write((const char*)&y, sizeof(real));
-      ofs.write((const char*)&z, sizeof(real));
+    if(n_atoms_group == 0){
+      for(int atomid=0; atomid < n_atoms; atomid++){
+	real x = crd[atomid][0]*0.1;
+	real y = crd[atomid][1]*0.1;
+	real z = crd[atomid][2]*0.1;
+	ofs.write((const char*)&x, sizeof(real));
+	ofs.write((const char*)&y, sizeof(real));
+	ofs.write((const char*)&z, sizeof(real));
+      }
+    }else{
+      for(int i=0; i < n_atoms_group; i++){
+	real x = crd[atom_group[i]][0]*0.1;
+	real y = crd[atom_group[i]][1]*0.1;
+	real z = crd[atom_group[i]][2]*0.1;
+	ofs.write((const char*)&x, sizeof(real));
+	ofs.write((const char*)&y, sizeof(real));
+	ofs.write((const char*)&z, sizeof(real));
+      }
     }
   }
   if(out_vel){
-    for(int atomid=0; atomid < n_atoms; atomid++){
-      real x = vel_just[atomid][0]*0.1;
-      real y = vel_just[atomid][1]*0.1;
-      real z = vel_just[atomid][2]*0.1;
-      ofs.write((const char*)&x, sizeof(real));
-      ofs.write((const char*)&y, sizeof(real));
-      ofs.write((const char*)&z, sizeof(real));
+    if(n_atoms_group == 0){
+      for(int atomid=0; atomid < n_atoms; atomid++){
+	real x = vel_just[atomid][0]*0.1;
+	real y = vel_just[atomid][1]*0.1;
+	real z = vel_just[atomid][2]*0.1;
+	ofs.write((const char*)&x, sizeof(real));
+	ofs.write((const char*)&y, sizeof(real));
+	ofs.write((const char*)&z, sizeof(real));
+      }
+    }else{
+      for(int i=0; i < n_atoms_group; i++){
+	real x = vel_just[atom_group[i]][0]*0.1;
+	real y = vel_just[atom_group[i]][1]*0.1;
+	real z = vel_just[atom_group[i]][2]*0.1;
+	ofs.write((const char*)&x, sizeof(real));
+	ofs.write((const char*)&y, sizeof(real));
+	ofs.write((const char*)&z, sizeof(real));
+      }
     }
   }
   if(out_force){
-    for(int atomid=0; atomid < n_atoms; atomid++){
-      real x = force[atomid][0]*0.1;
-      real y = force[atomid][1]*0.1;
-      real z = force[atomid][2]*0.1;
-      ofs.write((const char*)&x, sizeof(real));
-      ofs.write((const char*)&y, sizeof(real));
-      ofs.write((const char*)&z, sizeof(real));
+    if(n_atoms_group == 0){
+      for(int atomid=0; atomid < n_atoms; atomid++){
+	real x = force[atomid][0]*0.1;
+	real y = force[atomid][1]*0.1;
+	real z = force[atomid][2]*0.1;
+	ofs.write((const char*)&x, sizeof(real));
+	ofs.write((const char*)&y, sizeof(real));
+	ofs.write((const char*)&z, sizeof(real));
+      }
+    }else{
+      for(int i=0; i< n_atoms_group; i++){
+	real x = force[atom_group[i]][0]*0.1;
+	real y = force[atom_group[i]][1]*0.1;
+	real z = force[atom_group[i]][2]*0.1;
+	ofs.write((const char*)&x, sizeof(real));
+	ofs.write((const char*)&y, sizeof(real));
+	ofs.write((const char*)&z, sizeof(real));
+      }
     }
   }
   return 0;
@@ -143,8 +178,8 @@ int WriteTrrPresto::write_trr(int n_atoms,
 			      real temperature, real potential_e,
 			      real vdw_e,
 			      bool out_box,
-			      bool out_crd, bool out_vel, bool out_force){
-  
+			      bool out_crd, bool out_vel, bool out_force,
+			      int n_atoms_group, int* atom_group){
   int buf = 44;
   ofs.write((const char*)&buf, sizeof(int));
   ofs.write((const char*)&cur_step, sizeof(int));
@@ -172,17 +207,32 @@ int WriteTrrPresto::write_trr(int n_atoms,
   buf = 0;
   ofs.write((const char*)&buf, sizeof(int));
   
-  buf = n_atoms * 3 * 4;
-  ofs.write((const char*)&buf, sizeof(int));
-  for (int i = 0; i < n_atoms; i++){
-    float x = crd[i][0];
-    float y = crd[i][1];
-    float z = crd[i][2];
-    ofs.write((const char*)&x, sizeof(float));    
-    ofs.write((const char*)&y, sizeof(float));    
-    ofs.write((const char*)&z, sizeof(float));    
+  if(n_atoms_group == 0){
+    buf = n_atoms * 3 * 4;
+    ofs.write((const char*)&buf, sizeof(int));
+    for (int i = 0; i < n_atoms; i++){
+      float x = crd[i][0];
+      float y = crd[i][1];
+      float z = crd[i][2];
+      ofs.write((const char*)&x, sizeof(float));    
+      ofs.write((const char*)&y, sizeof(float));    
+      ofs.write((const char*)&z, sizeof(float));    
+    }
+    ofs.write((const char*)&buf, sizeof(int));
+  }else{
+    buf = n_atoms_group * 3 * 4;
+    ofs.write((const char*)&buf, sizeof(int));
+    for (int i = 0; i < n_atoms_group; i++){
+      float x = crd[atom_group[i]][0];
+      float y = crd[atom_group[i]][1];
+      float z = crd[atom_group[i]][2];
+      ofs.write((const char*)&x, sizeof(float));    
+      ofs.write((const char*)&y, sizeof(float));    
+      ofs.write((const char*)&z, sizeof(float));    
+    }
+    ofs.write((const char*)&buf, sizeof(int));
   }
-  ofs.write((const char*)&buf, sizeof(int));
+
   return 0;
 }
 

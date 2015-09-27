@@ -34,7 +34,8 @@ int Config::set_defaults(){
   n_com_cancel_groups = 0;
   n_com_cancel_groups_name = 0;
   n_enhance_groups_name = 0;
-  
+  group_o_crd_name = "";
+
   box_div[0] = 1;
   box_div[1] = 1;
   box_div[2] = 1;
@@ -182,6 +183,9 @@ void Config::setAll(vector<string> arg){
     else if(*itr=="--print-interval-extended-lambda"){ print_intvl_extended_lambda = atoi((*++itr).c_str()); }
     else if(*itr=="--fn-o-restart"){ fn_o_restart = *++itr; }
     else if(*itr=="--fn-o-coord"){ fn_o_crd = *++itr; }
+    else if(*itr=="--group-o-coord"){
+      group_o_crd_name = ((*++itr).c_str());
+    }
     else if(*itr=="--format-o-coord"){
       itr++;
       if(*itr == "gromacs"){ format_o_crd = CRDOUT_GROMACS; }

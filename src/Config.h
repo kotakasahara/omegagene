@@ -57,6 +57,7 @@ class Config : public CelesteObject {
   string fn_o_restart;
   string fn_o_crd;
   int format_o_crd;
+  string group_o_crd_name;
   string fn_o_log;
   string fn_o_energy;
   string fn_o_vmcmd_log;

@@ -29,6 +29,8 @@ class AtomGroupsReader(kkkit.FileI):
             for x in terms[1:]:
                 for x_val in self.parse_unit(x):
                     grp.add(x_val)
+            
+            #self.groups[len(self.groups)+1] = (g_name, sorted(list(grp)))
             self.groups[g_name] = sorted(list(grp))
             #self.groups[terms[0]] = [int(x) for x in terms[1:]]
         self.close()

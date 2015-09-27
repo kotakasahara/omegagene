@@ -100,7 +100,7 @@ class Residue(AtomSubset):
 class Model(object):
     def __init__(self):
         self.atoms = []
-        self.cryst = numpy.array([0.0,0.0,0.0])
+        self.cryst = numpy.array([0.0, 0.0, 0.0])
         self.model_id = 0
         self.title = ""
         ## self.residues[residue_num] = Residue()

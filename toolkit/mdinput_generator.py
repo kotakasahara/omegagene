@@ -119,7 +119,8 @@ class MDInputGen(object):
             print self.config.get_val("fn-i-atom-groups")
             print atom_groups_reader.fn
             self.atom_groups = atom_groups_reader.read_groups()
-
+            #self.atom_groups[0] = ("All", [int(x) for x in range(0, len(self.structure.atoms))])
+            #print self.atom_groups
         if self.config.get_val("fn-i-dist-restraint"):
             dist_rest_reader = disres.PrestoDistRestReader(self.config.get_val("fn-i-dist-restraint"))
             print self.config.get_val("fn-i-dist-restraint")
@@ -485,7 +486,10 @@ class MDInputGen(object):
     def dump_atom_groups(self, atom_groups):
         buf = ""
         buf += st.pack("@i", len(atom_groups.keys()))
+        #for grpid in range(len(atom_groups.keys())):
         for name, atoms in atom_groups.items():
+            #name = atom_groups[grpid][0]
+            #atoms = atom_groups[grpid][1]
             buf += st.pack("@i", len(name)+1)
             buf += name+"\0"
             buf += st.pack("@i", len(atoms))

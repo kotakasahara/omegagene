@@ -5,6 +5,7 @@ MmSystem::MmSystem()
   cur_time = 0.0;
   leapfrog_coef = 1.0;
   max_n_nb15off = MAX_N_NB15OFF;
+  out_group = 0;
   ctime_per_step = 0;
   ctime_cuda_htod_atomids = 0;
   ctime_cuda_reset_work_ene = 0;
@@ -545,7 +546,7 @@ int MmSystem::alloc_atom_groups(int in_n_groups,
   return 0;
 }
 
-int MmSystem::set_atom_group_info(const Config* cfg){
+int MmSystem::set_atom_group_info(Config* cfg){
   for(int i_grp=0; i_grp < n_groups; i_grp++){
     mass_groups[i_grp] = 0.0;
     for(int i_atom = 0; i_atom < n_atoms_in_groups[i_grp]; i_atom++){
@@ -555,6 +556,7 @@ int MmSystem::set_atom_group_info(const Config* cfg){
   }
   set_com_cancel_groups(cfg);
   set_enhance_groups(cfg);
+  set_out_group(cfg);
   return 0;
 }
 int MmSystem::get_atom_group_id_from_name(const string name){
@@ -563,7 +565,7 @@ int MmSystem::get_atom_group_id_from_name(const string name){
   }
   return -1;
 }
-int MmSystem::set_com_cancel_groups(const Config* cfg){
+int MmSystem::set_com_cancel_groups(Config* cfg){
   n_com_cancel_groups = 0;
   for(int i=0; i<cfg->n_com_cancel_groups; i++){
     com_cancel_groups[n_com_cancel_groups] = cfg->com_cancel_groups[i];
@@ -572,8 +574,9 @@ int MmSystem::set_com_cancel_groups(const Config* cfg){
   for(int i=0; i<cfg->n_com_cancel_groups_name; i++){
     com_cancel_groups[n_com_cancel_groups] = get_atom_group_id_from_name(cfg->com_cancel_groups_name[i]);
     if (com_cancel_groups[n_com_cancel_groups] < 0){
-      cout << "Invalid atom group : " << cfg->com_cancel_groups_name[i] << endl;
-      exit(1);
+      stringstream ss;
+      ss << "Invalid atom group (--com-cancel-group-name) : " << cfg->com_cancel_groups_name[i] << endl;
+      error_exit(ss.str(), "1A00002");
     }
     n_com_cancel_groups++; 
 
@@ -590,13 +593,38 @@ int MmSystem::print_com_cancel_groups(){
   }
   return 0;
 }
-int MmSystem::set_enhance_groups(const Config* cfg){
+int MmSystem::set_out_group(Config* cfg){
+  if(cfg->group_o_crd_name == "") out_group = 0;
+  else{  out_group = get_atom_group_id_from_name(cfg->group_o_crd_name);
+    if (out_group < 0){
+      stringstream ss;
+      ss << "Invalid atom group (--group-o-coord) : " << cfg->group_o_crd_name << endl;
+      error_exit(ss.str(), "1A00002");
+    }
+  }
+  
+  return 0;
+}
+int MmSystem::print_out_group(){
+  cout << "Trajectory output group: " << endl;
+  //if (out_group == -1){
+  //cout << "--group-o-coord is not specified." << endl;
+  //cout << "Output trajectory for ALL ATOMS." << endl;
+  //}else{
+    cout << "Group " << out_group << endl;
+    cout << atom_group_names[out_group] << " : " ;
+    cout << n_atoms_in_groups[out_group] << " atoms." << endl;
+    //}
+  return 0;
+}
+int MmSystem::set_enhance_groups(Config* cfg){
   n_enhance_groups = 0;
   for(int i=0; i<cfg->n_enhance_groups_name; i++){
     enhance_groups[n_enhance_groups] = get_atom_group_id_from_name(cfg->enhance_groups_name[i]);
     if (enhance_groups[n_enhance_groups] < 0){
-      cout << "Invalid atom group : " << cfg->enhance_groups_name[i] << endl;
-      exit(1);
+      stringstream ss;
+      ss << "Invalid atom group (--enhance-group-name): " << cfg->enhance_groups_name[i] << endl;
+      error_exit(ss.str(), "1A00002");
     }
     n_enhance_groups++; 
   }    
