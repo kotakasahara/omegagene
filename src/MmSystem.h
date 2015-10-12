@@ -20,6 +20,7 @@ using namespace std;
 #include "Constraint.h"
 #include "Extend.h"
 #include "DistRestraint.h"
+#include "PosRestraint.h"
 
 class MmSystem : public CelesteObject{
  private:
@@ -108,6 +109,7 @@ class MmSystem : public CelesteObject{
   real_fc pote_ele;
 
   real_fc pote_dist_rest;
+  real_fc pote_pos_rest;
 
   real kinetic_e;
   real temperature;
@@ -135,6 +137,7 @@ class MmSystem : public CelesteObject{
   int out_group;
   
   DistRestraintObject*  dist_restraint;
+  PosRestraintObject*  pos_restraint;
 
   //mt19937 random_mt;
 

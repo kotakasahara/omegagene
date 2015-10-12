@@ -115,6 +115,11 @@ class CelesteObject {
     DISTREST_HARMONIC,
     DISTREST_DUMMY
   };
+  enum {
+    POSREST_NONE = 0,
+    POSREST_HARMONIC,
+    POSREST_DUMMY
+  };
   // 
   static const int MAX_N_ATOMTYPE;
   //

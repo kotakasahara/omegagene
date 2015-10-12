@@ -118,6 +118,10 @@ int Read::load_launch_set(MmSystem& mmsys){
     cout << "--- Load distance restraint definition : " << size_dist_restraint << " bytes." << endl;
     load_ls_dist_restraint(mmsys.dist_restraint);
   }
+  if(size_pos_restraint > 0){
+    cout << "--- Load position restraint definition : " << size_pos_restraint << " bytes." << endl;
+    load_ls_pos_restraint(mmsys.pos_restraint);
+  }
   //cout << "load_ls_pcluster()" << endl;
   //load_ls_pcluster(mmsys);
   close();
@@ -157,6 +161,7 @@ int Read::load_ls_header(MmSystem& mmsys){
   read_bin_values(&size_extended, 1);
   read_bin_values(&size_groups, 1);
   read_bin_values(&size_dist_restraint, 1);
+  read_bin_values(&size_pos_restraint, 1);
   //int size_pcluster;
   //read_bin_values(&size_pcluster, 1);
 
@@ -170,6 +175,7 @@ int Read::load_ls_header(MmSystem& mmsys){
     cout << "size_extended:         " << size_extended << endl;
     cout << "size_groups:         " << size_groups << endl;
     cout << "size_dist_restraint: " << size_dist_restraint << endl;
+    cout << "size_pos_restraint: " << size_pos_restraint << endl;
     //cout << "size_pcluster: " << size_pcluster << endl;
   }
 
@@ -613,6 +619,27 @@ int Read::load_ls_dist_restraint(DistRestraintObject* dr){
     read_bin_values(&dist_high, 1);
     dr->add_drunit(aid1, aid2, coef_low, coef_high, dist_low, dist_high);
   }
+  return 0;
+}
+int Read::load_ls_pos_restraint(PosRestraintObject* pr){
+  int n_prunits;
+  read_bin_values(&n_prunits, 1);
+  cout << "test01 "<<n_prunits<<endl;
+  pr->alloc_prunits(n_prunits);
+  cout << "test02"<<endl;
+  for(int i=0; i < n_prunits; i++){
+    int aid;
+    float crd_x, crd_y, crd_z;
+    float dist_margin, coef;
+    read_bin_values(&aid, 1);    
+    read_bin_values(&crd_x, 1);
+    read_bin_values(&crd_y, 1);
+    read_bin_values(&crd_z, 1);
+    read_bin_values(&dist_margin, 1);
+    read_bin_values(&coef, 1);
+    pr->add_prunit(aid, crd_x, crd_y, crd_z, dist_margin, coef);
+  }
+  cout << "test03"<<endl;
   return 0;
 }
 /*

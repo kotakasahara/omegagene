@@ -709,6 +709,7 @@ real_fc MmSystem::set_potential_e(){
     + pote_14vdw + pote_14ele
     + pote_vdw + pote_ele
     + pote_dist_rest;
+    + pote_pos_rest;
   return potential_e;
 }
 int MmSystem::reset_energy(){
@@ -721,6 +722,7 @@ int MmSystem::reset_energy(){
   pote_vdw = 0.0;
   pote_ele = 0.0;
   pote_dist_rest = 0.0;
+  pote_pos_rest = 0.0;
   for(int atomid=0; atomid < n_atoms; atomid++)
     for(int d=0; d<3; d++) force[atomid][d] = 0.0;
 

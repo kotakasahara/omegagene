@@ -12,7 +12,12 @@ MAGIC=66261
 #VERSION = 15020801  ## shake, expand_shake_info()
 #VERSION = 15030901  ## vmcmd 
 #VERSION = 15032221  ## atom_groups
-VERSION = "v.0.34.b" ## version_info
+#VERSION = "v.0.34.b" ## version_info
+#VERSION = "v.0.36.c" ## version_info
+
+VERSION_LIST = ["v.0.34.b", "v.0.36.c"]
+#VERSION_ID = 0
+#VERSION = VERSION_LIST[VERSION_ID]
 
 import sys
 from optparse import OptionParser
@@ -29,6 +34,7 @@ import kkpresto_shake as shk
 import kkmm_extended
 #import define_atom_groups as atgrp
 import kkpresto_distrest as disres
+import kkceleste_posrest as posres
 import kkatomgroup as atgrp
 
 def get_options():
@@ -38,6 +44,10 @@ def get_options():
                  help="file name for config file")
     p.add_option('-o', dest='fn_out',
                  help="file name for config file")
+    p.add_option('-v', dest='version_id',
+                 default=0,
+                 type="int",
+                 help="version of binary")
 
     opts, args = p.parse_args()
     print "----------------------------"
@@ -47,7 +57,7 @@ def get_options():
 
 def _main():
     opts, args = get_options()
-    mdinputgen = MDInputGen(opts.fn_config, opts.fn_out)
+    mdinputgen = MDInputGen(opts.fn_config, opts.fn_out, opts.version_id)
     print "read_files()"
     mdinputgen.read_files()
     print "dump_mdinput()"    
@@ -55,9 +65,11 @@ def _main():
     return 
 
 class MDInputGen(object):
-    def __init__(self, in_fn_config, in_fn_out):
+    def __init__(self, in_fn_config, in_fn_out, version_id):
         self.fn_config = in_fn_config
         self.fn_out = in_fn_out
+        self.version_id = version_id
+        self.version = VERSION_LIST[version_id]
         self.config = None
         self.system = None
         self.structure = None
@@ -67,6 +79,8 @@ class MDInputGen(object):
         self.extended = None
         self.atom_groups = {}
         self.dist_rest = []
+        self.pos_rest = []
+
         return 
 
     def read_files(self):
@@ -127,6 +141,12 @@ class MDInputGen(object):
             self.dist_rest = dist_rest_reader.read()
             for d in self.dist_rest:
                 d.set_atom_ids(self.tpl)
+        
+        if self.version >= 1:
+            if self.config.get_val("fn-i-position-restraint"):
+                pos_rest_reader = posres.CelestePosRestReader(self.config.get_val("fn-i-position-restraint"))
+                print self.config.get_val("fn-i-position-restraint")
+                self.pos_rest = pos_rest_reader.read()
 
         return
 
@@ -178,8 +198,13 @@ class MDInputGen(object):
         ## Magic number 66261
         f.write(st.pack("@i", MAGIC))
         ## Version
-        f.write(st.pack("@i", len(VERSION)))
-        f.write(VERSION)
+        if self.version_id >= 1:
+            f.write(st.pack("@i", len(self.version)+1))
+            f.write(self.version+'\0')
+        else:
+            f.write(st.pack("@i", len(self.version)))
+            f.write(self.version)
+
         ## Config
         #buf_config = dump_mmconfig(cfg)
         #f.write(struct.pack("@i", len(buf_config)))
@@ -204,6 +229,9 @@ class MDInputGen(object):
 
         buf_dist_rest = self.dump_dist_rest(self.dist_rest)
 
+        if self.version_id >= 1:
+            buf_pos_rest = self.dump_pos_rest(self.pos_rest)
+
         #if config.get_val("particle-cluster-shake"):
         f.write(st.pack("@i", len(buf_box)))
         f.write(st.pack("@i", len(buf_coordinates)))
@@ -214,6 +242,8 @@ class MDInputGen(object):
         f.write(st.pack("@i", len(buf_extended)))
         f.write(st.pack("@i", len(buf_atom_groups)))
         f.write(st.pack("@i", len(buf_dist_rest)))
+        if self.version_id >= 1:
+            f.write(st.pack("@i", len(buf_pos_rest)))
         print "size: buf_box        : " + str(len(buf_box))
         print "size: buf_coordinates: " + str(len(buf_coordinates))
         print "size: buf_velocities : " + str(len(buf_velocities))
@@ -223,7 +253,8 @@ class MDInputGen(object):
         print "size: buf_extended     : " + str(len(buf_extended))
         print "size: buf_atom_groups: " + str(len(buf_atom_groups))
         print "size: buf_dist_rest: " + str(len(buf_dist_rest))
-
+        if self.version_id >= 1:
+            print "size: buf_pos_rest: " + str(len(buf_pos_rest))
         #f.write(st.pack("@i", len(buf_pcluster)))
         f.write(buf_box)
         f.write(buf_coordinates)
@@ -235,6 +266,8 @@ class MDInputGen(object):
     #f.write(buf_pcluster)
         f.write(buf_atom_groups)
         f.write(buf_dist_rest)
+        if self.version_id >= 1:
+            f.write(buf_pos_rest)
         f.close()
         return
 
@@ -508,5 +541,17 @@ class MDInputGen(object):
             buf += st.pack("@f", dr.dist[0])
             buf += st.pack("@f", dr.dist[1])
         return buf
+    def dump_pos_rest(self, pos_rest):
+        buf = ""
+        buf += st.pack("@i", len(pos_rest))
+        for pr in pos_rest:
+            buf += st.pack("@i", pr.atomid)
+            buf += st.pack("@f", pr.crd_x)
+            buf += st.pack("@f", pr.crd_y)
+            buf += st.pack("@f", pr.crd_z)
+            buf += st.pack("@f", pr.dist_margin)
+            buf += st.pack("@f", pr.coef)
+        return buf
+
 if __name__ == "__main__":
     _main()

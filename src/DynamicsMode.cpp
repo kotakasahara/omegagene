@@ -182,9 +182,14 @@ int DynamicsMode::apply_constraint(){
 }
 
 int DynamicsMode::apply_dist_restraint(){
-  subbox.copy_crd(mmsys.crd);
   mmsys.pote_dist_rest = mmsys.dist_restraint->apply_restraint(mmsys.n_atoms,
 							       mmsys.crd, mmsys.pbc, mmsys.force);
+  subbox.add_force_from_mmsys(mmsys.force);
+  return 0;
+}
+int DynamicsMode::apply_pos_restraint(){
+  mmsys.pote_pos_rest = mmsys.pos_restraint->apply_restraint(mmsys.n_atoms,
+							     mmsys.crd, mmsys.pbc, mmsys.force);
   subbox.add_force_from_mmsys(mmsys.force);
   return 0;
 }
@@ -240,6 +245,10 @@ int DynamicsMode::sub_output_log(){
     ss << string(buf);    
     if(cfg->dist_restraint_type != DISTREST_NONE){
       sprintf(buf, "Distance restraint: %14.10e\n", mmsys.pote_dist_rest);
+      ss << string(buf);    
+    }
+    if(cfg->pos_restraint_type != POSREST_NONE){
+      sprintf(buf, "Position restraint: %14.10e\n", mmsys.pote_pos_rest);
       ss << string(buf);    
     }
     sprintf(buf, "Temperature:       %14.10e\n", mmsys.temperature);
@@ -441,8 +450,13 @@ int DynamicsModePresto::calc_in_each_step(){
   subbox.calc_energy();
   //cout << "gather_energies()"<<endl;
   gather_energies();
-  if(cfg->dist_restraint_type != DISTREST_NONE){
-    apply_dist_restraint();
+  if(cfg->dist_restraint_type != DISTREST_NONE || 
+     cfg->pos_restraint_type != POSREST_NONE ){
+    subbox.copy_crd(mmsys.crd);
+    if(cfg->dist_restraint_type != DISTREST_NONE)
+      apply_dist_restraint();
+    if(cfg->pos_restraint_type != POSREST_NONE)
+      apply_pos_restraint();
   }
   const clock_t endTimeEne = clock();
   mmsys.ctime_calc_energy += endTimeEne - startTimeEne;
@@ -565,6 +579,9 @@ int DynamicsModeZhang::calc_in_each_step(){
   }
   if(cfg->dist_restraint_type != DISTREST_NONE){
     apply_dist_restraint();
+  }
+  if(cfg->pos_restraint_type != POSREST_NONE){
+    apply_pos_restraint();
   }
   
   const clock_t startTimeVel = clock();

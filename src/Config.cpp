@@ -65,6 +65,8 @@ int Config::set_defaults(){
 
   dist_restraint_type = DISTREST_NONE;
   dist_restraint_weight = 0.0;
+  pos_restraint_type = POSREST_NONE;
+  pos_restraint_weight = 0.0;
 
   gpu_device_id = -1;
   enhance_sigma = 2.0;
@@ -211,7 +213,13 @@ void Config::setAll(vector<string> arg){
       else{ dist_restraint_type = DISTREST_DUMMY; }
     }
     else if(*itr=="--dist-restraint-weight"){ dist_restraint_weight = atof((*++itr).c_str()); }
-
+    else if(*itr=="--position-restraint"){
+      itr++;
+      if(*itr == "none"){ pos_restraint_type = POSREST_NONE; }
+      else if(*itr == "harmonic"){ pos_restraint_type = POSREST_HARMONIC; }
+      else{ pos_restraint_type = POSREST_DUMMY; }
+    }
+    else if(*itr=="--position-restraint-weight"){ pos_restraint_weight = atof((*++itr).c_str()); }
     else if(*itr=="--gpu-device-id"){ gpu_device_id = atoi((*++itr).c_str()); }
     else if(*itr=="--enhance-group-name"){
       enhance_groups_name[n_enhance_groups_name] = ((*++itr).c_str());

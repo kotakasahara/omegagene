@@ -34,6 +34,7 @@ class Read : private CelesteObject {
   int size_extended;
   int size_groups;
   int size_dist_restraint;
+  int size_pos_restraint;
 
  public:
   ifstream ifs;
@@ -61,6 +62,7 @@ class Read : private CelesteObject {
   //int load_ls_pcluster(MmSystem& mmsys);
   int load_ls_atom_groups(MmSystem& mmsys);
   int load_ls_dist_restraint(DistRestraintObject* dr);
+  int load_ls_pos_restraint(PosRestraintObject* dr);
 };
 
 inline int reverse_endian(int value){

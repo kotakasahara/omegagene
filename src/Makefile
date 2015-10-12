@@ -1,9 +1,9 @@
-#EXECUTABLE = celeste
+EXECUTABLE = celeste
 #EXECUTABLE = celeste_wons
   # without neighbor search
 #EXECUTABLE = celeste_gpuecp
   # enumerate cell-pairs on cpu
-EXECUTABLE = celeste_gpu
+#EXECUTABLE = celeste_gpu
 
 ICCFLAGS = -ansi -fast -w1 
 #ICCFLAGS = -ansi -O0 -g #-w1 # -std=c++11
@@ -16,11 +16,10 @@ ICCLIB =
 CXX = icpc
 MPICXX = openmpic++
 #CUDALOC = /opt/cuda/5.5/lib64
-CUDALOC = /usr/apps.sp3/cuda/6.0/lib64
-#CUDALOC = /usr/local/cuda-6.0/lib64
+#CUDALOC = /usr/apps.sp3/cuda/6.0/lib64
+CUDALOC = /usr/local/cuda-6.0/lib64
 # BOOST_INC = ${HOME}/include
 # BOOST_LIB = ${HOME}/lib
-
 
 MODE_FLAG =
 CUDALIB = 
@@ -55,7 +54,7 @@ OBJS = CelesteObject.o Celeste.o     Config.o \
        Constraint.o ConstraintShake.o \
        Extend.o \
        Thermostat.o \
-       DistRestraint.o COMMotion.o \
+       DistRestraint.o PosRestraint.o COMMotion.o \
        main.o
 
 ## endif

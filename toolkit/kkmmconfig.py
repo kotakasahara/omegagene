@@ -55,6 +55,7 @@ class Config(object):
 
             "fn-i-atom-groups":ConfigReader.STR,
             "fn-i-dist-restraint":ConfigReader.STR,
+            "fn-i-position-restraint":ConfigReader.STR,
             "mol-settle":ConfigReader.ARRAY_STR
             }
         for key, k_type in self.type_def.items():

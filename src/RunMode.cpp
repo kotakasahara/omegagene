@@ -36,6 +36,14 @@ int RunMode::set_config_parameters(Config* in_cfg){
     mmsys.dist_restraint = new DistRestraintObject();
   }
   mmsys.dist_restraint->set_weight(cfg->dist_restraint_weight);
+
+  if(cfg->pos_restraint_type==POSREST_HARMONIC){
+    mmsys.pos_restraint = new PosRestraintHarmonic();
+  }else{
+    mmsys.pos_restraint = new PosRestraintObject();
+  }
+  mmsys.pos_restraint->set_weight(cfg->pos_restraint_weight);
+
   if(DBG>=1)
     cout << "DBG1: RunMode::set_config_parameters()"<<endl;
   //#if defined(F_CUDA) && defined(F_MPI)
