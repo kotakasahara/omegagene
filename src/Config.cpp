@@ -56,8 +56,8 @@ int Config::set_defaults(){
 
   constraint_tolerance = 0.000001;
   constraint_max_loops = 1000;
-  thermo_const_tolerance = 1000;
-  thermo_const_max_loops = 0.000001;
+  thermo_const_tolerance = 0.000001;
+  thermo_const_max_loops = 1000;
 
   init_vel_just = 0;
   extended_ensemble = EXTENDED_NONE;

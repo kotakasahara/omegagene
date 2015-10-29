@@ -329,7 +329,7 @@ real ExtendedVAUS::set_crd_centers(real* crd, PBC* pbc){
 	crd_centers[i_grp][d] += mod_crd * mass[aid1];
       }
     }
-    for(int d=0; d<3; d++) crd_centers[i_grp][d] /= mass_sum;
+    for(int d=0; d<3; d++) crd_centers[i_grp][d] *= mass_groups_inv[grp_id];
   }
   return 0;
 }
@@ -381,7 +381,7 @@ int ExtendedVAUS::scale_force(real lambda, real_fc* work, int n_atoms){
   
   //real k = (GAS_CONST / JOULE_CAL) * 1e-3;
   real dew = 2.0 * const_k * ( d_ln_p + recovery );
-  //cout << "dbg0522 "<<dew << endl;
+  cout << "dbg0522 "<<dew << endl;
   int n_atoms_3 = n_atoms * 3;
   for(int i_pair = 0; i_pair < n_enhance_group_pairs; i_pair++){
     real direction = 1.0;

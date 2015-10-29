@@ -464,6 +464,7 @@ int DynamicsModePresto::calc_in_each_step(){
   if(cfg->extended_ensemble == EXTENDED_VMCMD){
     subbox.extended_apply_bias(mmsys.cur_step, mmsys.set_potential_e());
   }else if(cfg->extended_ensemble == EXTENDED_VAUS){
+    //cout << "test1"<<endl;
     subbox.extended_apply_bias_struct_param(mmsys.cur_step);
   }
   const clock_t startTimeVel = clock();

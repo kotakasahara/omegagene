@@ -44,10 +44,15 @@ def get_options():
                  help="file name for config file")
     p.add_option('-o', dest='fn_out',
                  help="file name for config file")
-    p.add_option('-v', dest='version_id',
-                 default=0,
-                 type="int",
+    p.add_option('-v', dest='version',
+                 type="choice",
+                 choices=VERSION_LIST,
+                 default=VERSION_LIST[0],
                  help="version of binary")
+    #p.add_option('-v', dest='version_id',
+    #             default=0,
+    #             type="int",
+    #             help="version of binary")
 
     opts, args = p.parse_args()
     print "----------------------------"
@@ -57,7 +62,7 @@ def get_options():
 
 def _main():
     opts, args = get_options()
-    mdinputgen = MDInputGen(opts.fn_config, opts.fn_out, opts.version_id)
+    mdinputgen = MDInputGen(opts.fn_config, opts.fn_out, opts.version)
     print "read_files()"
     mdinputgen.read_files()
     print "dump_mdinput()"    
@@ -65,11 +70,11 @@ def _main():
     return 
 
 class MDInputGen(object):
-    def __init__(self, in_fn_config, in_fn_out, version_id):
+    def __init__(self, in_fn_config, in_fn_out, version):
         self.fn_config = in_fn_config
         self.fn_out = in_fn_out
-        self.version_id = version_id
-        self.version = VERSION_LIST[version_id]
+        self.version_id = VERSION_LIST.index(version)
+        self.version = version
         self.config = None
         self.system = None
         self.structure = None
