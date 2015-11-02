@@ -369,8 +369,9 @@ int ExtendedVAUS::scale_force(real lambda, real_fc* work, int n_atoms){
 		       + sigma_half) * sigma_sq_inv;
     param = vstates[cur_vs].get_lambda_high();
   }
+  
   //cout << " param " << param << endl;
-  //cout << "dbg0522 1 " << param << " " << d_ln_p << endl;
+  //cout << "dbg0522 1 " << param << " recov: " << recovery << endl;
   real tmp_lambda = 1.0;
   real d_ln_p = vstates[cur_vs].get_poly_param(0);
   for(int i=1; i < vstates[cur_vs].get_order()+1; i++){
@@ -403,7 +404,7 @@ int ExtendedVAUS::scale_force(real lambda, real_fc* work, int n_atoms){
       for(int i_at = 0; i_at < n_atoms_in_groups[grp_id]; i_at++){
 	int atom_id3 = atom_groups[grp_id][i_at] * 3;
 	for(int d=0; d<3; d++){
-	  work[atom_id3+d] += direction * bias[d];
+	  work[atom_id3+d] += direction * bias[d] * (real)mass[atom_groups[grp_id][i_at]];
 	  
 	}
 	//cout << " bias : " << atom_groups[grp_id][i_at]  << " " 
