@@ -3,6 +3,7 @@
 import re
 import kkpdb
 import kkpresto
+import sys
 
 class PrestoDistRest(object):
     def __init__(self, molid1, molid2, res_id1, res_id2, 
@@ -38,6 +39,8 @@ class PrestoDistRest(object):
                                       self.res_id[i],
                                       self.res_name[i],
                                       self.atom_name[i])
+            if aid[i] == -1:
+                sys.stderr.write("Distance restraint atom could not found: %d %d %s %s\n"%(self.molid[i], self.res_id[i], self.res_name[i], self.atom_name[i]))
         self.atom_id = tuple(aid)
         return
     def set_atom_id(self, tpl,
@@ -47,13 +50,19 @@ class PrestoDistRest(object):
         mol_type_id = 0
         mol_id_in_type = 0
         i = 0
+        flg = False
         for mol in tpl.mols:
             for i_mol in range(mol.mol_num):
-                if i == molid: break
+                if i == molid:
+                    flg=True
+                    break
                 mol_id_in_type += 1
                 i += 1
-            if i == molid: break
+            if flg: break
             mol_type_id += 1
+            if i == molid: break
+
+
         ## tpl.mols[mol_type_id]
         ## mol_id_in_type -th instance of the mol
 

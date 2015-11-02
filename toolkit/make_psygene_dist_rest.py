@@ -78,10 +78,10 @@ def _main():
             #if mol.mol_name != "WAT":
                 #print "mol " + str(len(mollist)) + " " + str(i) + " " + mol.mol_name
      
-    res_range = []
+    res_range = {}
     for i in range(0, len(opts.molids)):
         if len(opts.res_range) < i+1:
-            res_range.append(())
+            res_range[opts.molids[i]]=()
         else:
             valid_res = set()
             terms1 = re.compile(":").split(opts.res_range[i])
@@ -90,7 +90,7 @@ def _main():
                 for t2 in range(int(terms2[0]), int(terms2[1])+1):
                     valid_res.add(t2)
             print "mol: " + str(i) + " res:" + ",".join([str(x) for x in valid_res])
-            res_range.append(valid_res)
+            res_range[opts.molids[i]] = valid_res
             
     print res_range
     print opts.atomnames
