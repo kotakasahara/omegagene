@@ -60,8 +60,8 @@ DistRestraintHarmonic::~DistRestraintHarmonic(){
 }
 
 real_fc DistRestraintHarmonic::apply_restraint(int n_atoms,
-					   real** crd, PBC& pbc, 
-					   real** force){
+					       real** crd, PBC& pbc, 
+					       real** force){
   
 
   for ( int i = 0; i < n_atoms; i++){

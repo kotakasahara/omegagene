@@ -5,8 +5,8 @@
   # enumerate cell-pairs on cpu
 EXECUTABLE = celeste_gpu
 
-#ICCFLAGS = -ansi -fast -w1 
-ICCFLAGS = -ansi -O0 -g #-w1 # -std=c++11
+ICCFLAGS = -ansi -fast -w1 
+#ICCFLAGS = -ansi -O0 -g #-w1 # -std=c++11
 ICCLIB = 
 
 ### Environment variables for tsubame
@@ -16,8 +16,8 @@ ICCLIB =
 CXX = icpc
 MPICXX = openmpic++
 #CUDALOC = /opt/cuda/5.5/lib64
-#CUDALOC = /usr/apps.sp3/cuda/6.0/lib64
-CUDALOC = /usr/local/cuda-6.0/lib64
+CUDALOC = /usr/apps.sp3/cuda/6.0/lib64
+#CUDALOC = /usr/local/cuda-6.0/lib64
 # BOOST_INC = ${HOME}/include
 # BOOST_LIB = ${HOME}/lib
 

@@ -432,7 +432,7 @@ int DynamicsModePresto::calc_in_each_step(){
   mmsys.reset_energy();
   const clock_t endTimeReset = clock();
   mmsys.ctime_cuda_reset_work_ene += endTimeReset - startTimeReset;
-
+  
 #ifndef F_WO_NS
   const clock_t startTimeHtod = clock();
   if(mmsys.cur_step%cfg->nsgrid_update_intvl==0){

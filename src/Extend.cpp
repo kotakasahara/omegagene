@@ -359,14 +359,14 @@ int ExtendedVAUS::scale_force(real lambda, real_fc* work, int n_atoms){
   real param = lambda;
   real recovery = 0.0;
   
-  if (param <= vstates[cur_vs].get_lambda_low() - sigma_half ){
-    recovery = 2.0 * ( param - vstates[cur_vs].get_lambda_low() 
-		       - sigma_half) * sigma_sq_inv;
+  if (param <= vstates[cur_vs].get_lambda_low()){
+    recovery = ( param - vstates[cur_vs].get_lambda_low() 
+		       - sigma);
     param = vstates[cur_vs].get_lambda_low();
       //reparam = vstates[cur_vs].get_lambda_low();
-  }else if(param >= vstates[cur_vs].get_lambda_high() + sigma_half){
-    recovery = 2.0 * ( param - vstates[cur_vs].get_lambda_high() 
-		       + sigma_half) * sigma_sq_inv;
+  }else if(param >= vstates[cur_vs].get_lambda_high()){
+    recovery = ( param - vstates[cur_vs].get_lambda_high() 
+		 + sigma);
     param = vstates[cur_vs].get_lambda_high();
   }
   
