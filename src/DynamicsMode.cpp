@@ -78,7 +78,7 @@ int DynamicsMode::initial_preprocess(){
 			  cfg->format_o_extended_lambda);
     mmsys.vmcmd->set_lambda_interval(cfg->print_intvl_extended_lambda);
     mmsys.vmcmd->print_info();
-    mmsys.vmcmd->set_params(cfg->enhance_sigma);
+    mmsys.vmcmd->set_params(cfg->enhance_sigma, cfg->enhance_recov_coef);
     mmsys.vmcmd->set_enhance_groups(mmsys.n_atoms_in_groups,
 				   mmsys.atom_groups,
 				   mmsys.n_enhance_groups,

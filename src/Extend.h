@@ -72,8 +72,9 @@ class ExtendedVMcMD : public Extended {
   real_pw* mass_groups;
   real_pw* mass_groups_inv;
   real sigma;
-  real sigma_half;
-  real sigma_sq_inv;
+  real recov_coef;
+  //real sigma_half;
+  //real sigma_sq_inv;
   //
   int* n_atoms_in_groups;
   int** atom_groups;
@@ -128,7 +129,7 @@ class ExtendedVMcMD : public Extended {
 				    int in_n_enhance_groups,
 				 int* in_enhance_groups);
   int set_mass(real_pw* in_mass, real_pw* in_mass_groups, real_pw* in_mass_groups_inv);
-  int set_params(real in_recover_range);
+  int set_params(real in_sigme, real in_recov_coef);
 };
 
 

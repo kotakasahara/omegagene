@@ -69,7 +69,8 @@ int Config::set_defaults(){
   pos_restraint_weight = 0.0;
 
   gpu_device_id = -1;
-  enhance_sigma = 2.0;
+  enhance_sigma = 0.2;
+  enhance_recov_coef = 0.5;
   return 0;
 }
 void Config::setAll(int argn, char* argv[]){
@@ -226,6 +227,7 @@ void Config::setAll(vector<string> arg){
       n_enhance_groups_name++;
     }
     else if(*itr=="--enhance-sigma"){  enhance_sigma = atof((*++itr).c_str()); }
+    else if(*itr=="--enhance-recovery-coef"){  enhance_recov_coef = atof((*++itr).c_str()); }
     else{
       stringstream ss;
       ss<<"Configuration file: Unknown keyword <"<<(*itr)<<">";

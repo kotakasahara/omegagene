@@ -273,10 +273,11 @@ int ExtendedVMcMD::set_mass(real_pw* in_mass, real_pw* in_mass_groups, real_pw* 
 
   return 0;
 }
-int ExtendedVMcMD::set_params(real in_sigma){
+int ExtendedVMcMD::set_params(real in_sigma, real in_recov_coef){
   sigma = in_sigma;
-  sigma_half = sigma * 0.5;  
-  sigma_sq_inv = 1.0 / (sigma * sigma);
+  //sigma_half = sigma * 0.5;  
+  //sigma_sq_inv = 1.0 / (sigma * sigma);
+  recov_coef = in_recov_coef;
   return 0;
 }
 
@@ -360,13 +361,11 @@ int ExtendedVAUS::scale_force(real lambda, real_fc* work, int n_atoms){
   real recovery = 0.0;
   
   if (param <= vstates[cur_vs].get_lambda_low()){
-    recovery = ( param - vstates[cur_vs].get_lambda_low() 
-		       - sigma);
+    recovery = recov_coef * ( param - vstates[cur_vs].get_lambda_low() - sigma);
     param = vstates[cur_vs].get_lambda_low();
       //reparam = vstates[cur_vs].get_lambda_low();
   }else if(param >= vstates[cur_vs].get_lambda_high()){
-    recovery = ( param - vstates[cur_vs].get_lambda_high() 
-		 + sigma);
+    recovery = recov_coef * ( param - vstates[cur_vs].get_lambda_high() + sigma);
     param = vstates[cur_vs].get_lambda_high();
   }
   
