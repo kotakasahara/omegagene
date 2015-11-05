@@ -107,7 +107,14 @@ def extract_rigid_units_from_atom_ids(target_atom_ids, rigid_units):
             t_rigid_units.append(unit)
     return t_rigid_units
 
-def make_rigid_units(model, tpl, shk):
+def make_rigid_units(model, tpl, shkr):
+    #make shk.shake_sys[] dictionary
+    # (mol_id, atom_id_inmol) => shake object
+    shk_dict = {}
+    for molid, molshk in enumerate(shkr.shake):
+        for shkobj in molshk:
+            shk_dict[(molid, shkobj.atom_center)] = shkobj
+            #print str(molid) + " " + str(shkobj.atom_center)
     atom_id_mass = []
     rigid_units = []
     mol_id = 0
@@ -140,17 +147,30 @@ def make_rigid_units(model, tpl, shk):
 
         unit = RigidUnit()
         unit.add_atom(atom_id, mass)
-
-        if shk and mol_id < len(shk) and mol_atom_id in shk[mol_id]:
-            for shk_atom_id in shk[mol_id][mol_atom_id].atom_ids:
+        if (mol_id, mol_atom_id) in shk_dict.keys():
+            for shk_atom_id in shk_dict[(mol_id, mol_atom_id)].atom_ids:
                 #print "mol_id: " + str(mol_id) + " shk_atom_id:" + str(shk_atom_id) + " " + str(len(tpl.mols[mol_id].atoms))
                 shk_mass = tpl.mols[mol_id].atoms[shk_atom_id-1].mass
                 unit.add_atom(atom_id_head + shk_atom_id - 1, shk_mass)
                 processed_atom_id.add(atom_id_head + shk_atom_id - 1)
-            processed_atom_id.add(atom_id)        
             rigid_units.append(unit)
+        #    for shk_atom_id in shk_dict[atom_id].atom_ids:
+        #        #print "mol_id: " + str(mol_id) + " shk_atom_id:" + str(shk_atom_id) + " " + str(len(tpl.mols[mol_id].atoms))
+        #        shk_mass = tpl.mols[mol_id].atoms[shk_atom_id-1].mass
+        #        unit.add_atom(atom_id, shk_mass)
+        #        processed_atom_id.add(atom_id)
         else:
             tmp_one_atom_units.append(unit)
+
+        #print "mol_id: " + str(mol_id) + " mol_atom_id:" + str(mol_atom_id)
+        #if shk and mol_id < len(shk) and mol_atom_id in shk[mol_id]:
+        #    for shk_atom_id in shk[mol_id][mol_atom_id].atom_ids:
+        #        #print "mol_id: " + str(mol_id) + " shk_atom_id:" + str(shk_atom_id) + " " + str(len(tpl.mols[mol_id].atoms))
+        #        shk_mass = tpl.mols[mol_id].atoms[shk_atom_id-1].mass
+        #        unit.add_atom(atom_id_head + shk_atom_id - 1, shk_mass)
+        #        processed_atom_id.add(atom_id_head + shk_atom_id - 1)
+        #    processed_atom_id.add(atom_id)        
+        #   rigid_units.append(unit)
             
     for tmp_unit in tmp_one_atom_units:
         if not tmp_unit.atom_ids[0] in processed_atom_id:
@@ -376,14 +396,14 @@ def genevelo_target_atoms(target_atom_ids, rigid_units,
     #    check_total_trans_moment(target_atom_ids, atom_id_mass, atom_vel)
     return atom_vel
 
-def generate_velocities(model, tpl, shk,
+def generate_velocities(model, tpl, shkr,
                         temperature,
                         mol):
     atom_vel = []
     for i in range(len(model.atoms)):
         atom_vel.append(numpy.array([0.0, 0.0, 0.0]))
 
-    rigid_units, atom_id_mass = make_rigid_units(model, tpl, shk)
+    rigid_units, atom_id_mass = make_rigid_units(model, tpl, shkr)
     average_unit_mass = average_mass_of_rigid_units(rigid_units)
     print "Average mass of rigid units: " + str(average_unit_mass)
         
@@ -434,12 +454,12 @@ def get_atom_id_mass(tpl):
                 atom_id_mass.append(at.mass)
     return atom_id_mass
 
-def check_restart(fn_restart, model, tpl, shk):
+def check_restart(fn_restart, model, tpl, shkr):
     rest = kkpresto_restart.PrestoRestartReader(fn_restart).read_restart()
     print rest.crd[0]
     print rest.vel[0]
     rest.vel = convert_velocity_ang_fs_to_si(rest.vel)
-    rigid_units, atom_id_mass = make_rigid_units(model, tpl, shk)
+    rigid_units, atom_id_mass = make_rigid_units(model, tpl, shkr)
     target_atom_ids = set(range(0,len(model.atoms)))
 
     check_total_trans_moment(target_atom_ids, rest.vel, atom_id_mass, rigid_units)
@@ -468,15 +488,19 @@ def _main():
     ## 
 
     shk = None
+    shkr = None
     n_shk = 0
     if opts.fn_shk:
         print "READ SHK: " + opts.fn_shk
-        shk = kkpresto_shake.SHKReader(opts.fn_shk).read_shk()
-
+        shkr = kkpresto_shake.SHKReader(opts.fn_shk)
+        shkr.read_shk()
+        shkr.expand_shake_info(tpl)
+        shk = shkr.shake
+        
     if opts.fn_restart:
         print "GENERATE VELOCITIES: "
         rest.n_vel = len(model.atoms)
-        rest.vel = generate_velocities(model, tpl, shk,
+        rest.vel = generate_velocities(model, tpl, shkr,
                                        opts.temperature,
                                        opts.flg_mol)
 
@@ -488,7 +512,7 @@ def _main():
 
         if opts.check:
             print "CHECKING THE RESTART FILE: "
-            check_restart(opts.fn_restart, model, tpl, shk)
+            check_restart(opts.fn_restart, model, tpl, shkr)
 
 if __name__ == "__main__":
     _main()
