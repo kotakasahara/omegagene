@@ -359,27 +359,27 @@ int ExtendedVAUS::scale_force(real lambda, real_fc* work, int n_atoms){
   // case 1 : under the lower limit
   real param = lambda;
   real recovery = 0.0;
-  
-  if (param <= vstates[cur_vs].get_lambda_low() - sigma){
-    recovery = recov_coef * ( param - vstates[cur_vs].get_lambda_low() - sigma);
+
+  if (param <= vstates[cur_vs].get_lambda_low()){
+    if (param <= vstates[cur_vs].get_lambda_low() - sigma)
+      recovery = recov_coef * ( param - vstates[cur_vs].get_lambda_low() - sigma);
     param = vstates[cur_vs].get_lambda_low();
-      //reparam = vstates[cur_vs].get_lambda_low();
-  }else if(param >= vstates[cur_vs].get_lambda_high() + sigma){
-    recovery = recov_coef * ( param - vstates[cur_vs].get_lambda_high() + sigma);
+  }else if(param >= vstates[cur_vs].get_lambda_high()){  
+    if(param >= vstates[cur_vs].get_lambda_high() + sigma)
+      recovery = recov_coef * ( param - vstates[cur_vs].get_lambda_high() + sigma);
     param = vstates[cur_vs].get_lambda_high();
   }
-  
   //cout << " param " << param << endl;
   //cout << "dbg0522 1 " << param << " recov: " << recovery << endl;
   real tmp_lambda = 1.0;
   real d_ln_p = vstates[cur_vs].get_poly_param(0);
-  for(int i=1; i < vstates[cur_vs].get_order()+1; i++){
+  for(int i=1; i <= vstates[cur_vs].get_order(); i++){
     tmp_lambda *= param;
     d_ln_p += vstates[cur_vs].get_poly_param(i) * tmp_lambda;
   }
   
   //real k = (GAS_CONST / JOULE_CAL) * 1e-3;
-  real dew = 2.0 * const_k * ( d_ln_p + recovery );
+  real dew = const_k * d_ln_p + recovery;
   //cout << "dbg0522 "<<dew << endl;
   int n_atoms_3 = n_atoms * 3;
   for(int i_pair = 0; i_pair < n_enhance_group_pairs; i_pair++){
@@ -387,29 +387,48 @@ int ExtendedVAUS::scale_force(real lambda, real_fc* work, int n_atoms){
     for(int pair_ab=0; pair_ab < 2; pair_ab++){
       int i_grp = enhance_group_pairs[i_pair][pair_ab];
       int grp_id = enhance_groups[i_grp];
-      //cout << "pair : " << i_pair
-      //<< " " << enhance_group_pairs[i_pair][0]
-      //<< "-" << enhance_group_pairs[i_pair][1]
-      //<< " grp_id: " << grp_id 
-      //<< " dew: " << dew
-      //<< " unit: " << unit_vec[i_pair][0]
-      //<< " " << unit_vec[i_pair][1]
-      //<< " " << unit_vec[i_pair][2] << endl;
+      /*
+      cout << "lambda: " << lambda 
+	<< " dlnp: " << d_ln_p 
+	<< " recov: " << recovery 
+	<<" const_k: " << const_k
+	<< endl;
+	cout   << " pair : " << i_pair
+	<< " " << enhance_group_pairs[i_pair][0]
+	<< "-" << enhance_group_pairs[i_pair][1]
+	<< " grp_id: " << grp_id 
+	<< " dew: " << dew
+	<< " unit: " << unit_vec[i_pair][0]
+	<< " " << unit_vec[i_pair][1]
+	<< " " << unit_vec[i_pair][2] << endl;
+      */
       real bias[3];
       for(int d=0; d<3; d++)
-	bias[d] = dew * (real)mass_groups_inv[grp_id] 
-	  * unit_vec[i_pair][d];
+	bias[d] = dew * unit_vec[i_pair][d] * (real)mass_groups_inv[grp_id];
+      /// n_atoms_in_groups[grp_id];
       
       for(int i_at = 0; i_at < n_atoms_in_groups[grp_id]; i_at++){
 	int atom_id3 = atom_groups[grp_id][i_at] * 3;
+	/*
+	  cout 	  << " bias : " << atom_groups[grp_id][i_at] << " at:" << i_at
+	  << " ("<< atom_groups[grp_id][i_at] * 3  << ")"
+	  << " mass:"<< (real)mass[atom_groups[grp_id][i_at]]
+	  << direction << " " << grp_id << " "
+	  <<endl;
+	  cout << "prev:   " << work[atom_id3+0] << " " << work[atom_id3+1] << " " 
+	  << work[atom_id3+2] << endl;
+	*/
 	for(int d=0; d<3; d++){
 	  work[atom_id3+d] += direction * bias[d] * (real)mass[atom_groups[grp_id][i_at]];
-	  
 	}
-	//cout << " bias : " << atom_groups[grp_id][i_at]  << " " 
-	//<< direction << " " << grp_id << " "
-	//<< bias[0] <<" " << bias[1] << " " << bias[2] << endl;
-
+	/*
+	  cout << "biased: " << work[atom_id3+0] << " " << work[atom_id3+1] << " " 
+	  << work[atom_id3+2] << endl;
+	  cout << "bias:   " << direction * bias[0] * (real)mass[atom_groups[grp_id][i_at]] << " "
+	  << direction * bias[1] * (real)mass[atom_groups[grp_id][i_at]] << " "
+	  << direction * bias[2] * (real)mass[atom_groups[grp_id][i_at]] <<endl;
+	*/
+	
       }
       direction *= -1.0;
     }
@@ -423,8 +442,7 @@ int ExtendedVAUS::scale_force(real lambda, real_fc* work, int n_atoms){
       int atom_id3 = atom_groups[grp_id][i_at] * 3;
       for(int d=0; d<3; d++)
 	work[atom_id3+d] += bias[d];
-      
-	}
+    }
     */
   }
   return 0;

@@ -2,7 +2,7 @@
 #EXECUTABLE = celeste_wons
   # without neighbor search
 #EXECUTABLE = celeste_gpuecp
-  # enumerate cell-pairs on cpu
+ # enumerate cell-pairs on cpu
 EXECUTABLE = celeste_gpu
 
 ICCFLAGS = -ansi -fast -w1 

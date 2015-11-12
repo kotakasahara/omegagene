@@ -41,26 +41,24 @@ class PrestoDistRest(object):
                                       self.atom_name[i])
             if aid[i] == -1:
                 sys.stderr.write("Distance restraint atom could not found: %d %d %s %s\n"%(self.molid[i], self.res_id[i], self.res_name[i], self.atom_name[i]))
+            #print "mol:" + str(self.molid[i]) + " res:" + str(self.res_id[i]) + " "+ self.res_name[i] + " " + self.atom_name[i] + " " + str(aid[i])
         self.atom_id = tuple(aid)
         return
     def set_atom_id(self, tpl,
                     molid, res_id, res_name,
                     atom_name):
         ## tpl is an instance of kkpresto.TPL
-        mol_type_id = 0
-        mol_id_in_type = 0
-        i = 0
+        mol_type_id = -1
+        i_mol_id = -1
         flg = False
         for mol in tpl.mols:
-            for i_mol in range(mol.mol_num):
-                if i == molid:
-                    flg=True
-                    break
-                mol_id_in_type += 1
-                i += 1
-            if flg: break
             mol_type_id += 1
-            if i == molid: break
+            mol_id_in_type = -1
+            for i_mol in range(mol.mol_num):
+                mol_id_in_type += 1
+                i_mol_id += 1
+                if i_mol_id == molid: break
+            if i_mol_id == molid: break
 
 
         ## tpl.mols[mol_type_id]
@@ -72,6 +70,7 @@ class PrestoDistRest(object):
                     atom.res_name == res_name and \
                     atom.atom_name == atom_name:
                 atom_id = mol.head_atom_id + mol_id_in_type * len(mol.atoms) + i
+                #print "head:" + str(mol.head_atom_id) +" mol_in_type:" + str(mol_id_in_type) + " n_atoms_mol:" + str(len(mol.atoms)) + " i:"+str(i)
                 return atom_id
         return -1
     
