@@ -1484,7 +1484,7 @@ int SubBox::update_velocities(const real time_step){
     for(int d=0; d<3; d++){    
       vel_next[atomid_b3+d] = vel[atomid_b3+d]  +
 	( time_step * 
-	  FORCE_VEL * 
+	  -FORCE_VEL * 
 	 work[atomid_b3+d] 
 	  * mass_inv[atomid_b]);
     }
@@ -1559,7 +1559,7 @@ int SubBox::copy_vel_just(real** p_vel){
   //     subbox.set_vel_just(mmsys.vel)
   //return get_vel(vel_just, p_vel);
 }
-int SubBox::set_force_from_velocity(const real time_step){
+/*int SubBox::set_force_from_velocity(const real time_step){
   time_step_inv = 1.0 / time_step;
   for(int atomid_b = 0, atomid_b3 = 0;
       atomid_b < all_n_atoms[rank];
@@ -1569,7 +1569,7 @@ int SubBox::set_force_from_velocity(const real time_step){
     }
   }  
   return 0;
-}
+  }*/
 int SubBox::copy_crd(real** p_crd){
   return copy_crdvel_to_mmsys(crd, p_crd);
 }

@@ -271,7 +271,7 @@ class SubBox : public CelesteObject {
   int update_velocities(const real time_step);
   int velocity_average();
   int set_velocity_from_crd();
-  int set_force_from_velocity(const real time_step);
+  //int set_force_from_velocity(const real time_step);
   int revise_coordinates_pbc();
   int copy_crd(real** p_crd);
   int copy_vel_just(real** p_vel);

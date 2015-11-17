@@ -68,8 +68,8 @@ int ThermostatScaling::apply_thermostat(int n_atoms,
   for(int i=0, i_3=0; i < n_atoms; i++, i_3+=3){
     real vel_norm = 0;
     for(int d=0; d < 3; d++){
-      real vel_tmp = vel[i_3+d] + 0.5 * 
-	(time_step * work[i_3+d] * mass_inv[i]);
+      real vel_tmp = vel[i_3+d] - 0.5 * 
+	(time_step * work[i_3+d] * FORCE_VEL * mass_inv[i]);
       vel_norm += vel_tmp * vel_tmp;
     }
     kine_pre += mass[i] * vel_norm;
@@ -79,7 +79,7 @@ int ThermostatScaling::apply_thermostat(int n_atoms,
   real scale = sqrt(temperature / dt_temperature);
   for(int i=0, i_3=0; i < n_atoms; i++, i_3+=3){
     for(int d=0; d < 3; d++){
-      real vel_diff = time_step * work[i_3+d] * mass_inv[i];
+      real vel_diff = time_step * -FORCE_VEL * work[i_3+d] * mass_inv[i];
       vel_next[i_3+d] = (2.0 * scale - 1.0) * vel[i_3+d] + scale * vel_diff;
     }
   }
@@ -136,7 +136,7 @@ int ThermostatScaling::apply_thermostat_with_shake(int n_atoms,
       for(int d=0; d < 3; d++){
 	//buf_crd2[i_atom_3+d] += (crd[i_atom_3+d] - buf_crd1[i_atom_3+d]) * time_step_inv_sq;
 	//real vel_diff = -FORCE_VEL * work[i_atom_3+d] * mass_inv[i_atom] + buf_crd2[i_atom_3+d];
-	real vel_diff = work[i_atom_3+d] * mass_inv[i_atom] + (crd[i_atom_3+d]-buf_crd[i_atom_3+d])*time_step_inv_sq;
+	real vel_diff = -FORCE_VEL*work[i_atom_3+d] * mass_inv[i_atom] + (crd[i_atom_3+d]-buf_crd[i_atom_3+d])*time_step_inv_sq;
 	//real vel_tmp = vel[i_atom_3+d] + 0.5 * cfg->time_step * vel_diff;
 	vel_next[i_atom_3+d] = vel[i_atom_3+d] + 0.5 * time_step * vel_diff;
 	real vel_tmp = vel_next[i_atom_3+d];
@@ -155,7 +155,7 @@ int ThermostatScaling::apply_thermostat_with_shake(int n_atoms,
       real vel_norm = 0.0;
       for(int d=0; d < 3; d++){
 	//real vel_diff = -FORCE_VEL * work[i_atom_3+d] * mass_inv[i_atom] + buf_crd[i_atom_3+d];
-	real vel_diff = work[i_atom_3+d] * mass_inv[i_atom] + (crd[i_atom_3+d]-buf_crd[i_atom_3+d])*time_step_inv_sq;
+	real vel_diff = -FORCE_VEL * work[i_atom_3+d] * mass_inv[i_atom] + (crd[i_atom_3+d]-buf_crd[i_atom_3+d])*time_step_inv_sq;
 	vel_next[i_atom_3+d] = (2.0 * scale - 1.0) * vel[i_atom_3+d]
 	  + scale * time_step * vel_diff;
 	real tmp_vel = (vel_next[i_atom_3+d] + vel[i_atom_3+d]) * 0.5;
