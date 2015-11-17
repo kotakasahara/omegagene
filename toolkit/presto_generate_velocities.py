@@ -207,7 +207,7 @@ def mb_dist_3d(temprature, mass):
     rand5 = random.random()
     rand6 = random.random()
     vx = numpy.sqrt(const * numpy.log(rand1))*numpy.cos(2*numpy.pi*rand2)
-    vy = numpy.sqrt(const * numpy.log(rand3))*numpy.cos(2*numpy.pi*rand5)
+    vy = numpy.sqrt(const * numpy.log(rand3))*numpy.cos(2*numpy.pi*rand4)
     vz = numpy.sqrt(const * numpy.log(rand5))*numpy.cos(2*numpy.pi*rand6)
     return numpy.array([vx,vy,vz])
 

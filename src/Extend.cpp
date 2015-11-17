@@ -12,7 +12,6 @@ void Extended::set_lambda_interval(int in_lambda_interval){
   write_lambda_interval = in_lambda_interval;
 }
 
-
 VirtualState::VirtualState()
   : CelesteObject(){
   poly_order = 0;
@@ -22,6 +21,7 @@ VirtualState::~VirtualState(){
   if(poly_order > 0)
     delete[] poly_params;
 }
+
 int VirtualState::set_order(int in_order){
   poly_order = in_order;
   poly_params = new real[poly_order+1];
@@ -363,11 +363,11 @@ int ExtendedVAUS::scale_force(real lambda, real_fc* work, int n_atoms){
 
   if (param <= vstates[cur_vs].get_lambda_low()){
     if (param <= vstates[cur_vs].get_lambda_low() - sigma)
-      recovery = recov_coef * ( param - vstates[cur_vs].get_lambda_low() - sigma);
+      recovery = recov_coef * ( param - (vstates[cur_vs].get_lambda_low() - sigma));
     param = vstates[cur_vs].get_lambda_low();
   }else if(param >= vstates[cur_vs].get_lambda_high()){  
     if(param >= vstates[cur_vs].get_lambda_high() + sigma)
-      recovery = recov_coef * ( param - vstates[cur_vs].get_lambda_high() + sigma);
+      recovery = recov_coef * ( param - (vstates[cur_vs].get_lambda_high() + sigma));
     param = vstates[cur_vs].get_lambda_high();
   }
   //cout << " param " << param << endl;
@@ -380,11 +380,11 @@ int ExtendedVAUS::scale_force(real lambda, real_fc* work, int n_atoms){
   }
   
   //real k = (GAS_CONST / JOULE_CAL) * 1e-3;
-  real dew = const_k * d_ln_p + recovery;
+  real dew = const_k * (d_ln_p + recovery);
   //cout << "dbg0522 "<<dew << endl;
   int n_atoms_3 = n_atoms * 3;
   for(int i_pair = 0; i_pair < n_enhance_group_pairs; i_pair++){
-    real direction = -1.0;
+    real direction = 1.0;
     for(int pair_ab=0; pair_ab < 2; pair_ab++){
       int i_grp = enhance_group_pairs[i_pair][pair_ab];
       int grp_id = enhance_groups[i_grp];
