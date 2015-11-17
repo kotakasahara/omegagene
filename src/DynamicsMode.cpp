@@ -272,31 +272,6 @@ int DynamicsMode::sub_output_log(){
     cout << ss.str();
   return 0;
 }
-/*
-int DynamicsMode::update_velocities(real firstcoeff){
-  mmsys.velocity_swap();
-  // real firstcoeff ...
-  //   1.0 for the first step ??
-  for(int atomid=0; atomid < mmsys.n_atoms; atomid++){
-    for(int d=0; d < 3; d++){
-      //cout << "atomid:" << atomid << " dim:"<<d<<endl;
-      //cout << "time_step: " << time_step << " force_val: " << FORCE_VEL <<endl;
-      //      cout << "mass: " << mmsys.mass[atomid] << endl;
-      mmsys.vel_next[atomid][d] = mmsys.vel[atomid][d] - 
-	(firstcoeff * time_step *
-	 FORCE_VEL * mmsys.force[atomid][d] / mmsys.mass[atomid]);
-    }
-    //cout << "vel1 " << atomid << " " << mmsys.vel[atomid][0] << " , ";
-    //cout << mmsys.vel[atomid][1] << " , ";
-    //cout << mmsys.vel[atomid][2] << endl;
-    //cout << "vel_next1 " << atomid << " " << mmsys.vel_next[atomid][0] << " , ";
-    //cout << mmsys.vel_next[atomid][1] << " , ";
-    //cout << mmsys.vel_next[atomid][2] << endl;
-  }
-  mmsys.velocity_average();
-  return 0;
-}
-*/
 int DynamicsMode::cal_kinetic_energy(const real** vel){
   real_fc kine_pre = 0.0;
   for(int atomid=0; atomid < mmsys.n_atoms; atomid++){
@@ -432,7 +407,7 @@ int DynamicsModePresto::calc_in_each_step(){
   mmsys.reset_energy();
   const clock_t endTimeReset = clock();
   mmsys.ctime_cuda_reset_work_ene += endTimeReset - startTimeReset;
-  
+
 #ifndef F_WO_NS
   const clock_t startTimeHtod = clock();
   if(mmsys.cur_step%cfg->nsgrid_update_intvl==0){
@@ -446,10 +421,10 @@ int DynamicsModePresto::calc_in_each_step(){
   mmsys.ctime_cuda_htod_atomids += endTimeHtod - startTimeHtod;
 #endif
   const clock_t startTimeEne = clock();
-
   subbox.calc_energy();
   //cout << "gather_energies()"<<endl;
   gather_energies();
+
   if(cfg->dist_restraint_type != DISTREST_NONE || 
      cfg->pos_restraint_type != POSREST_NONE ){
     subbox.copy_crd(mmsys.crd);
@@ -458,6 +433,7 @@ int DynamicsModePresto::calc_in_each_step(){
     if(cfg->pos_restraint_type != POSREST_NONE)
       apply_pos_restraint();
   }
+
   const clock_t endTimeEne = clock();
   mmsys.ctime_calc_energy += endTimeEne - startTimeEne;
 
@@ -477,6 +453,7 @@ int DynamicsModePresto::calc_in_each_step(){
   const clock_t startTimeCoord = clock();
 
   subbox.cancel_com_motion();
+
   //if(mmsys.leapfrog_coef == 1.0){
   if(cfg->thermostat_type == THMSTT_SCALING){
     subbox.update_thermostat(mmsys.cur_step);
@@ -485,6 +462,8 @@ int DynamicsModePresto::calc_in_each_step(){
       subbox.apply_thermostat();
     }
   }
+
+
   //}
   //cout << "update_coordinates"<<endl;  
   subbox.cpy_crd_prev();

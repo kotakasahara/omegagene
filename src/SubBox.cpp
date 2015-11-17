@@ -968,10 +968,9 @@ int SubBox::calc_energy(){
   pote_ele += nsgrid.get_energy()[1];
 #endif
 
-  for ( int i = 0; i < n_atoms_box*3; i++){
-    work[i] *= -FORCE_VEL;
-  }
-
+  //for ( int i = 0; i < n_atoms_box*3; i++){
+  //work[i] *= -FORCE_VEL;
+  //}
 
   //cout << "nsgrid.get_energy()[1]" << nsgrid.get_energy()[1] << endl;
 
@@ -1091,6 +1090,9 @@ int SubBox::calc_energy_pairwise(){
       }
     }
   }
+
+  
+
   /*
   cout << "nb15off pairs " << n_pairs_15off << endl;
   cout << "15 pairs: " << n_pairs_nonzero << " / " << n_pairs_incutoff << " / " << n_pairs << endl;
@@ -1482,7 +1484,7 @@ int SubBox::update_velocities(const real time_step){
     for(int d=0; d<3; d++){    
       vel_next[atomid_b3+d] = vel[atomid_b3+d]  +
 	( time_step * 
-	 //	 FORCE_VEL * 
+	  FORCE_VEL * 
 	 work[atomid_b3+d] 
 	  * mass_inv[atomid_b]);
     }
@@ -2000,3 +2002,9 @@ int SubBox::get_global_region_id_from_box_region(int boxid, int regionid){
 }
 
 */
+int SubBox::print_work(int atom_id){
+  cout << "Debug SubBox::print work : " << atom_id << endl;
+  cout << work[atom_id*3+0] << " " << work[atom_id*3+1] 
+       << " " << work[atom_id*3+2] << endl;
+  return 0;
+}

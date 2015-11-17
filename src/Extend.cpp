@@ -356,6 +356,7 @@ real ExtendedVAUS::cal_struct_parameters(real* crd, PBC* pbc){
 
 int ExtendedVAUS::scale_force(real lambda, real_fc* work, int n_atoms){
   
+
   // case 1 : under the lower limit
   real param = lambda;
   real recovery = 0.0;
@@ -387,7 +388,7 @@ int ExtendedVAUS::scale_force(real lambda, real_fc* work, int n_atoms){
     for(int pair_ab=0; pair_ab < 2; pair_ab++){
       int i_grp = enhance_group_pairs[i_pair][pair_ab];
       int grp_id = enhance_groups[i_grp];
-      /*
+
       cout << "lambda: " << lambda 
 	<< " dlnp: " << d_ln_p 
 	<< " recov: " << recovery 
@@ -401,15 +402,15 @@ int ExtendedVAUS::scale_force(real lambda, real_fc* work, int n_atoms){
 	<< " unit: " << unit_vec[i_pair][0]
 	<< " " << unit_vec[i_pair][1]
 	<< " " << unit_vec[i_pair][2] << endl;
-      */
+
       real bias[3];
       for(int d=0; d<3; d++)
-	bias[d] = dew * unit_vec[i_pair][d] * (real)mass_groups_inv[grp_id];
+	bias[d] = dew * unit_vec[i_pair][d] / (real)n_atoms_in_groups[grp_id]; // * (real)mass_groups_inv[grp_id];
       /// n_atoms_in_groups[grp_id];
       
       for(int i_at = 0; i_at < n_atoms_in_groups[grp_id]; i_at++){
 	int atom_id3 = atom_groups[grp_id][i_at] * 3;
-	/*
+
 	  cout 	  << " bias : " << atom_groups[grp_id][i_at] << " at:" << i_at
 	  << " ("<< atom_groups[grp_id][i_at] * 3  << ")"
 	  << " mass:"<< (real)mass[atom_groups[grp_id][i_at]]
@@ -417,17 +418,17 @@ int ExtendedVAUS::scale_force(real lambda, real_fc* work, int n_atoms){
 	  <<endl;
 	  cout << "prev:   " << work[atom_id3+0] << " " << work[atom_id3+1] << " " 
 	  << work[atom_id3+2] << endl;
-	*/
+
 	for(int d=0; d<3; d++){
-	  work[atom_id3+d] += direction * bias[d] * (real)mass[atom_groups[grp_id][i_at]];
+	  work[atom_id3+d] += direction * bias[d];// * (real)mass[atom_groups[grp_id][i_at]];
 	}
-	/*
+
 	  cout << "biased: " << work[atom_id3+0] << " " << work[atom_id3+1] << " " 
 	  << work[atom_id3+2] << endl;
 	  cout << "bias:   " << direction * bias[0] * (real)mass[atom_groups[grp_id][i_at]] << " "
 	  << direction * bias[1] * (real)mass[atom_groups[grp_id][i_at]] << " "
 	  << direction * bias[2] * (real)mass[atom_groups[grp_id][i_at]] <<endl;
-	*/
+
 	
       }
       direction *= -1.0;

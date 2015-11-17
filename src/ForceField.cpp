@@ -66,6 +66,7 @@ int ForceField::calc_bond(real& ene, real_fc work[],
   cout << " param_e: " << param_e << "  param_r0: " << param_r0 << endl;
   cout << " coef: " << coef << " grad_coef:" << grad_coef << endl;
   cout << " r12: " << r12 << " diff: " << dif << " ene: " << ene << endl;
+  cout << " grad: " << work[0]  << " " << work[1] << " " << work[2] << endl;
   */
   return 0;
 }
@@ -296,7 +297,7 @@ real_pw ForceField::calc_pairwise(real_pw& ene_vdw, real_pw& ene_ele,
   real_pw work_coef = r12_2_inv * (-12.0 * term12 + 6.0 * term6);
   for (int d=0; d<3; d++)
     work_vdw[d] = work_coef * d12[d];
-
+  //cout << "dbg vdw " << r12 << " " << param_6term << " " << param_12term <<  " " << work_vdw[0] << " "  << work_vdw[1] << " " << work_vdw[2] << endl;
   real_pw cc = charge1 * charge2 * CHARGE_COEFF;
 
   real_pw work_coef_ele;
@@ -315,9 +316,11 @@ real_pw ForceField::calc_pairwise(real_pw& ene_vdw, real_pw& ene_ele,
 
   for(int d=0; d<3; d++)
     work[d] = work_vdw[d] + work_ele[d];
+  //cout << "kk dbg force " << work[0]<<" " << work[1] <<" " << work[2]<<endl;
 
   return r12;
 }
+
 int ForceField::calc_zms_excess(real& ene, real_fc work[],
 				real* crd1,
 				real* crd2,
