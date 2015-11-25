@@ -182,16 +182,16 @@ int MmSystem::alloc_nb14(){
 
 int MmSystem::alloc_nb15off(){
   nb15off = new int[n_atoms * max_n_nb15off];
-  nb15off1 = new int[n_atoms];
-  nb15off2 = new int[n_atoms];
+  //nb15off1 = new int[n_atoms];
+  //nb15off2 = new int[n_atoms];
   n_nb15off = 0;
   for(int i=0; i < n_atoms; i++){
     //debug
     for(int j=0; j < max_n_nb15off; j++){
       nb15off[i*max_n_nb15off+j] = -1;
-    }
-   nb15off1[i] = 0;
-    nb15off2[i] = 0;
+      }
+    //   nb15off1[i] = 0;
+    //nb15off2[i] = 0;
   }
   return 0;
 }
@@ -288,8 +288,8 @@ int MmSystem::free_nb14(){
 
 int MmSystem::free_nb15off(){
   delete[] nb15off;
-  delete[] nb15off1;
-  delete[] nb15off2;
+  //delete[] nb15off1;
+  //delete[] nb15off2;
   
   return 0;
 }
@@ -395,23 +395,23 @@ bool MmSystem::search_nb15off(int atomid1, int atomid2){
   // if the atompair (atomid1, atomid2) is 
   // in the list of nb15off, the function returns false
   bool flg1 = false;
-  int aid_diff = atomid2 - atomid1;
-  int bit_idx = atomid1;
-  if(aid_diff < 0){
-    aid_diff = -aid_diff;
-    bit_idx = atomid2;
-  }
-  int mask1 = 0;
-  int mask2 = 0;
-  if(aid_diff <= 32)
-    mask1 = 1 << (aid_diff-1);
-  else if(aid_diff > 32 && aid_diff <= 64)
-    mask2 = 1 << (aid_diff-33);
-  if(aid_diff > 0 && mask1 != 0 &&
-     (mask1 & nb15off1[bit_idx]) == mask1) {flg1=true;}
-  if(aid_diff > 32 && mask2 != 0 &&
-     (mask2 & nb15off2[bit_idx]) == mask2) {flg1=true;}
-  if(aid_diff > 64) flg1=false;
+  //int aid_diff = atomid2 - atomid1;
+  //int bit_idx = atomid1;
+  //if(aid_diff < 0){
+  //aid_diff = -aid_diff;
+  //bit_idx = atomid2;
+  //}
+  //int mask1 = 0;
+  //int mask2 = 0;
+  //if(aid_diff <= 32)
+  //mask1 = 1 << (aid_diff-1);
+  //else if(aid_diff > 32 && aid_diff <= 64)
+  //mask2 = 1 << (aid_diff-33);
+  //if(aid_diff > 0 && mask1 != 0 &&
+  //(mask1 & nb15off1[bit_idx]) == mask1) {flg1=true;}
+  //if(aid_diff > 32 && mask2 != 0 &&
+  //(mask2 & nb15off2[bit_idx]) == mask2) {flg1=true;}
+  //if(aid_diff > 64) flg1=false;
 
   bool flg2=false;
   int tail = max_n_nb15off * atomid1 + max_n_nb15off;
@@ -446,8 +446,8 @@ bool MmSystem::search_nb15off(int atomid1, int atomid2){
     cout << endl;
   }
 */
-  return flg1;
-  //return flg2;
+  //return flg1;
+  return flg2;
 }
 
 int MmSystem::set_nb15off(int atomid1, int atomid2){
@@ -469,32 +469,32 @@ int MmSystem::set_nb15off(int atomid1, int atomid2){
   nb15off[atomid2 * max_n_nb15off + i] = atomid1;
   n_nb15off+=2;
 
-  if(atomid1 > atomid2){
-    int tmp = atomid1;
-    atomid1 = atomid2;
-    atomid2 = tmp;
-  }else if(atomid1 == atomid2) return 1;
-  int id_diff = atomid2 - atomid1;
-  int add_bit1 = 0;
-  int add_bit2 = 0;
-  if(id_diff <= 32){
-    add_bit1 = 1 << (id_diff-1);
-  }else if(id_diff <= 64){
-    add_bit2 = 1 << (id_diff-33);
-  }else{
-    cerr << "The atom pair [" << atomid2 << "-" << atomid1 << "] " ;
-    cerr << "was within four covalent bonds and in exclusion list of non bonded pair potential. ";
-    cerr << "However this software requires that differences of ";
-    cerr << "atom ids of pairs in the exclusion list ";
-    cerr << "must be equal or less than 64. ";
-    cerr << "Reordering of atoms in the topology file and strucure file are needed.";
-    cerr << endl;
-    exit(1);
-  }
-  int tmp1 = nb15off1[atomid1];
-  int tmp2 = nb15off2[atomid1];
-  nb15off1[atomid1] = tmp1 | add_bit1;
-  nb15off2[atomid1] = tmp2 | add_bit2;
+  //if(atomid1 > atomid2){
+  //int tmp = atomid1;
+  //atomid1 = atomid2;
+  //atomid2 = tmp;
+  //}else if(atomid1 == atomid2) return 1;
+  //int id_diff = atomid2 - atomid1;
+  //int add_bit1 = 0;
+  //int add_bit2 = 0;
+  //if(id_diff <= 32){
+  //add_bit1 = 1 << (id_diff-1);
+  //}else if(id_diff <= 64){
+  //add_bit2 = 1 << (id_diff-33);
+  //}else{
+  //cerr << "The atom pair [" << atomid2 << "-" << atomid1 << "] " ;
+  //cerr << "was within four covalent bonds and in exclusion list of non bonded pair potential. ";
+  //cerr << "However this software requires that differences of ";
+  //cerr << "atom ids of pairs in the exclusion list ";
+  //cerr << "must be equal or less than 64. ";
+  //cerr << "Reordering of atoms in the topology file and strucure file are needed.";
+  //cerr << endl;
+  //exit(1);
+  //}
+  //int tmp1 = nb15off1[atomid1];
+  //int tmp2 = nb15off2[atomid1];
+  //nb15off1[atomid1] = tmp1 | add_bit1;
+  //nb15off2[atomid1] = tmp2 | add_bit2;
 
   //if(nb15off1[atomid1] != tmp1 || nb15off2[atomid1] != tmp2) n_nb15off++;
   //  cout << "//set_nb15off"<< endl;
