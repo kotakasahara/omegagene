@@ -154,8 +154,12 @@ class ExtendedVAUS : public ExtendedVMcMD {
   
   // from MmSystem
 
+  real*** crd_groups;
+  // crd_groups[group][atom][xyz]
   real** crd_centers;
+  // crd_centers[group][xyz]
   real** unit_vec;
+  // unit_vec[group][xyz]
 
  public:
   ExtendedVAUS();
@@ -164,6 +168,7 @@ class ExtendedVAUS : public ExtendedVMcMD {
   int alloc_crd_centers();
   int free_crd_centers();
   real set_crd_centers(real* crd, PBC* pbc);
+  int set_init_crd_groups(real* crd);
   virtual real cal_struct_parameters(real* crd, PBC* pbc);
 
   //int set_n_vstates(int in_n_vstates);

@@ -290,6 +290,15 @@ ExtendedVAUS::~ExtendedVAUS(){
   free_crd_centers();
 }
 int ExtendedVAUS::alloc_crd_centers(){
+  crd_groups = new real**[n_enhance_groups];
+  for(int i=0; i < n_enhance_groups; i++){
+    int grp_id = enhance_groups[i_grp];
+    crd_groups[i] = new real*[n_atoms_in_groups[grp_id]];
+    for(int j=0; j < n_atoms_in_groups[grp_id]; j++){
+      crd_groups[i][j] = new real[3];
+    }
+  }
+
   crd_centers = new real*[n_enhance_groups];
   for(int i=0; i < n_enhance_groups; i++){
     crd_centers[i] = new real[3];
@@ -301,6 +310,15 @@ int ExtendedVAUS::alloc_crd_centers(){
   return 0;
 }
 int ExtendedVAUS::free_crd_centers(){
+  for(int i=0; i < n_enhance_groups; i++){
+    int grp_id = enhance_groups[i_grp];
+    for(int j=0; j < n_atoms_in_groups[grp_id]; j++){
+      delete[] crd_groups[i][j];
+    }
+    delete[] crd_groups[i];
+  }
+  delete[] crd_groups;
+
   for(int i=0; i < n_enhance_groups; i++){
     delete[] crd_centers[i];
   }
@@ -316,22 +334,45 @@ real ExtendedVAUS::set_crd_centers(real* crd, PBC* pbc){
     int grp_id = enhance_groups[i_grp];
     int aid0 = atom_groups[grp_id][0];
     int aid0_3 = aid0*3;
-    for ( int d=0; d<3; d++)
-      crd_centers[i_grp][d] = crd[aid0_3+d]*mass[aid0];
+    real crd0[3] = {crd[aid0_3], crd[aid0_3+1], crd[aid0_3+2]};
+    for ( int d=0; d<3; d++){
+      crd_centers[i_grp][d] = crd[aid0_3+d] * mass[aid0];
+    }
     for (int i_atm=1; i_atm < n_atoms_in_groups[grp_id]; i_atm++){
       int aid1 = atom_groups[grp_id][i_atm];
-      //int aid1 = enhance_groups[i_grp][i_atm];
       int aid1_3 = aid1*3;
+      real crd1[3] = {crd[aid1_3], crd[aid1_3+1], crd[aid1_3+2]};
+      real d_crd[3];
+      pbc->diff_crd_minim_image(d_crd, crd0, crd1);
       for(int d=0; d<3; d++){
-	real diff = crd[aid0_3+d] - crd[aid1_3+d];
-	real mod_crd = crd[aid1_3+d];
-	if(diff > pbc->L_half[d])       mod_crd += pbc->L[d];
-	else if(-diff > pbc->L_half[d]) mod_crd -= pbc->L[d];
-	crd_centers[i_grp][d] += mod_crd * mass[aid1];
+	crd_centers[i_grp][d] += (crd0[d] - d_crd[d]) * mass[aid1];
       }
     }
-    for(int d=0; d<3; d++) crd_centers[i_grp][d] *= mass_groups_inv[grp_id];
-  }
+    for(int d=0; d<3; d++){
+      crd_centers[i_grp][d] *= mass_groups_inv[grp_id];
+    }
+  }    
+  //cout << "dbg1126 center " << crd_centers[0][0] << " "
+  //<< crd_centers[0][1] << " "
+  //<< crd_centers[0][2] << " "
+  //<< crd_centers[1][0] << " "
+  //<< crd_centers[1][1] << " "<< crd_centers[1][2] << endl;
+  return 0;
+}
+
+int ExtendedVAUS::set_init_crd_groups(real* crd){
+  for ( int i_grp=0; i_grp < n_enhance_groups; i_grp++){
+    int grp_id = enhance_groups[i_grp];
+    for ( int i_atm_grp = 0;
+	  i_atm_grp < n_atoms_in_groups[grp_id];
+	  i_atm_grp++){
+      int aid0 = atom_gropus[grp_id][0];
+      int aid0_3 = aid0 * 3;
+      for ( int d = 0; d < 3; d++){
+	crd_groups[i_grp][i_atm_grp][d] = crd[aid0_3+d];
+      }
+    }
+  }  
   return 0;
 }
 

@@ -1556,7 +1556,7 @@ int SubBox::copy_vel_just(real** p_vel){
   /// copy velocities from this object to the mmsys
   //  this.vel_just => mmsys.p_vel
   //  it called from DynamicsMoce.cpp
-  //     subbox.set_vel_just(mmsys.vel)
+
   //return get_vel(vel_just, p_vel);
 }
 /*int SubBox::set_force_from_velocity(const real time_step){
