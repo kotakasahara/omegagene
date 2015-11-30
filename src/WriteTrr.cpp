@@ -296,14 +296,39 @@ int WriteRestart::write_restart(int n_atoms, int n_steps,
   return 0;
 }
 
-WriteAUSRestart::WriteAUSRestart(){
+WriteGroupCoord::WriteGroupCoord(){
 }
-WriteAUSRestart::~WriteAUSRestart(){
+WriteGroupCoord::~WriteGroupCoord(){
 }
-int WriteAUSRestart::write_aus_restart(const int aus_type,
-				       vector<int> group_id,
-				       int** atom_groups,
-				       real** crd){
+
+int WriteGroupCoord::write_aus_restart(const int aus_type,
+				       int n_enhance_groups,
+				       vector<int> enhance_groups,
+				       int* n_atoms_in_groups,
+				       real*** crd_groups){
   
+  int buf = 5;
+  ofs.write((const char*)&buf, sizeof(int));
+  ofs.write("V-AUS", 5);
+  
+  ofs.write((const char*)&aus_type, sizeof(int));
+  ofs.write((const char*)&n_enhance_groups, sizeof(int));
+  for(int k=0; k < n_enhance_groups; k++){
+    ofs.write((const char*)&enhance_groups[k], sizeof(int));
+  }
+  for(int k=0; k < n_enhance_groups; k++){
+    ofs.write((const char*)&n_atoms_in_groups[enhance_groups[k]], sizeof(int));
+  }
+
+  for(int k=0; k < n_enhance_groups; k++){
+    for(int i=0; i < n_atoms_in_groups[enhance_groups[k]]; i++){
+      double x = crd_groups[k][i][0];
+      double y = crd_groups[k][i][1];
+      double z = crd_groups[k][i][2];
+      ofs.write((const char*)&x, sizeof(double));
+      ofs.write((const char*)&y, sizeof(double));
+      ofs.write((const char*)&z, sizeof(double));
+    }
+  }  
   return 0;
 }

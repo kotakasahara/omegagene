@@ -4,6 +4,7 @@
 #include "CelesteObject.h"
 
 #include "Write.h"
+#include "WriteTrr.h"
 #include "PBC.h"
 
 #include <cmath>
@@ -79,14 +80,24 @@ class ExtendedVMcMD : public Extended {
   int* n_atoms_in_groups;
   int** atom_groups;
   int n_enhance_groups;
-  int* enhance_groups;
+  vector<int> enhance_groups;
   int n_enhance_group_pairs;
   int** enhance_group_pairs;
 
+  real*** crd_groups;
+  // crd_groups[group][atom][xyz]
+  real** crd_centers;
+  // crd_centers[group][xyz]
+  real** unit_vec;
+  // unit_vec[group][xyz]
+
+  int aus_type;
  public:
   ExtendedVMcMD();
   ~ExtendedVMcMD();
   
+  int alloc_crd_centers();
+  int free_crd_centers();
   int set_n_vstates(int in_n_vstates);
   void set_trans_interval(int in_trans_interval);
   void set_temperature(real in_tmp);
@@ -124,12 +135,16 @@ class ExtendedVMcMD : public Extended {
   int set_vs_poly_param(int vs_id, int ord, real param);
   int print_info();
   virtual real cal_struct_parameters(real* crd, PBC* pbc);  
-  virtual int set_enhance_groups(int* in_n_atoms_in_groups,
+  int set_enhance_groups(int* in_n_atoms_in_groups,
 				 int** in_atom_groups,
 				    int in_n_enhance_groups,
-				 int* in_enhance_groups);
+				 vector<int> in_enhance_groups);
   int set_mass(real_pw* in_mass, real_pw* in_mass_groups, real_pw* in_mass_groups_inv);
-  int set_params(real in_sigme, real in_recov_coef);
+  int set_params(real in_sigma, real in_recov_coef);
+  void set_aus_type(int in_aus_type){ aus_type = in_aus_type; };
+
+  int write_aus_restart(string fn_out);
+  real*** get_crd_groups(){ return crd_groups; };
 };
 
 
@@ -154,19 +169,11 @@ class ExtendedVAUS : public ExtendedVMcMD {
   
   // from MmSystem
 
-  real*** crd_groups;
-  // crd_groups[group][atom][xyz]
-  real** crd_centers;
-  // crd_centers[group][xyz]
-  real** unit_vec;
-  // unit_vec[group][xyz]
 
  public:
   ExtendedVAUS();
   ~ExtendedVAUS();
   
-  int alloc_crd_centers();
-  int free_crd_centers();
   real set_crd_centers(real* crd, PBC* pbc);
   int set_init_crd_groups(real* crd);
   virtual real cal_struct_parameters(real* crd, PBC* pbc);
@@ -207,10 +214,6 @@ class ExtendedVAUS : public ExtendedVMcMD {
   //real alpha_low, real alpha_high);
   //int set_vs_poly_param(int vs_id, int ord, real param);
   //int print_info();
-  virtual int set_enhance_groups(int* in_n_atoms_in_groups,
-				 int** in_atom_groups,
-				    int in_n_enhance_groups,
-				 int* in_enhance_groups);
 };
 
 #endif

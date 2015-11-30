@@ -56,7 +56,14 @@ class Config(object):
             "fn-i-atom-groups":ConfigReader.STR,
             "fn-i-dist-restraint":ConfigReader.STR,
             "fn-i-position-restraint":ConfigReader.STR,
-            "mol-settle":ConfigReader.ARRAY_STR
+            "mol-settle":ConfigReader.ARRAY_STR,
+            
+            "fn-i-aus-restart":ConfigReader.STR,
+            "aus-type":ConfigReader.STR,
+            "enhance-group-name":ConfigReader.ARRAY_STR,
+
+            "dummy":ConfigReader.STR
+
             }
         for key, k_type in self.type_def.items():
             if is_array_type(k_type):
@@ -137,7 +144,7 @@ class ConfigReader(kkkit.FileI):
                     val_c = int(val)
                 vals_conv.append(val_c)
 
-            config.set_val(key,vals_conv)
+            config.set_val(key, vals_conv)
 
             line = self.read_line_com()
         self.close()

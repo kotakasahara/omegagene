@@ -74,16 +74,16 @@ int DynamicsMode::initial_preprocess(){
     cout << "  VS log output ... " << cfg->fn_o_vmcmd_log << endl;
     cout << "  Lambda output ... " << cfg->fn_o_extended_lambda << endl;
     mmsys.vmcmd->set_files(cfg->fn_o_vmcmd_log,
-			  cfg->fn_o_extended_lambda,
-			  cfg->format_o_extended_lambda);
+			   cfg->fn_o_extended_lambda,
+			   cfg->format_o_extended_lambda);
     mmsys.vmcmd->set_lambda_interval(cfg->print_intvl_extended_lambda);
     mmsys.vmcmd->print_info();
-    mmsys.vmcmd->set_params(cfg->enhance_sigma, cfg->enhance_recov_coef);
-    mmsys.vmcmd->set_enhance_groups(mmsys.n_atoms_in_groups,
-				   mmsys.atom_groups,
-				   mmsys.n_enhance_groups,
-				   mmsys.enhance_groups);
 
+    mmsys.vmcmd->set_params(cfg->enhance_sigma, cfg->enhance_recov_coef); //, cfg->aus_type);
+    
+    //for(int i_grp=0; i_grp < mmsys.n_groups; i_grp++){
+    //cout << "dbg1130 massDM " << i_grp << " " << mmsys.mass_inv_groups[i_grp]<<endl;
+    //}
     mmsys.vmcmd->set_mass(subbox.get_mass(),
 			  mmsys.mass_groups,
 			  mmsys.mass_inv_groups);
@@ -99,7 +99,7 @@ int DynamicsMode::initial_preprocess(){
 			mmsys.mass_inv_groups);
   
   mmsys.print_com_cancel_groups();
-  mmsys.print_enhance_groups();
+  //mmsys.print_enhance_groups();
   mmsys.print_out_group();
 
   //subbox.set_com_motion(cfg->n_com_cancel_groups,
@@ -141,6 +141,7 @@ int DynamicsMode::main_stream(){
     }
     sub_output();
   }
+  
   output_restart();
   cout << "== An additional step. ==" << endl;
   calc_in_each_step();
@@ -159,6 +160,11 @@ int DynamicsMode::output_restart(){
 					mmsys.pote_vdw + mmsys.pote_ele),
 			       (double)mmsys.kinetic_e,
 			       mmsys.crd, mmsys.vel_just);
+  
+  if(cfg->extended_ensemble == EXTENDED_VAUS){
+    subbox.extended_write_aus_restart(cfg->fn_o_aus_restart);
+  }
+
   return 0;
 }
 

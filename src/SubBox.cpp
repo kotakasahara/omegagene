@@ -1843,6 +1843,10 @@ int SubBox::extended_apply_bias_struct_param(unsigned long cur_step){
   extended->apply_bias(cur_step, param, work, n_atoms_box);
   return 0;
 }
+int SubBox::extended_write_aus_restart(string fn_out){
+  extended->write_aus_restart(fn_out);
+  return 0;
+}
 void SubBox::extended_enable_vs_transition(){
   extended->enable_vs_transition();
 }

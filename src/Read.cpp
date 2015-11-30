@@ -108,7 +108,7 @@ int Read::load_launch_set(MmSystem& mmsys){
   }
   if(size_extended > 0){
     cout << "--- Load extendeded ensemble definition : " << size_extended << " bytes." << endl;
-    load_ls_vmcmd(mmsys.vmcmd);
+    load_ls_vmcmd(mmsys);
   }
   if(size_groups > 0){
     cout << "--- Load atom group definition : " << size_groups << " bytes." << endl;
@@ -121,6 +121,10 @@ int Read::load_launch_set(MmSystem& mmsys){
   if(size_pos_restraint > 0){
     cout << "--- Load position restraint definition : " << size_pos_restraint << " bytes." << endl;
     load_ls_pos_restraint(mmsys.pos_restraint);
+  }
+  if(size_group_coord > 0){
+    cout << "--- Load group coordinates for restarting V-AUS: " << size_group_coord << " bytes." << endl;
+    load_ls_group_coord(mmsys);
   }
   //cout << "load_ls_pcluster()" << endl;
   //load_ls_pcluster(mmsys);
@@ -138,8 +142,10 @@ int Read::load_ls_header(MmSystem& mmsys){
     cerr << magic << endl;
     magic = reverse_endian(magic);
     if(magic != MAGIC_NUMBER){
-      cerr << magic << endl;
-      cerr << "ERROR: " << filename << " : the first 4 bytes were not " << MAGIC_NUMBER << endl;
+      stringstream ss;
+      ss << "ERROR: " << filename << " : the first 4 bytes were not [" << MAGIC_NUMBER 
+	 << "] but [" << magic << "]" << endl;
+      error_exit(ss.str(), "1A00004");
       exit(1);
     }
   }
@@ -148,9 +154,16 @@ int Read::load_ls_header(MmSystem& mmsys){
   char version_c[MAX_LEN_NAME];
   read_bin_values(&buf_int, 1); //length of string
   ifs.read(version_c, buf_int);
-  //read_bin_values(&mmsys.launchset_version, 1);
   mmsys.launchset_version = string(version_c);
   cout << "---- Input file format : version " << mmsys.launchset_version << endl;
+  if( mmsys.launchset_version != LS_VERSION){
+      stringstream ss;
+    ss << "ERROR: " << filename << " : the version is imcompatible." << endl;
+    ss << "[" << LS_VERSION << "] is required." << endl;
+    ss << "The input file is [" << mmsys.launchset_version << "]" << endl;
+      error_exit(ss.str(), "1A00003");
+      exit(1);
+  }
 
   read_bin_values(&size_box, 1);
   read_bin_values(&size_crd, 1);
@@ -162,8 +175,7 @@ int Read::load_ls_header(MmSystem& mmsys){
   read_bin_values(&size_groups, 1);
   read_bin_values(&size_dist_restraint, 1);
   read_bin_values(&size_pos_restraint, 1);
-  //int size_pcluster;
-  //read_bin_values(&size_pcluster, 1);
+  read_bin_values(&size_group_coord, 1);
 
   if(DBG==1){
     cout << "size_box:            " << size_box << endl;
@@ -176,7 +188,7 @@ int Read::load_ls_header(MmSystem& mmsys){
     cout << "size_groups:         " << size_groups << endl;
     cout << "size_dist_restraint: " << size_dist_restraint << endl;
     cout << "size_pos_restraint: " << size_pos_restraint << endl;
-    //cout << "size_pcluster: " << size_pcluster << endl;
+    cout << "size_group_coord: " << size_group_coord << endl;
   }
 
   return 0;
@@ -528,7 +540,8 @@ int Read::load_ls_constraint(ConstraintObject* cst){
 
   return 0;
 }
-int Read::load_ls_vmcmd(ExtendedVMcMD* vmcmd){
+
+int Read::load_ls_vmcmd(MmSystem& mmsys){
   int n_vs;
   read_bin_values(&n_vs, 1);
   int interval;
@@ -536,14 +549,14 @@ int Read::load_ls_vmcmd(ExtendedVMcMD* vmcmd){
   double temperature;
   read_bin_values(&temperature, 1);
 
-  vmcmd->set_n_vstates(n_vs);
-  vmcmd->set_trans_interval(interval);
-  vmcmd->set_temperature((real)temperature);
+  mmsys.vmcmd->set_n_vstates(n_vs);
+  mmsys.vmcmd->set_trans_interval(interval);
+  mmsys.vmcmd->set_temperature((real)temperature);
 
   for(int i = 0; i < n_vs; i++){
     int ord;
     read_bin_values(&ord, 1);
-    vmcmd->set_vs_order(i, ord);
+    mmsys.vmcmd->set_vs_order(i, ord);
     double lambda_low, lambda_high;
     double prob_low, prob_high;
     read_bin_values(&lambda_low, 1);
@@ -553,12 +566,12 @@ int Read::load_ls_vmcmd(ExtendedVMcMD* vmcmd){
     for(int j = 0; j < ord+1; j++){
       double buf;
       read_bin_values(&buf, 1);
-      vmcmd->set_vs_poly_param(i, j, (real)buf);
+      mmsys.vmcmd->set_vs_poly_param(i, j, (real)buf);
     }
     double alpha_low, alpha_high;
     read_bin_values(&alpha_low, 1);
     read_bin_values(&alpha_high, 1);
-    vmcmd->set_vs_params(i,
+    mmsys.vmcmd->set_vs_params(i,
 			 (real)lambda_low, (real)lambda_high,
 			 (real)prob_low, (real)prob_high,
 			 (real)alpha_low, (real)alpha_high);
@@ -566,8 +579,9 @@ int Read::load_ls_vmcmd(ExtendedVMcMD* vmcmd){
   int init, seed;
   read_bin_values(&init, 1);
   read_bin_values(&seed, 1);
-  vmcmd->set_init_vs(init-1);
-  vmcmd->set_random_seed(seed);
+  mmsys.vmcmd->set_init_vs(init-1);
+  mmsys.vmcmd->set_random_seed(seed);
+  
   return 0;
 }
 int Read::load_ls_atom_groups(MmSystem& mmsys){
@@ -578,7 +592,7 @@ int Read::load_ls_atom_groups(MmSystem& mmsys){
   n_atoms_in_group = new int[n_groups];
   n_atoms_in_group[0] = 0;
   cout << "n_groups " << n_groups << endl;
-  mmsys.atom_group_names.push_back(string("NULL"));
+  mmsys.atom_group_names.push_back(string("null"));
   for(int i=1; i < n_groups; i++){
     int len_name;
     char name[MAX_LEN_NAME];
@@ -624,9 +638,7 @@ int Read::load_ls_dist_restraint(DistRestraintObject* dr){
 int Read::load_ls_pos_restraint(PosRestraintObject* pr){
   int n_prunits;
   read_bin_values(&n_prunits, 1);
-  cout << "test01 "<<n_prunits<<endl;
   pr->alloc_prunits(n_prunits);
-  cout << "test02"<<endl;
   for(int i=0; i < n_prunits; i++){
     int aid;
     float crd_x, crd_y, crd_z;
@@ -639,40 +651,58 @@ int Read::load_ls_pos_restraint(PosRestraintObject* pr){
     read_bin_values(&coef, 1);
     pr->add_prunit(aid, crd_x, crd_y, crd_z, dist_margin, coef);
   }
-  cout << "test03"<<endl;
   return 0;
 }
-/*
-int Read::load_ls_pcluster(MmSystem& mmsys){
-  int n_clusters1;
-  int n_atoms;
-  int n_distances;
-  int tmp_int;
-  double tmp_dbl;
-  read_bin_values(&n_clusters1, 1);
-  mmsys.n_pclusters = n_clusters1 - 1;
-  read_bin_values(&n_atoms, 1);
-  mmsys.alloc_pcluster_vars();
 
-  for (int i=0; i < n_clusters1; i++){
-    read_bin_values(&mmsys.pcluster_index[i], 1);
-    mmsys.n_atoms_pclusters = 0;
+int Read::load_ls_group_coord(MmSystem& mmsys){
+
+
+  int buf = 0;
+  read_bin_values(&buf, 1);
+  char header[MAX_LEN_NAME];
+  ifs.read(header, buf);
+  cout << "dbg1130 group_coord : " << string(header) << endl;
+  int aus_type = 0;
+  read_bin_values(&aus_type, 1);
+  mmsys.vmcmd->set_aus_type(aus_type);
+  cout << "dbg1130 aus_type: " << aus_type << endl;
+  int n_groups = 0;
+  read_bin_values(&n_groups, 1);
+  cout << "dbg1130 n_groups: " << n_groups << endl;  
+
+  vector<int> enhance_groups;
+  for(int i=0; i<n_groups; i++){
+    read_bin_values(&buf, 1);
+    enhance_groups.push_back(buf);
   }
-  for (int i=0; i < n_atoms; i++){
-    read_bin_values(&mmsys.pcluster_atoms[i], 1);
+  mmsys.vmcmd->set_enhance_groups(mmsys.n_atoms_in_groups,
+				  mmsys.atom_groups,
+				  n_groups,
+				  enhance_groups);
+
+  for(int i=0; i<n_groups; i++){
+    read_bin_values(&buf, 1);
+    //if(buf != mmsys.n_atoms_in_groups[enhance_groups[i]]){
+    //stringstream ss;
+    //ss << "Information in the V-AUS restart file is inconsistent"<<endl;
+    //ss << "Enhanced group " << i << " (atom group " << enhance_groups[i] << ") " << endl;
+    //ss << mmsys.n_atoms_in_groups[enhance_groups[i]] << " atoms in the group definition." << endl;
+    //ss << buf << " atoms in the V-AUS restart file." << endl;
+    //error_exit(ss.str(), "1A00005");
+    //}
   }
-  int pclst_id = 0;
-  for(int idx=0; idx < n_atoms; idx++){
-    if (mmsys.pcluster_index[pclst_id+1] == idx){
-      pclst_id += 1;
-      mmsys.pcluster_head_atom[pclst_id] = idx;
+
+  double buf_dbl;
+  for(int i=0; i<n_groups; i++){
+    for(int j=0; j<mmsys.n_atoms_in_groups[enhance_groups[i]]; j++){
+      read_bin_values(&(mmsys.vmcmd->get_crd_groups()[i][j][0]), 1);
+      read_bin_values(&(mmsys.vmcmd->get_crd_groups()[i][j][1]), 1);
+      read_bin_values(&(mmsys.vmcmd->get_crd_groups()[i][j][2]), 1);
     }
-    mmsys.atom_pclusters[idx] = pclst_id;
-    mmsys.n_atoms_pclusters[pclst_id] += 1;
-  }
+  }  
   return 0;
 }
-*/
+
 template <typename TYPE> int Read::read_bin_values(TYPE *recept, int len){
   ifs.read((char*)recept, sizeof(TYPE)*len);
   if(is_conv_endian()){

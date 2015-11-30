@@ -6,12 +6,13 @@ CelesteObject::CelesteObject(){
 //const int CelesteObject::MAX_N_ATOMTYPE = 40;
 
 const string CelesteObject::EXE = "celeste";
-const string CelesteObject::ABOUT_ME = "celeste ver.0.36.e.2 26-nov-2015";
+const string CelesteObject::ABOUT_ME = "celeste ver.0.36.f 30-nov-2015";
 const string CelesteObject::DESCRIPTION = "";
 //const int CelesteObject::REAL_BYTE = 4;
 const int CelesteObject::REAL_BYTE = sizeof(real);
 const real CelesteObject::PI = 3.14159265;
 const int CelesteObject::MAGIC_NUMBER = 66261;
+const string CelesteObject::LS_VERSION = "v.0.36.f";
 const real CelesteObject::EPS = 1e-10;
 const real CelesteObject::EPS3 = 1e-30;
 const real CelesteObject::ELEM_CHARGE = 160217657e-19;

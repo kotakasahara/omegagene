@@ -547,15 +547,20 @@ int MmSystem::alloc_atom_groups(int in_n_groups,
 }
 
 int MmSystem::set_atom_group_info(Config* cfg){
+  //cout << "dbg1130 mass_groups" << endl;
   for(int i_grp=0; i_grp < n_groups; i_grp++){
+    //cout << "group " << i_grp << endl;
     mass_groups[i_grp] = 0.0;
     for(int i_atom = 0; i_atom < n_atoms_in_groups[i_grp]; i_atom++){
       mass_groups[i_grp] += mass[atom_groups[i_grp][i_atom]];
+      //cout << "  atom " << i_atom << " - " <<atom_groups[i_grp][i_atom] << " : " 
+      //<< mass[atom_groups[i_grp][i_atom]] << endl;;
     }
     mass_inv_groups[i_grp] = 1.0 / mass_groups[i_grp];
+    //cout << "dbg1130 massMS " << i_grp << " " << mass_groups[i_grp] << " " << mass_inv_groups[i_grp] << endl;
   }
   set_com_cancel_groups(cfg);
-  set_enhance_groups(cfg);
+  //set_enhance_groups(cfg);
   set_out_group(cfg);
   return 0;
 }
@@ -617,7 +622,7 @@ int MmSystem::print_out_group(){
     //}
   return 0;
 }
-int MmSystem::set_enhance_groups(Config* cfg){
+/*int MmSystem::set_enhance_groups(Config* cfg){
   n_enhance_groups = 0;
   for(int i=0; i<cfg->n_enhance_groups_name; i++){
     enhance_groups[n_enhance_groups] = get_atom_group_id_from_name(cfg->enhance_groups_name[i]);
@@ -639,8 +644,7 @@ int MmSystem::print_enhance_groups(){
     cout << n_atoms_in_groups[enhance_groups[i]] << " atoms." << endl;
   }
   return 0;
-}
-
+  }*/
 int MmSystem::free_excess_pairs(){
   for(int i=0; i < max_n_excess; i++){
     delete[] excess_pairs[i];

@@ -70,7 +70,10 @@ int Config::set_defaults(){
 
   gpu_device_id = -1;
   enhance_sigma = 0.2;
-  enhance_recov_coef = 0.5;
+  enhance_recov_coef = 50;
+  //aus_type = AUSTYPE_MASSCENTER;
+  fn_o_aus_restart = "aus_restart_out.dat";
+
   return 0;
 }
 void Config::setAll(int argn, char* argv[]){
@@ -228,9 +231,10 @@ void Config::setAll(vector<string> arg){
     }
     else if(*itr=="--enhance-sigma"){  enhance_sigma = atof((*++itr).c_str()); }
     else if(*itr=="--enhance-recovery-coef"){  enhance_recov_coef = atof((*++itr).c_str()); }
+    //    else if(*itr=="--aus-type"){  aus_type = atoi((*++itr).c_str()); }
+    else if(*itr=="--fn-o-aus-restart"){ fn_o_aus_restart = *++itr; }
     else{
       stringstream ss;
-      ss<<"Configuration file: Unknown keyword <"<<(*itr)<<">";
       error_exit(ss.str(), "1A00001");
     }
   }

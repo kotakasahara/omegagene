@@ -6,7 +6,8 @@ import re
 class AtomGroupsReader(kkkit.FileI):
     def __init__(self, fn):
         super(AtomGroupsReader, self).__init__(fn)
-        self.groups = {}
+        self.groups = [[]]
+        self.names = ["all"]
     def parse_unit(self, term):
         at = re.compile("^(\d+)$")
         at_range = re.compile("^(\d+)\-(\d+)$")
@@ -31,7 +32,10 @@ class AtomGroupsReader(kkkit.FileI):
                     grp.add(x_val)
             
             #self.groups[len(self.groups)+1] = (g_name, sorted(list(grp)))
-            self.groups[g_name] = sorted(list(grp))
+            #self.groups[g_name] = sorted(list(grp))
+            self.groups.append(sorted(list(grp)))
+            self.names.append(g_name)
             #self.groups[terms[0]] = [int(x) for x in terms[1:]]
+            print "Group-ID: " + str(len(self.groups)-1) + " n_atoms: " + str(len(self.groups[-1])) + " " + self.names[-1]
         self.close()
-        return self.groups
+        return self.groups, self.names

@@ -14,8 +14,9 @@ MAGIC=66261
 #VERSION = 15032221  ## atom_groups
 #VERSION = "v.0.34.b" ## version_info
 #VERSION = "v.0.36.c" ## version_info
+#VERSION = "v.0.36.f" ## version_info
 
-VERSION_LIST = ["v.0.34.b", "v.0.36.c"]
+VERSION_LIST = ["v.0.34.b", "v.0.36.c", "v.0.36.f"]
 #VERSION_ID = 0
 #VERSION = VERSION_LIST[VERSION_ID]
 
@@ -36,6 +37,7 @@ import kkmm_extended
 import kkpresto_distrest as disres
 import kkceleste_posrest as posres
 import kkatomgroup as atgrp
+import kkceleste_ausrestart as ausrest
 
 def get_options():
     p = OptionParser()
@@ -67,6 +69,7 @@ def _main():
     mdinputgen.read_files()
     print "dump_mdinput()"    
     mdinputgen.dump_mdinput()
+    print "End"
     return 
 
 class MDInputGen(object):
@@ -82,10 +85,11 @@ class MDInputGen(object):
         self.tpl = None
         self.settle = None
         self.extended = None
-        self.atom_groups = {}
+        self.atom_groups = []
+        self.atom_group_names = []
         self.dist_rest = []
         self.pos_rest = []
-
+        self.aus_restart = None
         return 
 
     def read_files(self):
@@ -113,7 +117,6 @@ class MDInputGen(object):
             self.system.pbc.origin = np.array([self.config.get_val("cell-origin-x"),
                                           self.config.get_val("cell-origin-y"),
                                           self.config.get_val("cell-origin-z")])
-
             
         self.system.set_atom_info_from_tpl(self.tpl)
         print "read restart"
@@ -137,7 +140,7 @@ class MDInputGen(object):
             atom_groups_reader = atgrp.AtomGroupsReader(self.config.get_val("fn-i-atom-groups"))
             print self.config.get_val("fn-i-atom-groups")
             print atom_groups_reader.fn
-            self.atom_groups = atom_groups_reader.read_groups()
+            self.atom_groups, self.atom_group_names = atom_groups_reader.read_groups()
             #self.atom_groups[0] = ("All", [int(x) for x in range(0, len(self.structure.atoms))])
             #print self.atom_groups
         if self.config.get_val("fn-i-dist-restraint"):
@@ -152,7 +155,23 @@ class MDInputGen(object):
                 pos_rest_reader = posres.CelestePosRestReader(self.config.get_val("fn-i-position-restraint"))
                 print self.config.get_val("fn-i-position-restraint")
                 self.pos_rest = pos_rest_reader.read()
-
+        if self.version >= 2:
+            if self.config.get_val("fn-i-aus-restart"):
+                aus_restart_reader = ausrest.CelesteAUSRestartReader(self.config.get_val("fn-i-aus-restart"))
+                print self.config.get_val("fn-i-aus-restart")
+                self.aus_restart = aus_restart_reader.read_aus_restart(self.atom_groups, self.atom_group_names)
+            elif self.config.get_val("aus-type") :
+                print "Generate AUS restart from the input coordinates"
+                if not self.config.get_val("enhance-group-name"):
+                    print "Options --enhance-group-name is required for AUS simulation"
+                    sys.exit(1)
+                print self.config.get_val("enhance-group-name")
+                self.aus_restart = ausrest.CelesteAUSRestart()
+                self.aus_restart.set_aus_type(self.config.get_val("aus-type"))
+                self.aus_restart.generate_aus_restart(self.restart,
+                                                      self.atom_groups,
+                                                      self.atom_group_names,
+                                                      self.config.get_val("enhance-group-name"))
         return
 
     def read_shake(self):
@@ -230,12 +249,16 @@ class MDInputGen(object):
         if self.extended:
             buf_extended = self.dump_extended(self.extended)
 
-        buf_atom_groups = self.dump_atom_groups(self.atom_groups)
+        buf_atom_groups = self.dump_atom_groups(self.atom_groups, self.atom_group_names)
 
         buf_dist_rest = self.dump_dist_rest(self.dist_rest)
 
         if self.version_id >= 1:
             buf_pos_rest = self.dump_pos_rest(self.pos_rest)
+        buf_group_coord = ""
+        if self.version_id >= 2:
+            if self.aus_restart:
+                buf_group_coord = self.aus_restart.dump_group_coord()
 
         #if config.get_val("particle-cluster-shake"):
         f.write(st.pack("@i", len(buf_box)))
@@ -249,6 +272,8 @@ class MDInputGen(object):
         f.write(st.pack("@i", len(buf_dist_rest)))
         if self.version_id >= 1:
             f.write(st.pack("@i", len(buf_pos_rest)))
+        if self.version_id >= 2:
+            f.write(st.pack("@i", len(buf_group_coord)))
         print "size: buf_box        : " + str(len(buf_box))
         print "size: buf_coordinates: " + str(len(buf_coordinates))
         print "size: buf_velocities : " + str(len(buf_velocities))
@@ -260,7 +285,8 @@ class MDInputGen(object):
         print "size: buf_dist_rest: " + str(len(buf_dist_rest))
         if self.version_id >= 1:
             print "size: buf_pos_rest: " + str(len(buf_pos_rest))
-        #f.write(st.pack("@i", len(buf_pcluster)))
+        if self.version_id >= 2:
+            print "size: buf_group_coord: " + str(len(buf_group_coord))
         f.write(buf_box)
         f.write(buf_coordinates)
         f.write(buf_velocities)
@@ -268,11 +294,12 @@ class MDInputGen(object):
         f.write(buf_shake)
         f.write(buf_settle)
         f.write(buf_extended)
-    #f.write(buf_pcluster)
         f.write(buf_atom_groups)
         f.write(buf_dist_rest)
         if self.version_id >= 1:
             f.write(buf_pos_rest)
+        if self.version_id >= 2:
+            f.write(buf_group_coord)
         f.close()
         return
 
@@ -521,17 +548,20 @@ class MDInputGen(object):
                 buf += st.pack("@d", float(prm))
         buf += st.pack("@ii", extended.init_vs, extended.seed)
         return buf
-    def dump_atom_groups(self, atom_groups):
+    def dump_atom_groups(self, atom_groups, atom_group_names):
         buf = ""
-        buf += st.pack("@i", len(atom_groups.keys()))
-        #for grpid in range(len(atom_groups.keys())):
-        for name, atoms in atom_groups.items():
-            #name = atom_groups[grpid][0]
-            #atoms = atom_groups[grpid][1]
+        buf += st.pack("@i", len(atom_group_names)-1)
+        #for name, atoms in atom_groups.items():
+        for grp_id in range(1, len(atom_group_names)):
+            name = atom_group_names[grp_id]
+            atoms = atom_groups[grp_id]
             buf += st.pack("@i", len(name)+1)
             buf += name+"\0"
             buf += st.pack("@i", len(atoms))
-        for name, atoms in atom_groups.items():
+        for grp_id in range(1, len(atom_group_names)):
+            name = atom_group_names[grp_id]
+            atoms = atom_groups[grp_id]
+            #for name, atoms in atom_groups.items():
             for atomid in atoms:
                 buf += st.pack("@i", atomid)
         return buf

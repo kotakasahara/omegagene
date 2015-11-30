@@ -66,16 +66,17 @@ class WriteRestart : public Write{
 		    real** crd, real** vel);
 };
 
-class WriteAUSRestart : public Write{
+class WriteGroupCoord : public Write{
  private:
  protected:
  public:
-  WriteAUSRestart();
-  ~WriteAUSRestart();
+  WriteGroupCoord();
+  ~WriteGroupCoord();
   int write_aus_restart(const int aus_type,
-			vector<int> group_id,
-			int** atom_groups,
-			real** crd);
+			int n_enhance_groups,
+			vector<int>  enhance_groups,
+			int* n_atoms_in_groups,
+			real*** crd_groups);
 };
 
 #endif

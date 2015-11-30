@@ -101,6 +101,13 @@ class CelesteObject {
     EXTENDED_DUMMY
   };
   enum {
+    AUSTYPE_0 = 0,
+    AUSTYPE_1,
+    AUSTYPE_2,
+    AUSTYPE_MASSCENTER,
+    AUSTYPE_DUMMY
+  };
+  enum {
     LAMBDAOUT_BIN = 0,
     LAMBDAOUT_ASC, 
     LAMBDAOUT_DUMMY
@@ -130,6 +137,7 @@ class CelesteObject {
   static const int REAL_BYTE;
   static const real PI;
   static const int MAGIC_NUMBER;
+  static const string LS_VERSION;
   static const real EPS;
   static const real EPS3;
   

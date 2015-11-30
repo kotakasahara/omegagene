@@ -80,6 +80,8 @@ class Config : public CelesteObject {
   real pos_restraint_weight;
   real enhance_sigma;
   real enhance_recov_coef;
+  //int aus_type;
+  string fn_o_aus_restart;
 
   Config();
   ~Config();
