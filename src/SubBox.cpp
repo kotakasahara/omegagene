@@ -1373,7 +1373,7 @@ int SubBox::calc_energy_14nb(){
   return 0;
 }
 int SubBox::calc_energy_ele_excess(){
-  real tmp = pote_ele;
+  real ele_excess = 0.0;
   for (int i=0; i < n_excess; i++){
     real tmp_ene;
     real_fc tmp_work[3];
@@ -1385,14 +1385,15 @@ int SubBox::calc_energy_ele_excess(){
 		       c1, c2,
 		       charge[excess_pairs[i][0]],
 		       charge[excess_pairs[i][1]]);
-    pote_ele += tmp_ene;
+    ele_excess += tmp_ene;
     for(int d=0; d<3; d++){
       work[atomidx1+d] += tmp_work[d];
       work[atomidx2+d] -= tmp_work[d];
     }
     //cout << "Excess : " << i << " "<<  pote_ele - tmp <<  " " << pote_ele << " " << tmp << endl;
   }
-  //cout << "Excess : "  << pote_ele - tmp <<  " " << pote_ele << " " << tmp << endl;
+  //cout << "Excess : "  << ele_excess <<  " " << pote_ele << endl
+  pote_ele += ele_excess;
   return 0;
 }
 

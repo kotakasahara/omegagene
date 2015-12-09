@@ -132,6 +132,9 @@ void Config::setAll(vector<string> arg){
     else if(*itr=="--electrostatic"){
       itr++;
       if(*itr=="zero-dipole"){ electrostatic = ELCTRST_ZERODIPOLE; }
+      else if(*itr=="zero-quadrupole"){ electrostatic = ELCTRST_ZEROQUADRUPOLE; }
+      else if(*itr=="zero-octupole"){ electrostatic = ELCTRST_ZEROOCTUPOLE; }
+      else if(*itr=="zero-hexadecapole"){ electrostatic = ELCTRST_ZEROHEXADECAPOLE; }
       else{ electrostatic = ELCTRST_DUMMY; }
     }
     else if(*itr=="--ele-alpha"){ ele_alpha = atof((*++itr).c_str()); }

@@ -111,9 +111,10 @@ def make_rigid_units(model, tpl, shkr):
     #make shk.shake_sys[] dictionary
     # (mol_id, atom_id_inmol) => shake object
     shk_dict = {}
-    for molid, molshk in enumerate(shkr.shake):
-        for shkobj in molshk:
-            shk_dict[(molid, shkobj.atom_center)] = shkobj
+    if shkr:
+        for molid, molshk in enumerate(shkr.shake):
+            for shkobj in molshk:
+                shk_dict[(molid, shkobj.atom_center)] = shkobj
             #print str(molid) + " " + str(shkobj.atom_center)
     atom_id_mass = []
     rigid_units = []

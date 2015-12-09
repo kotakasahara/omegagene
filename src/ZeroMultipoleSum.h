@@ -11,24 +11,75 @@ class ZeroMultipoleSum : public ElectrostaticObject {
  private:
  protected:
 
-  real_pw cutoff;
-  real_pw ewald_alpha;
+  const int zms_mode;
+  // zms_mode ...  1: dipole
+  //               2: quadrupole
+  //               3: octapole
+  //               4: hexadeca
+
+  const real_pw cutoff;
+  const real_pw ewald_alpha;
   real_pw bcoeff;
   real_pw fcoeff;
   real_pw scoeff;
+
+  real_pw hzqrc;
+  real_pw zqcoeff2;
+  real_pw zqcoeff4;
+  real_pw zqcoeff22;
+  real_pw zqcoeff44;
+
+  real_pw zocoeff2;
+  real_pw zocoeff4;
+  real_pw zocoeff6;
+  real_pw zocoeff22;
+  real_pw zocoeff44;
+  real_pw zocoeff66;
+
+  real_pw zhcoeff2;
+  real_pw zhcoeff4;
+  real_pw zhcoeff6;
+  real_pw zhcoeff8;
+  real_pw zhcoeff22;
+  real_pw zhcoeff44;
+  real_pw zhcoeff66;
+  real_pw zhcoeff88;
+
+  real_pw coeffd1;
+  real_pw coeffd2;
+  real_pw coeffd3;
+  real_pw coeffd4;
+
   real_pw zcore;
+  real_pw zqcore;
+  real_pw zocore;
+  real_pw zhcore;
+
   real_pw piewald;
   real_pw cutoff_2;
   real_pw cutoff_3;
+  real_pw cutoff_4;
+  real_pw cutoff_5;
+  real_pw cutoff_6;
+  real_pw cutoff_7;
+
 
   real_pw d_self;
   real_pw d_self_mon;
 
  public:
+  typedef int (ZeroMultipoleSum::*ZmsCalc)(real_pw&, real_pw&, const real_pw&, const real_pw&, const real_pw&, const real_pw&, const real_pw&, const real_pw&);
+  typedef int (ZeroMultipoleSum::*ZmsCalcExcess)(real&, real&, const real&, const real&, const real&, const real&, const real&, const real&);
 
-  ZeroMultipoleSum();
-  int (ZeroMultipoleSum::*func_calc_zms)(real_pw&, real_pw&, const real_pw&, const real_pw&, const real_pw&, const real_pw&, const real_pw&, const real_pw&);
-  int (ZeroMultipoleSum::*func_calc_zms_excess)(real&, real&, const real&, const real&, const real&, const real&);
+  ZeroMultipoleSum(const int in_zms_mode,
+		   const real in_alpha,
+		   const real in_cutoff,
+		   const ZmsCalc in_func, const ZmsCalcExcess in_func_excess);
+		   //int (* const func)(real_pw&, real_pw&, const real_pw&, const real_pw&, const real_pw&, const real_pw&, const real_pw&, const real_pw&),
+		   //int (* const func_excess)(real&, real&, const real&, const real&, const real&, const real&, const real&, const real&)
+  //);
+  const ZmsCalc func_calc_zms;
+  const ZmsCalcExcess func_calc_zms_excess;
 
   virtual int set_config_parameters(const Config* in_cfg);
   virtual int initial_preprocess();
@@ -51,22 +102,78 @@ class ZeroMultipoleSum : public ElectrostaticObject {
   inline real_pw get_fcoeff(){ return fcoeff; }
   inline real_pw get_scoeff(){ return scoeff; }
   inline real_pw get_zcore(){ return zcore; }
-  int calc_zms_alpha0(real_pw& ene_ele, real_pw& grad_coeff,
-		      const real_pw& r12,      const real_pw& r12sq,
-		      const real_pw& r12inv,   const real_pw& r12inv_2,
-		      const real_pw& r12inv_3, const real_pw& cc);
-  int calc_zms_excess_alpha0(real& ene_ele, real& grad_coeff,
+  int calc_zero02pole_excess_alpha0(real& ene_ele, real& grad_coeff,
+				    const real& r12,      const real& r12_2,
+				    const real& r12_inv, 
+				    const real& r12_2_inv, const real& r12_3_inv,
+				    const real& cc);
+  int calc_zero02pole_excess(real& ene_ele, real& grad_coeff,
 			     const real& r12,      const real& r12_2,
-			     const real& r12_3_inv, const real& cc);
-  int calc_zms(real_pw& ene_ele, real_pw& grad_coeff,
-	       const real_pw& r12,      const real_pw& r12_2,
-	       const real_pw& r12_inv,   const real_pw& r12_2_inv,
-	       const real_pw& r12_3_inv, const real_pw& cc);
-  int calc_zms_excess(real& ene_ele, real& grad_coeff,
-		      const real& r12,      const real& r12_2,
-		      const real& r12_3_inv, const real& cc);
-  
-  
+			     const real& r12_inv, 
+			     const real& r12_2_inv, const real& r12_3_inv,
+			     const real& cc);
+  int calc_zero04pole_excess_alpha0(real& ene_ele, real& grad_coeff,
+				    const real& r12,      const real& r12_2,
+				    const real& r12_inv, 
+				    const real& r12_2_inv, const real& r12_3_inv,
+				    const real& cc);
+  int calc_zero04pole_excess(real& ene_ele, real& grad_coeff,
+			     const real& r12,      const real& r12_2,
+			     const real& r12_inv, 
+			     const real& r12_2_inv, const real& r12_3_inv,
+			     const real& cc);
+  int calc_zero08pole_excess_alpha0(real& ene_ele, real& grad_coeff,
+				    const real& r12,      const real& r12_2,
+				    const real& r12_inv, 
+				    const real& r12_2_inv, const real& r12_3_inv,
+				    const real& cc);
+  int calc_zero08pole_excess(real& ene_ele, real& grad_coeff,
+			     const real& r12,      const real& r12_2,
+			     const real& r12_inv, 
+			     const real& r12_2_inv, const real& r12_3_inv,
+			     const real& cc);
+  int calc_zero16pole_excess_alpha0(real& ene_ele, real& grad_coeff,
+				    const real& r12,      const real& r12_2,
+				    const real& r12_inv, 
+				    const real& r12_2_inv, const real& r12_3_inv,
+				    const real& cc);
+  int calc_zero16pole_excess(real& ene_ele,        real& grad_coeff,
+			     const real& r12,      const real& r12_2,
+			     const real& r12_inv, 
+			     const real& r12_2_inv, const real& r12_3_inv,
+			     const real& cc);
+  int calc_zero02pole_alpha0(real_pw& ene_ele, real_pw& grad_coeff,
+			     const real_pw& r12,      const real_pw& r12_2,
+			     const real_pw& r12_inv,   const real_pw& r12_2_inv,
+			     const real_pw& r12_3_inv, const real_pw& cc);
+  int calc_zero02pole(real_pw& ene_ele, real_pw& grad_coeff,
+		      const real_pw& r12,      const real_pw& r12_2,
+		      const real_pw& r12_inv,   const real_pw& r12_2_inv,
+		      const real_pw& r12_3_inv, const real_pw& cc);
+  int calc_zero04pole_alpha0(real_pw& ene_ele, real_pw& grad_coeff,
+			     const real_pw& r12,      const real_pw& r12_2,
+			     const real_pw& r12_inv,   const real_pw& r12_2_inv,
+			     const real_pw& r12_3_inv, const real_pw& cc);
+  int calc_zero04pole(real_pw& ene_ele, real_pw& grad_coeff,
+		      const real_pw& r12,      const real_pw& r12_2,
+		      const real_pw& r12_inv,   const real_pw& r12_2_inv,
+		      const real_pw& r12_3_inv, const real_pw& cc);
+  int calc_zero08pole_alpha0(real_pw& ene_ele, real_pw& grad_coeff,
+			     const real_pw& r12,      const real_pw& r12_2,
+			     const real_pw& r12_inv,   const real_pw& r12_2_inv,
+			     const real_pw& r12_3_inv, const real_pw& cc);
+  int calc_zero08pole(real_pw& ene_ele, real_pw& grad_coeff,
+		      const real_pw& r12,      const real_pw& r12_2,
+		      const real_pw& r12_inv,   const real_pw& r12_2_inv,
+		      const real_pw& r12_3_inv, const real_pw& cc);
+  int calc_zero16pole_alpha0(real_pw& ene_ele, real_pw& grad_coeff,
+			     const real_pw& r12,      const real_pw& r12_2,
+			     const real_pw& r12_inv,   const real_pw& r12_2_inv,
+			     const real_pw& r12_3_inv, const real_pw& cc);
+  int calc_zero16pole(real_pw& ene_ele, real_pw& grad_coeff,
+		      const real_pw& r12,      const real_pw& r12_2,
+		      const real_pw& r12_inv,   const real_pw& r12_2_inv,
+		      const real_pw& r12_3_inv, const real_pw& cc);
 };
 
 #endif

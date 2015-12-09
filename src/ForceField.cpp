@@ -19,20 +19,73 @@ ForceField::~ForceField(){
 
 int ForceField::set_config_parameters(const Config* cfg){
   ForceFieldObject::set_config_parameters(cfg);
-  switch(cfg->electrostatic){
-  case ELCTRST_ZEROMULTIPOLE:
-  case ELCTRST_ZERODIPOLE:
-    ele = new ZeroMultipoleSum();
-    break;
-    //  case ELCTRST_DUMMY:
-    //    ele = new ElectrostaticObject(mmsys);
-    //    break;
-  default:
-    // ERROR
-    break;
+  if (cfg->ele_alpha < EPS){
+    switch(cfg->electrostatic){
+    case ELCTRST_ZERODIPOLE:
+      ele = new ZeroMultipoleSum(cfg->electrostatic,
+				 cfg->ele_alpha,
+				 cfg->cutoff,
+				 &ZeroMultipoleSum::calc_zero02pole_alpha0,
+				 &ZeroMultipoleSum::calc_zero02pole_excess_alpha0);
+      break;
+    case ELCTRST_ZEROQUADRUPOLE:
+      ele = new ZeroMultipoleSum(cfg->electrostatic,
+				 cfg->ele_alpha,
+				 cfg->cutoff,
+				 &ZeroMultipoleSum::calc_zero04pole_alpha0,
+				 &ZeroMultipoleSum::calc_zero04pole_excess_alpha0);
+      break;
+    case ELCTRST_ZEROOCTUPOLE:
+      ele = new ZeroMultipoleSum(cfg->electrostatic,
+				 cfg->ele_alpha,
+				 cfg->cutoff,
+				 &ZeroMultipoleSum::calc_zero08pole_alpha0,
+				 &ZeroMultipoleSum::calc_zero08pole_excess_alpha0);
+
+      break;
+    case ELCTRST_ZEROHEXADECAPOLE:
+      ele = new ZeroMultipoleSum(cfg->electrostatic,
+				 cfg->ele_alpha,
+				 cfg->cutoff,
+				 &ZeroMultipoleSum::calc_zero16pole_alpha0,
+				 &ZeroMultipoleSum::calc_zero16pole_excess_alpha0);
+      break;
+    }
+  }else{
+    switch(cfg->electrostatic){
+    case ELCTRST_ZERODIPOLE:
+      ele = new ZeroMultipoleSum(cfg->electrostatic,
+				 cfg->ele_alpha,
+				 cfg->cutoff,
+				 &ZeroMultipoleSum::calc_zero02pole,
+				 &ZeroMultipoleSum::calc_zero02pole_excess);
+      break;
+    case ELCTRST_ZEROQUADRUPOLE:
+      ele = new ZeroMultipoleSum(cfg->electrostatic,
+				 cfg->ele_alpha,
+				 cfg->cutoff,
+				 &ZeroMultipoleSum::calc_zero04pole,
+				 &ZeroMultipoleSum::calc_zero04pole_excess);
+      break;
+    case ELCTRST_ZEROOCTUPOLE:
+      ele = new ZeroMultipoleSum(cfg->electrostatic,
+				 cfg->ele_alpha,
+				 cfg->cutoff,
+				 &ZeroMultipoleSum::calc_zero08pole,
+				 &ZeroMultipoleSum::calc_zero08pole_excess);
+
+      break;
+    case ELCTRST_ZEROHEXADECAPOLE:
+      ele = new ZeroMultipoleSum(cfg->electrostatic,
+				 cfg->ele_alpha,
+				 cfg->cutoff,
+				 &ZeroMultipoleSum::calc_zero16pole,
+				 &ZeroMultipoleSum::calc_zero16pole_excess);
+      break;
+    }
+
   }
-  ele->set_config_parameters(cfg);
-  
+  //ele->set_config_parameters(cfg);
   return 0;
 }
 
@@ -306,7 +359,8 @@ real_pw ForceField::calc_pairwise(real_pw& ene_vdw, real_pw& ene_ele,
   //crd1[0],crd1[1],crd1[2],crd2[0],crd2[1],crd2[2]);
   (ele->*(ele->func_calc_zms))(ene_ele, work_coef_ele,
 			       r12, r12_2, r12_inv,
-			       r12_2_inv, r12_3_inv, cc);
+			       r12_2_inv, r12_3_inv,
+			       cc);
   //printf("dbgpair %10e %10e %15e\n", r12, cc, CHARGE_COEFF);
   //  if (ene_ele >1){
     //cout << "dbg 01 2 :"  << r12 << " "  << ene_ele << " " << charge1 << " "<<charge2<<endl;
@@ -332,14 +386,18 @@ int ForceField::calc_zms_excess(real& ene, real_fc work[],
   real r12_2 = d12[0]*d12[0] + d12[1]*d12[1] + d12[2]*d12[2];
   real r12 = sqrt(r12_2);
   real r12_inv = 1.0 / r12;
-  real r12_3_inv = r12_inv * r12_inv * r12_inv;
+  real r12_2_inv = r12_inv * r12_inv;
+  real r12_3_inv = r12_2_inv * r12_inv;
   real cc = charge1 * charge2 * CHARGE_COEFF;
   real work_coef;
   //cout << "dbg0204: cc " << cc << " " <<  charge1 << " " << charge2 << " " << r12_2 << " " << r12_inv << endl;
   (ele->*(ele->func_calc_zms_excess))(ene, work_coef,
-				      r12, r12_2, r12_3_inv, cc);
+				      r12, r12_2,
+				      r12_inv, r12_2_inv,
+				      r12_3_inv, cc);
   for (int d=0; d<3; d++)
     work[d] = work_coef * d12[d];
+  
   return 0;
 }
 
