@@ -12,6 +12,9 @@ SET( _CMAKE_PROJECT_INITIALS "celeste" CACHE INTERNAL "Project Name Initials" )
 MESSAGE( "\n${BoldCyan}    **** WELCOME TO ${CMAKE_PROJECT_NAME} (${_CMAKE_PROJECT_INITIALS})! ****${ColourReset}\n" )
 
 INCLUDE(CheckCXXCompiler)
+INCLUDE(CheckCelesteBuildOptions)
+
+
 INCLUDE(CheckCUDA)
 #INCLUDE(CheckOpenMP)
 
