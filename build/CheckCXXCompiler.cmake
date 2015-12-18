@@ -1,5 +1,16 @@
 # Use C++11
 INCLUDE(CheckCXXCompilerFlag)
+SET( MINIMUM_GCC_VERSION_REQUIRED 4.9 )
+SET( MINIMUM_CLANG_VERSION_REQUIRED 3.1 )
+SET( MINIMUM_ICC_VERSION_REQUIRED 14.0 )
+
+MACRO(CHECK_COMPILER_VERSION compiler_name minimum_version)
+    IF(CMAKE_CXX_COMPILER_VERSION VERSION_LESS ${minimum_version})
+        MESSAGE( FATAL_ERROR "${BoldRed}${compiler_name} version must be >= ${MINIMUM_GCC_VERSION_REQUIRED}!${ColourReset}" )
+    ENDIF()
+ENDMACRO(CHECK_COMPILER_VERSION)
+
+
 CHECK_CXX_COMPILER_FLAG("-std=c++14" COMPILER_SUPPORTS_CXX14)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
 IF (COMPILER_SUPPORTS_CXX14)
@@ -21,13 +32,15 @@ IF (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND COMPILER_SUPPORTS_LIBCXX)
 ENDIF()
 
 # Older versions of compilers may support C++11, but not include C++11 standards-compliant libraries
-MESSAGE( "-- Checking for C++ Standard Library conformance" )
-IF (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
-    MESSAGE( FATAL_ERROR "${BoldRed}GCC version must be >= 5.0; only GCC 5.0+ comes with a fully C++11-compliant standard library!${ColourReset}" )
-ELSEIF (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.1)
-    MESSAGE( FATAL_ERROR "${BoldRed}Clang version must be >= 3.1; only Clang 3.1+ comes with a fully C++11-compliant standard library!${ColourReset}" )
+MESSAGE( "-- Checking for C++ compiler version" )
+IF (CMAKE_COMPILER_IS_GNUCC)
+    CHECK_COMPILER_VERSION(GCC MINIMUM_GCC_VERSION_REQUIRED)
+ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+    CHECK_COMPILER_VERSION(ICC MINIMUM_ICC_VERSION_REQUIRED)
+ELSEIF (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    CHECK_COMPILER_VERSION(Clang MINIMUM_CLANG_VERSION_REQUIRED)
 ENDIF()
-MESSAGE( "-- Checking for C++ Standard Library conformance - Success" )
+MESSAGE( "-- Checking for C++ compiler version - Success" )
 
 # Enable compiler warnings
 IF (MSVC)
@@ -38,4 +51,6 @@ IF (MSVC)
     ENDIF()
 ELSEIF (CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic")
+ELSEIF (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 ENDIF()

@@ -4,6 +4,15 @@ CMAKE_MINIMUM_REQUIRED( VERSION 3.1.0 )
 # This needs to be set before PROJECT() in order to pick up toolchain files
 LIST( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/build )
 PROJECT( CELESTE )
+
+# if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR} )
+#     MESSAGE( FATAL_ERROR "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there. You may need to remove CMakeCache.txt." )
+# endif()
+
+# SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+# SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+# SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 INCLUDE(SetCMakeMessageColors)
 
 # SET(CMAKE_VERBOSE_MAKEFILE ON)
@@ -14,8 +23,9 @@ MESSAGE( "\n${BoldCyan}    **** WELCOME TO ${CMAKE_PROJECT_NAME} (${_CMAKE_PROJE
 INCLUDE(CheckCXXCompiler)
 INCLUDE(CheckCelesteBuildOptions)
 
-
-INCLUDE(CheckCUDA)
+IF(CELESTE_GPU OR CELESTE_GPUECP)
+	INCLUDE(CheckCUDA)
+ENDIF()
 #INCLUDE(CheckOpenMP)
 
 # INCLUDE_DIRECTORIES(include)
