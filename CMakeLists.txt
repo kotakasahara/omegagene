@@ -24,7 +24,7 @@ INCLUDE(CheckCXXCompiler)
 INCLUDE(CheckCelesteBuildOptions)
 
 IF(CELESTE_GPU OR CELESTE_GPUECP)
-	INCLUDE(CheckCUDA)
+    INCLUDE(CheckCUDA)
 ENDIF()
 #INCLUDE(CheckOpenMP)
 
