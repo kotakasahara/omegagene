@@ -17,9 +17,7 @@ INCLUDE(SetCMakeMessageColors)
 
 # SET(CMAKE_VERBOSE_MAKEFILE ON)
 SET( _CMAKE_PROJECT_INITIALS "celeste" CACHE INTERNAL "Project Name Initials" )
-
 MESSAGE( "\n${BoldCyan}    **** WELCOME TO ${CMAKE_PROJECT_NAME} (${_CMAKE_PROJECT_INITIALS})! ****\n\n    For the list of ${CMAKE_PROJECT_NAME} build options,\n    run CMake with the '-LH' flags.${ColourReset}\n" )
-#MESSAGE("\n${Magenta}    ${ColourReset}\n")
 
 INCLUDE(CheckCXXCompiler)
 INCLUDE(CheckCelesteBuildOptions)
@@ -30,6 +28,10 @@ ENDIF()
 
 IF(CELESTE_USE_OPENMP)
     INCLUDE(CheckOpenMP)
+ENDIF()
+
+IF(CELESTE_USE_MPI)
+    INCLUDE(CheckMPI)
 ENDIF()
 # INCLUDE_DIRECTORIES(include)
 

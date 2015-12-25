@@ -4,7 +4,7 @@
 #include "Celeste.h"
 using namespace std;
 
-int main(int argn, char* argv[]){
+int main(int argn, char* argv[]) {
     clock_t time_start = clock();
     Celeste celeste;
     celeste.setup(argn,argv);
