@@ -18,7 +18,8 @@ INCLUDE(SetCMakeMessageColors)
 # SET(CMAKE_VERBOSE_MAKEFILE ON)
 SET( _CMAKE_PROJECT_INITIALS "celeste" CACHE INTERNAL "Project Name Initials" )
 
-MESSAGE( "\n${BoldCyan}    **** WELCOME TO ${CMAKE_PROJECT_NAME} (${_CMAKE_PROJECT_INITIALS})! ****${ColourReset}\n" )
+MESSAGE( "\n${BoldCyan}    **** WELCOME TO ${CMAKE_PROJECT_NAME} (${_CMAKE_PROJECT_INITIALS})! ****\n\n    For the list of ${CMAKE_PROJECT_NAME} build options,\n    run CMake with the '-LH' flags.${ColourReset}\n" )
+#MESSAGE("\n${Magenta}    ${ColourReset}\n")
 
 INCLUDE(CheckCXXCompiler)
 INCLUDE(CheckCelesteBuildOptions)
@@ -26,8 +27,10 @@ INCLUDE(CheckCelesteBuildOptions)
 IF(CELESTE_GPU OR CELESTE_GPUECP)
     INCLUDE(CheckCUDA)
 ENDIF()
-#INCLUDE(CheckOpenMP)
 
+IF(CELESTE_USE_OPENMP)
+    INCLUDE(CheckOpenMP)
+ENDIF()
 # INCLUDE_DIRECTORIES(include)
 
 # Build project in the following subdirectories
@@ -36,4 +39,4 @@ ADD_SUBDIRECTORY(src)
 
 # Remove all files not tracked by git
 ADD_CUSTOM_TARGET(gitclean COMMAND git clean -d -f -x)
-MESSAGE("\n${Magenta}    To clean out all files not tracked by git,\n    simply run 'make gitclean' from the\n    project ROOT directory.${ColourReset}\n")
+MESSAGE("\n${Magenta}    To clean out all files not tracked by git,\n    simply run 'make gitclean' from the build's\n    ROOT directory.${ColourReset}\n")
