@@ -2,7 +2,7 @@ IF (CELESTE_GPU OR CELESTE_GPUECP)
     ADD_SUBDIRECTORY(cuda)
 ENDIF()
 
-ADD_LIBRARY(CelesteCore Celeste.cpp CelesteObject.cpp COMMotion.cpp Config.cpp Constraint.cpp ConstraintShake.cpp DistRestraint.cpp DynamicsMode.cpp ElectrostaticObject.cpp Extend.cpp ForceField.cpp ForceFieldObject.cpp MiniCell.cpp MmSystem.cpp PBC.cpp PosRestraint.cpp Read.cpp RunMode.cpp SubBox.cpp Thermostat.cpp Write.cpp WriteTrr.cpp ZeroMultipoleSum.cpp)
+ADD_LIBRARY(CelesteCore Celeste.cpp CelesteObject.cpp COMMotion.cpp Config.cpp Constraint.cpp ConstraintShake.cpp DistRestraint.cpp DynamicsMode.cpp ElectrostaticObject.cpp Extend.cpp ForceField.cpp ForceFieldObject.cpp MiniCell.cpp MmSystem.cpp PBC.cpp PosRestraint.cpp Read.cpp RunMode.cpp SubBox.cpp Thermostat.cpp Write.cpp WriteTrr.cpp ZeroMultipoleSum.cpp General.cpp)
 
 IF (CELESTE_WO_NS)
     ADD_DEFINITIONS(-DF_WO_NS)

@@ -759,8 +759,7 @@ int MmSystem::revise_crd_inbox(){
 }
 
 int MmSystem::set_random(int seed){
-  //random_mt.seed(seed);
-  //srand(seed);
+  random_mt.set_seed(seed);
   return 0;
 }
 

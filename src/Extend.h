@@ -6,13 +6,14 @@
 #include "Write.h"
 #include "WriteTrr.h"
 #include "PBC.h"
-
+#include "General.h"
 #include <cmath>
+#include <random>
 using namespace std;
 
 class Extended : public CelesteObject {
  private:
-
+  
  protected:
   int write_lambda_interval;
  public:
@@ -46,7 +47,7 @@ class VirtualState : public CelesteObject{
   real get_lambda_high(){ return lambda_range[1]; };
   int set_alpha(real in_alhpa_low, real in_alpha_high);
   bool is_in_range(real lambda);
-  int get_trans_prob(int up_down){ return trans_prob[up_down]; }
+  real get_trans_prob(int up_down){ return trans_prob[up_down]; }
 };
 
 class ExtendedVMcMD : public Extended {
@@ -92,6 +93,9 @@ class ExtendedVMcMD : public Extended {
   // unit_vec[group][xyz]
 
   int aus_type;
+  RandomNum* random_mt;
+  //uniform_real_distribution<float> random_gen;
+
  public:
   ExtendedVMcMD();
   ~ExtendedVMcMD();
@@ -140,7 +144,7 @@ class ExtendedVMcMD : public Extended {
 				    int in_n_enhance_groups,
 				 vector<int> in_enhance_groups);
   int set_mass(real_pw* in_mass, real_pw* in_mass_groups, real_pw* in_mass_groups_inv);
-  int set_params(real in_sigma, real in_recov_coef);
+  int set_params(RandomNum* in_mt, real in_sigma, real in_recov_coef);
   void set_aus_type(int in_aus_type){ aus_type = in_aus_type; };
 
   int write_aus_restart(string fn_out);

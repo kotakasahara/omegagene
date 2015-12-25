@@ -40,6 +40,7 @@ int VirtualState::set_params(real in_lambda_low,
   lambda_range[1] = in_lambda_high;
   trans_prob[0] = in_prob_low;
   trans_prob[1] = in_prob_high;
+  //cout << "dbg1225 vs set_param "<< trans_prob[0] << " " << trans_prob[1] << endl;
   return 0;
 }
 int VirtualState::set_alpha(real in_alpha_low, real in_alpha_high){
@@ -58,6 +59,7 @@ ExtendedVMcMD::ExtendedVMcMD()
   n_enhance_groups=0;
   //flg_vs_transition = false;
   flg_vs_transition = true;
+  
 }
 
 ExtendedVMcMD::~ExtendedVMcMD(){
@@ -169,12 +171,15 @@ int ExtendedVMcMD::trial_transition(int source, int rel_dest,
   // lambda
 
   // return ...
+
+  //std::uniform_real_distribution<> random_gen(0.0, 1.0);
+  
   if (source == 0 and rel_dest==-1)          return source;
   if (source == n_vstates-1 and rel_dest==1) return source;
   int up_down = rel_dest;
   if(rel_dest == -1) up_down = 0;
   if(vstates[source+rel_dest].is_in_range(lambda)){
-    real dice = 1.0; // random value
+    float dice = random_mt->get_float_01();
     if(dice > (1.0 - vstates[source].get_trans_prob(up_down))){
       return source + rel_dest;
     }
@@ -264,7 +269,10 @@ int ExtendedVMcMD::print_info(){
   for(int i=0; i < n_vstates; i++){
     cout << "  Virtual state: " << i+1 << " ... ";
     cout << vstates[i].get_lambda_low() << " ~ ";
-    cout << vstates[i].get_lambda_high() << endl;
+    cout << vstates[i].get_lambda_high() << " , ";
+    cout << vstates[i].get_trans_prob(0) << " - " ;
+    cout << vstates[i].get_trans_prob(1) << endl;
+
     for(int j=0; j < vstates[i].get_order()+1; j++){
       cout << "    " << j << ": " << vstates[i].get_poly_param(j) << endl;
     }
@@ -317,7 +325,8 @@ int ExtendedVMcMD::set_mass(real_pw* in_mass, real_pw* in_mass_groups, real_pw* 
 
   return 0;
 }
-int ExtendedVMcMD::set_params(real in_sigma, real in_recov_coef){
+int ExtendedVMcMD::set_params(RandomNum* in_mt, real in_sigma, real in_recov_coef){
+  random_mt = in_mt;
   sigma = in_sigma;
   //sigma_half = sigma * 0.5;  
   //sigma_sq_inv = 1.0 / (sigma * sigma);
