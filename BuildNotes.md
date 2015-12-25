@@ -32,6 +32,18 @@ Below is an assortment of build notes for handling different software dependenci
 
         #endif /* __GNUC__> 4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 9) */
 
+## Linux
+
+### MPI
+
+* Installation of MPICH or OpenMPI may not add `mpicc`/`mpic++` to the `$PATH`, resulting in the following error when invoking `cmake`:
+
+        Could NOT find MPI_C (missing: MPI_C_LIBRARIES MPI_C_INCLUDE_PATH)
+
+    To resolve this, simply add the directory containing `mpicc`/`mpic++` to the `$PATH` in the `ENVIRONMENT` or in the `cmake` invocation:
+
+        local$ PATH=$PATH:/usr/lib64/mpich/bin cmake .....
+
 
 
 ## Mac OS X

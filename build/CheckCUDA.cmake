@@ -1,8 +1,8 @@
 FIND_PACKAGE(CUDA REQUIRED)
 SET( MINIMUM_CUDA_VERSION_REQUIRED 7.0 )
-if (CUDA_VERSION VERSION_LESS MINIMUM_CUDA_VERSION_REQUIRED)
+IF (CUDA_VERSION VERSION_LESS MINIMUM_CUDA_VERSION_REQUIRED)
 	MESSAGE( FATAL_ERROR "${BoldRed}Installed CUDA version is older than ${MINIMUM_CUDA_VERSION_REQUIRED}!${ColourReset}" )
-endif()
+ENDIF()
 
 #[[
 	There is a known issue with CMake flag propagation that causes errors when compiling with nvcc:
