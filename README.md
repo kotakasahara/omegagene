@@ -19,30 +19,38 @@ Celeste is a Molecular Dynamics package (more description here).
 
 This is non-exhaustive description for building Celeste.  For platform-specific details, please refer to the [Build Notes](BuildNotes.md).
 
-1. Set up a target build folder;
+1. Set up a target build folder:
 
-        # in <PROJECT_ROOT> directory
-        mkdir target
-        cd target
+    ```sh
+    # in <PROJECT_ROOT> directory
+    local$ mkdir target
+    local$ cd target
+    ```
 
-1. Configure the build.  CMake must be invoked on the `CMakeLists.txt` file in the **<PROJECT_ROOT>** directory:
+1. Configure the build.  CMake will determine all the external software dependencies for the selected build variant, and exit with errors if the dependency requirements are not met.  CMake must be invoked on the `CMakeLists.txt` file in the **<PROJECT_ROOT>** directory:
 
-        # Run ONE of the following commands to configure for building the desired variant of celeste
-        # in <PROJECT_ROOT>/target directory
-        cmake -DCELESTE_WO_NS=1 ..
-        cmake -DCELESTE_GPU=1 ..
-        cmake -DCELESTE_GPUECP=1 ..
-        cmake ..
+    ```sh
+    # Run ONE of the following commands to configure for building the desired variant of celeste
+    # in <PROJECT_ROOT>/target directory
+    local$ cmake -DCELESTE_WO_NS=1 ..
+    local$ cmake -DCELESTE_GPU=1 ..
+    local$ cmake -DCELESTE_GPUECP=1 ..
+    local$ cmake ..
+    ```
 
 1. Build the software
 
-        # The verbose flag is optional
-        make VERBOSE=1
+    ```sh
+    # The verbose flag is optional
+    local$ make VERBOSE=1
+    ```
 
-Additional build options and configurations can be found by invoking CMake help:
+Additional build options and configurations can be found by invoking CMake `help`:
 
-    # in /target
-    cmake -LH ..
-    ...
-    ... help and custom flag descriptions
-    ...
+```sh
+# in <PROJECT_ROOT>/target
+local$ cmake -LH ..
+...
+... help and custom build flag descriptions
+...
+```

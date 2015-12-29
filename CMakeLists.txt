@@ -19,6 +19,7 @@ INCLUDE(SetCMakeMessageColors)
 SET( _CMAKE_PROJECT_INITIALS "celeste" CACHE INTERNAL "Project Name Initials" )
 MESSAGE( "\n${BoldCyan}    **** WELCOME TO ${CMAKE_PROJECT_NAME} (${_CMAKE_PROJECT_INITIALS})! ****\n\n    For the list of ${CMAKE_PROJECT_NAME} build options,\n    run CMake with the '-LH' flags.${ColourReset}\n" )
 
+INCLUDE(SetBuildInformation)
 INCLUDE(CheckCXXCompiler)
 INCLUDE(CheckCelesteBuildOptions)
 
