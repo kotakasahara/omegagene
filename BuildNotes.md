@@ -80,3 +80,15 @@ Below is an assortment of build notes for handling different software dependenci
 
         # where /usr/bin/clang symlinks to AppleClang
         localhost:target local$ cmake -D CMAKE_C_COMPILER=/opt/local/bin/clang-mp-3.7 -D CMAKE_CXX_COMPILER=/opt/local/bin/clang++-mp-3.7 -D CELESTE_GPU=1 -D CUDA_HOST_COMPILER=/usr/bin/clang ..
+
+
+## Windows
+
+* MSVC does not define the alternative tokens for logical operators (i.e. `and` in place of `&&`) by default.  See http://stackoverflow.com/questions/24414124/why-does-vs-not-define-the-alternative-tokens-for-logical-operators.  This issue can be circumvented by including the following header in source files that use alternative tokens:
+
+        #include <ciso646>
+
+    The correct solution is to disable C++ language extensions in MSVC by use of the `/Za` compiler flag; however this flag is known to be buggy and will result in ODR errors during linking.  See the following articles:
+
+    * http://cidebycide.blogspot.com/2015/10/visual-studio-2015-icu-and-error-lnk2005.html
+    * http://stackoverflow.com/questions/31808256/multi-file-iostream-error-lnk2005-in-vs2015-with-za
