@@ -173,7 +173,7 @@ int ExtendedVMcMD::trial_transition(int source, int rel_dest,
   // return ...
 
   //std::uniform_real_distribution<> random_gen(0.0, 1.0);
-  
+  if (!vstates[source].is_in_range(lambda))  return source;
   if (source == 0 and rel_dest==-1)          return source;
   if (source == n_vstates-1 and rel_dest==1) return source;
   int up_down = rel_dest;
@@ -239,7 +239,7 @@ int ExtendedVMcMD::close_files(){
   return 0;
 }
 int ExtendedVMcMD::write_vslog(int cur_steps){
-  writer_vslog.write_ttpvMcMDLog(cur_steps, cur_vs);
+  writer_vslog.write_ttpvMcMDLog(cur_steps+1, cur_vs);
   return 0;
 }
 int ExtendedVMcMD::write_lambda(real lambda){

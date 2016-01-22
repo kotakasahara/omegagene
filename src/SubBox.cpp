@@ -1571,12 +1571,16 @@ int SubBox::copy_vel_just(real** p_vel){
   }  
   return 0;
   }*/
+int SubBox::copy_crd_prev(real** p_crd){
+  return copy_crdvel_to_mmsys(crd_prev, p_crd);
+}
 int SubBox::copy_crd(real** p_crd){
   return copy_crdvel_to_mmsys(crd, p_crd);
 }
 int SubBox::copy_vel(real** p_vel){
   return copy_crdvel_to_mmsys(vel, p_vel);
 }
+
 int SubBox::copy_vel_next(real** p_vel){
   return copy_crdvel_to_mmsys(vel_next, p_vel);
 }
