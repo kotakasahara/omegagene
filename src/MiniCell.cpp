@@ -1,5 +1,6 @@
 #include "MiniCell.h"
 #include <bitset>
+#include <ciso646>
 
 #ifdef F_CUDA
 extern "C" int cuda_hostalloc_atom_info(real_pw*& h_crd, int*& h_atomids,

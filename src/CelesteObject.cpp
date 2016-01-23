@@ -1,12 +1,20 @@
 #include "CelesteObject.h"
 
+#ifndef MACRO_BUILD_VERSION
+    #error -- MACRO_BUILD_VERSION is not defined; please invoke the compiler with -DMACRO_BUILD_VERSION=<VALUE>!
+#endif
+
+#ifndef MACRO_BUILD_TIMESTAMP
+    #error -- MACRO_BUILD_TIMESTAMP is not defined; please invoke the compiler with -DMACRO_BUILD_TIMESTAMP=<VALUE>!
+#endif
+
 CelesteObject::CelesteObject(){
 }
 
 //const int CelesteObject::MAX_N_ATOMTYPE = 40;
 
 const string CelesteObject::EXE = "celeste";
-const string CelesteObject::ABOUT_ME = "celeste ver.0.36.i.1 22-jan-2016";
+const string CelesteObject::ABOUT_ME = string("celeste ") + MACRO_BUILD_VERSION + " (" + MACRO_BUILD_TIMESTAMP + ")";
 const string CelesteObject::DESCRIPTION = "";
 //const int CelesteObject::REAL_BYTE = 4;
 const int CelesteObject::REAL_BYTE = sizeof(real);
@@ -27,24 +35,23 @@ const real CelesteObject::BOLTZMAN = 1.380658e-23;
 //const int CelesteObject::MAX_N_NB15OFF = 32;
 
 int CelesteObject::cross(const double* a, const double* b, double* ret){
-  ret[0] = a[1]*b[2] - a[2]*b[1];
-  ret[1] = a[2]*b[0] - a[0]*b[2];
-  ret[2] = a[0]*b[1] - a[1]*b[0];
-  return 0;
+    ret[0] = a[1]*b[2] - a[2]*b[1];
+    ret[1] = a[2]*b[0] - a[0]*b[2];
+    ret[2] = a[0]*b[1] - a[1]*b[0];
+    return 0;
 }
 int CelesteObject::cross(const float* a, const float* b, float* ret){
-  ret[0] = a[1]*b[2] - a[2]*b[1];
-  ret[1] = a[2]*b[0] - a[0]*b[2];
-  ret[2] = a[0]*b[1] - a[1]*b[0];
-  return 0;
+    ret[0] = a[1]*b[2] - a[2]*b[1];
+    ret[1] = a[2]*b[0] - a[0]*b[2];
+    ret[2] = a[0]*b[1] - a[1]*b[0];
+    return 0;
 }
-int CelesteObject::error_exit(const string msg,
-			      const string error_code){
-  stringstream ss;
-  ss <<  "[ Error : " << error_code << " ]" << endl;
-  ss << msg << endl;
+int CelesteObject::error_exit(const string msg, const string error_code){
+    stringstream ss;
+    ss <<  "[ Error : " << error_code << " ]" << endl;
+    ss << msg << endl;
 
-  cerr << ss.str();
-  exit(1);
-  return 0;
+    cerr << ss.str();
+    exit(1);
+    return 0;
 }

@@ -1,4 +1,5 @@
 #include "Extend.h"
+#include <ciso646>
 
 Extended::Extended()
   : CelesteObject(){
