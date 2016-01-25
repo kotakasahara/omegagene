@@ -21,6 +21,7 @@ using namespace std;
 #include "Extend.h"
 #include "DistRestraint.h"
 #include "PosRestraint.h"
+#include "General.h"
 
 class MmSystem : public CelesteObject{
  private:
@@ -139,7 +140,7 @@ class MmSystem : public CelesteObject{
   DistRestraintObject*  dist_restraint;
   PosRestraintObject*  pos_restraint;
 
-  //mt19937 random_mt;
+  RandomNum random_mt;
 
   //time
 

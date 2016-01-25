@@ -74,6 +74,8 @@ int Config::set_defaults(){
   //aus_type = AUSTYPE_MASSCENTER;
   fn_o_aus_restart = "aus_restart_out.dat";
 
+  random_seed = -1;
+
   return 0;
 }
 void Config::setAll(int argn, char* argv[]){

@@ -69,6 +69,15 @@ int DynamicsMode::initial_preprocess(){
   //cout << "nsgrid_setup" << endl;
   //subbox.nsgrid_set(nsgrid_cutoff);
 
+  // Random
+  if (cfg->random_seed < 0){
+    random_device rnd;
+    mmsys.set_random(rnd());
+  }else{
+    mmsys.set_random(cfg->random_seed);
+  }
+
+
   if(cfg->extended_ensemble != EXTENDED_NONE){
     cout << "V_McMD: " << endl;
     cout << "  VS log output ... " << cfg->fn_o_vmcmd_log << endl;
@@ -79,7 +88,8 @@ int DynamicsMode::initial_preprocess(){
     mmsys.vmcmd->set_lambda_interval(cfg->print_intvl_extended_lambda);
     mmsys.vmcmd->print_info();
 
-    mmsys.vmcmd->set_params(cfg->enhance_sigma, cfg->enhance_recov_coef); //, cfg->aus_type);
+    mmsys.vmcmd->set_params(&mmsys.random_mt, 
+			    cfg->enhance_sigma, cfg->enhance_recov_coef); //, cfg->aus_type);
     
     //for(int i_grp=0; i_grp < mmsys.n_groups; i_grp++){
     //cout << "dbg1130 massDM " << i_grp << " " << mmsys.mass_inv_groups[i_grp]<<endl;
@@ -112,7 +122,6 @@ int DynamicsMode::initial_preprocess(){
   cout << "Initial kinetic energy : " << mmsys.kinetic_e << endl;
   cout << "Initial temperature : " <<  mmsys.temperature << endl;
   cout << "Degree of freedom : " <<  mmsys.d_free << endl;
-
 
   return 0;
 }
@@ -205,10 +214,10 @@ int DynamicsMode::sub_output(){
   //cout << "cur_step: " << mmsys.cur_step << " ";
   //cout << mmsys.cur_step % cfg->print_intvl_crd << endl;
 
-  bool out_crd = cfg->print_intvl_crd > 0 && mmsys.cur_step % cfg->print_intvl_crd == 0;
-  bool out_vel = cfg->print_intvl_vel > 0 && mmsys.cur_step % cfg->print_intvl_vel == 0;
-  bool out_force = cfg->print_intvl_force > 0 && mmsys.cur_step % cfg->print_intvl_force == 0;
-  if(out_crd) subbox.copy_crd(mmsys.crd);
+  bool out_crd = cfg->print_intvl_crd > 0 && mmsys.cur_step != 1 && (mmsys.cur_step-1) % cfg->print_intvl_crd == 0;
+  bool out_vel = cfg->print_intvl_vel > 0 && mmsys.cur_step != 1 && (mmsys.cur_step-1) % cfg->print_intvl_vel == 0;
+  bool out_force = cfg->print_intvl_force > 0 && mmsys.cur_step != 1 && (mmsys.cur_step-1) % cfg->print_intvl_force == 0;
+  if(out_crd) subbox.copy_crd_prev(mmsys.crd);
   if(out_vel) subbox.copy_vel(mmsys.vel_just);
   if(out_crd || out_vel || out_force){
     real total_e = mmsys.set_potential_e() + mmsys.kinetic_e;

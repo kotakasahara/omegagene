@@ -661,14 +661,14 @@ int Read::load_ls_group_coord(MmSystem& mmsys){
   read_bin_values(&buf, 1);
   char header[MAX_LEN_NAME];
   ifs.read(header, buf);
-  cout << "dbg1130 group_coord : " << string(header) << endl;
+  //cout << "dbg1130 group_coord : " << string(header) << endl;
   int aus_type = 0;
   read_bin_values(&aus_type, 1);
   mmsys.vmcmd->set_aus_type(aus_type);
-  cout << "dbg1130 aus_type: " << aus_type << endl;
+  //cout << "dbg1130 aus_type: " << aus_type << endl;
   int n_groups = 0;
   read_bin_values(&n_groups, 1);
-  cout << "dbg1130 n_groups: " << n_groups << endl;  
+  //cout << "dbg1130 n_groups: " << n_groups << endl;  
 
   vector<int> enhance_groups;
   for(int i=0; i<n_groups; i++){
