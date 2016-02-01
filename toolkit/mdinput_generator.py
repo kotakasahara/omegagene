@@ -43,9 +43,12 @@ def get_options():
     p = OptionParser()
     
     p.add_option('-i', dest='fn_config',
-                 help="file name for config file")
+                 help="Input config file")
     p.add_option('-o', dest='fn_out',
-                 help="file name for config file")
+                 help="Output binary file")
+    p.add_option('-w', dest='fn_warning',
+                 default="WARNING.celeste",
+                 help="Output warning file")
     p.add_option('-v', dest='version',
                  type="choice",
                  choices=VERSION_LIST,
@@ -64,18 +67,21 @@ def get_options():
 
 def _main():
     opts, args = get_options()
-    mdinputgen = MDInputGen(opts.fn_config, opts.fn_out, opts.version)
-    print "read_files()"
+    mdinputgen = MDInputGen(opts.fn_config, opts.fn_out, opts.fn_warning, opts.version)
+    print "Reading input files"
     mdinputgen.read_files()
-    print "dump_mdinput()"    
+    print "Writingb the inary"
     mdinputgen.dump_mdinput()
+    mdinputgen.write_warnings()
     print "End"
     return 
 
 class MDInputGen(object):
-    def __init__(self, in_fn_config, in_fn_out, version):
+    def __init__(self, in_fn_config, in_fn_out, in_fn_warning, version):
         self.fn_config = in_fn_config
         self.fn_out = in_fn_out
+        self.fn_warning = in_fn_warning
+        self.msg_warnings = []
         self.version_id = VERSION_LIST.index(version)
         self.version = version
         self.config = None
@@ -91,7 +97,17 @@ class MDInputGen(object):
         self.pos_rest = []
         self.aus_restart = None
         return 
-
+    def add_warn(self, msg):
+        self.msg_warnings.append(msg)
+        return 
+    def write_warnings(self):
+        if len(self.msg_warnings) > 0:
+            f = open(self.fn_warning,"w")
+            for i, msg in enumerate(self.msg_warnings):
+                f.write("WARNING : " + str(i) + "\n") 
+                f.write(msg + "\n")
+            f.close()
+        return
     def read_files(self):
         print "read_config"
         self.config = kkmmconfig.ConfigReader(self.fn_config).read_config()
@@ -587,6 +603,13 @@ class MDInputGen(object):
             buf += st.pack("@f", pr.dist_margin)
             buf += st.pack("@f", pr.coef)
         return buf
-
+    def evaluate_aus_group_center(self):
+        if self.version >= 2:
+            if not self.config.get_val("fn-i-aus-restart") and self.config.get_val("aus-type") :
+                warn = self.aus_restart.check_com_proximity(self.restart, self.system.mass,
+                                                            self.atom_groups,
+                                                            self.config.get_val("enhance-group-name"))
+                self.msg_warnings.extend(warn)
+            
 if __name__ == "__main__":
     _main()
