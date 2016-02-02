@@ -70,24 +70,28 @@ class CelesteAUSRestart(object):
         self.n_enhance_groups = len(self.crd_groups)
         return 
     def check_com_proximity(self, restart, mass,
-                            atom_groups, 
+                            atom_groups, atom_group_names,
                             aus_group_names):
         warning_msg = []
         for name in aus_group_names:
             grp_id = atom_group_names.index(name) 
             center = numpy.zeros(3, dtype=numpy.float32)
+            sum_mass = 0.0
             for atom_id in atom_groups[grp_id]:
-                cetner += restart.crd[atom_id] * mass[atom_id]
+                center += restart.crd[atom_id] * mass[atom_id]
+                sum_mass += mass[atom_id]
+            center /= sum_mass
             min_dist = 1e10
             for atom_id in atom_groups[grp_id]:
                 dist = numpy.sqrt(numpy.sum((restart.crd[atom_id] - center)**2))
+
                 if min_dist >= dist: min_dist = dist
                 
             if min_dist >= Min_dist_proximity:
                 msg = "The center of the group [" + name + "] is far from the molecule.\n"
                 msg += "The minimum distance : " + str(min_dist) +"\n"
                 warning_msg.append(msg)
-        return 
+        return warning_msg
 
 class CelesteAUSRestartReader(kkkit.FileBI):
     def __init__(self, fn):

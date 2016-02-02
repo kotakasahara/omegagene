@@ -38,6 +38,7 @@ import kkpresto_distrest as disres
 import kkceleste_posrest as posres
 import kkatomgroup as atgrp
 import kkceleste_ausrestart as ausrest
+import evaluate_structure as evst
 
 def get_options():
     p = OptionParser()
@@ -72,6 +73,7 @@ def _main():
     mdinputgen.read_files()
     print "Writingb the inary"
     mdinputgen.dump_mdinput()
+    mdinputgen.evaluate()
     mdinputgen.write_warnings()
     print "End"
     return 
@@ -104,7 +106,7 @@ class MDInputGen(object):
         if len(self.msg_warnings) > 0:
             f = open(self.fn_warning,"w")
             for i, msg in enumerate(self.msg_warnings):
-                f.write("WARNING : " + str(i) + "\n") 
+                f.write("WARNING : " + str(i+1) + "\n") 
                 f.write(msg + "\n")
             f.close()
         return
@@ -603,13 +605,31 @@ class MDInputGen(object):
             buf += st.pack("@f", pr.dist_margin)
             buf += st.pack("@f", pr.coef)
         return buf
+    def evaluate(self):
+        self.evaluate_aus_group_center()
+        self.evaluate_structures()
+        return
     def evaluate_aus_group_center(self):
         if self.version >= 2:
             if not self.config.get_val("fn-i-aus-restart") and self.config.get_val("aus-type") :
                 warn = self.aus_restart.check_com_proximity(self.restart, self.system.mass,
-                                                            self.atom_groups,
+                                                            self.atom_groups, self.atom_group_names,
                                                             self.config.get_val("enhance-group-name"))
-                self.msg_warnings.extend(warn)
-            
+                for w in warn: self.add_warn(w)
+            ## check bonds exceeding the boundary
+            ##  (other than molecules with < 4 atoms) 
+            bnds = evst.check_bond_exceeding_boundary(self.restart, self.tpl)
+            if len(bnds) > 0:
+                warn = "The bonds exceeds PBC:\n"
+                warn += ", ".join([str(x) for x in bnds])
+                self.add_warn(warn)
+
+    def evaluate_structures(self):
+        ## check total charge
+        tcharge = evst.check_total_charge(self.tpl)
+        if tcharge > 1e-6 or tcharge < -1e-6:
+            warn = "The total charge is not zero : " + str(tcharge)
+            self.add_warn(warn)
+        
 if __name__ == "__main__":
     _main()
