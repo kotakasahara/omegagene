@@ -1,11 +1,6 @@
 #include "Celeste.h"
 
-Celeste::Celeste()
-  : CelesteObject(){
-  
-}
-
-int Celeste::setup(int argn, char* argv[]){
+int Celeste::setup(int argn, char* argv[]) {
   cout << ABOUT_ME << endl;
   string fn_cfg;
   if(argn<2){
@@ -13,13 +8,12 @@ int Celeste::setup(int argn, char* argv[]){
     cerr << "------------------------------------"<<endl;
     exit(1);
   }
-  cout << "conf.setall\n";
-  cfg.set_defaults();
-  cfg.setAll(argn,argv);
+  cout << "conf.set_arguments\n";
+  cfg.set_arguments(argn,argv);
   if(cfg.fn_cfg!=string())
-    cfg.setAll(Read(cfg.fn_cfg).load_config());
+    cfg.set_arguments(Read(cfg.fn_cfg).load_config());
   cout <<"/setup\n";
-  
+
   return 0;
 }
 
@@ -48,7 +42,7 @@ int Celeste::test_mode(){
 
 int Celeste::dynamics_mode(){
   cout<<"dynamics_mode\n";
-  
+
   // #if defined(F_CUDA) && defined(F_MPI)
   //   cout << "F_CUDA + F_MPI flags = ON" << endl;
   //  MpiGpuDynamicsMode* dynamics = new MpiGpuDynamicsMode;
@@ -67,27 +61,27 @@ int Celeste::dynamics_mode(){
     cout << "Unknown Integrator" << endl;
   }
   //#endif
-  
-  
+
+
   if(DBG>=1)
     cout << "DBG1: dynamics->set_config_parameters(cfg)" << endl;
-  
+
   dynamics->set_config_parameters(&cfg);
 
   Read(cfg.fn_inp).load_launch_set(dynamics->mmsys);
 
   if(DBG>=1)
     cout << "DBG1: dynamics->initial_preprocess()" << endl;
-  
+
   dynamics->initial_preprocess();
-  
+
   if(DBG>=1)
     cout << "DBG1: dynamics->main_stream()" << endl;
   dynamics->main_stream();
-  
+
   //dynamics->mmsys.writeData();
-  
-  dynamics->terminal_process();  
+
+  dynamics->terminal_process();
 
 #if defined(F_MPI)
   MPI_Finalize();

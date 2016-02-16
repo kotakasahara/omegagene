@@ -19,14 +19,14 @@ using namespace std;
 #include "DynamicsMode.h"
 
 class Celeste : private CelesteObject{
- private:
-  Config cfg;
- public:
-  Celeste();
-  int setup(int argn, char* argv[]);
-  int main_stream();
-  int test_mode();
-  int dynamics_mode();
+    Config cfg;
+
+  public:
+    Celeste() = default;
+    int setup(int argn, char* argv[]);
+    int main_stream();
+    int test_mode();
+    int dynamics_mode();
 };
 
 #endif
