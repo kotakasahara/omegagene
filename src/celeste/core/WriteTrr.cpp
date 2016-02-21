@@ -1,4 +1,5 @@
 #include "WriteTrr.h"
+using namespace std;
 
 WriteTrr::WriteTrr()
   : Write(){
@@ -9,7 +10,7 @@ WriteTrr::~WriteTrr(){
 
 int WriteTrr::write_trr(int n_atoms,
 			int cur_step, real cur_time,
-			real lx, real ly, real lz, 
+			real lx, real ly, real lz,
 			real** crd, real** vel_just, real_fc** force,
 			real cpu_time, real total_e, real kinetic_e,
 			real temperature, real potential_e,
@@ -29,7 +30,7 @@ WriteTrrGromacs::~WriteTrrGromacs(){
 
 int WriteTrrGromacs::write_trr(int n_atoms,
 			       int cur_step, real cur_time,
-			       real lx, real ly, real lz, 
+			       real lx, real ly, real lz,
 			       real** crd, real** vel_just, real_fc** force,
 			       real cpu_time, real total_e, real kinetic_e,
 			       real temperature, real potential_e,
@@ -51,7 +52,7 @@ int WriteTrrGromacs::write_trr(int n_atoms,
   int f_size = 0;
   if(out_force)
     f_size = n_atoms * 3 * sizeof(real);
-  
+
   int magic = 1993;
   int nchar1 = 13;
   int nchar2 = 12;
@@ -87,13 +88,13 @@ int WriteTrrGromacs::write_trr(int n_atoms,
     real z = lz*0.1;
 
     ofs.write((const char*)&x, sizeof x);
-    ofs.write((const char*)&dummy_real, sizeof(real));    
-    ofs.write((const char*)&dummy_real, sizeof(real));    
-    ofs.write((const char*)&dummy_real, sizeof(real));    
+    ofs.write((const char*)&dummy_real, sizeof(real));
+    ofs.write((const char*)&dummy_real, sizeof(real));
+    ofs.write((const char*)&dummy_real, sizeof(real));
     ofs.write((const char*)&y, sizeof y);
-    ofs.write((const char*)&dummy_real, sizeof(real));    
-    ofs.write((const char*)&dummy_real, sizeof(real));    
-    ofs.write((const char*)&dummy_real, sizeof(real));    
+    ofs.write((const char*)&dummy_real, sizeof(real));
+    ofs.write((const char*)&dummy_real, sizeof(real));
+    ofs.write((const char*)&dummy_real, sizeof(real));
     ofs.write((const char*)&z, sizeof z);
   }
   if(out_crd){
@@ -172,7 +173,7 @@ WriteTrrPresto::~WriteTrrPresto(){
 
 int WriteTrrPresto::write_trr(int n_atoms,
 			      int cur_step, real cur_time,
-			      real lx, real ly, real lz, 
+			      real lx, real ly, real lz,
 			      real** crd, real** vel_just, real_fc** force,
 			      real cpu_time, real total_e, real kinetic_e,
 			      real temperature, real potential_e,
@@ -191,22 +192,22 @@ int WriteTrrPresto::write_trr(int n_atoms,
   buf_f = (float)total_e;
   ofs.write((const char*)&buf_f, sizeof(float));   //total e
   buf_f = (float)kinetic_e;
-  ofs.write((const char*)&buf_f, sizeof(float));   //kinetic e  
+  ofs.write((const char*)&buf_f, sizeof(float));   //kinetic e
   buf_f = (float)temperature;
-  ofs.write((const char*)&buf_f, sizeof(float));   //temperature  
+  ofs.write((const char*)&buf_f, sizeof(float));   //temperature
   buf_f = (float)potential_e;
   ofs.write((const char*)&buf_f, sizeof(float));   //potential e
   buf_f = 0.0;
   ofs.write((const char*)&buf_f, sizeof(float));   //rmsf
   buf_f = (float)vdw_e;
   ofs.write((const char*)&buf_f, sizeof(float));   //vdw
-  buf_f = 0.0;  
+  buf_f = 0.0;
   ofs.write((const char*)&buf_f, sizeof(float));   //hyd
-  buf_f = 0.0;  
+  buf_f = 0.0;
   ofs.write((const char*)&buf_f, sizeof(float));   //rmsd
   buf = 0;
   ofs.write((const char*)&buf, sizeof(int));
-  
+
   if(n_atoms_group == 0){
     buf = n_atoms * 3 * 4;
     ofs.write((const char*)&buf, sizeof(int));
@@ -214,9 +215,9 @@ int WriteTrrPresto::write_trr(int n_atoms,
       float x = crd[i][0];
       float y = crd[i][1];
       float z = crd[i][2];
-      ofs.write((const char*)&x, sizeof(float));    
-      ofs.write((const char*)&y, sizeof(float));    
-      ofs.write((const char*)&z, sizeof(float));    
+      ofs.write((const char*)&x, sizeof(float));
+      ofs.write((const char*)&y, sizeof(float));
+      ofs.write((const char*)&z, sizeof(float));
     }
     ofs.write((const char*)&buf, sizeof(int));
   }else{
@@ -226,9 +227,9 @@ int WriteTrrPresto::write_trr(int n_atoms,
       float x = crd[atom_group[i]][0];
       float y = crd[atom_group[i]][1];
       float z = crd[atom_group[i]][2];
-      ofs.write((const char*)&x, sizeof(float));    
-      ofs.write((const char*)&y, sizeof(float));    
-      ofs.write((const char*)&z, sizeof(float));    
+      ofs.write((const char*)&x, sizeof(float));
+      ofs.write((const char*)&y, sizeof(float));
+      ofs.write((const char*)&z, sizeof(float));
     }
     ofs.write((const char*)&buf, sizeof(int));
   }
@@ -253,7 +254,7 @@ int WriteRestart::write_restart(int n_atoms, int n_steps,
   char title[80];
   int i;
   strcpy(title, ABOUT_ME.c_str());
-  
+
   ofs.write((const char*)&buf_int, sizeof(int));
   ofs.write(title, 80);
   ofs.write((const char*)&buf_int, sizeof(int));
@@ -272,7 +273,7 @@ int WriteRestart::write_restart(int n_atoms, int n_steps,
   ofs.write((const char*)&buf_dbl, sizeof(double));
   ofs.write((const char*)&e_kinetic, sizeof(double));
   ofs.write((const char*)&e_potential, sizeof(double));
-  ofs.write((const char*)&buf_int, sizeof(int));  
+  ofs.write((const char*)&buf_int, sizeof(int));
 
   buf_int = n_atoms*3*8;
   ofs.write((const char*)&buf_int, sizeof(int));
@@ -282,7 +283,7 @@ int WriteRestart::write_restart(int n_atoms, int n_steps,
       ofs.write((const char*)&buf_dbl, sizeof(double));
     }
   }
-  ofs.write((const char*)&buf_int, sizeof(int));  
+  ofs.write((const char*)&buf_int, sizeof(int));
 
   ofs.write((const char*)&buf_int, sizeof(int));
   for(int i=0; i < n_atoms; i++){
@@ -291,7 +292,7 @@ int WriteRestart::write_restart(int n_atoms, int n_steps,
       ofs.write((const char*)&buf_dbl, sizeof(double));
     }
   }
-  ofs.write((const char*)&buf_int,sizeof(int));  
+  ofs.write((const char*)&buf_int,sizeof(int));
   close();
   return 0;
 }
@@ -306,11 +307,11 @@ int WriteGroupCoord::write_aus_restart(const int aus_type,
 				       vector<int> enhance_groups,
 				       int* n_atoms_in_groups,
 				       real*** crd_groups){
-  
+
   int buf = 5;
   ofs.write((const char*)&buf, sizeof(int));
   ofs.write("V-AUS", 5);
-  
+
   ofs.write((const char*)&aus_type, sizeof(int));
   ofs.write((const char*)&n_enhance_groups, sizeof(int));
   for(int k=0; k < n_enhance_groups; k++){
@@ -329,6 +330,6 @@ int WriteGroupCoord::write_aus_restart(const int aus_type,
       ofs.write((const char*)&y, sizeof(double));
       ofs.write((const char*)&z, sizeof(double));
     }
-  }  
+  }
   return 0;
 }

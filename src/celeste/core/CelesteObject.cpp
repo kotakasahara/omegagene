@@ -1,5 +1,8 @@
 #include "CelesteObject.h"
 
+#include <iostream>
+#include <sstream>
+
 #ifndef MACRO_BUILD_VERSION
     #error -- MACRO_BUILD_VERSION is not defined; please invoke the compiler with -DMACRO_BUILD_VERSION=<VALUE>!
 #endif
@@ -7,6 +10,8 @@
 #ifndef MACRO_BUILD_TIMESTAMP
     #error -- MACRO_BUILD_TIMESTAMP is not defined; please invoke the compiler with -DMACRO_BUILD_TIMESTAMP=<VALUE>!
 #endif
+
+using namespace std;
 
 CelesteObject::CelesteObject(){
 }

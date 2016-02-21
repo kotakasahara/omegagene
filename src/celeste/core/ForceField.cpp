@@ -1,17 +1,18 @@
 #include "ForceField.h"
+using namespace std;
 
 ForceField::ForceField()
   : ForceFieldObject(){
   if(DBG >= 1)
     cout << "DBG1: ForceField::ForceField()"<<endl;
-  
+
   gmul[0] = 0.0;  gmul[1] = 0.0;   gmul[2] = 2.0;
   gmul[3] = 0.0;  gmul[4] = 4.0;   gmul[5] = 0.0;
   gmul[6] = 6.0;  gmul[7] = 0.0;   gmul[8] = 8.0;
   gmul[9] = 0.0;  gmul[10] = 10.0;
-  
+
   //if(DBG >= 1)
-  //cout << "DBG1: ForceField::ForceField() owari"<<endl;    
+  //cout << "DBG1: ForceField::ForceField() owari"<<endl;
 }
 
 ForceField::~ForceField(){
@@ -91,7 +92,7 @@ int ForceField::set_config_parameters(const Config* cfg){
 
 int ForceField::initial_preprocess(const PBC* in_pbc){
   if (DBG >= 1)
-    cout << "DBG1: ForceField::initial_preprocess"<<endl;    
+    cout << "DBG1: ForceField::initial_preprocess"<<endl;
   ForceFieldObject::initial_preprocess(in_pbc);
   ele->initial_preprocess();
   return 0;
@@ -100,10 +101,10 @@ int ForceField::initial_preprocess(const PBC* in_pbc){
 int ForceField::calc_bond(real& ene, real_fc work[],
 			  const real* crd1, const real* crd2,
 			  const real& param_e, const real& param_r0){
-  
+
   //mmsys->pbc.print_pbc();
   real d12[3];
-  
+
   pbc->diff_crd_minim_image(d12, crd1, crd2);
 
   real_bp r12 = sqrt(d12[0]*d12[0] + d12[1]*d12[1] + d12[2]*d12[2]);
@@ -127,7 +128,7 @@ int ForceField::calc_bond(real& ene, real_fc work[],
 int ForceField::calc_angle(real& ene, real_fc work1[], real_fc work2[],
 			   const real* crd1, const real* crd2, const real* crd3,
 			   const real& param_e, const real& param_theta0){
-  
+
   real d12[3];
   real d32[3];
   pbc->diff_crd_minim_image(d12, crd1, crd2);
@@ -176,8 +177,8 @@ int ForceField::calc_torsion(real& ene, real_fc work1[], real_fc work2[], real_f
   real_bp d32[3];
   pbc->diff_crd_minim_image(d32, crd3, crd2);
   real_bp d43[3];
-  pbc->diff_crd_minim_image(d43, crd4, crd3);  
-  
+  pbc->diff_crd_minim_image(d43, crd4, crd3);
+
   real_bp p12[3];
   cross(d21, d32, p12);
   real_bp p23[3];
@@ -201,10 +202,10 @@ int ForceField::calc_torsion(real& ene, real_fc work1[], real_fc work2[], real_f
   real_bp phimod = param_symmetry * phi - param_phase;
   //cout << "dbg0204:ps, phi, phase " << param_symmetry << " ";
   //cout << phi << " " << param_phase << endl;
-  
+
   real_bp div = 1.0 / real_bp(param_overlaps);
   ene = param_ene * (1.0 + cos(phimod) ) * div;
-  
+
   //cout << "dbg0204:torsion " << ene << " " << param_ene << " ";
   //cout << phimod << " " << div << endl;
   real_bp sinp = sin(phi);
@@ -216,7 +217,7 @@ int ForceField::calc_torsion(real& ene, real_fc work1[], real_fc work2[], real_f
   real_bp cos_fphs = cos(param_phase);
   real_bp sin_rot = sin(param_symmetry * phi);
   real_bp cos_rot = cos(param_symmetry * phi);
-  
+
   real_bp dums = sinp;
   real_bp dflim = cos_fphs * (param_symmetry - gmul[nrot] + gmul[nrot] * cosp);
   real_bp df0 = cos_fphs * sin_rot - sin_fphs * cos_rot;
@@ -252,7 +253,7 @@ int ForceField::calc_torsion(real& ene, real_fc work1[], real_fc work2[], real_f
     work2[i] = work_coeff * (op_d2132_p23[i] + op_p12_d43[i]
 			     - r12 * op_d2132_p12[i]
 			     - r23 * op_p23_d43[i]);
-  
+
   real_bp op_p12_d32[3];
   cross(p12, d32, op_p12_d32);
   real_bp op_p23_d32[3];
@@ -260,7 +261,7 @@ int ForceField::calc_torsion(real& ene, real_fc work1[], real_fc work2[], real_f
 
   for(int i=0; i<3; i++)
     work3[i] = work_coeff * (op_p12_d32[i] - r23 * op_p23_d32[i]);
-  
+
   //cout << "dbg0204:torsion:work: "<<endl;
   //cout << work1[0] << " " << work1[1] << " " << work1[2] << endl;
   //cout << work2[0] << " " << work2[1] << " " << work2[2] << endl;
@@ -279,7 +280,7 @@ int ForceField::calc_14pair(real& ene_vdw,
 			    const real& charge4,
 			    const real& param_coeff_vdw,
 			    const real& param_coeff_ele){
-  
+
   real d14[3];
   pbc->diff_crd_minim_image(d14, crd1, crd4);
   real r14_2 = d14[0] * d14[0] + d14[1]*d14[1] + d14[2]*d14[2];
@@ -305,10 +306,10 @@ int ForceField::calc_14pair(real& ene_vdw,
   real_bp work_ele[3];
   for (int d=0; d<3; d++)
     work_ele[d] = coef_ele*d14[d];
-  
+
   for (int d=0; d<3; d++)
     work[d] = work_vdw[d] + work_ele[d];
-  
+
   return 0;
 }
 
@@ -319,24 +320,24 @@ real_pw ForceField::calc_pairwise(real_pw& ene_vdw, real_pw& ene_ele,
 				  real_pw& param_12term,
 				  real_pw& charge1,
 				  real_pw& charge2){
-  
+
   real_pw d12[3] = {0.0, 0.0, 0.0};
 
   //pbc->diff_crd_minim_image(d12, crd1, crd2);
-  
+
   for(int d=0; d<3; d++){
     d12[d] = crd1[d] - crd2[d];
   }
 
   real_pw r12_2 = d12[0]*d12[0] + d12[1]*d12[1] + d12[2]*d12[2];
-  
+
   real_pw r12 = sqrt(r12_2);
   //  cout << "r12 : " << r12 << endl;
   ene_vdw = 0.0;
   ene_ele = 0.0;
   real_pw work_vdw[3] = {0.0, 0.0, 0.0};
   real_pw work_ele[3] = {0.0, 0.0, 0.0};
-  //if( r12 < 0.1) 
+  //if( r12 < 0.1)
   //cout << "  r12 " << r12 << endl;
   if (r12 >= cutoff) return r12;
   real_pw r12_inv = 1.0 / r12;
@@ -380,7 +381,7 @@ int ForceField::calc_zms_excess(real& ene, real_fc work[],
 				real* crd2,
 				real_pw& charge1,
 				real_pw& charge2){
-  
+
   real d12[3];
   pbc->diff_crd_minim_image(d12, crd1, crd2);
   real r12_2 = d12[0]*d12[0] + d12[1]*d12[1] + d12[2]*d12[2];
@@ -397,7 +398,7 @@ int ForceField::calc_zms_excess(real& ene, real_fc work[],
 				      r12_3_inv, cc);
   for (int d=0; d<3; d++)
     work[d] = work_coef * d12[d];
-  
+
   return 0;
 }
 
@@ -417,7 +418,7 @@ int ForceField::cal_self_energy(const int& n_atoms,
 				real*& energy_self,
 				real& energy_self_sum){
   ele->cal_self_energy(n_atoms, n_excess, excess_pairs,
-		       /*n_atoms, 
+		       /*n_atoms,
 		       n_bonds,    bond_atomid_pairs,
 		       n_angles,   angle_atomid_triads,
 		       n_torsions, torsion_atomid_quads,

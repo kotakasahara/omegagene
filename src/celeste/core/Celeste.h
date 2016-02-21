@@ -1,15 +1,6 @@
 #ifndef __CELESTE_H__
 #define __CELESTE_H__
 
-#include <iostream>
-#include <set>
-#include <map>
-#include <sstream>
-#include <iomanip>
-#include <cstdlib>
-
-using namespace std;
-
 #include "CelesteObject.h"
 #include "Config.h"
 #include "Read.h"
@@ -19,7 +10,7 @@ using namespace std;
 #include "DynamicsMode.h"
 
 class Celeste : private CelesteObject{
-    Config cfg;
+    Config config;
 
   public:
     Celeste() = default;

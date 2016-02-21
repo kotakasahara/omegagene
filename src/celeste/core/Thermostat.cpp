@@ -1,5 +1,7 @@
 #include "Thermostat.h"
 
+using namespace std;
+
 ThermostatObject::ThermostatObject()
   : CelesteObject(){
 
@@ -48,7 +50,7 @@ int ThermostatObject::apply_thermostat_with_shake(int n_atoms,
 ////////////////////////////////////////////////////////////
 
 
-ThermostatScaling::ThermostatScaling() 
+ThermostatScaling::ThermostatScaling()
   : ThermostatObject(){
 }
 ThermostatScaling::~ThermostatScaling(){
@@ -62,20 +64,20 @@ int ThermostatScaling::apply_thermostat(int n_atoms,
 					real* vel, real* vel_next,
 					real_pw* mass,
 					real_pw* mass_inv){
-				       
+
   real_fc kine_pre = 0.0;
-  
+
   for(int i=0, i_3=0; i < n_atoms; i++, i_3+=3){
     real vel_norm = 0;
     for(int d=0; d < 3; d++){
-      real vel_tmp = vel[i_3+d] - 0.5 * 
+      real vel_tmp = vel[i_3+d] - 0.5 *
 	(time_step * work[i_3+d] * FORCE_VEL * mass_inv[i]);
       vel_norm += vel_tmp * vel_tmp;
     }
     kine_pre += mass[i] * vel_norm;
   }
-  
-  real dt_temperature = kine_pre * temperature_coeff; 
+
+  real dt_temperature = kine_pre * temperature_coeff;
   real scale = sqrt(temperature / dt_temperature);
   for(int i=0, i_3=0; i < n_atoms; i++, i_3+=3){
     for(int d=0; d < 3; d++){
@@ -120,7 +122,7 @@ int ThermostatScaling::apply_thermostat_with_shake(int n_atoms,
       kine_pre += vel_norm * mass[i_atom];
     }
     real cur_temperature = kine_pre * temperature_coeff;
-    
+
     if(i_loop == max_loops-1) break;
     real diff = fabs(cur_temperature - temperature) / temperature;
     if(diff < tolerance){
@@ -163,14 +165,14 @@ int ThermostatScaling::apply_thermostat_with_shake(int n_atoms,
       }
       kine_pre += vel_norm * mass[i_atom];
     }
-    commotion->cancel_translation(atomids_rev, vel_next);    
+    commotion->cancel_translation(atomids_rev, vel_next);
     for(int i_atom = 0, i_atom_3 = 0;
 	i_atom < n_atoms; i_atom++, i_atom_3+=3){
       for(int d=0; d < 3; d++){
 	crd[i_atom_3+d] = crd_prev[i_atom_3+d] + time_step * vel_next[i_atom_3+d];
       }
     }
-  }  
+  }
   if(!converge){
     cout << "Thermostat was not converged." << endl;
   }
@@ -179,7 +181,7 @@ int ThermostatScaling::apply_thermostat_with_shake(int n_atoms,
 ////////////////////////////////////////////////////////////
 
 
-ThermostatHooverEvans::ThermostatHooverEvans() 
+ThermostatHooverEvans::ThermostatHooverEvans()
   : ThermostatObject(){
 }
 ThermostatHooverEvans::~ThermostatHooverEvans(){
@@ -225,8 +227,8 @@ int ThermostatHooverEvans::apply_thermostat(int n_atoms,
   real gamma_beta = gamma/beta;
   for (int i = 0, i_3 = 0;
        i < n_atoms*3; i++){
-    vel_next[i_3] = (1.0 - gamma)/(beta - gamma_beta) * 
-      (vel[i_3] + work[i_3] * 
+    vel_next[i_3] = (1.0 - gamma)/(beta - gamma_beta) *
+      (vel[i_3] + work[i_3] *
        (1.0 + gamma - beta - gamma_beta) / (alpha - gamma * alpha)
        );
   }
@@ -253,7 +255,7 @@ int ThermostatHooverEvans::apply_thermostat_with_shake(int n_atoms,
 ////////////////////////////////////////////////////////////////////////////////
 
 
-ThermostatNoseHoover::ThermostatNoseHoover() 
+ThermostatNoseHoover::ThermostatNoseHoover()
   : ThermostatObject(){
 }
 ThermostatNoseHoover::~ThermostatNoseHoover(){

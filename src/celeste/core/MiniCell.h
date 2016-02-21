@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
-using namespace std;
 
 #define N_ATOM_CELL 8
 #define N_BITMASK (N_ATOM_CELL * N_ATOM_CELL + 31) / 32
@@ -43,10 +42,10 @@ class MiniCell : public CelesteObject{
 
   // n_neighbors_x, _y
   //   the number of neighboring cells in X and Y axes
-  //   "neighboring" means it can be included in 
+  //   "neighboring" means it can be included in
   //   the cutoff sphere
   int n_neighbors_xyz[3];
-  
+
   // cutoff_pair
   //   cutoff length for pair interactions
   real_pw cutoff_pair_half;
@@ -63,12 +62,12 @@ class MiniCell : public CelesteObject{
   int ***idx_crd_cell;
 
   // idx_atom_cell
-  //  idx_atom_cell[atom_id_grid] = cell_id  
+  //  idx_atom_cell[atom_id_grid] = cell_id
   int *idx_atom_cell;
   //  idx_cell_head_atom[cell_id] = atom_id  _grid
   //int *idx_cell_head_atom;
   int *idx_cell_n_atoms;
-  
+
   // flg_dummy[atom_id_grid] = 1 ... dummy, 0 ... not dummy
   int *flg_dummy;
 
@@ -89,8 +88,8 @@ class MiniCell : public CelesteObject{
 
   // the maximum number of atos for each column
   int max_n_atoms_column;
-  
-  PBC* pbc;  
+
+  PBC* pbc;
 
   ///// About Box division /////
 
@@ -102,7 +101,7 @@ class MiniCell : public CelesteObject{
   int max_n_atoms_box;
   int max_n_atoms_exbox;
   int max_n_atoms_region[125];
-  
+
   int  box_id;
   int  box_crd[3];
   int  n_boxes;
@@ -119,7 +118,7 @@ class MiniCell : public CelesteObject{
 
   int* nb15off;
   int max_n_nb15off;
-  
+
   // for mpi
   int mpi_n_atoms;
   real_pw* mpi_sendbuf_crd;
@@ -128,7 +127,7 @@ class MiniCell : public CelesteObject{
   real_fc* mpi_recvbuf_frc;
   int* mpi_sendbuf_atomids;
   int* mpi_recvbuf_atomids;
-  
+
   // atominfo
   real_pw **crd_in_cell;
 
@@ -136,7 +135,7 @@ class MiniCell : public CelesteObject{
   int *atomids;
 
   // atomids_buf
-  //   2. Temporary buffer for atomids 
+  //   2. Temporary buffer for atomids
   //      (atomids for space decompositions)
   //        set_crds_to_homebox
   int *atomids_buf;
@@ -147,17 +146,17 @@ class MiniCell : public CelesteObject{
 
   int max_n_cell_pairs;
   int n_cell_pairs;
-  CellPair* cell_pairs;  
-  // idx_head_cell_pairs[cell_id] = 
+  CellPair* cell_pairs;
+  // idx_head_cell_pairs[cell_id] =
   //   index in the array cell_pairs
-  //   for the first element of 
+  //   for the first element of
   //   cell_pairs[ ].cell1_id = cell_id
   int *idx_head_cell_pairs;
 
   // Uniform z-grid
   //   index for enumerating pairs of 8-atom grid cells
   //   z crd divided into PBC.L[2]/(cutoff/2)
-  //  uni_id = 
+  //  uni_id =
   //   uni_id(z) = uni_id / ( n_uni(x) * n_uni(y) )
   //   uni_id(y) = uni_id % ( n_uni(x) * n_uni(y) )
   //   uni_id(x) = uni_id % ( n_uni(x) * n_uni(y) )
@@ -220,7 +219,7 @@ class MiniCell : public CelesteObject{
   void get_crd(int atomid_grid, real_pw& x, real_pw& y, real_pw& z);
   real_fc*& get_work(){return work;};
   real_fc*& get_energy(){return energy;};
-  int* get_idx_atom_cell_xy(){return idx_atom_cell_xy;};  
+  int* get_idx_atom_cell_xy(){return idx_atom_cell_xy;};
   int get_idx_cell_head_atom(const int cid){return cid*N_ATOM_CELL; }
   int get_n_atoms_in_cell(const int cid){
     int col = get_column_id_from_crd(cell_crd[cid][0], cell_crd[cid][1]);
@@ -235,7 +234,7 @@ class MiniCell : public CelesteObject{
   int get_column_id_from_crd(int x, int y);
   //int get_column_crd_from_id(int x, int y);
   int get_cell_id_from_crd(int x, int y, int z);
-  
+
   int is_dummy(int atom_id_grid){ return atomids[atom_id_grid]==-1; };
 
   int get_n_atom_array(){ return n_cells*N_ATOM_CELL; }
@@ -259,7 +258,7 @@ class MiniCell : public CelesteObject{
 			  const PBC* in_pbc,
 			  const int in_max_n_nb15off,
 			  int* in_nb15off);
-  
+
   //real move_crd_in_cell(const int atomid, const int dim, const real val);
   void add_energy(const real_fc in_vdw, const real_fc in_ele){ energy[0] += in_vdw; energy[1] += in_ele; };
   int add_work(const int atomid_grid,
@@ -289,5 +288,5 @@ class MiniCell : public CelesteObject{
   int*& get_idx_xy_head_cell(){return idx_xy_head_cell;};
 };
 
-#endif 
+#endif
 

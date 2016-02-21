@@ -1,5 +1,7 @@
 #include "PBC.h"
 
+using namespace std;
+
 PBC::PBC()
   : CelesteObject(){
   for (int i=0; i<3; i++){
@@ -28,7 +30,7 @@ int PBC::set_pbc(real val[]){
   L[0] = val[0];
   L[1] = val[4];
   L[2] = val[8];
-  angle[0] = 90.0; 
+  angle[0] = 90.0;
   angle[1] = 90.0;
   angle[2] = 90.0;
   for (int i=0; i<3; i++){

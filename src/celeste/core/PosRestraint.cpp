@@ -1,5 +1,7 @@
 #include "PosRestraint.h"
 
+using namespace std;
+
 PRUnit::PRUnit(){
 }
 PRUnit::~PRUnit(){
@@ -43,15 +45,15 @@ int PosRestraintObject::add_prunit(int in_aid, real in_x, real in_y, real in_z,
   n_prunits++;
   return n_prunits;
 }
-real_fc PosRestraintObject::apply_restraint(int n_atoms, real** crd, PBC& pbc, 
+real_fc PosRestraintObject::apply_restraint(int n_atoms, real** crd, PBC& pbc,
 					    real** force){
-  
+
   return 0;
 }
 
 ///////////////////////////////////////////////////////////////
 
-PosRestraintHarmonic::PosRestraintHarmonic() 
+PosRestraintHarmonic::PosRestraintHarmonic()
   : PosRestraintObject(){
 }
 PosRestraintHarmonic::~PosRestraintHarmonic(){
@@ -59,9 +61,9 @@ PosRestraintHarmonic::~PosRestraintHarmonic(){
 }
 
 real_fc PosRestraintHarmonic::apply_restraint(int n_atoms,
-					      real** crd, PBC& pbc, 
+					      real** crd, PBC& pbc,
 					      real** force){
-  
+
 
   for ( int i = 0; i < n_atoms; i++){
     for (int d=0; d<3; d++){

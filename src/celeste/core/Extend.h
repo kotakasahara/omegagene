@@ -9,11 +9,10 @@
 #include "General.h"
 #include <cmath>
 #include <random>
-using namespace std;
 
 class Extended : public CelesteObject {
  private:
-  
+
  protected:
   int write_lambda_interval;
  public:
@@ -81,7 +80,7 @@ class ExtendedVMcMD : public Extended {
   int* n_atoms_in_groups;
   int** atom_groups;
   int n_enhance_groups;
-  vector<int> enhance_groups;
+  std::vector<int> enhance_groups;
   int n_enhance_group_pairs;
   int** enhance_group_pairs;
 
@@ -99,7 +98,7 @@ class ExtendedVMcMD : public Extended {
  public:
   ExtendedVMcMD();
   ~ExtendedVMcMD();
-  
+
   int alloc_crd_centers();
   int free_crd_centers();
   int set_n_vstates(int in_n_vstates);
@@ -120,12 +119,12 @@ class ExtendedVMcMD : public Extended {
   void set_random_seed(int in_seed){ random_seed = in_seed; };
   int trial_transition(int source, int rel_dest,
 		       real lambda);
-  
+
   int set_current_vstate(real lambda);
   virtual int scale_force(real lambda, real_fc* work, int n_atoms);
 
   // files
-  int set_files(string fn_vslog, string fn_lambda, int format_lambda);
+  int set_files(std::string fn_vslog, std::string fn_lambda, int format_lambda);
   int close_files();
   int write_vslog(int cur_steps);
   int write_lambda(real lambda);
@@ -138,16 +137,16 @@ class ExtendedVMcMD : public Extended {
 		    real alpha_low, real alpha_high);
   int set_vs_poly_param(int vs_id, int ord, real param);
   int print_info();
-  virtual real cal_struct_parameters(real* crd, PBC* pbc);  
+  virtual real cal_struct_parameters(real* crd, PBC* pbc);
   int set_enhance_groups(int* in_n_atoms_in_groups,
 				 int** in_atom_groups,
 				    int in_n_enhance_groups,
-				 vector<int> in_enhance_groups);
+				 std::vector<int> in_enhance_groups);
   int set_mass(real_pw* in_mass, real_pw* in_mass_groups, real_pw* in_mass_groups_inv);
   int set_params(RandomNum* in_mt, real in_sigma, real in_recov_coef);
   void set_aus_type(int in_aus_type){ aus_type = in_aus_type; };
 
-  int write_aus_restart(string fn_out);
+  int write_aus_restart(std::string fn_out);
   real*** get_crd_groups(){ return crd_groups; };
 };
 
@@ -170,14 +169,14 @@ class ExtendedVAUS : public ExtendedVMcMD {
   //WriteTTPVMcMDLog writer_vslog;
 
   //WriteTableLog* writer_lambda;
-  
+
   // from MmSystem
 
 
  public:
   ExtendedVAUS();
   ~ExtendedVAUS();
-  
+
   real set_crd_centers(real* crd, PBC* pbc);
   int set_init_crd_groups(real* crd);
   virtual real cal_struct_parameters(real* crd, PBC* pbc);
@@ -191,21 +190,21 @@ class ExtendedVAUS : public ExtendedVMcMD {
   //real in_lambda,
   //real_fc* work,
   //int n_atoms_box);
-  
+
   //VirtualState& get_vstate(int vs_id){ return vstates[vs_id]; };
-  
+
   //int get_init_vs(){ return init_vs; };
   //void set_init_vs(int in_init_vs){ init_vs = in_init_vs; cur_vs = init_vs;};
   //int get_random_seed(){ return random_seed; };
   //void set_random_seed(int in_seed){ random_seed = in_seed; };
   //int trial_transition(int source, int rel_dest,
   //real lambda);
-  
+
   //int set_current_vstate(real lambda);
   virtual int scale_force(real lambda, real_fc* work, int n_atoms);
 
   // files
-  //int set_files(string fn_vslog, string fn_lambda, int format_lambda);
+  //int set_files(std::string fn_vslog, std::string fn_lambda, int format_lambda);
   //int close_files();
   //int write_vslog(int cur_steps);
   //int write_lambda(real lambda);

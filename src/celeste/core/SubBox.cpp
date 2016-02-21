@@ -1,5 +1,7 @@
 #include "SubBox.h"
 
+using namespace std;
+
 #ifdef F_CUDA
 extern "C" int cuda_set_device(int device_id);
 
@@ -22,7 +24,7 @@ extern "C" int cuda_set_cell_constant(const int  in_n_cells,
 				      const int* in_n_neighbor_xyz);
 
 extern "C" int cuda_set_constant(
-				 real_pw cutoff, 
+				 real_pw cutoff,
 				 real_pw cutoff_pairlist, int n_atomtypes);
 extern "C" int cuda_alloc_set_lj_params(real_pw* h_lj_6term,
 					real_pw* h_lj_12term,
@@ -38,7 +40,7 @@ extern "C" int cuda_memcpy_htod_atomids(int*& h_atomids,
 					int*& h_idx_xy_head_cell);
 extern "C" int cuda_set_pbc(real_pw* l, real_pw* lb);
 extern "C" int cuda_memcpy_htod_crd(real_pw*& h_crd);
-				    
+
 extern "C" int cuda_set_atominfo();
 extern "C" int cuda_set_crd();
 extern "C" int cuda_pairwise_ljzd(const bool flg_mod_15mask);
@@ -117,7 +119,7 @@ int SubBox::alloc_variables(){
 
 #else
   charge = new real_pw[max_n_atoms_exbox];
- 
+
   atom_type = new int[max_n_atoms_exbox];
 #endif
   mass = new real_pw[max_n_atoms_exbox];
@@ -132,7 +134,7 @@ int SubBox::alloc_variables(){
   //for(int i = 0; i < n_boxes; i++){
   //atomids_box[i] = new int[max_n_atoms_box];
   //}
-  //crd = new real[n_atoms*3];  
+  //crd = new real[n_atoms*3];
   //atomids = new int[n_atoms];
   /*
   region_atoms = new int*[27];
@@ -143,7 +145,7 @@ int SubBox::alloc_variables(){
   */
 
   /* for bonded potentials */
-  
+
 
   if(rank==0)
     rank0_alloc_variables();
@@ -270,7 +272,7 @@ int SubBox::init_variables(){
   //for(int j=0; j < max_n_atoms_region[27]; j++){
   //region_atoms[i][j] = -1;
   //}
-  //} 
+  //}
   init_energy();
   init_work();
   return 0;
@@ -403,7 +405,7 @@ int SubBox::free_variables_for_nb15off(){
   return 0;
 }
 
-int SubBox::set_parameters(int in_n_atoms, PBC* in_pbc, 
+int SubBox::set_parameters(int in_n_atoms, PBC* in_pbc,
 			   Config* in_cfg,
 			   real in_cutoff_pair,
 			   int in_n_boxes_x, int in_n_boxes_y, int in_n_boxes_z){
@@ -414,7 +416,7 @@ int SubBox::set_parameters(int in_n_atoms, PBC* in_pbc,
   //   box_l, exbox_l
   //   box_crd <- set_box_crd()
   //   box_lower, box_upper, exbox_lower, exbox_upper
-  //   
+  //
 
   //cout << "SubBox::set_parameters" <<endl;
   n_atoms = in_n_atoms;
@@ -437,7 +439,7 @@ int SubBox::set_parameters(int in_n_atoms, PBC* in_pbc,
 
   // temporary:
   max_n_atoms_exbox = n_atoms / n_boxes * COEF_MAX_N_ATOMS_BOX;
-  // 
+  //
 
   rank = 0;
 
@@ -446,9 +448,9 @@ int SubBox::set_parameters(int in_n_atoms, PBC* in_pbc,
 #endif
   //cout << "rank: " << rank << " max_n_atoms_box: " << max_n_atoms_box << endl;
   for(int d=0; d<3; d++){
-    box_l[d] = pbc->L[d] / n_boxes_xyz[d];  
+    box_l[d] = pbc->L[d] / n_boxes_xyz[d];
     exbox_l[d] = box_l[d] + cutoff_pair;
-  }  
+  }
   set_box_crd();
   for(int d=0; d<3; d++){
     box_lower[d] = pbc->lower_bound[d] + box_crd[d] * box_l[d];
@@ -466,12 +468,12 @@ int SubBox::set_parameters(int in_n_atoms, PBC* in_pbc,
 }
 
 int SubBox::set_nsgrid(){
-  // #ifdef F_CUDA  
+  // #ifdef F_CUDA
   //  cuda_print_device_info(0, true);
   //#endif
 
   //cout << "set_grid_parameters" << endl;
-  nsgrid.set_grid_parameters(n_atoms, cfg->nsgrid_cutoff, 
+  nsgrid.set_grid_parameters(n_atoms, cfg->nsgrid_cutoff,
 			     pbc, max_n_nb15off, nb15off);
   //cout << "set_box_info" << endl;
   nsgrid.set_box_info(n_boxes_xyz, box_l);
@@ -501,10 +503,10 @@ int SubBox::set_nsgrid(){
 
   cuda_memcpy_htod_atom_info(charge, atom_type);
 
-  update_device_cell_info();  
+  update_device_cell_info();
 
   nsgrid_crd_to_gpu();
-  
+
 
   #ifdef F_ECP
     nsgrid.enumerate_cell_pairs();
@@ -530,7 +532,7 @@ int SubBox::set_nsgrid(){
 }
 int SubBox::nsgrid_crd_to_gpu(){
 #ifdef F_CUDA
-  
+
   cuda_memcpy_htod_crd(nsgrid.get_crd());
   cuda_set_crd();
 
@@ -549,15 +551,15 @@ int SubBox::nsgrid_update(){
   const clock_t endTimeSet = clock();
   //nsgrid.enumerate_cell_pairs();
 
-#if defined(F_CUDA)  
-  update_device_cell_info();  
+#if defined(F_CUDA)
+  update_device_cell_info();
   nsgrid_crd_to_gpu();
   #ifdef F_ECP
     nsgrid.enumerate_cell_pairs();
     cuda_memcpy_htod_cell_pairs(nsgrid.get_cell_pairs(),
 				nsgrid.get_idx_head_cell_pairs(),
 				nsgrid.get_n_cell_pairs());
-			
+
   #else
   cuda_enumerate_cell_pairs(nsgrid.get_atomids(),
 			    nsgrid.get_n_cells(),
@@ -631,8 +633,8 @@ int SubBox::rank0_div_box(real** in_crd,
   //   all_atomids
   //   atomids_rev
   //   all_n_atoms
-  //     
-  
+  //
+
   for(int atomid = 0; atomid < n_atoms; atomid++){
     int box_assign[3];
     for(int d=0; d<3; d++)
@@ -666,7 +668,7 @@ int SubBox::rank0_send_init_data(real** in_crd,
     }
     // velocities
     for(int i_atom = 0, i_atom3=0;
-	i_atom < all_n_atoms[i_box]; 
+	i_atom < all_n_atoms[i_box];
 	i_atom++, i_atom3+=3){
       crd[i_atom3] = in_crd[all_atomids[i_box][i_atom]][0];
       crd[i_atom3+1] = in_crd[all_atomids[i_box][i_atom]][1];
@@ -677,7 +679,7 @@ int SubBox::rank0_send_init_data(real** in_crd,
       charge[i_atom] = in_charge[all_atomids[i_box][i_atom]];
       atom_type[i_atom] = in_atom_type[all_atomids[i_box][i_atom]];
       atomids_rev[all_atomids[i_box][i_atom]] = i_atom;
-      //Atomids 
+      //Atomids
       // write the MPI code here!!
     }
   }
@@ -685,7 +687,7 @@ int SubBox::rank0_send_init_data(real** in_crd,
     atomids_rev[i_atom] = -1;
   }
   for(int i_atom = 0, i_atom3=0;
-      i_atom < all_n_atoms[0]; 
+      i_atom < all_n_atoms[0];
       i_atom++, i_atom3+=3){
     crd[i_atom3] = in_crd[all_atomids[0][i_atom]][0];
     crd[i_atom3+1] = in_crd[all_atomids[0][i_atom]][1];
@@ -1001,7 +1003,7 @@ int SubBox::calc_energy_pairwise(){
   CellPair* cellpairs = nsgrid.get_cell_pairs();
   for(int cp=0; cp < nsgrid.get_n_cell_pairs(); cp++){
     //CellPair cellpair = nsgrid.get_cell_pair(cp);
-    
+
     int c1 = cellpairs[cp].cell_id1;
     int c2 = cellpairs[cp].cell_id2;
     int n_atoms_c1 = nsgrid.get_n_atoms_in_cell(c1);
@@ -1021,22 +1023,22 @@ int SubBox::calc_energy_pairwise(){
 	//n_pairs ++;
 	int mask_id;
 	int interact_bit;
-	if (check_nb15off(a1, a2, cellpairs[cp].pair_mask, mask_id, interact_bit) ){ 
+	if (check_nb15off(a1, a2, cellpairs[cp].pair_mask, mask_id, interact_bit) ){
 	  //n_pairs_15off++;
 	  continue; }
 	real_pw crd1[3];
 	nsgrid.get_crd(atomid_grid1, crd1[0], crd1[1], crd1[2]);
-	
+
 	real_pw tmp_ene_vdw = 0.0;
 	real_pw tmp_ene_ele = 0.0;
 	real_fc tmp_work[3] = {0.0, 0.0, 0.0};
 	real_pw param_6term  = lj_6term[atom_type[atomid1]  * n_lj_types + atom_type[atomid2]];
 	real_pw param_12term = lj_12term[atom_type[atomid1] * n_lj_types + atom_type[atomid2]];
-	
+
 	//real_pw r12 = sqrt(pow(crd2[0]-crd1[0],2)+pow(crd2[1]-crd1[1],2)+pow(crd2[2]-crd1[2],2));
 	//sum_dist += r12;
 	//if(sum_dist > 100000) sum_dist -= 100000;
-	
+
 	real_pw r12 = ff.calc_pairwise(tmp_ene_vdw, tmp_ene_ele, tmp_work,
 				       crd1, crd2,
 				       param_6term, param_12term,
@@ -1045,21 +1047,21 @@ int SubBox::calc_energy_pairwise(){
 	if(r12 > cfg->nsgrid_cutoff){
 	  cellpairs[cp].pair_mask[mask_id] &= ~interact_bit;
 	}
-	
+
 	nsgrid.add_energy(tmp_ene_vdw, tmp_ene_ele);
 	/*
 	  if(isnan(tmp_ene_vdw)){
 	  cout << "Error! nonbond " << atomid1 << " "  << atomid2 <<" "
 	  << " g:" << atomid_grid1 << " "  << atomid_grid2 <<" ";
 	  cout << tmp_ene_vdw << " " <<  tmp_ene_ele << " " << r12 << " "
-	  << crd1[0] << "," << crd1[1] << "," << crd1[2] <<" " 
-	  << crd2[0] << "," << crd2[1] << "," << crd2[2] <<" " 
+	  << crd1[0] << "," << crd1[1] << "," << crd1[2] <<" "
+	  << crd2[0] << "," << crd2[1] << "," << crd2[2] <<" "
 	  <<endl;
 	  }
 	*/
 	nsgrid.add_work(atomid_grid1, tmp_work[0], tmp_work[1], tmp_work[2]);
 	nsgrid.add_work(atomid_grid2, -tmp_work[0], -tmp_work[1], -tmp_work[2]);
-	
+
 	//n_pairs_incutoff++;
       /*
 	p_vdw += tmp_ene_vdw;
@@ -1067,7 +1069,7 @@ int SubBox::calc_energy_pairwise(){
 	if (tmp_ene_vdw != 0.0 || tmp_ene_ele != 0.0){
 	  n_pairs_nonzero++;
 	  sum_dist_incut += r12;
-	  if(sum_dist_incut > 100000) sum_dist_incut -= 100000;	
+	  if(sum_dist_incut > 100000) sum_dist_incut -= 100000;
 	  if(atomid1 > atomid2){
 	atomid1sum+=atomid2;
 	atomid2sum+=atomid1;
@@ -1091,7 +1093,7 @@ int SubBox::calc_energy_pairwise(){
     }
   }
 
-  
+
 
   /*
   cout << "nb15off pairs " << n_pairs_15off << endl;
@@ -1127,14 +1129,14 @@ int SubBox::calc_energy_pairwise_wo_neighborsearch(){
     for(int atomid2 = 0, atomid2_3=0; atomid2 < atomid1; atomid2++, atomid2_3+=3){
       //n_pairs++;
       real_pw crd2[3] = {(real_pw)crd[atomid2_3], (real_pw)crd[atomid2_3+1], (real_pw)crd[atomid2_3+2]};
-      
+
       bool flg=true;
       for(int i = atomid1 * max_n_nb15off;
 	  i < atomid1 * max_n_nb15off + max_n_nb15off;
 	  i++){
 	if(nb15off[i] == atomid2){
 	  //n_pairs_15off++;
-	  flg = false; 
+	  flg = false;
 	}
       }
       if(!flg) continue;
@@ -1144,18 +1146,18 @@ int SubBox::calc_energy_pairwise_wo_neighborsearch(){
       real_fc tmp_work[3] = {0.0, 0.0, 0.0};
       real_pw param_6term  = lj_6term[atom_type[atomid1]  * n_lj_types + atom_type[atomid2]];
       real_pw param_12term = lj_12term[atom_type[atomid1] * n_lj_types + atom_type[atomid2]];
-      
+
       for(int d=0; d < 3; d++){
 	if(crd2[d]-crd1[d] >= pbc->L_half[d])
 	  crd2[d] -= pbc->L[d];
 	else if(crd2[d]-crd1[d] <= -pbc->L_half[d])
 	  crd2[d] += pbc->L[d];
       }
-      
+
       //real_pw r12 = sqrt(pow(crd2[0]-crd1[0],2)+pow(crd2[1]-crd1[1],2)+pow(crd2[2]-crd1[2],2));
       //sum_dist += r12;
       //if(sum_dist > 100000) sum_dist -= 100000;
-      
+
       if(ff.calc_pairwise(tmp_ene_vdw, tmp_ene_ele, tmp_work,
 			  crd1, crd2,
 			  param_6term, param_12term,
@@ -1174,8 +1176,8 @@ int SubBox::calc_energy_pairwise_wo_neighborsearch(){
 	  cout << "Error! nonbond " << atomid1 << " "  << atomid2 <<" "
 	       << " g:" << atomid_grid1 << " "  << atomid_grid2 <<" ";
 	  cout << tmp_ene_vdw << " " <<  tmp_ene_ele << " " << r12 << " "
-	       << crd1[0] << "," << crd1[1] << "," << crd1[2] <<" " 
-	       << crd2[0] << "," << crd2[1] << "," << crd2[2] <<" " 
+	       << crd1[0] << "," << crd1[1] << "," << crd1[2] <<" "
+	       << crd2[0] << "," << crd2[1] << "," << crd2[2] <<" "
 	       <<endl;
 	}
 	nsgrid.add_work(atomid_grid1, tmp_work[0], tmp_work[1], tmp_work[2]);
@@ -1188,7 +1190,7 @@ int SubBox::calc_energy_pairwise_wo_neighborsearch(){
 	p_ele += tmp_ene_ele;
 	if (tmp_ene_vdw != 0.0 || tmp_ene_ele != 0.0){
 	sum_dist_incut += r12;
-	if(sum_dist_incut > 100000) sum_dist_incut -= 100000;	
+	if(sum_dist_incut > 100000) sum_dist_incut -= 100000;
 	if(atomid1 > atomid2){
 	atomid1sum+=atomid2;
 	    atomid2sum+=atomid1;
@@ -1208,8 +1210,8 @@ int SubBox::calc_energy_pairwise_wo_neighborsearch(){
 	  atomid12mult = atomid12mult%100000;
 	  }
       */
-      
-      
+
+
     }
   }
   /*
@@ -1402,7 +1404,7 @@ int SubBox::get_box_id_from_crd(const int box_crd[]){
     n_boxes_xyz[0]*box_crd[1] + box_crd[0];
 }
 
-int SubBox::get_box_crd_from_id(const int box_id, 
+int SubBox::get_box_crd_from_id(const int box_id,
 				int *box_crd){
   box_crd[0] = box_id%(n_boxes_xyz[0]);
   box_crd[1] = (box_id%(n_boxes_xyz[0]*n_boxes_xyz[1])) / n_boxes_xyz[0];
@@ -1482,11 +1484,11 @@ int SubBox::update_velocities(const real time_step){
   for(int atomid_b=0, atomid_b3=0;
       atomid_b < all_n_atoms[rank];
       atomid_b++, atomid_b3+=3){
-    for(int d=0; d<3; d++){    
+    for(int d=0; d<3; d++){
       vel_next[atomid_b3+d] = vel[atomid_b3+d]  +
-	( time_step * 
-	  -FORCE_VEL * 
-	 work[atomid_b3+d] 
+	( time_step *
+	  -FORCE_VEL *
+	 work[atomid_b3+d]
 	  * mass_inv[atomid_b]);
     }
   }
@@ -1497,14 +1499,14 @@ int SubBox::velocity_average(){
   for(int atomid_b=0, atomid_b3=0;
       atomid_b < all_n_atoms[rank];
       atomid_b++, atomid_b3+=3){
-    for(int d=0; d<3; d++){    
+    for(int d=0; d<3; d++){
       vel_just[atomid_b3+d] = (vel[atomid_b3+d] + vel_next[atomid_b3+d])*0.5;
     }
   }
   return 0;
 }
 int SubBox::set_velocity_from_crd(){
-  
+
   for(int atomid_b = 0, atomid_b3 = 0;
       atomid_b < all_n_atoms[rank];
       atomid_b++, atomid_b3+=3){
@@ -1534,7 +1536,7 @@ int SubBox::revise_coordinates_pbc(){
   for(int atomid_b=0, atomid_b3=0;
       atomid_b < all_n_atoms[rank];
       atomid_b++, atomid_b3+=3){
-    for(int d=0; d<3; d++){    
+    for(int d=0; d<3; d++){
       if(crd[atomid_b3+d] >= pbc->upper_bound[d]){
 	crd[atomid_b3+d] -= pbc->L[d];
       }else if(crd[atomid_b3+d] < pbc->lower_bound[d]){
@@ -1568,7 +1570,7 @@ int SubBox::copy_vel_just(real** p_vel){
     for(int d=0; d<3; d++){
       work[atomid_b3+d] = (vel_next[atomid_b3+d] - vel[atomid_b3+d])*mass[atomid_b] * time_step_inv;
     }
-  }  
+  }
   return 0;
   }*/
 int SubBox::copy_crd_prev(real** p_crd){
@@ -1625,7 +1627,7 @@ int SubBox::update_coordinates(const real time_step, real *p_crd, real* p_vel){
     for(int d=0; d<3; d++){
       real diff = p_vel[atomid_b3+d] * time_step;
       crd[atomid_b3+d] = p_crd[atomid_b3+d] + diff;
-      //#ifndef F_WO_NS      
+      //#ifndef F_WO_NS
       //      nsgrid.move_atom(atomid_b, d, diff);
       //#endif
     }
@@ -1634,14 +1636,14 @@ int SubBox::update_coordinates(const real time_step, real *p_crd, real* p_vel){
 }
 
 int SubBox::update_coordinates_nsgrid(){
-  // this method should be called 
+  // this method should be called
   //   after update_coordinates(), before revise_coordinates_pbc()
 
   //for(int atomid_b=0, atomid_b3=0;
   //atomid_b < all_n_atoms[rank];
   //atomid_b++, atomid_b3+=3){
   //for(int d=0; d<3; d++){
-  //nsgrid.move_atom(atomid_b, d, crd[atomid_b3+d]-crd_prev[atomid_b3+d]);      
+  //nsgrid.move_atom(atomid_b, d, crd[atomid_b3+d]-crd_prev[atomid_b3+d]);
   //}
   //}
   nsgrid.move_atom(all_n_atoms[rank], crd, crd_prev);
@@ -1677,7 +1679,7 @@ int SubBox::init_constraint(int in_constraint,
   case CONST_SHAKE:
     flg_constraint = 1;
     break;
-  case CONST_SHAKE_SETTLE:    
+  case CONST_SHAKE_SETTLE:
     flg_constraint = 1;
     flg_settle = 1;
     break;
@@ -1736,7 +1738,7 @@ int SubBox::init_thermostat(const int in_thermostat_type,
 
 #ifdef F_CUDA
 int SubBox::gpu_device_setup(){
-  
+
   //cuda_print_device_info();
   //cuda_memcpy_htod_grid_pairs(mmsys.nsgrid.grid_pairs,
   //mmsys.nsgrid.n_grid_pairs);
@@ -1755,7 +1757,7 @@ int SubBox::gpu_device_setup(){
 			   max_n_atoms_exbox,
 			   nsgrid.get_max_n_atom_array());
 
-  
+
   real_pw tmp_l[3] = {(real_pw)pbc->L[0], (real_pw)pbc->L[1], (real_pw)pbc->L[2]};
   real_pw tmp_lb[3] = {(real_pw)pbc->lower_bound[0], (real_pw)pbc->lower_bound[1], (real_pw)pbc->lower_bound[2]};
   //cuda_set_pbc((const real_pw*)pbc->L);
@@ -1807,7 +1809,7 @@ int SubBox::apply_constraint(){
 int SubBox::update_thermostat(const int cur_step){
   //cout << "update thermostat " << cur_step << " / " << cfg->heating_steps<< endl;
   if(cur_step < cfg->heating_steps){
-    real new_temp = cfg->temperature_init + 
+    real new_temp = cfg->temperature_init +
       ((cfg->temperature - cfg->temperature_init) /
        (real)cfg->heating_steps) * cur_step;
     thermostat->set_temperature(new_temp);
@@ -1848,7 +1850,7 @@ int SubBox::extended_apply_bias_struct_param(unsigned long cur_step){
   extended->apply_bias(cur_step, param, work, n_atoms_box);
   return 0;
 }
-int SubBox::extended_write_aus_restart(string fn_out){
+int SubBox::extended_write_aus_restart(std::string fn_out){
   extended->write_aus_restart(fn_out);
   return 0;
 }
@@ -1861,14 +1863,14 @@ int SubBox::cancel_com_motion(){
 }
 
 int SubBox::set_com_motion(int n_groups, int* group_ids,
-			   int*  n_atoms_in_groups, 
+			   int*  n_atoms_in_groups,
 			   int** groups,
 			   real* mass_inv_groups){
   return commotion.set_groups(n_groups,
 			      group_ids, n_atoms_in_groups,
 			      groups, mass_inv_groups,
 			      mass);
-  
+
 }
 /*
 int SubBox::set_bonding_info
@@ -1922,7 +1924,7 @@ int SubBox::set_bonding_info
 */
 /*
 qint SubBox::assign_regions(){
-  // set 
+  // set
   //   region_atoms
   //   n_region_atoms
   // require
@@ -1952,7 +1954,7 @@ int SubBox::set_max_n_atoms_region(){
   // set
   //   max_n_atoms_region
   //   max_n_atoms_box
-  //   max_n_atoms_exbox 
+  //   max_n_atoms_exbox
   max_n_atoms_box = 0;
   int tmp_max_n_atoms_box = (n_atoms + n_boxes-1)/n_boxes * COEF_MAX_N_ATOMS;
   real vol_box = box_l[0] * box_l[1] * box_l[2];
@@ -2013,7 +2015,7 @@ int SubBox::get_global_region_id_from_box_region(int boxid, int regionid){
 */
 int SubBox::print_work(int atom_id){
   cout << "Debug SubBox::print work : " << atom_id << endl;
-  cout << work[atom_id*3+0] << " " << work[atom_id*3+1] 
+  cout << work[atom_id*3+0] << " " << work[atom_id*3+1]
        << " " << work[atom_id*3+2] << endl;
   return 0;
 }

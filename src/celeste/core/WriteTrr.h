@@ -11,7 +11,7 @@ class WriteTrr : public Write {
   ~WriteTrr();
   virtual int write_trr(int n_atoms,
 			int cur_step, real cur_time,
-			real lx, real ly, real lz, 
+			real lx, real ly, real lz,
 			real** crd, real** vel_just, real_fc** force,
 			real cpu_time, real total_e, real kinetic_e,
 			real temperature, real potential_e,
@@ -28,7 +28,7 @@ class WriteTrrGromacs : public WriteTrr {
   ~WriteTrrGromacs();
   virtual int write_trr(int n_atoms,
 			int cur_step, real cur_time,
-			real lx, real ly, real lz, 
+			real lx, real ly, real lz,
 			real** crd, real** vel_just, real_fc** force,
 			real cpu_time, real total_e, real kinetic_e,
 			real temperature, real potential_e,
@@ -36,7 +36,7 @@ class WriteTrrGromacs : public WriteTrr {
 			bool out_box,
 			bool out_crd, bool out_vel, bool out_force,
 			int n_atoms_group, int* atom_group);
-  
+
 };
 class WriteTrrPresto : public WriteTrr {
  private:
@@ -45,7 +45,7 @@ class WriteTrrPresto : public WriteTrr {
   ~WriteTrrPresto();
   virtual int write_trr(int n_atoms,
 			int cur_step, real cur_time,
-			real lx, real ly, real lz, 
+			real lx, real ly, real lz,
 			real** crd, real** vel_just, real_fc** force,
 			real cpu_time, real total_e, real kinetic_e,
 			real temperature, real potential_e,
@@ -74,7 +74,7 @@ class WriteGroupCoord : public Write{
   ~WriteGroupCoord();
   int write_aus_restart(const int aus_type,
 			int n_enhance_groups,
-			vector<int>  enhance_groups,
+			std::vector<int>  enhance_groups,
 			int* n_atoms_in_groups,
 			real*** crd_groups);
 };

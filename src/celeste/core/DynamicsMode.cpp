@@ -1,11 +1,12 @@
 #include "DynamicsMode.h"
+using namespace std;
 
 DynamicsMode::DynamicsMode()
  : RunMode(){
-} 
+}
 
 DynamicsMode::~DynamicsMode(){
-} 
+}
 
 int DynamicsMode::test(Config* in_cfg){
   cfg = in_cfg;
@@ -21,9 +22,9 @@ int DynamicsMode::set_config_parameters(Config* in_cfg){
   //enecal = new EnergyCalc(&mmsys, &subbox);
   cfg = in_cfg;
   RunMode::set_config_parameters(cfg);
-  if(cfg->extended_ensemble == EXTENDED_VMCMD){    
+  if(cfg->extended_ensemble == EXTENDED_VMCMD){
     mmsys.vmcmd = new ExtendedVMcMD();
-  }else if(cfg->extended_ensemble == EXTENDED_VAUS){    
+  }else if(cfg->extended_ensemble == EXTENDED_VAUS){
     mmsys.vmcmd = new ExtendedVAUS();
   }
   return 0;
@@ -51,8 +52,8 @@ int DynamicsMode::initial_preprocess(){
     writer_trr->open();
   }
   if(cfg->constraint_type != CONST_NONE){
-    int n_shake_dist = mmsys.constraint.get_n_pair() + 
-      3 * mmsys.constraint.get_n_trio() + 
+    int n_shake_dist = mmsys.constraint.get_n_pair() +
+      3 * mmsys.constraint.get_n_trio() +
       6 * mmsys.constraint.get_n_quad();
     mmsys.d_free -= n_shake_dist;
   }
@@ -88,9 +89,9 @@ int DynamicsMode::initial_preprocess(){
     mmsys.vmcmd->set_lambda_interval(cfg->print_intvl_extended_lambda);
     mmsys.vmcmd->print_info();
 
-    mmsys.vmcmd->set_params(&mmsys.random_mt, 
+    mmsys.vmcmd->set_params(&mmsys.random_mt,
 			    cfg->enhance_sigma, cfg->enhance_recov_coef); //, cfg->aus_type);
-    
+
     //for(int i_grp=0; i_grp < mmsys.n_groups; i_grp++){
     //cout << "dbg1130 massDM " << i_grp << " " << mmsys.mass_inv_groups[i_grp]<<endl;
     //}
@@ -100,14 +101,14 @@ int DynamicsMode::initial_preprocess(){
   }
 
   //cout << "DBG MmSystem.n_bonds: " << mmsys.n_bonds << endl;
-  
+
   subbox.copy_vel_next(mmsys.vel_just);
   subbox.set_com_motion(mmsys.n_com_cancel_groups,
 			mmsys.com_cancel_groups,
 			mmsys.n_atoms_in_groups,
 			mmsys.atom_groups,
 			mmsys.mass_inv_groups);
-  
+
   mmsys.print_com_cancel_groups();
   //mmsys.print_enhance_groups();
   mmsys.print_out_group();
@@ -127,7 +128,7 @@ int DynamicsMode::initial_preprocess(){
 }
 
 int DynamicsMode::terminal_process(){
-  cout << "DynamicsMode::terminal_process()"<<endl;  
+  cout << "DynamicsMode::terminal_process()"<<endl;
   writer_trr->close();
   if(cfg->extended_ensemble != EXTENDED_NONE)
     mmsys.vmcmd->close_files();
@@ -145,12 +146,12 @@ int DynamicsMode::main_stream(){
 	mmsys.cur_step % cfg->print_intvl_log == 0) ||
        mmsys.cur_step == 1 ||
        mmsys.cur_step == cfg->n_steps){
-      
+
       sub_output_log();
     }
     sub_output();
   }
-  
+
   output_restart();
   cout << "== An additional step. ==" << endl;
   calc_in_each_step();
@@ -163,13 +164,13 @@ int DynamicsMode::output_restart(){
   writer_restart.set_fn(cfg->fn_o_restart);
   writer_restart.write_restart(mmsys.n_atoms,
 			       (int)mmsys.cur_step, (double)mmsys.cur_time,
-			       (double)(mmsys.pote_bond + mmsys.pote_angle + 
+			       (double)(mmsys.pote_bond + mmsys.pote_angle +
 					mmsys.pote_torsion + mmsys.pote_impro +
 					mmsys.pote_14vdw + mmsys.pote_14ele +
 					mmsys.pote_vdw + mmsys.pote_ele),
 			       (double)mmsys.kinetic_e,
 			       mmsys.crd, mmsys.vel_just);
-  
+
   if(cfg->extended_ensemble == EXTENDED_VAUS){
     subbox.extended_write_aus_restart(cfg->fn_o_aus_restart);
   }
@@ -183,7 +184,7 @@ int DynamicsMode::calc_in_each_step(){
 int DynamicsMode::apply_constraint(){
 
   //if(mmsys.leapfrog_coeff == 1.0){
-    
+
   if(cfg->thermostat_type==THMSTT_SCALING){
     subbox.apply_thermostat_with_shake(cfg->thermo_const_max_loops,
 				       cfg->thermo_const_tolerance);
@@ -191,7 +192,7 @@ int DynamicsMode::apply_constraint(){
   }else{
     subbox.apply_constraint();
   }
-  
+
   //}
   return 0;
 }
@@ -249,27 +250,27 @@ int DynamicsMode::sub_output_log(){
     sprintf(buf, "Total:     %14.10e\n", total_e);
     ss << string(buf);
     sprintf(buf, "Potential: %14.10e    Kinetic:  %14.10e\n", mmsys.potential_e, mmsys.kinetic_e);
-    ss << string(buf);    
+    ss << string(buf);
     sprintf(buf, "Bond:      %14.10e    Angle:    %14.10e\n", mmsys.pote_bond, mmsys.pote_angle);
-    ss << string(buf);    
+    ss << string(buf);
     sprintf(buf, "Torsion:   %14.10e    Improper: %14.10e\n", mmsys.pote_torsion, mmsys.pote_impro);
-    ss << string(buf);    
+    ss << string(buf);
     sprintf(buf, "14-VDW:    %14.10e    14-Ele:   %14.10e\n", mmsys.pote_14vdw, mmsys.pote_14ele);
-    ss << string(buf);    
+    ss << string(buf);
     sprintf(buf, "VDW:       %14.10e    Ele:      %14.10e\n", mmsys.pote_vdw, mmsys.pote_ele);
-    ss << string(buf);    
+    ss << string(buf);
     if(cfg->dist_restraint_type != DISTREST_NONE){
       sprintf(buf, "Distance restraint: %14.10e\n", mmsys.pote_dist_rest);
-      ss << string(buf);    
+      ss << string(buf);
     }
     if(cfg->pos_restraint_type != POSREST_NONE){
       sprintf(buf, "Position restraint: %14.10e\n", mmsys.pote_pos_rest);
-      ss << string(buf);    
+      ss << string(buf);
     }
     sprintf(buf, "Temperature:       %14.10e\n", mmsys.temperature);
-    ss << string(buf);    
+    ss << string(buf);
     sprintf(buf, "Comput Time:       %14.10e\n", (float)mmsys.ctime_per_step/ (float)CLOCKS_PER_SEC);
-    ss << string(buf);    
+    ss << string(buf);
     /*
       ss << "Step: " << mmsys.cur_step  << "\t";
     ss << "Time: " << mmsys.cur_time << " [ps]" << endl;
@@ -293,7 +294,7 @@ int DynamicsMode::cal_kinetic_energy(const real** vel){
     real kine_atom = 0.0;
     for(int d=0; d < 3; d++)
       kine_atom += vel[atomid][d] * vel[atomid][d];
-    kine_pre += kine_atom * mmsys.mass[atomid]; 
+    kine_pre += kine_atom * mmsys.mass[atomid];
     //cout << "dbg_kine: " << mmsys.mass[atomid] << " " << vel[atomid][0];
     //cout << " " << vel[atomid][1] <<" " << vel[atomid][2] << endl;
   }
@@ -340,12 +341,12 @@ int DynamicsMode::subbox_setup(){
 			   mmsys.constraint.get_n_trio(),
 			   mmsys.constraint.get_n_quad(),
 			   mmsys.settle.get_n_trio());
-    
+
     subbox.set_subset_constraint(mmsys.constraint,
 				 mmsys.settle);
   }
   subbox.init_thermostat(cfg->thermostat_type,
-			 cfg->temperature_init, 
+			 cfg->temperature_init,
 			 mmsys.d_free);
   if(cfg->extended_ensemble != EXTENDED_NONE){
     subbox.set_extended(mmsys.vmcmd);
@@ -408,10 +409,10 @@ int DynamicsMode::gather_energies(){
 
 DynamicsModePresto::DynamicsModePresto()
  : DynamicsMode(){
-} 
+}
 
 DynamicsModePresto::~DynamicsModePresto(){
-} 
+}
 
 int DynamicsModePresto::calc_in_each_step(){
 
@@ -428,7 +429,7 @@ int DynamicsModePresto::calc_in_each_step(){
   if(mmsys.cur_step%cfg->nsgrid_update_intvl==0){
     subbox.nsgrid_update();
   }else{
-#if defined(F_CUDA)  
+#if defined(F_CUDA)
     subbox.nsgrid_crd_to_gpu();
 #endif
   }
@@ -440,7 +441,7 @@ int DynamicsModePresto::calc_in_each_step(){
   //cout << "gather_energies()"<<endl;
   gather_energies();
 
-  if(cfg->dist_restraint_type != DISTREST_NONE || 
+  if(cfg->dist_restraint_type != DISTREST_NONE ||
      cfg->pos_restraint_type != POSREST_NONE ){
     subbox.copy_crd(mmsys.crd);
     if(cfg->dist_restraint_type != DISTREST_NONE)
@@ -480,14 +481,14 @@ int DynamicsModePresto::calc_in_each_step(){
 
 
   //}
-  //cout << "update_coordinates"<<endl;  
+  //cout << "update_coordinates"<<endl;
   subbox.cpy_crd_prev();
   subbox.update_coordinates_cur(cfg->time_step);
 
   if(cfg->constraint_type != CONST_NONE){
     apply_constraint();
   }
-  //cout << "revise_coordinates"<<endl;  
+  //cout << "revise_coordinates"<<endl;
   #ifndef F_WO_NS
     subbox.update_coordinates_nsgrid();
   #endif
@@ -513,7 +514,7 @@ int DynamicsModePresto::calc_in_each_step(){
 int DynamicsModePresto::apply_constraint(){
 
   //if(mmsys.leapfrog_coeff == 1.0){
-    
+
   if(cfg->thermostat_type==THMSTT_SCALING){
     subbox.apply_thermostat_with_shake(cfg->thermo_const_max_loops,
 				       cfg->thermo_const_tolerance);
@@ -521,7 +522,7 @@ int DynamicsModePresto::apply_constraint(){
   }else{
     subbox.apply_constraint();
   }
-  
+
   //}
   return 0;
 }
@@ -530,10 +531,10 @@ int DynamicsModePresto::apply_constraint(){
 
 DynamicsModeZhang::DynamicsModeZhang()
  : DynamicsMode(){
-} 
+}
 
 DynamicsModeZhang::~DynamicsModeZhang(){
-} 
+}
 
 int DynamicsModeZhang::calc_in_each_step(){
   const clock_t startTimeStep = clock();
@@ -545,7 +546,7 @@ int DynamicsModeZhang::calc_in_each_step(){
   mmsys.ctime_cuda_reset_work_ene += endTimeReset - startTimeReset;
 
   subbox.update_coordinates_cur(time_step_half);
-  subbox.cpy_vel_prev();  
+  subbox.cpy_vel_prev();
 
 #ifndef F_WO_NS
   const clock_t startTimeHtod = clock();
@@ -553,7 +554,7 @@ int DynamicsModeZhang::calc_in_each_step(){
     //cout << "nsgrid_update"<<endl;
     subbox.nsgrid_update();
   }else{
-  #if defined(F_CUDA)  
+  #if defined(F_CUDA)
     subbox.nsgrid_crd_to_gpu();
   #endif
   }
@@ -578,32 +579,32 @@ int DynamicsModeZhang::calc_in_each_step(){
   if(cfg->pos_restraint_type != POSREST_NONE){
     apply_pos_restraint();
   }
-  
+
   const clock_t startTimeVel = clock();
   subbox.cpy_crd_prev();
   //subbox.apply_thermostat();
 
   if(cfg->constraint_type != CONST_NONE){
     // subbox.update_velocities(cfg->time_step);
-    // vel_next 
+    // vel_next
     //subbox.update_coordinates_cur(cfg->time_step);
     //apply_constraint();
-    //subbox.set_force_from_velocity(cfg->time_step);    
+    //subbox.set_force_from_velocity(cfg->time_step);
     //subbox.cpy_crd_from_prev();
-    //subbox.update_velocities(cfg->time_step);    
+    //subbox.update_velocities(cfg->time_step);
     //subbox.update_coordinates_cur(cfg->time_step);
     //subbox.apply_thermostat();
   }
 
   subbox.apply_thermostat();
-  
+
   const clock_t endTimeVel = clock();
   mmsys.ctime_update_velo += endTimeVel - startTimeVel;
 
   const clock_t startTimeCoord = clock();
 
   subbox.update_coordinates_cur(time_step_half);
-  //cout << "revise_coordinates"<<endl;  
+  //cout << "revise_coordinates"<<endl;
   #ifndef F_WO_NS
   subbox.update_coordinates_nsgrid();
   #endif
@@ -611,10 +612,10 @@ int DynamicsModeZhang::calc_in_each_step(){
 
   const clock_t endTimeCoord = clock();
   mmsys.ctime_update_coord += endTimeCoord - startTimeCoord;
-  
+
   const clock_t startTimeKine = clock();
   //subbox.velocity_average();
-  
+
   subbox.copy_vel_next(mmsys.vel_just);
   cal_kinetic_energy((const real**)mmsys.vel_just);
   const clock_t endTimeKine = clock();

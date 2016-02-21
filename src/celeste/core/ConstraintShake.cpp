@@ -1,8 +1,9 @@
 #include "ConstraintShake.h"
+using namespace std;
 
 ConstraintShake::ConstraintShake()
   : ConstraintObject(){
-  
+
 }
 
 ConstraintShake::~ConstraintShake(){
@@ -21,7 +22,7 @@ int ConstraintShake::apply_constraint(real* in_crd, real* in_crd_prev, real_pw* 
 
 int ConstraintShake::shake_pair(real* in_crd, real* in_crd_prev, real_pw* in_mass_inv,
 			   PBC* pbc){
-  
+
   for(int i_cst = 0; i_cst < n_pair; i_cst++){
     int atomid1_3 = pair_atomids[i_cst][0] * 3;
     int atomid2_3 = pair_atomids[i_cst][1] * 3;
@@ -44,7 +45,7 @@ int ConstraintShake::shake_pair(real* in_crd, real* in_crd_prev, real_pw* in_mas
     real_cst val_b = mass12_inv * diff_ip;
     real_cst val_c = diff_sq - pair_dist[i_cst];
     real_cst val_g = (val_b - sqrt(max(val_b*val_b - val_c * val_a, (real_cst)0.0))) / val_a;
-    
+
     for(int d=0; d < 3; d++){
       in_crd[atomid1_3+d] += mass1_inv * val_g * d12_prev[d];
       in_crd[atomid2_3+d] -= mass2_inv * val_g * d12_prev[d];
@@ -68,7 +69,7 @@ int ConstraintShake::shake_trio(real* in_crd, real* in_crd_prev, real_pw* in_mas
     real crd3_prev[3] = {in_crd_prev[atomid3_3], in_crd_prev[atomid3_3+1], in_crd_prev[atomid3_3+2]};
     real_cst d12[3], d23[3], d31[3];
     real_cst d12_prev[3], d23_prev[3], d31_prev[3];
-    
+
     real_cst g[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
     pbc->diff_crd_minim_image(d12, crd1, crd2);
@@ -105,41 +106,41 @@ int ConstraintShake::shake_trio(real* in_crd, real* in_crd_prev, real_pw* in_mas
 		   coef32 * d23_prev[d] * g[1] +
 		   coef33 * d31_prev[d] * g[2]);
       }
-      real_cst gradf11 = 2.0 * coef11 * 
-	(d12[0] * d12_prev[0] + 
-	 d12[1] * d12_prev[1] + 
+      real_cst gradf11 = 2.0 * coef11 *
+	(d12[0] * d12_prev[0] +
+	 d12[1] * d12_prev[1] +
 	 d12[2] * d12_prev[2]);
-      real_cst gradf12 = 2.0 * coef12 * 
-	(d12[0] * d23_prev[0] + 
-	 d12[1] * d23_prev[1] + 
+      real_cst gradf12 = 2.0 * coef12 *
+	(d12[0] * d23_prev[0] +
+	 d12[1] * d23_prev[1] +
 	 d12[2] * d23_prev[2]);
-      real_cst gradf13 = 2.0 * coef13 * 
-	(d12[0] * d31_prev[0] + 
-	 d12[1] * d31_prev[1] + 
+      real_cst gradf13 = 2.0 * coef13 *
+	(d12[0] * d31_prev[0] +
+	 d12[1] * d31_prev[1] +
 	 d12[2] * d31_prev[2]);
-      real_cst gradf21 = 2.0 * coef21 * 
-	(d23[0] * d12_prev[0] + 
-	 d23[1] * d12_prev[1] + 
+      real_cst gradf21 = 2.0 * coef21 *
+	(d23[0] * d12_prev[0] +
+	 d23[1] * d12_prev[1] +
 	 d23[2] * d12_prev[2]);
-      real_cst gradf22 = 2.0 * coef22 * 
-	(d23[0] * d23_prev[0] + 
-	 d23[1] * d23_prev[1] + 
+      real_cst gradf22 = 2.0 * coef22 *
+	(d23[0] * d23_prev[0] +
+	 d23[1] * d23_prev[1] +
 	 d23[2] * d23_prev[2]);
-      real_cst gradf23 = 2.0 * coef23 * 
-	(d23[0] * d31_prev[0] + 
-	 d23[1] * d31_prev[1] + 
+      real_cst gradf23 = 2.0 * coef23 *
+	(d23[0] * d31_prev[0] +
+	 d23[1] * d31_prev[1] +
 	 d23[2] * d31_prev[2]);
-      real_cst gradf31 = 2.0 * coef31 * 
-	(d31[0] * d12_prev[0] + 
-	 d31[1] * d12_prev[1] + 
+      real_cst gradf31 = 2.0 * coef31 *
+	(d31[0] * d12_prev[0] +
+	 d31[1] * d12_prev[1] +
 	 d31[2] * d12_prev[2]);
-      real_cst gradf32 = 2.0 * coef32 * 
-	(d31[0] * d23_prev[0] + 
-	 d31[1] * d23_prev[1] + 
+      real_cst gradf32 = 2.0 * coef32 *
+	(d31[0] * d23_prev[0] +
+	 d31[1] * d23_prev[1] +
 	 d31[2] * d23_prev[2]);
-      real_cst gradf33 = 2.0 * coef33 * 
-	(d31[0] * d31_prev[0] + 
-	 d31[1] * d31_prev[1] + 
+      real_cst gradf33 = 2.0 * coef33 *
+	(d31[0] * d31_prev[0] +
+	 d31[1] * d31_prev[1] +
 	 d31[2] * d31_prev[2]);
 
       real_cst diff[3] = {trio_dist[i_cst][0] - (d12[0]*d12[0] + d12[1]*d12[1] + d12[2]*d12[2]),
@@ -168,7 +169,7 @@ int ConstraintShake::shake_trio(real* in_crd, real* in_crd_prev, real_pw* in_mas
       real_cst detb32 = gradf31 * gradf12 - gradf32 * gradf11;
       real_cst detb33 = gradf11 * gradf22 - gradf12 * gradf21;
 
-      
+
       g[0] = (detb11 * diff[0] + detb12 * diff[1] + detb13 * diff[2]) * determin;
       g[1] = (detb21 * diff[0] + detb22 * diff[1] + detb23 * diff[2]) * determin;
       g[2] = (detb31 * diff[0] + detb32 * diff[1] + detb33 * diff[2]) * determin;
@@ -179,11 +180,11 @@ int ConstraintShake::shake_trio(real* in_crd, real* in_crd_prev, real_pw* in_mas
 
     if(!converge){
       cout << "Shake not converged, tri: " << i_cst << endl;
-      cout << trio_atomids[i_cst][0] << " - " 
-	   << trio_atomids[i_cst][1] << " - " 
+      cout << trio_atomids[i_cst][0] << " - "
+	   << trio_atomids[i_cst][1] << " - "
 	   << trio_atomids[i_cst][2] <<endl;
     }
-    
+
 
     for(int d=0; d < 3; d++){
       in_crd[atomid1_3+d] += mass1_inv *
@@ -192,10 +193,10 @@ int ConstraintShake::shake_trio(real* in_crd, real* in_crd_prev, real_pw* in_mas
 	(- g[3] * d12_prev[d] + g[4] * d23_prev[d]);
       in_crd[atomid3_3+d] += mass3_inv *
 	(- g[4] * d23_prev[d] + g[5] * d31_prev[d]);
-    }    
+    }
 
   }
-  
+
   return 0;
 }
 
@@ -246,12 +247,12 @@ int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real_pw* in_mas
       pbc->diff_crd_minim_image(d_cur[i_pair],
 				crd_cur[Pairs_idx[i_pair][0]],
 				crd_cur[Pairs_idx[i_pair][1]]);
-      
+
       pbc->diff_crd_minim_image(d_prev[i_pair],
 				crd_prev[Pairs_idx[i_pair][0]],
 				crd_prev[Pairs_idx[i_pair][1]]);
 
-    }      
+    }
     real_cst coef[6];
     real_cst coef_post[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
@@ -275,7 +276,7 @@ int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real_pw* in_mas
 	  d_virtual[i_pair][d] = d_cur[i_pair][d];
 	for(int j_pair=0; j_pair < 6; j_pair++){
 	  for(int d=0; d<3; d++)
-	    d_virtual[i_pair][d] += weight[j_pair][i_pair] * 
+	    d_virtual[i_pair][d] += weight[j_pair][i_pair] *
 	      d_prev[j_pair][d] * coef[j_pair];
 	}
       }
@@ -289,11 +290,11 @@ int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real_pw* in_mas
 	  //	  if(atomid_3[0] == dbgatom*3)
 	  //cout << "grad["<<i_pair<<"]["<<j_pair<<"] " << grad[i_pair][j_pair]<<endl;
 	}
-      }	  
+      }
       converge = true;
       real_cst sqrt_dist[6];
       for(int i_pair=0; i_pair < 6; i_pair++){
-	real_cst norm = 
+	real_cst norm =
 	  (d_virtual[i_pair][0] * d_virtual[i_pair][0] +
 	   d_virtual[i_pair][1] * d_virtual[i_pair][1] +
 	   d_virtual[i_pair][2] * d_virtual[i_pair][2]);
@@ -309,7 +310,7 @@ int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real_pw* in_mas
       //cout << "DBG result: ";
       for(int i_pair=0; i_pair < 6; i_pair++){
 	result[i_pair] = sqrt_dist[i_pair];
-	for(int j_pair=0; j_pair < 6; j_pair++){	
+	for(int j_pair=0; j_pair < 6; j_pair++){
 	  result[i_pair] += grad[j_pair][i_pair] * coef[j_pair];
 
 	}
@@ -324,10 +325,10 @@ int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real_pw* in_mas
 
     if(!converge){
       cout << "Shake not converged, quad: " << i_cst << endl;
-      cout << quad_atomids[i_cst][0] << " - " 
-	   << quad_atomids[i_cst][1] << " - " 
-	   << quad_atomids[i_cst][2] << " - " 
-	   << quad_atomids[i_cst][3] << endl;	
+      cout << quad_atomids[i_cst][0] << " - "
+	   << quad_atomids[i_cst][1] << " - "
+	   << quad_atomids[i_cst][2] << " - "
+	   << quad_atomids[i_cst][3] << endl;
     }
     for(int d=0; d < 3; d++){
       in_crd[atomid_3[0]+d] += mass_inv[0] * (coef[0] * d_prev[0][d]
@@ -344,13 +345,13 @@ int ConstraintShake::shake_quad(real* in_crd, real* in_crd_prev, real_pw* in_mas
 					      - coef[5] * d_prev[5][d]);
     }
   }
-  
+
   return 0;
 }
 
 ConstraintSettle::ConstraintSettle()
   : ConstraintObject(){
-  
+
 }
 
 ConstraintSettle::~ConstraintSettle(){
@@ -358,8 +359,8 @@ ConstraintSettle::~ConstraintSettle(){
 }
 int ConstraintSettle::apply_constraint(real* in_crd, real* in_crd_prev, real_pw* in_mass_inv,
 				 PBC* pbc){
-  
-  
+
+
   return 0;
 }
 

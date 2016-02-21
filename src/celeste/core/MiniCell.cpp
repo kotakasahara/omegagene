@@ -2,11 +2,13 @@
 #include <bitset>
 #include <ciso646>
 
+using namespace std;
+
 #ifdef F_CUDA
 extern "C" int cuda_hostalloc_atom_info(real_pw*& h_crd, int*& h_atomids,
 					real_fc*& h_work, real_fc*& h_energy,
 					int max_n_atom_array);
-extern "C" int cuda_hostalloc_cell_info(//CellPair*& h_cell_pairs, 
+extern "C" int cuda_hostalloc_cell_info(//CellPair*& h_cell_pairs,
 					//int*& h_idx_head_cell_pairs,
 					int*& h_idx_xy_head_cell,
 					//int max_n_cell_pairs,
@@ -19,7 +21,7 @@ extern "C" int cuda_hostfree_cell_info(//CellPair* h_cell_pairs,
 				       int* h_idx_xy_head_cell);
 
   #ifdef F_ECP
-  extern "C" int cuda_hostalloc_cellpair_info(CellPair*& h_cell_pairs, 
+  extern "C" int cuda_hostalloc_cellpair_info(CellPair*& h_cell_pairs,
 					      int*& h_idx_head_cell_pairs,
 					      int*& h_n_cells_z,
 					      int max_n_cell_pairs,
@@ -47,7 +49,7 @@ int MiniCell::alloc_variables(){
   }
   idx_crd_cell = new int**[n_cells_xyz[0]];
   for(int i=0; i < n_cells_xyz[0]; i++){
-    idx_crd_cell[i] = new int*[n_cells_xyz[1]];    
+    idx_crd_cell[i] = new int*[n_cells_xyz[1]];
     for(int j=0; j < n_cells_xyz[1]; j++){
       idx_crd_cell[i][j] = new int[n_cells_xyz[2]];
       //for(int k=0; k < n_cells_xyz[2]; k++)
@@ -71,7 +73,7 @@ int MiniCell::alloc_variables(){
   //dummy_particles = new int*[n_columns];
   //for(int i=0; i < n_columns; i++){
   //dummy_particles[i] = new int[N_ATOM_CELL];
-  
+
   atomids_rev = new int[get_max_n_atom_array()];
   atomids_buf = new int[get_max_n_atom_array()];
 #ifdef F_CUDA
@@ -108,7 +110,7 @@ int MiniCell::alloc_variables(){
   uni2cell_z = new int*[n_uni];
   for(int i=0; i < n_uni; i++){
     uni2cell_z[i] = new int[2];
-  } 
+  }
   cell2uni_z = new int*[max_n_cells];
   for(int i=0; i < max_n_cells; i++){
     cell2uni_z[i] = new int[2];
@@ -130,7 +132,7 @@ int MiniCell::init_variables(){
     n_atoms_col[i]=0;
   for(int i=0; i < n_columns; i++)
     n_cells_z[i] = 0;
-  
+
   //for(int i = 0; i < (get_max_n_atom_array()); i++){
   //crd_in_cell[i][0]=0.0;
   //crd_in_cell[i][1]=0.0;
@@ -141,7 +143,7 @@ int MiniCell::init_variables(){
   for(int i = 0; i < get_max_n_atom_array(); i++){
     atomids_buf[i] = -1;
   }
-  
+
   for(int i=0; i < max_n_atoms_exbox; i++)
     idx_atom_cell_xy[i] = -1;
   for(int i=0; i < n_columns+1; i++)
@@ -150,7 +152,7 @@ int MiniCell::init_variables(){
     idx_xy_head_atom[i] = 0;
   for(int i=0; i < max_n_cells; i++)
     idx_cell_n_atoms[i] = 0;
-  
+
   //#ifdef F_CUDA
   //  cout << "cuda_hostalloc_atom_info"<<endl;
   //  cuda_hostalloc_atom_info(crd, atomids, work, energy, n_atoms);
@@ -185,7 +187,7 @@ int MiniCell::free_variables(){
   }
   delete[] idx_crd_cell;
   delete[] idx_atom_cell;
-  
+
   delete[] n_atoms_col;
 
 
@@ -245,7 +247,7 @@ int MiniCell::free_variables(){
 }
 
 int MiniCell::set_grid_xy(){
-  // set 
+  // set
   //   n_cells_xyz
   //   L_cell_xy
   //   exbox_l
@@ -264,7 +266,7 @@ int MiniCell::set_grid_xy(){
   n_columns = (n_cells_xyz[0] * n_cells_xyz[1]);
 
   // the maximum number of atoms in each column is estimated as
-  //  1.3 times larger than the expected number. 
+  //  1.3 times larger than the expected number.
   //  there is no data the factor 1.3 is good or not.
   //  this point should be tested.
   max_n_atoms_column = ceil((real_pw)max_n_atoms_exbox/(real_pw)n_columns * 1.3);
@@ -277,7 +279,7 @@ int MiniCell::set_grid_xy(){
 
 
   max_n_cells = n_cells_xyz[0] * n_cells_xyz[1] * n_cells_xyz[2];
-  
+
   max_n_cell_pairs = ((n_neighbors_xyz[0]*2+1) *
 		      (n_neighbors_xyz[1]*2+1) * (n_neighbors_xyz[0]+n_neighbors_xyz[1]+2) )
     * 0.5 * max_n_cells * COEF_MAX_N_CELL_PAIRS;
@@ -321,12 +323,12 @@ int MiniCell::set_atoms_into_grid_xy(){
     int cell_crd_xy[2];
 
     for (int d=0; d < 2; d++){
-      
+
       // checking the atom is in the box
       if(crd[atom_id_g*3+d] > box_upper_bound[d] ||
 	 crd[atom_id_g*3+d] < box_lower_bound[d]){
 	cout << "CRDERROR! EXCEEDED PB: " << atom_id_g << "-" << d << " "
-	     << crd[atom_id_g*3+d] << " , " << box_upper_bound[d] << " , " 
+	     << crd[atom_id_g*3+d] << " , " << box_upper_bound[d] << " , "
 	     << box_lower_bound[d] << endl;
       }
 
@@ -347,7 +349,7 @@ int MiniCell::set_atoms_into_grid_xy(){
 
   //cout << "set_idx_xy_head_atom_from_n_atoms_col()" << endl;
   set_idx_xy_head();
-  
+
   set_atomids_from_buf();
 
   //cout << "reorder_atominfo_for_columns()" << endl;
@@ -368,18 +370,18 @@ int MiniCell::set_atoms_into_grid_xy(){
    cout << "test " <<cid<< endl;
    cout << cell_crd[cid][0] <<"-"<<cell_crd[cid][1] <<"-"<<cell_crd[cid][2] <<endl;
    for(int i=0; i < N_ATOM_CELL; i++){
-     cout << (cid*N_ATOM_CELL+i) << "- " 
- 	 << crd[(cid*N_ATOM_CELL+i)*3] << ", " 
- 	 << crd[(cid*N_ATOM_CELL+i)*3+1]<< ", " 
+     cout << (cid*N_ATOM_CELL+i) << "- "
+ 	 << crd[(cid*N_ATOM_CELL+i)*3] << ", "
+ 	 << crd[(cid*N_ATOM_CELL+i)*3+1]<< ", "
  	 << crd[(cid*N_ATOM_CELL+i)*3+2]<<endl;
    }
    cid = 1976;
    cout << "test " <<cid<< endl;
    cout << cell_crd[cid][0] <<"-"<<cell_crd[cid][1] <<"-"<<cell_crd[cid][2] <<endl;
    for(int i=0; i < N_ATOM_CELL; i++){
-   cout << (cid*N_ATOM_CELL+i) << "- " 
-   << crd[(cid*N_ATOM_CELL+i)*3] << ", " 
-   << crd[(cid*N_ATOM_CELL+i)*3+1]<< ", " 
+   cout << (cid*N_ATOM_CELL+i) << "- "
+   << crd[(cid*N_ATOM_CELL+i)*3] << ", "
+   << crd[(cid*N_ATOM_CELL+i)*3+1]<< ", "
    << crd[(cid*N_ATOM_CELL+i)*3+2]<<endl;
    }
   */
@@ -496,7 +498,7 @@ int MiniCell::reorder_atominfo_in_columns(){
 
   //for(int i=0; i<n_columns; i++) n_atoms_col[i]=0;
   //memset(n_atoms_col, 0, sizeof(int)*n_columns);
-  
+
   // set atomids[atom_id_grid] = atomids_buf[atom_id_g]
   //for(int atom_id_g=0; atom_id_g < n_atoms_exbox; atom_id_g++){
   //int column_id = idx_atom_cell_xy[atom_id_g];
@@ -507,19 +509,19 @@ int MiniCell::reorder_atominfo_in_columns(){
   //column_id >= n_columns ||
   //n_atoms_col[column_id] >= max_n_atoms_column){
   //cout << "atomids["<<atom_id_grid<<"/" << n_atoms_exbox+n_columns*N_ATOM_CELL
-  //	   <<"]="<<atomids_buf[atom_id_g]<< "/" << n_atoms 
+  //	   <<"]="<<atomids_buf[atom_id_g]<< "/" << n_atoms
   //<<" column:"<<column_id<<"/"<<n_columns
   //<<" n_atoms_col:"<<n_atoms_col[column_id]<<"/"<<max_n_atoms_column<<endl;
   //exit(1);
   //}
   //n_atoms_col[column_id]++;
   //}
-  //cout << "reorder_atominfo 2:" <<endl; 
+  //cout << "reorder_atominfo 2:" <<endl;
    //for(int atom_id_grid=0; atom_id_grid < n_atoms; atom_id_grid++){
    //cout << atom_id_grid << " " <<  atomids[atom_id_grid] << endl;
    //}
    //cout << endl;
-  for(int column_id=0; column_id < n_columns; column_id++){  
+  for(int column_id=0; column_id < n_columns; column_id++){
     // sort atomids in column by order of z coordinates
     quick_sort_in_columns(idx_xy_head_atom[column_id],
  			  idx_xy_head_atom[column_id] + n_atoms_col[column_id] - 1);
@@ -528,8 +530,8 @@ int MiniCell::reorder_atominfo_in_columns(){
     //int aid = idx_xy_head_atom[column_id] + i;
     //exit(1);
     int last_id = idx_xy_head_atom[column_id] + n_atoms_col[column_id] -1;
-    
-    // set crd 
+
+    // set crd
     for(int i = idx_xy_head_atom[column_id] + n_atoms_col[column_id];
 	i <  idx_xy_head_atom[column_id] + n_cells_z[column_id] * N_ATOM_CELL; i++){
       crd[i*3+0] = crd[last_id*3+0];
@@ -539,7 +541,7 @@ int MiniCell::reorder_atominfo_in_columns(){
     }
       //int last = 0;
       //for(int i=0; i < n_cells_z[column_id] * N_ATOM_CELL; i++){// n_atoms_col[column_id]; i++){
-      //int atom_id_grid = idx_xy_head_atom[column_id] + i;	
+      //int atom_id_grid = idx_xy_head_atom[column_id] + i;
       //if(i < n_atoms_col[column_id]) {last = atom_id_grid;}
       //else cout << "last : "<< last << endl;;
       //crd[atom_id_grid*3] = in_crd[atomids[last]][0];
@@ -613,12 +615,12 @@ int MiniCell::quick_sort_in_columns(const int l, const int r){
   /*
   cout << "qs " << l << " - " << r << endl;
   if (r > l){
-    
+
     int pivot = l;
     cout << "pivot : " << pivot << "\t" << atomids[pivot] << endl;
-    cout << "crd " << crd[pivot*3+2] << endl;    
+    cout << "crd " << crd[pivot*3+2] << endl;
     real v = crd[pivot*3+2];
-    
+
     int i = l-1;
     int j = r+1;
 
@@ -631,7 +633,7 @@ int MiniCell::quick_sort_in_columns(const int l, const int r){
       cout << " swp " << endl;
     }
     cout << " qs3 " << l << " - " << i-1 << " " << i << " - " << r << endl;
-    //swap_atomid_crd(i, r);    
+    //swap_atomid_crd(i, r);
     //int t = atomids[i];
     //atomids[i] = atomids[r];
     //atomids[r] = t;
@@ -648,7 +650,7 @@ int MiniCell::quick_sort_in_columns(const int l, const int r){
 
 int MiniCell::debug_set_atoms_into_grid(){
   int *rev_atomids = new int[n_atoms];
-  for(int i = 0; i< n_atoms; i++){ rev_atomids[i] = -1; }   
+  for(int i = 0; i< n_atoms; i++){ rev_atomids[i] = -1; }
   cout << "!!!!!!!!!!! DEBUG" << endl;
   for(int atom_id_grid=0; atom_id_grid < N_ATOM_CELL*n_cells; atom_id_grid++){
     int cell_id = idx_atom_cell[atom_id_grid];
@@ -664,7 +666,7 @@ int MiniCell::debug_set_atoms_into_grid(){
  	 << crd[atom_id_grid*3+1] << "," << crd[atom_id_grid*3+2]
  	 << ") cell:" << cell_id << ":"
  	 << cell_crd[cell_id][0] << "," << cell_crd[cell_id][1] << ","
- 	 << cell_crd[cell_id][2] << " " 
+ 	 << cell_crd[cell_id][2] << " "
  	 <<endl;
   }
   //cout << "atomids rev : ";
@@ -679,10 +681,10 @@ int MiniCell::debug_set_atoms_into_grid(){
 int MiniCell::update_crd(real** in_crd){
   /*
 
-  for(int column_id=0; column_id < n_columns; column_id++){  
+  for(int column_id=0; column_id < n_columns; column_id++){
     int last = 0;
     for(int i=0; i < n_cells_z[column_id] * N_ATOM_CELL; i++){
-      int atom_id_grid = idx_xy_head_atom[column_id] + i;	
+      int atom_id_grid = idx_xy_head_atom[column_id] + i;
       if(i < n_atoms_col[column_id]) {last = atom_id_grid;}
       crd[atom_id_grid*3] = in_crd[atomids[last]][0];
       crd[atom_id_grid*3+1] = in_crd[atomids[last]][1];
@@ -709,7 +711,7 @@ int MiniCell::update_cell_assign(const real** in_crd){
   //   idx_atom_cell_xy
   //   n_atoms_col
   //   idx_xy_head_atom
-  
+
   for (int atom_id=0; atom_id < n_atoms; atom_id++){
     int mg[2] = {0,0};
     for (int d=0; d < 2; d++){
@@ -735,16 +737,16 @@ int MiniCell::update_cell_assign(const real** in_crd){
     idx_atom_cell_xy[atom_id] = to;
     n_atoms_col[from]--;
     n_atoms_col[to]++;
-    
+
   }
   set_idx_xy_head_atom_from_n_atoms_col();
-  reorder_atominfo(in_crd);  
+  reorder_atominfo(in_crd);
   //reset_cell_assignment();
   return 0;
 }
 */
 int MiniCell::set_idx_xy_head(){
-  // set 
+  // set
   //   idx_xy_head_atom
   //   n_cells_z
   //   n_cells
@@ -772,12 +774,12 @@ int MiniCell::set_idx_xy_head(){
       cell_crd[cur_cell_id][0] = column_x;
       cell_crd[cur_cell_id][1] = column_y;
       cell_crd[cur_cell_id][2] = cur_cell_z;
-      
+
     }
     int n_dummies = n_cells_z[column_id]*N_ATOM_CELL - n_atoms_col[column_id];
     n_dummies_all += n_dummies;
     int i;
-    
+
     //for(i = 0; i < n_dummies; i++){
       //cout << "dummy " << column_id << "-" << n_atoms_col[column_id] << " " << i <<" " << idx_xy_head_atom[column_id] << endl;
     //int cur_atomid_grid = idx_xy_head_atom[column_id]+n_atoms_col[column_id]+i;
@@ -797,8 +799,8 @@ int MiniCell::set_idx_xy_head(){
 }
 
 int MiniCell::set_atomids_rev(){
-  for(int atom_id_grid = 0; 
-      atom_id_grid < get_n_atom_array(); 
+  for(int atom_id_grid = 0;
+      atom_id_grid < get_n_atom_array();
       atom_id_grid++){
     if(atomids[atom_id_grid] >= 0){
       atomids_rev[atomids[atom_id_grid]] = atom_id_grid;
@@ -821,7 +823,7 @@ int MiniCell::set_atomids_from_buf(){
   return 0;
 }
 
-real_pw MiniCell::get_cell_z_min(int cell_id){  
+real_pw MiniCell::get_cell_z_min(int cell_id){
   //return crd[(idx_cell_head_atom[cell_id])*3+2];
   return crd[cell_id * N_ATOM_CELL * 3 + 2];
 }
@@ -851,7 +853,7 @@ int MiniCell::set_uniform_grid(){
     real_pw cell_z_min = get_cell_z_min(cell_id) - pbc->lower_bound[2];
     real_pw cell_z_max = get_cell_z_max(cell_id) - pbc->lower_bound[2];
     int uni_z_min = cell_z_min/L_z_uni;
-    int uni_z_max = cell_z_max/L_z_uni;    
+    int uni_z_max = cell_z_max/L_z_uni;
 
     cell2uni_z[cell_id][0] = uni_z_min;
     cell2uni_z[cell_id][1] = uni_z_max;
@@ -861,7 +863,7 @@ int MiniCell::set_uniform_grid(){
 	uni2cell_z[uni_id][0] = cell[2];
       if(cell[2] > uni2cell_z[uni_id][1])
 	uni2cell_z[uni_id][1] = cell[2];
-      
+
     }
   }
 
@@ -897,7 +899,7 @@ int MiniCell::enumerate_cell_pairs(){
     real_pw cell1_z_bottom = get_cell_z_min(cell1_id);
     real_pw cell1_z_top = get_cell_z_max(cell1_id);
     bool cell1_odd = cell1_id%2!=0;
-    
+
     int d_cell[3];
     int cell_rel[3];
     int image[3];
@@ -957,21 +959,21 @@ int MiniCell::enumerate_cell_pairs(){
 	  last_uni_z[1] = n_uni_z - 1;
 	}else{
 	  first_uni_z[2] = -1;
-	  last_uni_z[2] = -1;	  
+	  last_uni_z[2] = -1;
 	  last_uni_z[1] = tmp_last;
 	}
-	
+
 	int tmp_img = -2;
 	for(int i_img = 0; i_img < 3; i_img++){
-	  image[2] = i_img-1;	  
+	  image[2] = i_img-1;
 	  if (first_uni_z[i_img] < 0) continue;
-	  int first_uni_id = get_uni_id_from_crd(cell2[0], cell2[1], 
+	  int first_uni_id = get_uni_id_from_crd(cell2[0], cell2[1],
 						 first_uni_z[i_img]);
-	  int last_uni_id = get_uni_id_from_crd(cell2[0], cell2[1], 
+	  int last_uni_id = get_uni_id_from_crd(cell2[0], cell2[1],
 						last_uni_z[i_img]);
 	  int first_cell = get_cell_id_from_crd(cell2[0], cell2[1], uni2cell_z[first_uni_id][0]);
 	  int last_cell = get_cell_id_from_crd(cell2[0], cell2[1], uni2cell_z[last_uni_id][1]);
-	  
+
 	  for(int cell2_id = first_cell;
 	      cell2_id <= last_cell; cell2_id++){
 	    real_pw cell2_z_top = get_cell_z_max(cell2_id) + image[2] * pbc->L[2];
@@ -1003,7 +1005,7 @@ dx[2] = cell2_z_top - cell1_z_bottom;
 
 	    bool cell2_odd = cell2_id%2!=0;
 	    if(check_valid_pair(cell1_id, cell2_id, cell1_odd, cell2_odd))
-	      add_cell_pair(cell1_id, cell2_id, image);	    
+	      add_cell_pair(cell1_id, cell2_id, image);
 	  }
 	}
       }
@@ -1011,11 +1013,11 @@ dx[2] = cell2_z_top - cell1_z_bottom;
   }
   idx_head_cell_pairs[n_cells] = n_cell_pairs;
   //cout << "checked cells: " << tmp_cell1 << " / " << n_cells << endl ;
-  //cout << "checked column_pairs: " << tmp_column_pairs << " / " 
+  //cout << "checked column_pairs: " << tmp_column_pairs << " / "
   //<< n_columns * (n_neighbors_xy[0]*2+1)*(n_neighbors_xy[1]*2+1)   <<" "
   //<< n_neighbors_xy[0] <<":"<<n_neighbors_xy[1] <<":"<<n_columns<<endl;
   //cout << "n_cell_pairs : " << n_cell_pairs << " / " << tmp_n_cell_pair<<endl;
-  
+
   return 0;
 }
 bool MiniCell::check_valid_pair(const int cell1_id, const int cell2_id,
@@ -1023,10 +1025,10 @@ bool MiniCell::check_valid_pair(const int cell1_id, const int cell2_id,
   //avoid taking both i-j, j-i pairs
   //bool cell2_odd = cell2_id%2!=0;
   if (cell1_odd){
-    if ((cell2_id < cell1_id && !cell2_odd ) || 
+    if ((cell2_id < cell1_id && !cell2_odd ) ||
 	(cell2_id > cell1_id && cell2_odd )) return false;
   }else{
-    if ((cell2_id < cell1_id && cell2_odd ) || 
+    if ((cell2_id < cell1_id && cell2_odd ) ||
 	(cell2_id > cell1_id && !cell2_odd )) return false;
   }
   return true;
@@ -1074,7 +1076,7 @@ int MiniCell::set_cell_pair_bitmask(const int cell_id1, const int cell_id2, int*
     if(atomids[a1] == -1) flg1 = true;
     int a2 = N_ATOM_CELL*cell_id2;
     //int a2_cell = 0;
-    for(int a2_cell = 0; 
+    for(int a2_cell = 0;
 	a2_cell < N_ATOM_CELL; a2++, a2_cell++){
       int bit_pos = a2_cell * N_ATOM_CELL + a1_cell;
       int mask_id =  bit_pos / 32;
@@ -1088,7 +1090,7 @@ int MiniCell::set_cell_pair_bitmask(const int cell_id1, const int cell_id2, int*
 	int tail = atomids[a1] * max_n_nb15off + max_n_nb15off;
 	for(int i = atomids[a1] * max_n_nb15off;
 	    i < tail && nb15off[i] != -1; i++){
-	  if(nb15off[i] == atomids[a2]){ 
+	  if(nb15off[i] == atomids[a2]){
 	    flg12=true;
 	    break;}
 	}
@@ -1111,9 +1113,9 @@ void MiniCell::get_crd(int atomid_grid, real_pw& x, real_pw& y, real_pw& z){
 
 int MiniCell::get_column_id_from_crd(int x, int y){
   while(x < 0) { x += n_cells_xyz[0];}
-  while(x >= n_cells_xyz[0]) { x -= n_cells_xyz[0];}  
+  while(x >= n_cells_xyz[0]) { x -= n_cells_xyz[0];}
   while(y < 0) { y += n_cells_xyz[1];}
-  while(y >= n_cells_xyz[1]) { y -= n_cells_xyz[1];}    
+  while(y >= n_cells_xyz[1]) { y -= n_cells_xyz[1];}
   int col = x + y * n_cells_xyz[0];
   if (col >= n_columns) {
     cout << "ERROR!! get_column_id_from_crd " << x << "-" << y << ":" << col<<endl;
@@ -1127,10 +1129,10 @@ int MiniCell::get_column_id_from_crd(int x, int y){
 //}
  int MiniCell::get_cell_id_from_crd(int x, int y, int z){
    //while(x < 0) { x += n_cells_xyz[0];}
-  //while(x >= n_cells_xyz[0]) { x -= n_cells_xyz[0];}  
+  //while(x >= n_cells_xyz[0]) { x -= n_cells_xyz[0];}
   //while(y < 0) { y += n_cells_xyz[1];}
-  //while(y >= n_cells_xyz[1]) { y -= n_cells_xyz[1];}    
-  
+  //while(y >= n_cells_xyz[1]) { y -= n_cells_xyz[1];}
+
   //int n_z = n_cells_z[get_column_id_from_crd(x,y)];
   //while(z < 0) { z += n_z; }
   //while(z >= n_z) { z -= n_z; }
@@ -1187,7 +1189,7 @@ int MiniCell::move_atom(int n_atom, real* in_crd, real* in_prev_crd){
 }
 
 int MiniCell::set_box_info(int in_n_boxes_xyz[], real in_box_l[]){
-  // set 
+  // set
   //   box_id,      box_crd
   //   n_boxes, n_boxes_xyz
   //   box_l,   box_upper_bound,   box_lower_bound
@@ -1226,7 +1228,7 @@ int MiniCell::set_box_info(int in_n_boxes_xyz[], real in_box_l[]){
 int MiniCell::print_box_info(){
   cout << "print_box_info(): box_id=" << box_id << endl;
   cout << "box_crd : " << box_crd[0] << ", "
-       << box_crd[1] << ", " << box_crd[2] << " / " 
+       << box_crd[1] << ", " << box_crd[2] << " / "
        << n_boxes_xyz[0] << ", " << n_boxes_xyz[1]
        << ", " << n_boxes_xyz[2] << endl;
   cout << "box_l : " << box_l[0] << ", " << box_l[1]
@@ -1247,7 +1249,7 @@ int MiniCell::print_box_info(){
 int MiniCell::set_crds_to_homebox(real* in_crd,
 				  int* in_atomids,
 				  int in_n_atoms_box){
-  // set 
+  // set
   //   n_atoms_box, n_atoms_exbox
   //   a part of crd, atomids_buf
   //   only home atoms
@@ -1259,10 +1261,10 @@ int MiniCell::set_crds_to_homebox(real* in_crd,
     crd[idx+1] = in_crd[idx+1];
     crd[idx+2] = in_crd[idx+2];
     atomids_buf[i] = in_atomids[i];
-    if(crd[idx+0] <= pbc->lower_bound[0] || crd[idx+0] >= pbc->upper_bound[0] || 
-       crd[idx+1] <= pbc->lower_bound[1] || crd[idx+1] >= pbc->upper_bound[1] || 
+    if(crd[idx+0] <= pbc->lower_bound[0] || crd[idx+0] >= pbc->upper_bound[0] ||
+       crd[idx+1] <= pbc->lower_bound[1] || crd[idx+1] >= pbc->upper_bound[1] ||
        crd[idx+2] <= pbc->lower_bound[2] || crd[idx+2] >= pbc->upper_bound[2]){
-      cout << "CRD!!! " << crd[idx] << " " << crd[idx+1] << " " << crd[idx+2] <<endl; 
+      cout << "CRD!!! " << crd[idx] << " " << crd[idx+1] << " " << crd[idx+2] <<endl;
     }
   }
   return 0;
@@ -1272,7 +1274,7 @@ int MiniCell::set_max_n_atoms_region(){
   // set
   //   max_n_atoms_region
   //   max_n_atoms_box
-  //   max_n_atoms_exbox 
+  //   max_n_atoms_exbox
   // requires
   //   n_atoms
   //   n_boxes
@@ -1295,13 +1297,13 @@ int MiniCell::set_max_n_atoms_region(){
     real_pw vol = nx[0] * nx[1] * nx[2];
     max_n_atoms_region[i] = vol/vol_box * tmp_max_n_atoms_box;
     max_n_atoms_exbox += max_n_atoms_region[i];
-    if(rx[0] != 2 and rx[1] != 2 and rx[2] != 2 and 
+    if(rx[0] != 2 and rx[1] != 2 and rx[2] != 2 and
        rx[0] != -2 and rx[1] != -2 and rx[2] != -2)
       max_n_atoms_box += max_n_atoms_region[i];
     //cout << "region_id : " << i << " (" <<get_region_id_from_crd(3, rx[0],rx[1],rx[2])<<") "
     //<< " [" <<rx[0]<<","<<rx[1]<<","<<rx[2]<<"]" <<endl;
       //<< " max_n_cell_reg:"<<max_n_cells_region[i]<< endl;
-    
+
   }
   // -1,-1,-1 => 56 regions
   // -1,-1, 0 => 12 regions
@@ -1333,7 +1335,7 @@ int MiniCell::get_box_id_from_crd(const int box_crd[]){
     n_boxes_xyz[0]*box_crd[1] + box_crd[0];
 }
 
-int MiniCell::get_box_crd_from_id(const int& box_id, 
+int MiniCell::get_box_crd_from_id(const int& box_id,
 				  int* box_crd){
   box_crd[0] = box_id%(n_boxes_xyz[0]);
   box_crd[1] = (box_id%(n_boxes_xyz[0]*n_boxes_xyz[1])) / n_boxes_xyz[0];
@@ -1345,7 +1347,7 @@ int MiniCell::assign_regions(int from_atomid_g=0, int to_atomid_g=-1){
   /*
   if(to_atomid_g<0) to_atomid_g = n_atoms_exbox;
   for(int atomid_g = from_atomid_g; atomid_g < to_atomid_g; atomid_g++){
-    int region[3]; 
+    int region[3];
     for(int d = 0; d < 3; d++){
       if(crd[atomid_g*3+d] < box_lower_bound[d])
 	region[d] = -2;
@@ -1377,7 +1379,7 @@ int MiniCell::add_atom_to_region(int atomid_g, int region_id){
 }
 /*
 int MiniCell::copy_pbc_replica(int dir_x, int dir_y, int dir_z){
-  // This function is used when there are no space decomposition 
+  // This function is used when there are no space decomposition
   //   in the axis (n_boxes_xyz[d] == 1)
   // Atoms in the regions with +1(-1) position to the regions
   //   with -2(+2) postion.
@@ -1386,14 +1388,14 @@ int MiniCell::copy_pbc_replica(int dir_x, int dir_y, int dir_z){
     int rx,ry,rz;
     get_region_crd_from_id(5, region_id,
 			   rx, ry, rz);
-    if(dir_x != 0 && dir_x != rx) continue;			   
+    if(dir_x != 0 && dir_x != rx) continue;
     if(dir_y != 0 && dir_y != ry) continue;
     if(dir_z != 0 && dir_z != rz) continue;
     for(int i=0; i < n_atoms_region[region_id]; i++){
       for(int d=0; d < 3; d++){
 
       }
-    } 
+    }
   }
   return 0;
 }
@@ -1412,7 +1414,7 @@ int MiniCell::setup_replica_regions(){
     mpi_send_crd_replica_regions(0,1,0);
     mpi_send_crd_replica_regions(0,-1,0);
   }
-  if(n_boxes_xyz[2] == 1){  
+  if(n_boxes_xyz[2] == 1){
   }else{
     mpi_send_crd_replica_regions(0,0,1);
     mpi_send_crd_replica_regions(0,0,-1);
@@ -1426,13 +1428,13 @@ int MiniCell::mpi_send_crd_replica_regions(int dir_x, int dir_y, int dir_z){
   // args
   //  dir_x, _y, _z : -1, 0, or +1
   //    1, 0, 0 ... send to +1x, receive from -1x
-  
+
   mpi_n_atoms = 0;
   for(int region_id=0; region_id < 125; region_id++){
     int rx,ry,rz;
     get_region_crd_from_id(5, region_id,
 			   rx, ry, rz);
-    if(dir_x != 0 && dir_x != rx) continue;			   
+    if(dir_x != 0 && dir_x != rx) continue;
     if(dir_y != 0 && dir_y != ry) continue;
     if(dir_z != 0 && dir_z != rz) continue;
     for(int i=0; i < n_atoms_region[region_id]; i++){
@@ -1444,9 +1446,9 @@ int MiniCell::mpi_send_crd_replica_regions(int dir_x, int dir_y, int dir_z){
   }
 #if defined(F_MPI)
   // MPI
-  
-  
-#endif  
+
+
+#endif
   return 0;
 }
 
@@ -1458,7 +1460,7 @@ int MiniCell:update_coordinates(const real** vel_next, const real& time_step){
     if(atomids[atom_id_grid] < 0) continue;
     for(int d=0; d<3; d++){
       real diff = vel_next[atomids[atom_id_grid]][0] * time_step;
-      
+
     }
   }
   return 0;

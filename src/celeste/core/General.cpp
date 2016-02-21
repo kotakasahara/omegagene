@@ -1,5 +1,7 @@
 #include "General.h"
 
+using namespace std;
+
 RandomNum::RandomNum(){
 }
 

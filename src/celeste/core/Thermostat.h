@@ -5,7 +5,6 @@
 #include <cmath>
 #include "Constraint.h"
 #include "COMMotion.h"
-using namespace std;
 
 class ThermostatObject : public CelesteObject{
  private:

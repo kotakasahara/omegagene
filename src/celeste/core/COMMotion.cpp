@@ -1,4 +1,5 @@
 #include "COMMotion.h"
+using namespace std;
 
 COMMotion::COMMotion(){
 }
@@ -46,6 +47,6 @@ int COMMotion::cancel_translation(int* atomids_rev,
       }
     }
   }
-  
+
   return 0;
 }

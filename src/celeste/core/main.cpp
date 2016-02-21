@@ -1,6 +1,5 @@
 #include <iostream>
 #include <ctime>
-#include "define.h"
 #include "Celeste.h"
 using namespace std;
 

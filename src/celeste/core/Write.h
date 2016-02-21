@@ -7,20 +7,19 @@
 #include <map>
 #include <set>
 #include <vector>
-using namespace std;
 
 #include "CelesteObject.h"
 
 class Write : public CelesteObject {
  private:
-  string filename;
+  std::string filename;
   bool op;
  public:
-  ofstream ofs;
+  std::ofstream ofs;
   Write();
-  Write(string inFn);
-  void set_fn(string in_fn){filename = in_fn;};
-  string getFn(){return filename;};
+  Write(std::string inFn);
+  void set_fn(std::string in_fn){filename = in_fn;};
+  std::string getFn(){return filename;};
   bool is_open(){return op;};
   int open();
   int openApp();
@@ -42,7 +41,7 @@ class WriteTableLog : public Write {
   int n_cols;
  public:
   WriteTableLog();
-  ~WriteTableLog();  
+  ~WriteTableLog();
   inline void set_ncolumns(int in_n_cols){ n_cols = in_n_cols; };
   virtual int write_header();
   virtual int write_row(int* values);
@@ -54,7 +53,7 @@ class WriteTableLogBinary : public WriteTableLog {
  protected:
  public:
   WriteTableLogBinary();
-  ~WriteTableLogBinary();  
+  ~WriteTableLogBinary();
   virtual int write_header();
   virtual int write_row(int* values);
   virtual int write_row(real* values);
@@ -65,7 +64,7 @@ class WriteTableLogAscii : public WriteTableLog {
  protected:
  public:
   WriteTableLogAscii();
-  ~WriteTableLogAscii();  
+  ~WriteTableLogAscii();
   virtual int write_header();
   virtual int write_row(int* values);
   virtual int write_row(real* values);

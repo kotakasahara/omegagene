@@ -20,6 +20,7 @@ class ConstraintShake : public ConstraintObject {
 
 
 };
+
 class ConstraintSettle: public ConstraintObject {
  private:
  protected:

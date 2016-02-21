@@ -4,11 +4,10 @@
 #include "CelesteObject.h"
 #include "PBC.h"
 #include <cmath>
-using namespace std;
 
 class ConstraintObject : public CelesteObject {
  private:
-  
+
  protected:
   // shk
   static const int Pairs_idx[6][2];
@@ -46,7 +45,7 @@ class ConstraintObject : public CelesteObject {
   int calc_linear_eq(real_cst a[6][6], real_cst x[6], real_cst b[6], int size);
   int set_subset_constraint(ConstraintObject& super,
 			    int* atomids_rev);
-  
+
   int get_n_pair() const { return n_pair; }
   int get_n_trio() const { return n_trio; }
   int get_n_quad() const { return n_quad; }

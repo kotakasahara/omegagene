@@ -5,7 +5,6 @@
 #include <cmath>
 #include "ElectrostaticObject.h"
 
-using namespace std;
 
 class ZeroMultipoleSum : public ElectrostaticObject {
  private:
@@ -104,42 +103,42 @@ class ZeroMultipoleSum : public ElectrostaticObject {
   inline real_pw get_zcore(){ return zcore; }
   int calc_zero02pole_excess_alpha0(real& ene_ele, real& grad_coeff,
 				    const real& r12,      const real& r12_2,
-				    const real& r12_inv, 
+				    const real& r12_inv,
 				    const real& r12_2_inv, const real& r12_3_inv,
 				    const real& cc);
   int calc_zero02pole_excess(real& ene_ele, real& grad_coeff,
 			     const real& r12,      const real& r12_2,
-			     const real& r12_inv, 
+			     const real& r12_inv,
 			     const real& r12_2_inv, const real& r12_3_inv,
 			     const real& cc);
   int calc_zero04pole_excess_alpha0(real& ene_ele, real& grad_coeff,
 				    const real& r12,      const real& r12_2,
-				    const real& r12_inv, 
+				    const real& r12_inv,
 				    const real& r12_2_inv, const real& r12_3_inv,
 				    const real& cc);
   int calc_zero04pole_excess(real& ene_ele, real& grad_coeff,
 			     const real& r12,      const real& r12_2,
-			     const real& r12_inv, 
+			     const real& r12_inv,
 			     const real& r12_2_inv, const real& r12_3_inv,
 			     const real& cc);
   int calc_zero08pole_excess_alpha0(real& ene_ele, real& grad_coeff,
 				    const real& r12,      const real& r12_2,
-				    const real& r12_inv, 
+				    const real& r12_inv,
 				    const real& r12_2_inv, const real& r12_3_inv,
 				    const real& cc);
   int calc_zero08pole_excess(real& ene_ele, real& grad_coeff,
 			     const real& r12,      const real& r12_2,
-			     const real& r12_inv, 
+			     const real& r12_inv,
 			     const real& r12_2_inv, const real& r12_3_inv,
 			     const real& cc);
   int calc_zero16pole_excess_alpha0(real& ene_ele, real& grad_coeff,
 				    const real& r12,      const real& r12_2,
-				    const real& r12_inv, 
+				    const real& r12_inv,
 				    const real& r12_2_inv, const real& r12_3_inv,
 				    const real& cc);
   int calc_zero16pole_excess(real& ene_ele,        real& grad_coeff,
 			     const real& r12,      const real& r12_2,
-			     const real& r12_inv, 
+			     const real& r12_inv,
 			     const real& r12_2_inv, const real& r12_3_inv,
 			     const real& cc);
   int calc_zero02pole_alpha0(real_pw& ene_ele, real_pw& grad_coeff,

@@ -1,8 +1,9 @@
 #include "Constraint.h"
+using namespace std;
 
 const int ConstraintObject::Pairs_idx[6][2] = {{0,1},{1,2},{2,0},{3,0},{2,3},{1,3}};
 
-ConstraintObject::ConstraintObject() 
+ConstraintObject::ConstraintObject()
   : CelesteObject() {
   n_pair = 0;
   n_trio = 0;
@@ -159,7 +160,7 @@ int ConstraintObject::calc_linear_eq(real_cst a[6][6],
       pivot[i] = pivot[index];
       pivot[index] = tmp;
     }
-    
+
     if (fabs(a[i][pivot[i]]) < EPS3){
       cerr << "matrix is singular" << endl;
       return 1;
@@ -188,7 +189,7 @@ int ConstraintObject::calc_linear_eq(real_cst a[6][6],
     real_cst new_x = b[pivot[i]];
     for( int j = 0; j < i; j++){
       new_x -= a[j][pivot[i]] * x[j];
-    } 
+    }
     x[i] = new_x;
     //cout << x[i] << " ";
   }
@@ -200,7 +201,7 @@ int ConstraintObject::calc_linear_eq(real_cst a[6][6],
     real_cst new_x = x[i];
     for( int j = i+1; j < size; j++){
       new_x -= a[j][pivot[i]] * x[j];
-    } 
+    }
     x[i] = new_x * a[i][pivot[i]];
     //    cout << x[i] << " " ;
   }

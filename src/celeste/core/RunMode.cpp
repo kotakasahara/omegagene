@@ -1,4 +1,5 @@
 #include "RunMode.h"
+using namespace std;
 
 RunMode::RunMode()
   : CelesteObject(){
@@ -60,15 +61,15 @@ int RunMode::set_config_parameters(Config* in_cfg){
     break;
   case PRCS_MPI:
   case PRCS_CUDA:
-    enecal = new GpuEnergyCalc(&mmsys);    
+    enecal = new GpuEnergyCalc(&mmsys);
   case PRCS_MPI_CUDA:
   default:
-    enecal = new EnergyCalcObject(&mmsys);    
+    enecal = new EnergyCalcObject(&mmsys);
     break;
   }
   */
   //enecal->set_config_parameters(cfg);
-  
+
   return 0;
 }
 

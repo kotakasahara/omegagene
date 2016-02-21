@@ -1,5 +1,7 @@
 #include "ForceFieldObject.h"
 
+using namespace std;
+
 ForceFieldObject::ForceFieldObject()
   : CelesteObject(){
   if(DBG >= 1)
@@ -15,7 +17,7 @@ int ForceFieldObject::set_config_parameters(const Config* cfg){
   if(DBG>=1)
     cout << "DBG1: ForceFieldObject::set_config_parameters()" <<endl;
   cutoff = cfg->cutoff;
-  
+
   //pbc = in_pbc;
   return 0;
 }

@@ -12,7 +12,6 @@
 #include "COMMotion.h"
 #include <ctime>
 
-using namespace std;
 
 #define COEF_MAX_N_ATOMS_BOX 1.2
 
@@ -66,7 +65,7 @@ class SubBox : public CelesteObject {
   real_pw *mass_inv;
   int  *atom_type;
 
-  // buffer for thermostat with shake 
+  // buffer for thermostat with shake
   real *buf_crd;
   //
 
@@ -126,7 +125,7 @@ class SubBox : public CelesteObject {
   real* nb14_coeff_vdw;
   real* nb14_coeff_ele;
   int** excess_pairs;
-  
+
   int max_n_nb15off;
   int n_nb15off;
   int* nb15off;
@@ -134,7 +133,7 @@ class SubBox : public CelesteObject {
   int n_lj_types;
   real_pw* lj_6term;
   real_pw* lj_12term;
-  
+
   real_fc pote_vdw;
   real_fc pote_ele;
   real_fc pote_bond;
@@ -152,13 +151,13 @@ class SubBox : public CelesteObject {
   ConstraintObject* constraint;
   ConstraintObject* settle;
   ExtendedVMcMD* extended;
-  
+
   int flg_thermostat;
   ThermostatObject* thermostat;
 
   bool flg_mod_15mask;
   COMMotion commotion;
-  
+
   clock_t ctime_setgrid;
   clock_t ctime_enumerate_cellpairs;
   clock_t ctime_calc_energy_pair;
@@ -184,7 +183,7 @@ class SubBox : public CelesteObject {
   int free_variables_for_nb14();
   int free_variables_for_excess();
   int free_variables_for_nb15off();
-  
+
   int set_parameters(int in_n_atomds, PBC* in_pbc, Config* in_cfg,
 		     real in_cutoff_pair,
 		     int in_n_boxes_x, int in_n_boxes_y, int in_n_boxes_z);
@@ -202,7 +201,7 @@ class SubBox : public CelesteObject {
 		       int* in_atom_type);
   int rank0_div_box(real** in_crd,
 		    real** in_vel);
-		    
+
   int rank0_send_init_data(real** in_crd,
 			   real** in_vel,
 			   real_pw* in_charge,
@@ -250,12 +249,12 @@ class SubBox : public CelesteObject {
   int calc_energy_ele_excess();
   real_pw* get_mass(){return mass;};
   int get_box_id_from_crd(const int box_crd[]);
-  int get_box_crd_from_id(const int box_id, 
+  int get_box_crd_from_id(const int box_id,
 			  int *box_crd);
   int init_energy();
   int init_work();
   int add_work_from_minicell();
-  
+
   real* get_box_l(){return box_l;};
   int* get_n_boxes_xyz(){return n_boxes_xyz;};
   real* get_crds(){return crd;};
@@ -289,7 +288,7 @@ class SubBox : public CelesteObject {
   bool is_in_box(real* in_crd);
   bool is_in_exbox(real* in_crd);
   int set_box_crd();
-  
+
   int init_constraint(int in_constraint,
 		      int in_max_loops,
 		      real in_tolerance,
@@ -316,7 +315,7 @@ class SubBox : public CelesteObject {
   int update_device_cell_info();
   int calc_energy_pairwise_cuda();
 #endif
-  
+
   int apply_constraint();
   int update_thermostat(const int cur_step);
   int apply_thermostat();
@@ -325,18 +324,18 @@ class SubBox : public CelesteObject {
   void set_extended(ExtendedVMcMD* in_exp){ extended =in_exp; };
   int extended_apply_bias(unsigned long cur_step, real in_lambda);
   int extended_apply_bias_struct_param(unsigned long cur_step);
-  int extended_write_aus_restart(string fn_out);
+  int extended_write_aus_restart(std::string fn_out);
   void extended_enable_vs_transition();
   int cancel_com_motion();
 
   int set_com_motion(int n_groups, int* group_ids,
-			   int*  n_atoms_in_groups, 
+			   int*  n_atoms_in_groups,
 			   int** groups,
 			   real* mass_inv_groups);
 
   int print_work(int atom_id);
 
-  //int set_box_region_info(const real** in_crd);  
+  //int set_box_region_info(const real** in_crd);
   //int set_max_n_atoms_region();
   //int get_region_id_from_crd(int width, int rx, int ry, int rz);
   //int get_region_crd_from_id(int width, int regid,

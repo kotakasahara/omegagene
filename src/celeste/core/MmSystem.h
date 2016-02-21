@@ -1,7 +1,6 @@
 #ifndef __MM_SYSTEM_H__
 #define __MM_SYSTEM_H__
 
-#include "define.h"
 #include <iostream>
 #include <set>
 #include <ctime>
@@ -11,7 +10,6 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
-using namespace std;
 
 #include "CelesteObject.h"
 #include "Config.h"
@@ -68,8 +66,8 @@ class MmSystem : public CelesteObject{
   // 1-5 pairs excluded from 1-5 interactions
   // nb15off_atomid_pairs[atom_id] = [atom_id1, atom_id2, ...]
   // n_nb15off_atom[atom_id] = number of atoms without 1-5 interactions
-  int* nb15off1;  
-  int* nb15off2;  
+  int* nb15off1;
+  int* nb15off2;
   int n_nb15off;
   int* nb15off;
   int max_n_nb15off;
@@ -79,7 +77,7 @@ class MmSystem : public CelesteObject{
   int n_excess;
   int** excess_pairs;
 
-  string launchset_version;
+  std::string launchset_version;
 
   real pbc_val[9];
   PBC pbc;
@@ -96,7 +94,7 @@ class MmSystem : public CelesteObject{
   real_pw* mass;
   int* atom_type;
   // self energy for ZD
-  real* energy_self;  
+  real* energy_self;
   real energy_self_sum;
 
   real_fc potential_e;
@@ -129,14 +127,14 @@ class MmSystem : public CelesteObject{
   int** atom_groups;
   real_pw* mass_groups;
   real_pw* mass_inv_groups;
-  vector<string> atom_group_names;
+  std::vector<std::string> atom_group_names;
 
   int n_com_cancel_groups;
   int com_cancel_groups[MAX_N_COM_GROUPS];
   int n_enhance_groups;
   int enhance_groups[MAX_N_COM_GROUPS];
   int out_group;
-  
+
   DistRestraintObject*  dist_restraint;
   PosRestraintObject*  pos_restraint;
 
@@ -189,23 +187,23 @@ class MmSystem : public CelesteObject{
   //int free_pcluster_vars();
   // parameter setter
   int set_lj_pair_param(int type1, int type2, real_pw param6, real_pw param12);
-  int set_bond_param(int bond_id, 
+  int set_bond_param(int bond_id,
 		     int atomid1, int atomid2,
 		     real eps, real r0);
-  int set_angle_param(int angle_id, 
+  int set_angle_param(int angle_id,
 		      int atomid1, int atomid2, int atomid3,
 		      real eps, real theta0);
-  int set_torsion_param(int torsion_id, 
+  int set_torsion_param(int torsion_id,
 			int atomid1, int atomid2, int atomid3, int atomid4,
 			real ene, int overlaps,
 			int symmetry, real phase,
 			int flag_14nb);
-  int set_impro_param(int torsion_id, 
+  int set_impro_param(int torsion_id,
 			int atomid1, int atomid2, int atomid3, int atomid4,
 			real ene, int overlaps,
 			int symmetry, real phase,
 			int flag_14nb);
-  int set_nb14_param(int nb14_id, 
+  int set_nb14_param(int nb14_id,
 		     int atomid1, int atomid2,
 		     int atomtype1, int atomtype2,
 		     real coeff_vdw, real coeff_ele);
@@ -215,7 +213,7 @@ class MmSystem : public CelesteObject{
   int add_excess_pairs(int atomid1, int atomid2);
   int set_excess_pairs();
   int set_atom_group_info(Config* cfg);
-  int get_atom_group_id_from_name(const string name);
+  int get_atom_group_id_from_name(const std::string name);
   int print_com_cancel_groups();
   int set_com_cancel_groups(Config* cfg);
   int set_enhance_groups(Config* cfg);
@@ -225,13 +223,13 @@ class MmSystem : public CelesteObject{
   int get_out_group(){return out_group;};
 
   // calc
-  
+
   int reset_energy();
   //int velocity_swap();
   //int velocity_average();
   //int update_velocities();
   int write_data();
-  int nsgrid_setup(real nsgrid_cutoff); // , int box_div[]);		
+  int nsgrid_setup(real nsgrid_cutoff); // , int box_div[]);
 
   int nsgrid_update();
   int nsgrid_update_receiver();

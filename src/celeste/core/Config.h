@@ -5,11 +5,10 @@
 #include <vector>
 #include <array>
 
-class Config : public CelesteObject {
-  public:
-    int     mode        = M_TEST;
-    std::string  fn_cfg      = "md_i.cfg";
-    std::string  fn_inp      = "md_i.inp";
+struct Config : public CelesteObject {
+    int     mode            = M_TEST;
+    std::string  fn_cfg     = "md_i.cfg";
+    std::string  fn_inp     = "md_i.inp";
 
     int     processor       = PRCS_SINGLE;
     int     gpu_device_id   = -1;
@@ -41,7 +40,7 @@ class Config : public CelesteObject {
     int     random_seed             = -1;
     int     extended_ensemble       = EXTENDED_NONE;
 
-    std::array<int, 3> box_div           = {{ 1, 1, 1 }};
+    std::array<int, 3> box_div      = {{ 1, 1, 1 }};
 
     int     print_intvl_crd         = 10000;
     int     print_intvl_vel         = 0;
@@ -51,16 +50,16 @@ class Config : public CelesteObject {
     int     print_intvl_energyflow;
     int     print_intvl_extended_lambda;
 
-    std::string  fn_o_restart        = "md_o.restart";
-    std::string  fn_o_crd            = "md_o.trr";
-    int     format_o_crd        = CRDOUT_GROMACS;
-    std::string  group_o_crd_name    = "";
-    std::string  fn_o_log            = "md_o.log";
-    std::string  fn_o_energy         = "md_o.erg";
-    std::string  fn_o_vmcmd_log;
-    std::string  fn_o_extended_lambda;
-    int     format_o_extended_lambda    = LAMBDAOUT_BIN;
-    std::string  fn_o_energyflow             = "md_o.efl";
+    std::string fn_o_restart        = "md_o.restart";
+    std::string fn_o_crd            = "md_o.trr";
+    std::string group_o_crd_name    = "";
+    std::string fn_o_log            = "md_o.log";
+    std::string fn_o_energy         = "md_o.erg";
+    std::string fn_o_vmcmd_log;
+    std::string fn_o_extended_lambda;
+    std::string fn_o_energyflow             = "md_o.efl";
+    int         format_o_crd                = CRDOUT_GROMACS;
+    int         format_o_extended_lambda    = LAMBDAOUT_BIN;
 
     int     init_vel_just = 0;
     // 0: initial velocity is 0-dt
@@ -77,13 +76,15 @@ class Config : public CelesteObject {
     real    pos_restraint_weight    = 0.0;
     real    enhance_sigma           = 0.2;
     real    enhance_recov_coef      = 50;
-    std::string  fn_o_aus_restart        = "aus_restart_out.dat";
+    std::string  fn_o_aus_restart   = "aus_restart_out.dat";
     // int  aus_type = AUSTYPE_MASSCENTER;
 
     Config() = default;
-    void set_arguments(int argn,char* argv[]);
+    Config(std::vector<std::string> &&arg);
+    Config(const std::string &filepath) : Config( extract_args_from_file(filepath) ) { }
+    Config(int argc, char** argv) : Config( std::vector<std::string>(argv + 1, argv + argc) ) { };
+    std::vector<std::string> extract_args_from_file(const std::string &filepath);
     void set_arguments(std::vector<std::string> &&arg);
-    void operator=(Config op);
 };
 
 #endif

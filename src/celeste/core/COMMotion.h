@@ -3,9 +3,8 @@
 
 #include "CelesteObject.h"
 #include "PBC.h"
-using namespace std;
 
-class COMMotion : public CelesteObject{
+class COMMotion : public CelesteObject {
  private:
   int n_groups;
   int* group_ids;

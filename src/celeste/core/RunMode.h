@@ -22,10 +22,10 @@ class RunMode : public CelesteObject {
   int print_intvl_energy;
   int print_intvl_energyflow;
 
-  string fn_o_crd;
-  string fn_o_log;
-  string fn_o_energy;
-  string fn_o_energyflow;
+  std::string fn_o_crd;
+  std::string fn_o_log;
+  std::string fn_o_energy;
+  std::string fn_o_energyflow;
 
   WriteTrr* writer_trr;
   WriteRestart writer_restart;

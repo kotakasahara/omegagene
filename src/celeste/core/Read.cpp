@@ -1,9 +1,9 @@
 #include "Read.h"
+using namespace std;
 
 const int Read::MAX_LEN_NAME = 256;
 
-Read::Read(string inFn)
-  : CelesteObject(){
+Read::Read(string inFn) : CelesteObject() {
   op=false;
   filename = inFn;
 }
@@ -22,35 +22,6 @@ int Read::close(){
   ifs.close();
   op=false;
   return 0;
-}
-
-vector<string> Read::load_config(){
-  vector<string> vconf;
-  open();
-  string buf;
-  cout << "Configuration:" << endl;
-  cout << "-----------------------------------"<<endl;
-  while(ifs && getline(ifs, buf)){
-    int pos1 = buf.find_first_of("#;");
-    //int pos2 = buf.find_first_of(";");
-    //if(pos1 > pos2) pos1 = pos2;
-    if(pos1 != string::npos){
-      //cout << "cut : " << pos1 << endl;
-      buf = buf.substr(0, pos1);
-    }
-    if(buf.size()==0) continue;
-    cout <<buf<<endl;
-    stringstream ss(buf);
-    while(ss>>buf){
-      //if(buf[0] == '#' || buf[0] == ';') break;
-      vconf.push_back(buf);
-      //cout << "[" << buf << "]"<< endl;
-      
-    }
-  }
-  cout << "-----------------------------------"<<endl;
-  close();
-  return vconf;
 }
 
 vector<int> Read::load_integers(){
@@ -134,7 +105,7 @@ int Read::load_launch_set(MmSystem& mmsys){
 
 int Read::load_ls_header(MmSystem& mmsys){
   cout << "--- Load file header." << endl;
-  
+
   int magic;
   ifs.read((char*)&magic, sizeof(int));
   if(magic != MAGIC_NUMBER){
@@ -143,7 +114,7 @@ int Read::load_ls_header(MmSystem& mmsys){
     magic = reverse_endian(magic);
     if(magic != MAGIC_NUMBER){
       stringstream ss;
-      ss << "ERROR: " << filename << " : the first 4 bytes were not [" << MAGIC_NUMBER 
+      ss << "ERROR: " << filename << " : the first 4 bytes were not [" << MAGIC_NUMBER
 	 << "] but [" << magic << "]" << endl;
       error_exit(ss.str(), "1A00004");
       exit(1);
@@ -224,7 +195,7 @@ int Read::load_ls_crd(MmSystem& mmsys){
   if(mmsys.n_atoms <= 0){
     // ERROR: the number of atoms is zero
     return 1;
-  }  
+  }
   mmsys.d_free = mmsys.n_atoms * 3 -3;
 
   mmsys.alloc_atom_vars();
@@ -237,7 +208,7 @@ int Read::load_ls_crd(MmSystem& mmsys){
     mmsys.crd[i][0] = (real)x;
     mmsys.crd[i][1] = (real)y;
     mmsys.crd[i][2] = (real)z;
-    
+
     //cout << "load_ls_crd " << i << " : ";
     //cout << mmsys.crd[i][0] << " ";
     //cout << mmsys.crd[i][1] << " ";
@@ -290,13 +261,13 @@ int Read::load_ls_tpl(MmSystem& mmsys){
   //if(size_tpl <= 0){
     // ERROR: size of topology data is zero
   //return 1;
-  //}  
+  //}
   int n_atoms;
   read_bin_values(&n_atoms, 1);
   if(mmsys.n_atoms != n_atoms){
     // ERROR: the number of atoms is inconsistent to the coordinates field
     return 2;
-  }  
+  }
   // charge
   for(int i=0; i < mmsys.n_atoms; i++){
     double charge;
@@ -305,7 +276,7 @@ int Read::load_ls_tpl(MmSystem& mmsys){
     //if (DBG==1){ cout << "charge " << i << " : " << mmsys.charge[i] << endl; }
   }
     // mass
-  for(int i=0; i < mmsys.n_atoms; i++){  
+  for(int i=0; i < mmsys.n_atoms; i++){
     double mass;
     read_bin_values(&mass, 1);
     mmsys.mass[i] = (real_pw)mass;
@@ -317,7 +288,7 @@ int Read::load_ls_tpl(MmSystem& mmsys){
     read_bin_values(&atom_type, 1);
     mmsys.atom_type[i] = atom_type-1;
     //    if (DBG>=1){ cout << "atom_type " << i << " : " << mmsys.atom_type[i] << endl; }
-  }  
+  }
 
   // nbpair
   int size_lj;
@@ -358,8 +329,8 @@ int Read::load_ls_tpl(MmSystem& mmsys){
     read_bin_values(&r0, 1);
     mmsys.set_bond_param(i, atomid1, atomid2, (real)eps, (real)r0);
     //if (DBG>=1){ cout << "bond " << i << " : " << atomid1 << " - " << atomid2 << endl;}
-  }  
-  
+  }
+
   // angle
   int size_angle;
   read_bin_values(&size_angle, 1);
@@ -400,7 +371,7 @@ int Read::load_ls_tpl(MmSystem& mmsys){
     read_bin_values(&symmetry, 1);
     read_bin_values(&phase, 1);
     read_bin_values(&flag_14nb, 1);
-    mmsys.set_torsion_param(i, atomid1, atomid2, atomid3, atomid4, 
+    mmsys.set_torsion_param(i, atomid1, atomid2, atomid3, atomid4,
 			    (real)ene, overlaps, symmetry,
 			    (real)phase, flag_14nb);
     //cout << "torsion: " << atomid1 << "-" << atomid4 << " " << flag_14nb << endl;
@@ -427,7 +398,7 @@ int Read::load_ls_tpl(MmSystem& mmsys){
     read_bin_values(&symmetry, 1);
     read_bin_values(&phase, 1);
     read_bin_values(&flag_14nb, 1);
-    mmsys.set_impro_param(i, atomid1, atomid2, atomid3, atomid4, 
+    mmsys.set_impro_param(i, atomid1, atomid2, atomid3, atomid4,
 			    (real)ene, overlaps, symmetry,
 			    (real)phase, flag_14nb);
   }
@@ -451,7 +422,7 @@ int Read::load_ls_tpl(MmSystem& mmsys){
     read_bin_values(&coeff_vdw, 1);
     read_bin_values(&coeff_ele, 1);
     mmsys.set_nb14_param(i, atomid1, atomid2,
-			 atomtype1-1, atomtype2-1, 
+			 atomtype1-1, atomtype2-1,
 			 (real)coeff_ele, (real)coeff_vdw);
     //cout << "nb14:" << atomid1 <<"-"<< atomid2 << " " << coeff_vdw << " " << coeff_ele << endl;
   }
@@ -470,7 +441,7 @@ int Read::load_ls_tpl(MmSystem& mmsys){
     read_bin_values(&atomid2, 1);
     mmsys.set_nb15off(atomid1, atomid2);
     //mmsys.set_nb15off(atomid2, atomid1);
-  }  
+  }
   mmsys.alloc_excess_pairs();
   mmsys.set_excess_pairs();
   return 0;
@@ -487,28 +458,28 @@ int Read::load_ls_constraint(ConstraintObject* cst){
   read_bin_values(&n_const_2, 1);
   read_bin_values(&n_const_3, 1);
   read_bin_values(&n_const_4, 1);
-  
+
   cst->set_max_n_constraints(n_const_2, n_const_3, n_const_4);
   cst->alloc_constraint();
-  
+
   int atomid1, atomid2, atomid3, atomid4;
   double dist1, dist2, dist3, dist4, dist5, dist6;
   // 2 atoms
   for(int i=0; i < n_const_2; i++){
-    read_bin_values(&atomid1, 1);    
-    read_bin_values(&atomid2, 1);    
-    read_bin_values(&dist1, 1);    
+    read_bin_values(&atomid1, 1);
+    read_bin_values(&atomid2, 1);
+    read_bin_values(&dist1, 1);
     dist1 = dist1 * dist1;
     cst->add_pair(atomid1, atomid2, (real_cst)dist1);
   }
   // 3 atoms
   for(int i=0; i < n_const_3; i++){
-    read_bin_values(&atomid1, 1);    
-    read_bin_values(&atomid2, 1);    
-    read_bin_values(&atomid3, 1);    
-    read_bin_values(&dist1, 1);    
-    read_bin_values(&dist2, 1);    
-    read_bin_values(&dist3, 1);    
+    read_bin_values(&atomid1, 1);
+    read_bin_values(&atomid2, 1);
+    read_bin_values(&atomid3, 1);
+    read_bin_values(&dist1, 1);
+    read_bin_values(&dist2, 1);
+    read_bin_values(&dist3, 1);
     dist1 = dist1 * dist1;
     dist2 = dist2 * dist2;
     dist3 = dist3 * dist3;
@@ -517,16 +488,16 @@ int Read::load_ls_constraint(ConstraintObject* cst){
   }
   // 4 atoms
   for(int i=0; i < n_const_4; i++){
-    read_bin_values(&atomid1, 1);    
-    read_bin_values(&atomid2, 1);    
-    read_bin_values(&atomid3, 1);    
-    read_bin_values(&atomid4, 1);    
-    read_bin_values(&dist1, 1);    
-    read_bin_values(&dist2, 1);    
-    read_bin_values(&dist3, 1);    
-    read_bin_values(&dist4, 1);    
-    read_bin_values(&dist5, 1);    
-    read_bin_values(&dist6, 1);    
+    read_bin_values(&atomid1, 1);
+    read_bin_values(&atomid2, 1);
+    read_bin_values(&atomid3, 1);
+    read_bin_values(&atomid4, 1);
+    read_bin_values(&dist1, 1);
+    read_bin_values(&dist2, 1);
+    read_bin_values(&dist3, 1);
+    read_bin_values(&dist4, 1);
+    read_bin_values(&dist5, 1);
+    read_bin_values(&dist6, 1);
     dist1 = dist1 * dist1;
     dist2 = dist2 * dist2;
     dist3 = dist3 * dist3;
@@ -581,7 +552,7 @@ int Read::load_ls_vmcmd(MmSystem& mmsys){
   read_bin_values(&seed, 1);
   mmsys.vmcmd->set_init_vs(init-1);
   mmsys.vmcmd->set_random_seed(seed);
-  
+
   return 0;
 }
 int Read::load_ls_atom_groups(MmSystem& mmsys){
@@ -601,19 +572,19 @@ int Read::load_ls_atom_groups(MmSystem& mmsys){
     int n_atoms;
     read_bin_values(&n_atoms_in_group[i], 1);
     mmsys.atom_group_names.push_back(string(name));
-    cout << "read atom groups : " << i << " " 
-	 << n_atoms_in_group[i] << " " 
+    cout << "read atom groups : " << i << " "
+	 << n_atoms_in_group[i] << " "
 	 << name << " "
 	 << mmsys.atom_group_names[i] << endl;
   }
   mmsys.alloc_atom_groups(n_groups, n_atoms_in_group);
   int buf;
-  for(int i=0; i < n_groups; i++){  
+  for(int i=0; i < n_groups; i++){
     for(int j = 0; j < n_atoms_in_group[i]; j++){
       read_bin_values(&buf, 1);
       mmsys.atom_groups[i][j] = buf-1;
     }
-  }  
+  }
   delete[] n_atoms_in_group;
   return 0;
 }
@@ -625,8 +596,8 @@ int Read::load_ls_dist_restraint(DistRestraintObject* dr){
     int aid1, aid2;
     float coef_low, coef_high;
     float dist_low, dist_high;
-    read_bin_values(&aid1, 1);    
-    read_bin_values(&aid2, 1);    
+    read_bin_values(&aid1, 1);
+    read_bin_values(&aid2, 1);
     read_bin_values(&coef_low, 1);
     read_bin_values(&coef_high, 1);
     read_bin_values(&dist_low, 1);
@@ -643,7 +614,7 @@ int Read::load_ls_pos_restraint(PosRestraintObject* pr){
     int aid;
     float crd_x, crd_y, crd_z;
     float dist_margin, coef;
-    read_bin_values(&aid, 1);    
+    read_bin_values(&aid, 1);
     read_bin_values(&crd_x, 1);
     read_bin_values(&crd_y, 1);
     read_bin_values(&crd_z, 1);
@@ -668,7 +639,7 @@ int Read::load_ls_group_coord(MmSystem& mmsys){
   //cout << "dbg1130 aus_type: " << aus_type << endl;
   int n_groups = 0;
   read_bin_values(&n_groups, 1);
-  //cout << "dbg1130 n_groups: " << n_groups << endl;  
+  //cout << "dbg1130 n_groups: " << n_groups << endl;
 
   vector<int> enhance_groups;
   for(int i=0; i<n_groups; i++){
@@ -699,7 +670,7 @@ int Read::load_ls_group_coord(MmSystem& mmsys){
       read_bin_values(&(mmsys.vmcmd->get_crd_groups()[i][j][1]), 1);
       read_bin_values(&(mmsys.vmcmd->get_crd_groups()[i][j][2]), 1);
     }
-  }  
+  }
   return 0;
 }
 

@@ -1,7 +1,6 @@
 #ifndef __FORCE_FIELD_OBJECT_H__
 #define __FORCE_FIELD_OBJECT_H__
 
-#include "define.h"
 #include "CelesteObject.h"
 #include "Config.h"
 #include "PBC.h"
@@ -12,7 +11,7 @@ class ForceFieldObject : public CelesteObject {
   real cutoff;
   const PBC *pbc;
   //MmSystem* mmsys;
-  
+
  public:
 
   ForceFieldObject();

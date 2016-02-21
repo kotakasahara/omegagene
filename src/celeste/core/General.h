@@ -3,12 +3,11 @@
 
 #include <random>
 #include <iostream>
-using namespace std;
 
 class RandomNum{
  private:
  protected:
-  mt19937 mt;
+  std::mt19937 mt;
   //static uniform_float dist_uni_f();
  public:
   RandomNum();

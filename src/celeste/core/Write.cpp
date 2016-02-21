@@ -1,14 +1,15 @@
 #include "Write.h"
+using namespace std;
 
 Write::Write(string inFn)
   : CelesteObject(){
-  
+
   op=false;
   filename =inFn;
 }
 Write::Write()
   : CelesteObject(){
-  
+
   op=false;
 }
 int Write::open(){

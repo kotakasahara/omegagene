@@ -1,4 +1,6 @@
 #include "ElectrostaticObject.h"
+#include <iostream>
+using namespace std;
 
 ElectrostaticObject::ElectrostaticObject()
   : CelesteObject(){

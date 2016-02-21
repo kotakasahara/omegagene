@@ -1,4 +1,6 @@
 #include "MmSystem.h"
+#include <sstream>
+using namespace std;
 
 MmSystem::MmSystem()
   : CelesteObject(){
@@ -53,7 +55,7 @@ int MmSystem::alloc_atom_vars(){
     crd[i] = new real[3];
     for(int d=0; d < 3; d++) crd[i][d] = 0.0;
   }
-  
+
   force = new real_fc*[n_atoms];
   for(int i=0; i < n_atoms; i++){
     force[i] = new real_fc[3];
@@ -290,7 +292,7 @@ int MmSystem::free_nb15off(){
   delete[] nb15off;
   //delete[] nb15off1;
   //delete[] nb15off2;
-  
+
   return 0;
 }
 int MmSystem::free_atom_groups(){
@@ -311,7 +313,7 @@ int MmSystem::set_lj_pair_param(int type1, int type2, real_pw param6, real_pw pa
   lj_12term[type2 * n_lj_types + type1] = param12;
   return 0;
 }
-int MmSystem::set_bond_param(int bond_id, 
+int MmSystem::set_bond_param(int bond_id,
 			     int atomid1, int atomid2,
 			     real eps, real r0){
   bond_atomid_pairs[bond_id][0] = atomid1;
@@ -326,7 +328,7 @@ int MmSystem::set_bond_param(int bond_id,
 
   return 0;
 }
-int MmSystem::set_angle_param(int angle_id, 
+int MmSystem::set_angle_param(int angle_id,
 			     int atomid1, int atomid2, int atomid3,
 			     real eps, real theta0){
   angle_atomid_triads[angle_id][0] = atomid1;
@@ -336,7 +338,7 @@ int MmSystem::set_angle_param(int angle_id,
   angle_theta0[angle_id] = theta0;
   return 0;
 }
-int MmSystem::set_torsion_param(int torsion_id, 
+int MmSystem::set_torsion_param(int torsion_id,
 				int atomid1, int atomid2, int atomid3, int atomid4,
 				real ene, int overlaps,
 				int symmetry, real phase,
@@ -352,7 +354,7 @@ int MmSystem::set_torsion_param(int torsion_id,
   torsion_nb14[torsion_id] = flag_14nb;
   return 0;
 }
-int MmSystem::set_impro_param(int impro_id, 
+int MmSystem::set_impro_param(int impro_id,
 			      int atomid1, int atomid2, int atomid3, int atomid4,
 			      real ene, int overlaps,
 			      int symmetry, real phase,
@@ -369,7 +371,7 @@ int MmSystem::set_impro_param(int impro_id,
   return 0;
 }
 
-int MmSystem::set_nb14_param(int nb14_id, 
+int MmSystem::set_nb14_param(int nb14_id,
 			     int atomid1, int atomid2,
 			     int atomtype1, int atomtype2,
 			     real coeff_vdw, real coeff_ele){
@@ -392,7 +394,7 @@ void show_int(int x){
 }
 
 bool MmSystem::search_nb15off(int atomid1, int atomid2){
-  // if the atompair (atomid1, atomid2) is 
+  // if the atompair (atomid1, atomid2) is
   // in the list of nb15off, the function returns false
   bool flg1 = false;
   //int aid_diff = atomid2 - atomid1;
@@ -439,7 +441,7 @@ bool MmSystem::search_nb15off(int atomid1, int atomid2){
     show_int(mask2 & nb15off2[bit_idx]);
     if((mask1 & nb15off1[bit_idx]) == mask1) cout << "mask1 true" <<endl;
     if((mask2 & nb15off2[bit_idx]) == mask2) cout << "mask2 true" <<endl;
-    cout << "oldpair "; 
+    cout << "oldpair ";
     for(int i = max_n_nb15off * atomid1; i < tail; i++){
       cout <<  nb15off[i] <<" ";
     }
@@ -553,7 +555,7 @@ int MmSystem::set_atom_group_info(Config* cfg){
     mass_groups[i_grp] = 0.0;
     for(int i_atom = 0; i_atom < n_atoms_in_groups[i_grp]; i_atom++){
       mass_groups[i_grp] += mass[atom_groups[i_grp][i_atom]];
-      //cout << "  atom " << i_atom << " - " <<atom_groups[i_grp][i_atom] << " : " 
+      //cout << "  atom " << i_atom << " - " <<atom_groups[i_grp][i_atom] << " : "
       //<< mass[atom_groups[i_grp][i_atom]] << endl;;
     }
     mass_inv_groups[i_grp] = 1.0 / mass_groups[i_grp];
@@ -583,9 +585,9 @@ int MmSystem::set_com_cancel_groups(Config* cfg){
       ss << "Invalid atom group (--com-cancel-group-name) : " << cfg->com_cancel_groups_name[i] << endl;
       error_exit(ss.str(), "1A00002");
     }
-    n_com_cancel_groups++; 
+    n_com_cancel_groups++;
 
-  }    
+  }
   return 0;
 }
 int MmSystem::print_com_cancel_groups(){
@@ -607,7 +609,7 @@ int MmSystem::set_out_group(Config* cfg){
       error_exit(ss.str(), "1A00002");
     }
   }
-  
+
   return 0;
 }
 int MmSystem::print_out_group(){
@@ -631,8 +633,8 @@ int MmSystem::print_out_group(){
       ss << "Invalid atom group (--enhance-group-name): " << cfg->enhance_groups_name[i] << endl;
       error_exit(ss.str(), "1A00002");
     }
-    n_enhance_groups++; 
-  }    
+    n_enhance_groups++;
+  }
   return 0;
 }
 int MmSystem::print_enhance_groups(){
@@ -656,7 +658,7 @@ int MmSystem::free_excess_pairs(){
 int MmSystem::add_excess_pairs(int atomid1, int atomid2){
   bool flg=true;
   for(int j=0; j < n_excess; j++){
-    if(excess_pairs[j][0] == atomid1 && 
+    if(excess_pairs[j][0] == atomid1 &&
        excess_pairs[j][1] == atomid2){
       flg=false;
       return 1;
@@ -704,7 +706,7 @@ int MmSystem::set_excess_pairs(){
   //  }
   cout << "excess set " << n_excess << " / "  << max_n_excess << endl;
 
-  return 0;  
+  return 0;
 }
 
 real_fc MmSystem::set_potential_e(){
@@ -788,7 +790,7 @@ int MmSystem::ff_setup(const Config* cfg){
 		     (const int&)n_excess,
 		     (const int**&)excess_pairs,
 		     /*
-		     
+
 		     (const int&)n_bonds,
 		     (const int**&)bond_atomid_pairs,
 		     (const int&)n_angles,
