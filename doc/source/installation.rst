@@ -39,7 +39,7 @@ The neighbor search is effective for fast calculation, but the implementation is
 Acceleration with GPU
 ------------------------------------
 
-For GPU mode、NVIDIA GPU Computer capability 3.5 or later is required.
+For GPU mode NVIDIA GPU Computer capability 3.5 or later is required.
 
 The path to the CUDA library should be specified as CUDALOC variable in Makefile.
 
