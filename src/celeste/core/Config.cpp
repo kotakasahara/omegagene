@@ -1,21 +1,20 @@
 #include "Config.h"
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 
 using namespace std;
 
 Config::Config(vector<string> &&arg) {
     set_arguments(std::forward<vector<string>>(arg));
-    if (not fn_cfg.empty()) {
-        set_arguments(extract_args_from_file(fn_cfg));
-    }
+    if (not fn_cfg.empty()) { set_arguments(extract_args_from_file(fn_cfg)); }
 }
 
 vector<string> Config::extract_args_from_file(const string &filepath) {
     ifstream ifs(filepath.c_str());
     if (not ifs) {
-        cerr << "Cannot open " << filepath << "!\n"; std::exit(1);
+        cerr << "Cannot open " << filepath << "!\n";
+        std::exit(1);
     }
 
     vector<string> args;
@@ -24,22 +23,18 @@ vector<string> Config::extract_args_from_file(const string &filepath) {
     cout << "-----------------------------------\nReading from configuration file:  " << filepath << "\n";
     while (ifs && getline(ifs, buf)) {
         int pos1 = buf.find_first_of("#;");
-        if (pos1 != string::npos) {
-            buf = buf.substr(0, pos1);
-        }
-        if (buf.size()==0) continue;
+        if (pos1 != string::npos) { buf = buf.substr(0, pos1); }
+        if (buf.size() == 0) continue;
         cout << buf << endl;
         stringstream ss(buf);
-        while (ss >> buf) {
-            args.emplace_back(buf);
-        }
+        while (ss >> buf) { args.emplace_back(buf); }
     }
     cout << "-----------------------------------" << endl;
     return args;
 }
 
 void Config::set_arguments(std::vector<std::string> &&arg) {
-    string type,val;
+    string type, val;
     for (auto itr = arg.begin(); itr != arg.end(); itr++) {
         if (*itr == "--mode") {
             itr++;
@@ -48,7 +43,8 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
             } else if (*itr == "md") {
                 mode = M_DYNAMICS;
             } else {
-                cerr << "invalid mode [" << (*itr) << "]\n"; std::exit(1);
+                cerr << "invalid mode [" << (*itr) << "]\n";
+                std::exit(1);
             }
 
         } else if (*itr == "--cfg") {
@@ -106,38 +102,54 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
             thermo_const_tolerance = atof((*++itr).c_str());
 
         } else if (*itr == "--cutoff") {
-            cutoff=atof((*++itr).c_str());
+            cutoff = atof((*++itr).c_str());
 
         } else if (*itr == "--n-steps") {
-            n_steps=atoi((*++itr).c_str());
+            n_steps = atoi((*++itr).c_str());
 
         } else if (*itr == "--time-step") {
-            time_step=atof((*++itr).c_str());
+            time_step = atof((*++itr).c_str());
 
         } else if (*itr == "--electrostatic") {
             itr++;
-            if (*itr == "zero-dipole") { electrostatic = ELCTRST_ZERODIPOLE; }
-            else if (*itr == "zero-quadrupole") { electrostatic = ELCTRST_ZEROQUADRUPOLE; }
-            else if (*itr == "zero-octupole") { electrostatic = ELCTRST_ZEROOCTUPOLE; }
-            else if (*itr == "zero-hexadecapole") { electrostatic = ELCTRST_ZEROHEXADECAPOLE; }
-            else{ electrostatic = ELCTRST_DUMMY; }
+            if (*itr == "zero-dipole") {
+                electrostatic = ELCTRST_ZERODIPOLE;
+            } else if (*itr == "zero-quadrupole") {
+                electrostatic = ELCTRST_ZEROQUADRUPOLE;
+            } else if (*itr == "zero-octupole") {
+                electrostatic = ELCTRST_ZEROOCTUPOLE;
+            } else if (*itr == "zero-hexadecapole") {
+                electrostatic = ELCTRST_ZEROHEXADECAPOLE;
+            } else {
+                electrostatic = ELCTRST_DUMMY;
+            }
 
         } else if (*itr == "--ele-alpha") {
             ele_alpha = atof((*++itr).c_str());
 
         } else if (*itr == "--thermostat") {
             itr++;
-            if (*itr == "none") { thermostat_type = THMSTT_NONE; }
-            else if (*itr == "scaling") { thermostat_type = THMSTT_SCALING; }
-            else if (*itr == "hoover-evans") { thermostat_type = THMSTT_HOOVER_EVANS; }
-            else { thermostat_type = THMSTT_DUMMY; }
+            if (*itr == "none") {
+                thermostat_type = THMSTT_NONE;
+            } else if (*itr == "scaling") {
+                thermostat_type = THMSTT_SCALING;
+            } else if (*itr == "hoover-evans") {
+                thermostat_type = THMSTT_HOOVER_EVANS;
+            } else {
+                thermostat_type = THMSTT_DUMMY;
+            }
 
         } else if (*itr == "--extended-ensemble") {
             itr++;
-            if (*itr == "none") { extended_ensemble = EXTENDED_NONE; }
-            else if (*itr == "v-mcmd") { extended_ensemble = EXTENDED_VMCMD; }
-            else if (*itr == "v-aus") { extended_ensemble = EXTENDED_VAUS; }
-            else{ extended_ensemble = EXTENDED_DUMMY; }
+            if (*itr == "none") {
+                extended_ensemble = EXTENDED_NONE;
+            } else if (*itr == "v-mcmd") {
+                extended_ensemble = EXTENDED_VMCMD;
+            } else if (*itr == "v-aus") {
+                extended_ensemble = EXTENDED_VAUS;
+            } else {
+                extended_ensemble = EXTENDED_DUMMY;
+            }
 
         } else if (*itr == "--temperature") {
             temperature = atof((*++itr).c_str());
@@ -150,12 +162,15 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
 
         } else if (*itr == "--com-motion") {
             itr++;
-            if (*itr == "none") { com_motion = COM_NONE; }
-            else if (*itr == "cancel") { com_motion = COM_CANCEL; }
+            if (*itr == "none") {
+                com_motion = COM_NONE;
+            } else if (*itr == "cancel") {
+                com_motion = COM_CANCEL;
+            }
 
         } else if (*itr == "--com-cancel-group-name") {
             com_cancel_groups_name[n_com_cancel_groups_name] = ((*++itr).c_str());
-            //cout << "name " << com_cancel_groups_name[n_com_cancel_groups_name] << endl;
+            // cout << "name " << com_cancel_groups_name[n_com_cancel_groups_name] << endl;
             n_com_cancel_groups_name++;
 
         } else if (*itr == "--com-cancel-group-id") {
@@ -173,8 +188,8 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
 
         }
 
-        //else if (*itr == "--nsgrid-min-width") { nsgrid_min_width= atof((*++itr).c_str()); }
-        //else if (*itr == "--nsgrid-max-n-atoms") { nsgrid_max_n_atoms = atof((*++itr).c_str()); }
+        // else if (*itr == "--nsgrid-min-width") { nsgrid_min_width= atof((*++itr).c_str()); }
+        // else if (*itr == "--nsgrid-max-n-atoms") { nsgrid_max_n_atoms = atof((*++itr).c_str()); }
 
         else if (*itr == "--nsgrid-update-intvl") {
             nsgrid_update_intvl = atoi((*++itr).c_str());
@@ -211,9 +226,13 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
 
         } else if (*itr == "--format-o-coord") {
             itr++;
-            if (*itr == "gromacs") { format_o_crd = CRDOUT_GROMACS; }
-            else if (*itr == "presto") {  format_o_crd = CRDOUT_PRESTO; }
-            else{ format_o_crd = CRDOUT_DUMMY; }
+            if (*itr == "gromacs") {
+                format_o_crd = CRDOUT_GROMACS;
+            } else if (*itr == "presto") {
+                format_o_crd = CRDOUT_PRESTO;
+            } else {
+                format_o_crd = CRDOUT_DUMMY;
+            }
 
         } else if (*itr == "--fn-o-log") {
             fn_o_log = *++itr;
@@ -229,36 +248,62 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
 
         } else if (*itr == "--format-o-extended-lambda") {
             itr++;
-            if (*itr == "binary") { format_o_extended_lambda = LAMBDAOUT_BIN; }
-            else if (*itr == "ascii") {  format_o_extended_lambda = LAMBDAOUT_ASC; }
-            else{ format_o_extended_lambda = LAMBDAOUT_DUMMY; }
+            if (*itr == "binary") {
+                format_o_extended_lambda = LAMBDAOUT_BIN;
+            } else if (*itr == "ascii") {
+                format_o_extended_lambda = LAMBDAOUT_ASC;
+            } else {
+                format_o_extended_lambda = LAMBDAOUT_DUMMY;
+            }
         }
 
-        else if (*itr == "--fn-o-energyflow") { fn_o_energyflow = *++itr; }
-        else if (*itr == "--dist-restraint") {
+        else if (*itr == "--fn-o-energyflow") {
+            fn_o_energyflow = *++itr;
+
+        } else if (*itr == "--dist-restraint") {
             itr++;
-            if (*itr == "none") { dist_restraint_type = DISTREST_NONE; }
-            else if (*itr == "harmonic") { dist_restraint_type = DISTREST_HARMONIC; }
-            else{ dist_restraint_type = DISTREST_DUMMY; }
-        }
-        else if (*itr == "--dist-restraint-weight") { dist_restraint_weight = atof((*++itr).c_str()); }
-        else if (*itr == "--position-restraint") {
+            if (*itr == "none") {
+                dist_restraint_type = DISTREST_NONE;
+            } else if (*itr == "harmonic") {
+                dist_restraint_type = DISTREST_HARMONIC;
+            } else {
+                dist_restraint_type = DISTREST_DUMMY;
+            }
+
+        } else if (*itr == "--dist-restraint-weight") {
+            dist_restraint_weight = atof((*++itr).c_str());
+
+        } else if (*itr == "--position-restraint") {
             itr++;
-            if (*itr == "none") { pos_restraint_type = POSREST_NONE; }
-            else if (*itr == "harmonic") { pos_restraint_type = POSREST_HARMONIC; }
-            else{ pos_restraint_type = POSREST_DUMMY; }
-        }
-        else if (*itr == "--position-restraint-weight") { pos_restraint_weight = atof((*++itr).c_str()); }
-        else if (*itr == "--gpu-device-id") { gpu_device_id = atoi((*++itr).c_str()); }
-        else if (*itr == "--enhance-group-name") {
+            if (*itr == "none") {
+                pos_restraint_type = POSREST_NONE;
+            } else if (*itr == "harmonic") {
+                pos_restraint_type = POSREST_HARMONIC;
+            } else {
+                pos_restraint_type = POSREST_DUMMY;
+            }
+
+        } else if (*itr == "--position-restraint-weight") {
+            pos_restraint_weight = atof((*++itr).c_str());
+
+        } else if (*itr == "--gpu-device-id") {
+            gpu_device_id = atoi((*++itr).c_str());
+
+        } else if (*itr == "--enhance-group-name") {
             enhance_groups_name[n_enhance_groups_name] = ((*++itr).c_str());
             n_enhance_groups_name++;
+
+        } else if (*itr == "--enhance-sigma") {
+            enhance_sigma = atof((*++itr).c_str());
+
+        } else if (*itr == "--enhance-recovery-coef") {
+            enhance_recov_coef = atof((*++itr).c_str());
         }
-        else if (*itr == "--enhance-sigma") {  enhance_sigma = atof((*++itr).c_str()); }
-        else if (*itr == "--enhance-recovery-coef") {  enhance_recov_coef = atof((*++itr).c_str()); }
         //    else if (*itr == "--aus-type") {  aus_type = atoi((*++itr).c_str()); }
-        else if (*itr == "--fn-o-aus-restart") { fn_o_aus_restart = *++itr; }
-        else{
+        else if (*itr == "--fn-o-aus-restart") {
+            fn_o_aus_restart = *++itr;
+
+        } else {
             stringstream ss;
             error_exit(ss.str(), "1A00001");
         }

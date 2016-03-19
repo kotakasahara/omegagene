@@ -1,7 +1,3 @@
 #include "ZeroDipoleSum.h"
 
-ZeroDipoleSum::ZeroDipoleSum() 
-  : ZeroMultipoleSum(){
-  
-}
-
+ZeroDipoleSum::ZeroDipoleSum() : ZeroMultipoleSum() {}
