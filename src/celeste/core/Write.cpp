@@ -6,7 +6,9 @@ Write::Write(string inFn) : CelesteObject() {
     op       = false;
     filename = inFn;
 }
-Write::Write() : CelesteObject() { op = false; }
+Write::Write() : CelesteObject() {
+    op = false;
+}
 int Write::open() {
     ofs.open(filename.c_str());
     if (!ofs) {
@@ -42,9 +44,15 @@ int WriteTTPVMcMDLog::write_ttpvMcMDLog(int step, int vstate) {
 WriteTableLog::WriteTableLog() : Write() {}
 WriteTableLog::~WriteTableLog() {}
 
-int WriteTableLog::write_header() { return 0; }
-int WriteTableLog::write_row(int *values) { return 0; }
-int WriteTableLog::write_row(real *values) { return 0; }
+int WriteTableLog::write_header() {
+    return 0;
+}
+int WriteTableLog::write_row(int *values) {
+    return 0;
+}
+int WriteTableLog::write_row(real *values) {
+    return 0;
+}
 
 WriteTableLogBinary::WriteTableLogBinary() : WriteTableLog() {}
 WriteTableLogBinary::~WriteTableLogBinary() {}
@@ -72,7 +80,9 @@ int WriteTableLogBinary::write_row(real *values) {
 }
 WriteTableLogAscii::WriteTableLogAscii() : WriteTableLog() {}
 WriteTableLogAscii::~WriteTableLogAscii() {}
-int WriteTableLogAscii::write_header() { return 0; }
+int WriteTableLogAscii::write_header() {
+    return 0;
+}
 int WriteTableLogAscii::write_row(int *values) {
     ofs << values[0];
     for (int i = 1; i < n_cols; i++) { ofs << "\t" << values[i]; }

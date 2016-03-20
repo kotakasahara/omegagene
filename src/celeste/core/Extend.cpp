@@ -3,13 +3,19 @@
 
 using namespace std;
 
-Extended::Extended() : CelesteObject() { write_lambda_interval = 0; }
+Extended::Extended() : CelesteObject() {
+    write_lambda_interval = 0;
+}
 
 Extended::~Extended() {}
 
-void Extended::set_lambda_interval(int in_lambda_interval) { write_lambda_interval = in_lambda_interval; }
+void Extended::set_lambda_interval(int in_lambda_interval) {
+    write_lambda_interval = in_lambda_interval;
+}
 
-VirtualState::VirtualState() : CelesteObject() { poly_order = 0; }
+VirtualState::VirtualState() : CelesteObject() {
+    poly_order = 0;
+}
 
 VirtualState::~VirtualState() {
     if (poly_order > 0) delete[] poly_params;
@@ -38,7 +44,9 @@ int VirtualState::set_alpha(real in_alpha_low, real in_alpha_high) {
     alpha[1] = in_alpha_high;
     return 0;
 }
-bool VirtualState::is_in_range(real lambda) { return (lambda >= lambda_range[0] and lambda <= lambda_range[1]); }
+bool VirtualState::is_in_range(real lambda) {
+    return (lambda >= lambda_range[0] and lambda <= lambda_range[1]);
+}
 
 ExtendedVMcMD::ExtendedVMcMD() : Extended() {
     n_vstates        = 0;
@@ -90,15 +98,21 @@ int ExtendedVMcMD::set_n_vstates(int in_n_vstates) {
     return 0;
 }
 
-void ExtendedVMcMD::set_trans_interval(int in_trans_interval) { trans_interval = in_trans_interval; }
+void ExtendedVMcMD::set_trans_interval(int in_trans_interval) {
+    trans_interval = in_trans_interval;
+}
 
 void ExtendedVMcMD::set_temperature(real in_tmp) {
     temperature = in_tmp;
     const_k     = (GAS_CONST / JOULE_CAL) * 1e-3 * temperature;
 }
 
-int ExtendedVMcMD::get_trans_interval() { return trans_interval; }
-int ExtendedVMcMD::get_temperature() { return temperature; }
+int ExtendedVMcMD::get_trans_interval() {
+    return trans_interval;
+}
+int ExtendedVMcMD::get_temperature() {
+    return temperature;
+}
 
 int ExtendedVMcMD::apply_bias(unsigned long cur_step, real in_lambda, real_fc *work, int n_atoms_box) {
     if (cur_step % trans_interval == 0) {
@@ -199,15 +213,24 @@ int ExtendedVMcMD::write_lambda(real lambda) {
     writer_lambda->write_row(&lambda);
     return 0;
 }
-int ExtendedVMcMD::set_vs_order(int vs_id, int ord) { return vstates[vs_id].set_order(ord); }
+int ExtendedVMcMD::set_vs_order(int vs_id, int ord) {
+    return vstates[vs_id].set_order(ord);
+}
 
-int ExtendedVMcMD::set_vs_params(int vs_id, real lambda_low, real lambda_high, real prob_low, real prob_high, real alpha_low,
+int ExtendedVMcMD::set_vs_params(int  vs_id,
+                                 real lambda_low,
+                                 real lambda_high,
+                                 real prob_low,
+                                 real prob_high,
+                                 real alpha_low,
                                  real alpha_high) {
     vstates[vs_id].set_params(lambda_low, lambda_high, prob_low, prob_high);
     vstates[vs_id].set_alpha(alpha_low, alpha_high);
     return 0;
 }
-int ExtendedVMcMD::set_vs_poly_param(int vs_id, int ord, real param) { return vstates[vs_id].set_poly_param(ord, param); }
+int ExtendedVMcMD::set_vs_poly_param(int vs_id, int ord, real param) {
+    return vstates[vs_id].set_poly_param(ord, param);
+}
 
 int ExtendedVMcMD::print_info() {
 
@@ -219,14 +242,20 @@ int ExtendedVMcMD::print_info() {
         cout << vstates[i].get_trans_prob(0) << " - ";
         cout << vstates[i].get_trans_prob(1) << endl;
 
-        for (int j = 0; j < vstates[i].get_order() + 1; j++) { cout << "    " << j << ": " << vstates[i].get_poly_param(j) << endl; }
+        for (int j = 0; j < vstates[i].get_order() + 1; j++) {
+            cout << "    " << j << ": " << vstates[i].get_poly_param(j) << endl;
+        }
     }
     return 0;
 }
 
-real ExtendedVMcMD::cal_struct_parameters(real *crd, PBC *pbc) { return 0.0; }
+real ExtendedVMcMD::cal_struct_parameters(real *crd, PBC *pbc) {
+    return 0.0;
+}
 
-int ExtendedVMcMD::set_enhance_groups(int *in_n_atoms_in_groups, int **in_atom_groups, int in_n_enhance_groups,
+int ExtendedVMcMD::set_enhance_groups(int *       in_n_atoms_in_groups,
+                                      int **      in_atom_groups,
+                                      int         in_n_enhance_groups,
                                       vector<int> in_enhance_groups) {
     n_atoms_in_groups = in_n_atoms_in_groups;
     atom_groups       = in_atom_groups;
@@ -285,8 +314,12 @@ int ExtendedVMcMD::write_aus_restart(string fn_out) {
 }
 ///////////////// ExtendedVAUS //////////////////
 
-ExtendedVAUS::ExtendedVAUS() { n_enhance_groups = 0; }
-ExtendedVAUS::~ExtendedVAUS() { free_crd_centers(); }
+ExtendedVAUS::ExtendedVAUS() {
+    n_enhance_groups = 0;
+}
+ExtendedVAUS::~ExtendedVAUS() {
+    free_crd_centers();
+}
 real ExtendedVAUS::set_crd_centers(real *crd, PBC *pbc) {
     for (int i_grp = 0; i_grp < n_enhance_groups; i_grp++) {
         int grp_id = enhance_groups[i_grp];
@@ -343,7 +376,7 @@ real ExtendedVAUS::cal_struct_parameters(real *crd, PBC *pbc) {
     // center of mass for each groups
     set_crd_centers(crd, pbc);
     //  real dist = 0.0;
-    int i_pair  = 0;
+    int  i_pair = 0;
     real lambda = 0.0;
     for (int i_grp = 0; i_grp < n_enhance_groups; i_grp++) {
         for (int j_grp = i_grp + 1; j_grp < n_enhance_groups; j_grp++) {
@@ -365,8 +398,9 @@ int ExtendedVAUS::scale_force(real lambda, real_fc *work, int n_atoms) {
     real recovery = 0.0;
 
     if (param <= vstates[cur_vs].get_lambda_low()) {
-        if (param <= vstates[cur_vs].get_lambda_low() - sigma) recovery = recov_coef * (param - (vstates[cur_vs].get_lambda_low() - sigma));
-        param                                                           = vstates[cur_vs].get_lambda_low();
+        if (param <= vstates[cur_vs].get_lambda_low() - sigma)
+            recovery = recov_coef * (param - (vstates[cur_vs].get_lambda_low() - sigma));
+        param        = vstates[cur_vs].get_lambda_low();
     } else if (param >= vstates[cur_vs].get_lambda_high()) {
         if (param >= vstates[cur_vs].get_lambda_high() + sigma)
             recovery = recov_coef * (param - (vstates[cur_vs].get_lambda_high() + sigma));
@@ -420,7 +454,9 @@ int ExtendedVAUS::scale_force(real lambda, real_fc *work, int n_atoms) {
                   cout << "prev:   " << work[atom_id3+0] << " " << work[atom_id3+1] << " "
                   << work[atom_id3+2] << endl;
                 */
-                for (int d = 0; d < 3; d++) { work[atom_id3 + d] += direction * bias[d] * (real)mass[atom_groups[grp_id][i_at]]; }
+                for (int d = 0; d < 3; d++) {
+                    work[atom_id3 + d] += direction * bias[d] * (real)mass[atom_groups[grp_id][i_at]];
+                }
                 /*
                   cout << "biased: " << work[atom_id3+0] << " " << work[atom_id3+1] << " "
                   << work[atom_id3+2] << endl;

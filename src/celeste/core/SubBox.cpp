@@ -7,17 +7,29 @@ extern "C" int cuda_set_device(int device_id);
 
 extern "C" int cuda_alloc_atom_info(int max_n_atoms_exbox,
                                     // int n_atom_array,
-                                    int max_n_cells, int max_n_cell_pairs, int n_columns);
+                                    int max_n_cells,
+                                    int max_n_cell_pairs,
+                                    int n_columns);
 
 extern "C" int cuda_free_atom_info();
 extern "C" int cuda_memcpy_htod_atom_info(real_pw *&h_charge_orig, int *&h_atomtype_orig);
 
-extern "C" int cuda_set_cell_constant(const int in_n_cells, const int in_n_atoms_box, const int in_n_atom_array, const int *in_n_cells_xyz,
-                                      const int in_n_columns, const real_pw *in_l_cell_xyz, const int *in_n_neighbor_xyz);
+extern "C" int cuda_set_cell_constant(const int      in_n_cells,
+                                      const int      in_n_atoms_box,
+                                      const int      in_n_atom_array,
+                                      const int *    in_n_cells_xyz,
+                                      const int      in_n_columns,
+                                      const real_pw *in_l_cell_xyz,
+                                      const int *    in_n_neighbor_xyz);
 
 extern "C" int cuda_set_constant(real_pw cutoff, real_pw cutoff_pairlist, int n_atomtypes);
-extern "C" int cuda_alloc_set_lj_params(real_pw *h_lj_6term, real_pw *h_lj_12term, int n_lj_types, int *h_nb15off, const int max_n_nb15off,
-                                        const int max_n_atoms, const int max_n_atom_array);
+extern "C" int cuda_alloc_set_lj_params(real_pw * h_lj_6term,
+                                        real_pw * h_lj_12term,
+                                        int       n_lj_types,
+                                        int *     h_nb15off,
+                                        const int max_n_nb15off,
+                                        const int max_n_atoms,
+                                        const int max_n_atom_array);
 
 extern "C" int cuda_free_lj_params();
 
@@ -42,9 +54,10 @@ extern "C" int cuda_hostfree_atom_type_charge(int *h_atom_type, real_pw *h_charg
 extern "C" int cuda_hostalloc_atom_type_charge(int *&h_atom_type, real_pw *&h_charge, const int n_atoms_system);
 
 extern "C" int cuda_init_cellinfo(const int n_cells);
-extern "C" int cuda_enumerate_cell_pairs(int *&h_atomids,
-                                         const int n_cells, // const int n_uni,
-                                         const int n_neighbor_col, const int *idx_atom_cell_xy);
+extern "C" int cuda_enumerate_cell_pairs(int *&     h_atomids,
+                                         const int  n_cells, // const int n_uni,
+                                         const int  n_neighbor_col,
+                                         const int *idx_atom_cell_xy);
 #ifdef F_ECP
 extern "C" int cuda_memcpy_htod_cell_pairs(CellPair *&h_cell_pairs, int *&h_idx_head_cell_pairs, int n_cell_pairs);
 
@@ -358,8 +371,13 @@ int SubBox::free_variables_for_nb15off() {
     return 0;
 }
 
-int SubBox::set_parameters(int in_n_atoms, PBC *in_pbc, Config *in_cfg, real in_cutoff_pair, int in_n_boxes_x, int in_n_boxes_y,
-                           int in_n_boxes_z) {
+int SubBox::set_parameters(int     in_n_atoms,
+                           PBC *   in_pbc,
+                           Config *in_cfg,
+                           real    in_cutoff_pair,
+                           int     in_n_boxes_x,
+                           int     in_n_boxes_y,
+                           int     in_n_boxes_z) {
     // set
     //   n_atoms, pbc, cutoff_pair
     //   n_boxes_xyz,  n_boxes
@@ -562,7 +580,7 @@ int SubBox::rank0_div_box(real **in_crd, real **in_vel) {
     for (int atomid = 0; atomid < n_atoms; atomid++) {
         int box_assign[3];
         for (int d = 0; d < 3; d++) box_assign[d] = floor((in_crd[atomid][d] - pbc->lower_bound[d]) / box_l[d]);
-        int box_id                                = get_box_id_from_crd(box_assign);
+        int      box_id                           = get_box_id_from_crd(box_assign);
         all_atomids[box_id][all_n_atoms[box_id]]  = atomid;
         atomids_rev[atomid]                       = all_n_atoms[box_id];
         all_n_atoms[box_id]++;
@@ -571,7 +589,11 @@ int SubBox::rank0_div_box(real **in_crd, real **in_vel) {
     return 0;
 }
 
-int SubBox::rank0_send_init_data(real **in_crd, real **in_vel, real_pw *in_charge, real_pw *in_mass, int *in_atom_type) {
+int SubBox::rank0_send_init_data(real **  in_crd,
+                                 real **  in_vel,
+                                 real_pw *in_charge,
+                                 real_pw *in_mass,
+                                 int *    in_atom_type) {
     // set
     //   crd
     //   vel_next
@@ -623,7 +645,9 @@ int SubBox::rank0_send_init_data(real **in_crd, real **in_vel, real_pw *in_charg
 
     return 0;
 }
-int SubBox::recv_init_data() { return 0; }
+int SubBox::recv_init_data() {
+    return 0;
+}
 int SubBox::set_bond_potentials(int **in_bond_atomid_pairs, real *in_bond_epsiron, real *in_bond_r0) {
     n_bonds = 0;
     for (int i = 0; i < max_n_bonds; i++) {
@@ -652,7 +676,9 @@ int SubBox::set_angle_potentials(int **in_angle_atomid_triads, real *in_angle_ep
         int aid3_b = atomids_rev[in_angle_atomid_triads[i][2]];
         if (aid1_b != -1 && aid2_b != -1 && aid3_b != -1) {
             real mid_crd[3];
-            for (int d = 0; d < 3; d++) { mid_crd[d] = (crd[aid1_b * 3 + d] + crd[aid2_b * 3 + d] + crd[aid3_b * 3 + d]) / 3; }
+            for (int d = 0; d < 3; d++) {
+                mid_crd[d] = (crd[aid1_b * 3 + d] + crd[aid2_b * 3 + d] + crd[aid3_b * 3 + d]) / 3;
+            }
             if (is_in_box(mid_crd)) {
                 angle_atomid_triads[n_angles][0] = aid1_b;
                 angle_atomid_triads[n_angles][1] = aid2_b;
@@ -665,8 +691,12 @@ int SubBox::set_angle_potentials(int **in_angle_atomid_triads, real *in_angle_ep
     }
     return 0;
 }
-int SubBox::set_torsion_potentials(int **in_torsion_atomid_quads, real *in_torsion_energy, int *in_torsion_overlaps,
-                                   int *in_torsion_symmetry, real *in_torsion_phase, int *in_torsion_nb14) {
+int SubBox::set_torsion_potentials(int **in_torsion_atomid_quads,
+                                   real *in_torsion_energy,
+                                   int * in_torsion_overlaps,
+                                   int * in_torsion_symmetry,
+                                   real *in_torsion_phase,
+                                   int * in_torsion_nb14) {
     n_torsions = 0;
     for (int i = 0; i < max_n_torsions; i++) {
         int aid1_b = atomids_rev[in_torsion_atomid_quads[i][0]];
@@ -676,7 +706,8 @@ int SubBox::set_torsion_potentials(int **in_torsion_atomid_quads, real *in_torsi
         if (aid1_b != -1 && aid2_b != -1 && aid3_b != -1 && aid4_b != -1) {
             real mid_crd[3];
             for (int d = 0; d < 3; d++) {
-                mid_crd[d] = (crd[aid1_b * 3 + d] + crd[aid2_b * 3 + d] + crd[aid3_b * 3 + d] + crd[aid4_b * 3 + d]) * 0.25;
+                mid_crd[d] =
+                    (crd[aid1_b * 3 + d] + crd[aid2_b * 3 + d] + crd[aid3_b * 3 + d] + crd[aid4_b * 3 + d]) * 0.25;
             }
             if (is_in_box(mid_crd)) {
                 torsion_atomid_quads[n_torsions][0] = aid1_b;
@@ -696,8 +727,12 @@ int SubBox::set_torsion_potentials(int **in_torsion_atomid_quads, real *in_torsi
     return 0;
 }
 
-int SubBox::set_impro_potentials(int **in_impro_atomid_quads, real *in_impro_energy, int *in_impro_overlaps, int *in_impro_symmetry,
-                                 real *in_impro_phase, int *in_impro_nb14) {
+int SubBox::set_impro_potentials(int **in_impro_atomid_quads,
+                                 real *in_impro_energy,
+                                 int * in_impro_overlaps,
+                                 int * in_impro_symmetry,
+                                 real *in_impro_phase,
+                                 int * in_impro_nb14) {
     n_impros = 0;
     for (int i = 0; i < max_n_impros; i++) {
         int aid1_b = atomids_rev[in_impro_atomid_quads[i][0]];
@@ -707,7 +742,8 @@ int SubBox::set_impro_potentials(int **in_impro_atomid_quads, real *in_impro_ene
         if (aid1_b != -1 && aid2_b != -1 && aid3_b != -1 && aid4_b != -1) {
             real mid_crd[3];
             for (int d = 0; d < 3; d++) {
-                mid_crd[d] = (crd[aid1_b * 3 + d] + crd[aid2_b * 3 + d] + crd[aid3_b * 3 + d] + crd[aid4_b * 3 + d]) * 0.25;
+                mid_crd[d] =
+                    (crd[aid1_b * 3 + d] + crd[aid2_b * 3 + d] + crd[aid3_b * 3 + d] + crd[aid4_b * 3 + d]) * 0.25;
             }
             if (is_in_box(mid_crd)) {
                 impro_atomid_quads[n_impros][0] = aid1_b;
@@ -727,7 +763,9 @@ int SubBox::set_impro_potentials(int **in_impro_atomid_quads, real *in_impro_ene
     return 0;
 }
 
-int SubBox::set_nb14_potentials(int **in_nb14_atomid_pairs, int **in_nb14_atomtype_pairs, real *in_nb14_coeff_vdw,
+int SubBox::set_nb14_potentials(int **in_nb14_atomid_pairs,
+                                int **in_nb14_atomtype_pairs,
+                                real *in_nb14_coeff_vdw,
                                 real *in_nb14_coeff_ele) {
     n_nb14 = 0;
     for (int i = 0; i < max_n_nb14; i++) {
@@ -773,7 +811,7 @@ int SubBox::set_nb15off(int *in_nb15off) {
     for (int i = 0; i < n_atoms * max_n_nb15off; i++)
         if (in_nb15off[i] != -1) nball++;
     for (int i = 0; i < max_n_atoms_exbox * max_n_nb15off; i++) nb15off[i] = -1;
-    int nb                                                                 = 0;
+    int      nb                                                            = 0;
     for (int atomid = 0; atomid < n_atoms; atomid++) {
         if (atomids_rev[atomid] > -1) {
             for (int i = 0; i < max_n_nb15off; i++) {
@@ -881,8 +919,8 @@ int SubBox::calc_energy_pairwise() {
         int atoms_index_c2 = nsgrid.get_idx_cell_head_atom(c2);
         int a2             = 0;
         for (a2 = 0; a2 < N_ATOM_CELL; a2++) {
-            int atomid_grid2 = atoms_index_c2 + a2;
-            int atomid2      = nsgrid.get_atomid_from_gridorder(atomid_grid2);
+            int     atomid_grid2 = atoms_index_c2 + a2;
+            int     atomid2      = nsgrid.get_atomid_from_gridorder(atomid_grid2);
             real_pw crd2[3];
             nsgrid.get_crd(atomid_grid2, crd2[0], crd2[1], crd2[2]);
             pbc->fix_pbc_image(crd2, cellpairs[cp].image);
@@ -909,8 +947,8 @@ int SubBox::calc_energy_pairwise() {
                 // sum_dist += r12;
                 // if(sum_dist > 100000) sum_dist -= 100000;
 
-                real_pw r12 = ff.calc_pairwise(tmp_ene_vdw, tmp_ene_ele, tmp_work, crd1, crd2, param_6term, param_12term, charge[atomid1],
-                                               charge[atomid2]);
+                real_pw r12 = ff.calc_pairwise(tmp_ene_vdw, tmp_ene_ele, tmp_work, crd1, crd2, param_6term,
+                                               param_12term, charge[atomid1], charge[atomid2]);
                 if (r12 > cfg->nsgrid_cutoff) { cellpairs[cp].pair_mask[mask_id] &= ~interact_bit; }
 
                 nsgrid.add_energy(tmp_ene_vdw, tmp_ene_ele);
@@ -963,7 +1001,8 @@ int SubBox::calc_energy_pairwise() {
     cout << "15 pairs: " << n_pairs_nonzero << " / " << n_pairs_incutoff << " / " << n_pairs << endl;
     cout << " E : " << pote_vdw << ", " << pote_ele << endl;
     cout << " E2 : " << p_vdw << ", " << p_ele << endl;
-    cout << " atomidsum : " << atomid1sum << " " << atomid2sum << " " << atomid1sum + atomid2sum << " " << atomid12mult << endl;
+    cout << " atomidsum : " << atomid1sum << " " << atomid2sum << " " << atomid1sum + atomid2sum << " " << atomid12mult
+    << endl;
     cout << " sum_dist: " <<  sum_dist << " - " << sum_dist_incut << endl;
     cout << " lj6: " << lj6mult << " lj12: "<<lj12mult <<endl;
     cout << " chg: " << chgmult << endl;
@@ -1019,8 +1058,8 @@ int SubBox::calc_energy_pairwise_wo_neighborsearch() {
             // sum_dist += r12;
             // if(sum_dist > 100000) sum_dist -= 100000;
 
-            if (ff.calc_pairwise(tmp_ene_vdw, tmp_ene_ele, tmp_work, crd1, crd2, param_6term, param_12term, charge[atomid1],
-                                 charge[atomid2])
+            if (ff.calc_pairwise(tmp_ene_vdw, tmp_ene_ele, tmp_work, crd1, crd2, param_6term, param_12term,
+                                 charge[atomid1], charge[atomid2])
                 == 0) {
                 pote_vdw += tmp_ene_vdw;
                 pote_ele += tmp_ene_ele;
@@ -1076,7 +1115,8 @@ int SubBox::calc_energy_pairwise_wo_neighborsearch() {
     cout << "15 pairs: " << n_pairs_incutoff << " / " << n_pairs << endl;
     cout << " E : " << pote_vdw << ", " << pote_ele << endl;
     cout << " E2 : " << p_vdw << ", " << p_ele << endl;
-    cout << " atomidsum : " << atomid1sum << " " << atomid2sum << " " << atomid1sum + atomid2sum << " " << atomid12mult << endl;
+    cout << " atomidsum : " << atomid1sum << " " << atomid2sum << " " << atomid1sum + atomid2sum << " " << atomid12mult
+    << endl;
     cout << " sum_dist: " <<  sum_dist << " - " << sum_dist_incut << endl;
     cout << " lj6: " << lj6mult << " lj12: "<<lj12mult <<endl;
     cout << " chg: " << chgmult << endl;
@@ -1096,10 +1136,10 @@ int SubBox::calc_energy_bonds() {
         // int i = bp_bonds[i];
         real_bp tmp_ene;
         real_bp tmp_work[3];
-        int atomidx1 = bond_atomid_pairs[i][0] * 3;
-        int atomidx2 = bond_atomid_pairs[i][1] * 3;
-        real c1[3]   = {crd[atomidx1], crd[atomidx1 + 1], crd[atomidx1 + 2]};
-        real c2[3]   = {crd[atomidx2], crd[atomidx2 + 1], crd[atomidx2 + 2]};
+        int     atomidx1 = bond_atomid_pairs[i][0] * 3;
+        int     atomidx2 = bond_atomid_pairs[i][1] * 3;
+        real    c1[3]    = {crd[atomidx1], crd[atomidx1 + 1], crd[atomidx1 + 2]};
+        real    c2[3]    = {crd[atomidx2], crd[atomidx2 + 1], crd[atomidx2 + 2]};
         ff.calc_bond(tmp_ene, tmp_work, c1, c2, bond_epsiron[i], bond_r0[i]);
         pote_bond += tmp_ene;
         for (int d = 0; d < 3; d++) {
@@ -1115,15 +1155,15 @@ int SubBox::calc_energy_bonds() {
 int SubBox::calc_energy_angles() {
     for (int i = 0; i < n_angles; i++) {
         //  int angle_idx = bp_angles[i];
-        real tmp_ene;
+        real    tmp_ene;
         real_fc tmp_work1[3], tmp_work2[3];
 
-        int atomidx1 = angle_atomid_triads[i][0] * 3;
-        int atomidx2 = angle_atomid_triads[i][1] * 3;
-        int atomidx3 = atomids_rev[angle_atomid_triads[i][2]] * 3;
-        real c1[3]   = {crd[atomidx1], crd[atomidx1 + 1], crd[atomidx1 + 2]};
-        real c2[3]   = {crd[atomidx2], crd[atomidx2 + 1], crd[atomidx2 + 2]};
-        real c3[3]   = {crd[atomidx3], crd[atomidx3 + 1], crd[atomidx3 + 2]};
+        int  atomidx1 = angle_atomid_triads[i][0] * 3;
+        int  atomidx2 = angle_atomid_triads[i][1] * 3;
+        int  atomidx3 = atomids_rev[angle_atomid_triads[i][2]] * 3;
+        real c1[3]    = {crd[atomidx1], crd[atomidx1 + 1], crd[atomidx1 + 2]};
+        real c2[3]    = {crd[atomidx2], crd[atomidx2 + 1], crd[atomidx2 + 2]};
+        real c3[3]    = {crd[atomidx3], crd[atomidx3 + 1], crd[atomidx3 + 2]};
         ff.calc_angle(tmp_ene, tmp_work1, tmp_work2, c1, c2, c3, angle_epsiron[i], angle_theta0[i]);
         pote_angle += tmp_ene;
         for (int d = 0; d < 3; d++) {
@@ -1138,18 +1178,18 @@ int SubBox::calc_energy_angles() {
 int SubBox::calc_energy_torsions() {
     for (int i = 0; i < n_torsions; i++) {
         // int torsion_idx = bp_torsions[i];
-        real tmp_ene;
+        real    tmp_ene;
         real_fc tmp_work1[3], tmp_work2[3], tmp_work3[3];
-        int atomidx1 = torsion_atomid_quads[i][0] * 3;
-        int atomidx2 = torsion_atomid_quads[i][1] * 3;
-        int atomidx3 = torsion_atomid_quads[i][2] * 3;
-        int atomidx4 = torsion_atomid_quads[i][3] * 3;
-        real c1[3]   = {crd[atomidx1], crd[atomidx1 + 1], crd[atomidx1 + 2]};
-        real c2[3]   = {crd[atomidx2], crd[atomidx2 + 1], crd[atomidx2 + 2]};
-        real c3[3]   = {crd[atomidx3], crd[atomidx3 + 1], crd[atomidx3 + 2]};
-        real c4[3]   = {crd[atomidx4], crd[atomidx4 + 1], crd[atomidx4 + 2]};
-        ff.calc_torsion(tmp_ene, tmp_work1, tmp_work2, tmp_work3, c1, c2, c3, c4, torsion_energy[i], torsion_overlaps[i],
-                        torsion_symmetry[i], torsion_phase[i]);
+        int     atomidx1 = torsion_atomid_quads[i][0] * 3;
+        int     atomidx2 = torsion_atomid_quads[i][1] * 3;
+        int     atomidx3 = torsion_atomid_quads[i][2] * 3;
+        int     atomidx4 = torsion_atomid_quads[i][3] * 3;
+        real    c1[3]    = {crd[atomidx1], crd[atomidx1 + 1], crd[atomidx1 + 2]};
+        real    c2[3]    = {crd[atomidx2], crd[atomidx2 + 1], crd[atomidx2 + 2]};
+        real    c3[3]    = {crd[atomidx3], crd[atomidx3 + 1], crd[atomidx3 + 2]};
+        real    c4[3]    = {crd[atomidx4], crd[atomidx4 + 1], crd[atomidx4 + 2]};
+        ff.calc_torsion(tmp_ene, tmp_work1, tmp_work2, tmp_work3, c1, c2, c3, c4, torsion_energy[i],
+                        torsion_overlaps[i], torsion_symmetry[i], torsion_phase[i]);
         pote_torsion += tmp_ene;
         for (int d = 0; d < 3; d++) {
             work[atomidx1 + d] += tmp_work1[d];
@@ -1164,18 +1204,18 @@ int SubBox::calc_energy_torsions() {
 int SubBox::calc_energy_impros() {
     for (int i = 0; i < n_impros; i++) {
         // int impro_idx = bp_impros[i];
-        real tmp_ene;
+        real    tmp_ene;
         real_fc tmp_work1[3], tmp_work2[3], tmp_work3[3];
-        int atomidx1 = impro_atomid_quads[i][0] * 3;
-        int atomidx2 = impro_atomid_quads[i][1] * 3;
-        int atomidx3 = impro_atomid_quads[i][2] * 3;
-        int atomidx4 = impro_atomid_quads[i][3] * 3;
-        real c1[3]   = {crd[atomidx1], crd[atomidx1 + 1], crd[atomidx1 + 2]};
-        real c2[3]   = {crd[atomidx2], crd[atomidx2 + 1], crd[atomidx2 + 2]};
-        real c3[3]   = {crd[atomidx3], crd[atomidx3 + 1], crd[atomidx3 + 2]};
-        real c4[3]   = {crd[atomidx4], crd[atomidx4 + 1], crd[atomidx4 + 2]};
-        ff.calc_torsion(tmp_ene, tmp_work1, tmp_work2, tmp_work3, c1, c2, c3, c4, impro_energy[i], impro_overlaps[i], impro_symmetry[i],
-                        impro_phase[i]);
+        int     atomidx1 = impro_atomid_quads[i][0] * 3;
+        int     atomidx2 = impro_atomid_quads[i][1] * 3;
+        int     atomidx3 = impro_atomid_quads[i][2] * 3;
+        int     atomidx4 = impro_atomid_quads[i][3] * 3;
+        real    c1[3]    = {crd[atomidx1], crd[atomidx1 + 1], crd[atomidx1 + 2]};
+        real    c2[3]    = {crd[atomidx2], crd[atomidx2 + 1], crd[atomidx2 + 2]};
+        real    c3[3]    = {crd[atomidx3], crd[atomidx3 + 1], crd[atomidx3 + 2]};
+        real    c4[3]    = {crd[atomidx4], crd[atomidx4 + 1], crd[atomidx4 + 2]};
+        ff.calc_torsion(tmp_ene, tmp_work1, tmp_work2, tmp_work3, c1, c2, c3, c4, impro_energy[i], impro_overlaps[i],
+                        impro_symmetry[i], impro_phase[i]);
         pote_impro += tmp_ene;
         for (int d = 0; d < 3; d++) {
             work[atomidx1 + d] += tmp_work1[d];
@@ -1188,18 +1228,18 @@ int SubBox::calc_energy_impros() {
 }
 int SubBox::calc_energy_14nb() {
     for (int i = 0; i < n_nb14; i++) {
-        real tmp_ene_vdw;
-        real tmp_ene_ele;
+        real    tmp_ene_vdw;
+        real    tmp_ene_ele;
         real_fc tmp_work[3];
-        int atomidx1  = nb14_atomid_pairs[i][0] * 3;
-        int atomidx2  = nb14_atomid_pairs[i][1] * 3;
-        int atomtype1 = nb14_atomtype_pairs[i][0];
-        int atomtype2 = nb14_atomtype_pairs[i][1];
-        real c1[3]    = {crd[atomidx1], crd[atomidx1 + 1], crd[atomidx1 + 2]};
-        real c2[3]    = {crd[atomidx2], crd[atomidx2 + 1], crd[atomidx2 + 2]};
+        int     atomidx1  = nb14_atomid_pairs[i][0] * 3;
+        int     atomidx2  = nb14_atomid_pairs[i][1] * 3;
+        int     atomtype1 = nb14_atomtype_pairs[i][0];
+        int     atomtype2 = nb14_atomtype_pairs[i][1];
+        real    c1[3]     = {crd[atomidx1], crd[atomidx1 + 1], crd[atomidx1 + 2]};
+        real    c2[3]     = {crd[atomidx2], crd[atomidx2 + 1], crd[atomidx2 + 2]};
         ff.calc_14pair(tmp_ene_vdw, tmp_ene_ele, tmp_work, c1, c2, lj_6term[atomtype1 * n_lj_types + atomtype2],
-                       lj_12term[atomtype1 * n_lj_types + atomtype2], charge[nb14_atomid_pairs[i][0]], charge[nb14_atomid_pairs[i][1]],
-                       nb14_coeff_vdw[i], nb14_coeff_ele[i]);
+                       lj_12term[atomtype1 * n_lj_types + atomtype2], charge[nb14_atomid_pairs[i][0]],
+                       charge[nb14_atomid_pairs[i][1]], nb14_coeff_vdw[i], nb14_coeff_ele[i]);
         pote_14vdw += tmp_ene_vdw;
         pote_14ele += tmp_ene_ele;
         for (int d = 0; d < 3; d++) {
@@ -1212,12 +1252,12 @@ int SubBox::calc_energy_14nb() {
 int SubBox::calc_energy_ele_excess() {
     real ele_excess = 0.0;
     for (int i = 0; i < n_excess; i++) {
-        real tmp_ene;
+        real    tmp_ene;
         real_fc tmp_work[3];
-        int atomidx1 = excess_pairs[i][0] * 3;
-        int atomidx2 = excess_pairs[i][1] * 3;
-        real c1[3]   = {crd[atomidx1], crd[atomidx1 + 1], crd[atomidx1 + 2]};
-        real c2[3]   = {crd[atomidx2], crd[atomidx2 + 1], crd[atomidx2 + 2]};
+        int     atomidx1 = excess_pairs[i][0] * 3;
+        int     atomidx2 = excess_pairs[i][1] * 3;
+        real    c1[3]    = {crd[atomidx1], crd[atomidx1 + 1], crd[atomidx1 + 2]};
+        real    c2[3]    = {crd[atomidx2], crd[atomidx2 + 1], crd[atomidx2 + 2]};
         ff.calc_zms_excess(tmp_ene, tmp_work, c1, c2, charge[excess_pairs[i][0]], charge[excess_pairs[i][1]]);
         ele_excess += tmp_ene;
         for (int d = 0; d < 3; d++) {
@@ -1303,7 +1343,8 @@ int SubBox::update_velocities(const real time_step) {
     // swap_velocity_buffer();
     for (int atomid_b = 0, atomid_b3 = 0; atomid_b < all_n_atoms[rank]; atomid_b++, atomid_b3 += 3) {
         for (int d = 0; d < 3; d++) {
-            vel_next[atomid_b3 + d] = vel[atomid_b3 + d] + (time_step * -FORCE_VEL * work[atomid_b3 + d] * mass_inv[atomid_b]);
+            vel_next[atomid_b3 + d] =
+                vel[atomid_b3 + d] + (time_step * -FORCE_VEL * work[atomid_b3 + d] * mass_inv[atomid_b]);
         }
     }
     return 0;
@@ -1333,9 +1374,10 @@ int SubBox::set_velocity_from_crd() {
         }
         real diff = fabs(norm1 - norm2) * mass[atomid_b];
         if (diff > 0.01)
-            cout << "diff " << atomid_b << " " << diff << "(" << crd[atomid_b3] << ", " << crd[atomid_b3 + 1] << ", " << crd[atomid_b3 + 2]
-                 << ") "
-                 << "(" << crd_prev[atomid_b3] << ", " << crd_prev[atomid_b3 + 1] << ", " << crd_prev[atomid_b3 + 2] << ") " << endl;
+            cout << "diff " << atomid_b << " " << diff << "(" << crd[atomid_b3] << ", " << crd[atomid_b3 + 1] << ", "
+                 << crd[atomid_b3 + 2] << ") "
+                 << "(" << crd_prev[atomid_b3] << ", " << crd_prev[atomid_b3 + 1] << ", " << crd_prev[atomid_b3 + 2]
+                 << ") " << endl;
     }
     return 0;
 }
@@ -1354,7 +1396,9 @@ int SubBox::revise_coordinates_pbc() {
 
 int SubBox::copy_vel_just(real **p_vel) {
     for (int atomid_b = 0, atomid_b3 = 0; atomid_b < all_n_atoms[rank]; atomid_b++, atomid_b3 += 3) {
-        for (int d = 0; d < 3; d++) { p_vel[atomids[atomid_b]][d] = (vel[atomid_b3 + d] + vel_next[atomid_b3 + d]) * 0.5; }
+        for (int d = 0; d < 3; d++) {
+            p_vel[atomids[atomid_b]][d] = (vel[atomid_b3 + d] + vel_next[atomid_b3 + d]) * 0.5;
+        }
     }
     return 0;
     /// copy velocities from this object to the mmsys
@@ -1374,11 +1418,19 @@ int SubBox::copy_vel_just(real **p_vel) {
   }
   return 0;
   }*/
-int SubBox::copy_crd_prev(real **p_crd) { return copy_crdvel_to_mmsys(crd_prev, p_crd); }
-int SubBox::copy_crd(real **p_crd) { return copy_crdvel_to_mmsys(crd, p_crd); }
-int SubBox::copy_vel(real **p_vel) { return copy_crdvel_to_mmsys(vel, p_vel); }
+int SubBox::copy_crd_prev(real **p_crd) {
+    return copy_crdvel_to_mmsys(crd_prev, p_crd);
+}
+int SubBox::copy_crd(real **p_crd) {
+    return copy_crdvel_to_mmsys(crd, p_crd);
+}
+int SubBox::copy_vel(real **p_vel) {
+    return copy_crdvel_to_mmsys(vel, p_vel);
+}
 
-int SubBox::copy_vel_next(real **p_vel) { return copy_crdvel_to_mmsys(vel_next, p_vel); }
+int SubBox::copy_vel_next(real **p_vel) {
+    return copy_crdvel_to_mmsys(vel_next, p_vel);
+}
 int SubBox::copy_crdvel_to_mmsys(real *src, real **dst) {
     for (int atomid_b = 0, atomid_b3 = 0; atomid_b < all_n_atoms[rank]; atomid_b++, atomid_b3 += 3) {
         for (int d = 0; d < 3; d++) { dst[atomids[atomid_b]][d] = src[atomid_b3 + d]; }
@@ -1435,8 +1487,8 @@ int SubBox::update_coordinates_nsgrid() {
 }
 
 bool SubBox::is_in_box(real *in_crd) {
-    return in_crd[0] >= box_lower[0] && in_crd[0] < box_upper[0] && in_crd[1] >= box_lower[1] && in_crd[1] < box_upper[1]
-           && in_crd[2] >= box_lower[2] && in_crd[2] < box_upper[2];
+    return in_crd[0] >= box_lower[0] && in_crd[0] < box_upper[0] && in_crd[1] >= box_lower[1]
+           && in_crd[1] < box_upper[1] && in_crd[2] >= box_lower[2] && in_crd[2] < box_upper[2];
 }
 bool SubBox::is_in_exbox(real *in_crd) {
     for (int d = 0; d < 3; d++) {
@@ -1452,8 +1504,13 @@ int SubBox::set_box_crd() {
     return 0;
 }
 
-int SubBox::init_constraint(int in_constraint, int in_max_loops, real in_tolerance, int max_n_pair, int max_n_trio, int max_n_quad,
-                            int max_n_settle) {
+int SubBox::init_constraint(int  in_constraint,
+                            int  in_max_loops,
+                            real in_tolerance,
+                            int  max_n_pair,
+                            int  max_n_trio,
+                            int  max_n_quad,
+                            int  max_n_settle) {
     switch (in_constraint) {
         case CONST_SHAKE: flg_constraint = 1; break;
         case CONST_SHAKE_SETTLE:
@@ -1519,7 +1576,8 @@ int SubBox::gpu_device_setup() {
                          nsgrid.get_max_n_cells(), nsgrid.get_max_n_cell_pairs(), nsgrid.get_n_columns() + 1);
     //     nsgrid.get_n_uni());
 
-    cuda_alloc_set_lj_params(lj_6term, lj_12term, n_lj_types, nb15off, max_n_nb15off, max_n_atoms_exbox, nsgrid.get_max_n_atom_array());
+    cuda_alloc_set_lj_params(lj_6term, lj_12term, n_lj_types, nb15off, max_n_nb15off, max_n_atoms_exbox,
+                             nsgrid.get_max_n_atom_array());
 
     real_pw tmp_l[3]  = {(real_pw)pbc->L[0], (real_pw)pbc->L[1], (real_pw)pbc->L[2]};
     real_pw tmp_lb[3] = {(real_pw)pbc->lower_bound[0], (real_pw)pbc->lower_bound[1], (real_pw)pbc->lower_bound[2]};
@@ -1532,8 +1590,8 @@ int SubBox::gpu_device_setup() {
 }
 
 int SubBox::update_device_cell_info() {
-    cuda_set_cell_constant(nsgrid.get_n_cells(), n_atoms_exbox, nsgrid.get_n_atom_array(), nsgrid.get_n_cells_xyz(), nsgrid.get_n_columns(),
-                           nsgrid.get_L_cell_xyz(), nsgrid.get_n_neighbors_xyz());
+    cuda_set_cell_constant(nsgrid.get_n_cells(), n_atoms_exbox, nsgrid.get_n_atom_array(), nsgrid.get_n_cells_xyz(),
+                           nsgrid.get_n_columns(), nsgrid.get_L_cell_xyz(), nsgrid.get_n_neighbors_xyz());
 
     cuda_memcpy_htod_atomids(nsgrid.get_atomids(), nsgrid.get_idx_xy_head_cell());
 
@@ -1560,9 +1618,11 @@ int SubBox::apply_constraint() {
 int SubBox::update_thermostat(const int cur_step) {
     // cout << "update thermostat " << cur_step << " / " << cfg->heating_steps<< endl;
     if (cur_step < cfg->heating_steps) {
-        real new_temp = cfg->temperature_init + ((cfg->temperature - cfg->temperature_init) / (real)cfg->heating_steps) * cur_step;
+        real new_temp =
+            cfg->temperature_init + ((cfg->temperature - cfg->temperature_init) / (real)cfg->heating_steps) * cur_step;
         thermostat->set_temperature(new_temp);
-        // cout << "set temperature : " << new_temp << " " << cfg->temperature_init << " - " << cfg->temperature << endl;
+        // cout << "set temperature : " << new_temp << " " << cfg->temperature_init << " - " << cfg->temperature <<
+        // endl;
     } else {
         thermostat->set_temperature(cfg->temperature);
     }
@@ -1570,15 +1630,13 @@ int SubBox::update_thermostat(const int cur_step) {
 }
 
 int SubBox::apply_thermostat() {
-
     thermostat->apply_thermostat(n_atoms_box, work, vel, vel_next, mass, mass_inv);
     return 0;
 }
 
 int SubBox::apply_thermostat_with_shake(const int max_loops, const real tolerance) {
-    thermostat->apply_thermostat_with_shake(n_atoms_box, work, crd, crd_prev, vel, vel_next, mass, mass_inv, constraint, pbc, buf_crd,
-                                            max_loops, tolerance, &commotion, atomids_rev);
-
+    thermostat->apply_thermostat_with_shake(n_atoms_box, work, crd, crd_prev, vel, vel_next, mass, mass_inv, constraint,
+                                            pbc, buf_crd, max_loops, tolerance, &commotion, atomids_rev);
     return 0;
 }
 int SubBox::extended_apply_bias(unsigned long cur_step, real in_lambda) {
@@ -1594,9 +1652,13 @@ int SubBox::extended_write_aus_restart(std::string fn_out) {
     extended->write_aus_restart(fn_out);
     return 0;
 }
-void SubBox::extended_enable_vs_transition() { extended->enable_vs_transition(); }
+void SubBox::extended_enable_vs_transition() {
+    extended->enable_vs_transition();
+}
 
-int SubBox::cancel_com_motion() { return commotion.cancel_translation(atomids_rev, vel_next); }
+int SubBox::cancel_com_motion() {
+    return commotion.cancel_translation(atomids_rev, vel_next);
+}
 
 int SubBox::set_com_motion(int n_groups, int *group_ids, int *n_atoms_in_groups, int **groups, real *mass_inv_groups) {
     return commotion.set_groups(n_groups, group_ids, n_atoms_in_groups, groups, mass_inv_groups, mass);

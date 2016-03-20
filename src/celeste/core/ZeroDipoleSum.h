@@ -4,10 +4,10 @@
 #include "ZeroMultipoleSum.h"
 
 class ZeroDipoleSum : public ZeroMultipoleSum {
- private:
- protected:
- public:
-  ZeroDipoleSum();
+  private:
+  protected:
+  public:
+    ZeroDipoleSum();
 };
 
 #endif

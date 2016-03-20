@@ -14,4 +14,6 @@ int ElectrostaticObject::set_config_parameters(const Config *in_cfg) {
     return 0;
 }
 
-int ElectrostaticObject::initial_preprocess() { return 0; }
+int ElectrostaticObject::initial_preprocess() {
+    return 0;
+}

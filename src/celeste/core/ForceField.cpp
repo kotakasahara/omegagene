@@ -27,41 +27,49 @@ int ForceField::set_config_parameters(const Config *cfg) {
     if (cfg->ele_alpha < EPS) {
         switch (cfg->electrostatic) {
             case ELCTRST_ZERODIPOLE:
-                ele = new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff, &ZeroMultipoleSum::calc_zero02pole_alpha0,
+                ele = new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff,
+                                           &ZeroMultipoleSum::calc_zero02pole_alpha0,
                                            &ZeroMultipoleSum::calc_zero02pole_excess_alpha0);
                 break;
             case ELCTRST_ZEROQUADRUPOLE:
-                ele = new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff, &ZeroMultipoleSum::calc_zero04pole_alpha0,
+                ele = new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff,
+                                           &ZeroMultipoleSum::calc_zero04pole_alpha0,
                                            &ZeroMultipoleSum::calc_zero04pole_excess_alpha0);
                 break;
             case ELCTRST_ZEROOCTUPOLE:
-                ele = new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff, &ZeroMultipoleSum::calc_zero08pole_alpha0,
+                ele = new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff,
+                                           &ZeroMultipoleSum::calc_zero08pole_alpha0,
                                            &ZeroMultipoleSum::calc_zero08pole_excess_alpha0);
 
                 break;
             case ELCTRST_ZEROHEXADECAPOLE:
-                ele = new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff, &ZeroMultipoleSum::calc_zero16pole_alpha0,
+                ele = new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff,
+                                           &ZeroMultipoleSum::calc_zero16pole_alpha0,
                                            &ZeroMultipoleSum::calc_zero16pole_excess_alpha0);
                 break;
         }
     } else {
         switch (cfg->electrostatic) {
             case ELCTRST_ZERODIPOLE:
-                ele = new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff, &ZeroMultipoleSum::calc_zero02pole,
-                                           &ZeroMultipoleSum::calc_zero02pole_excess);
+                ele =
+                    new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff,
+                                         &ZeroMultipoleSum::calc_zero02pole, &ZeroMultipoleSum::calc_zero02pole_excess);
                 break;
             case ELCTRST_ZEROQUADRUPOLE:
-                ele = new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff, &ZeroMultipoleSum::calc_zero04pole,
-                                           &ZeroMultipoleSum::calc_zero04pole_excess);
+                ele =
+                    new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff,
+                                         &ZeroMultipoleSum::calc_zero04pole, &ZeroMultipoleSum::calc_zero04pole_excess);
                 break;
             case ELCTRST_ZEROOCTUPOLE:
-                ele = new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff, &ZeroMultipoleSum::calc_zero08pole,
-                                           &ZeroMultipoleSum::calc_zero08pole_excess);
+                ele =
+                    new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff,
+                                         &ZeroMultipoleSum::calc_zero08pole, &ZeroMultipoleSum::calc_zero08pole_excess);
 
                 break;
             case ELCTRST_ZEROHEXADECAPOLE:
-                ele = new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff, &ZeroMultipoleSum::calc_zero16pole,
-                                           &ZeroMultipoleSum::calc_zero16pole_excess);
+                ele =
+                    new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff,
+                                         &ZeroMultipoleSum::calc_zero16pole, &ZeroMultipoleSum::calc_zero16pole_excess);
                 break;
         }
     }
@@ -76,7 +84,12 @@ int ForceField::initial_preprocess(const PBC *in_pbc) {
     return 0;
 }
 
-int ForceField::calc_bond(real &ene, real_fc work[], const real *crd1, const real *crd2, const real &param_e, const real &param_r0) {
+int ForceField::calc_bond(real &      ene,
+                          real_fc     work[],
+                          const real *crd1,
+                          const real *crd2,
+                          const real &param_e,
+                          const real &param_r0) {
 
     // mmsys->pbc.print_pbc();
     real d12[3];
@@ -101,8 +114,14 @@ int ForceField::calc_bond(real &ene, real_fc work[], const real *crd1, const rea
     return 0;
 }
 
-int ForceField::calc_angle(real &ene, real_fc work1[], real_fc work2[], const real *crd1, const real *crd2, const real *crd3,
-                           const real &param_e, const real &param_theta0) {
+int ForceField::calc_angle(real &      ene,
+                           real_fc     work1[],
+                           real_fc     work2[],
+                           const real *crd1,
+                           const real *crd2,
+                           const real *crd3,
+                           const real &param_e,
+                           const real &param_theta0) {
 
     real d12[3];
     real d32[3];
@@ -136,9 +155,18 @@ int ForceField::calc_angle(real &ene, real_fc work1[], real_fc work2[], const re
     return 0;
 }
 
-int ForceField::calc_torsion(real &ene, real_fc work1[], real_fc work2[], real_fc work3[], const real *crd1, const real *crd2,
-                             const real *crd3, const real *crd4, const real &param_ene, const real &param_overlaps,
-                             const real &param_symmetry, const real &param_phase) {
+int ForceField::calc_torsion(real &      ene,
+                             real_fc     work1[],
+                             real_fc     work2[],
+                             real_fc     work3[],
+                             const real *crd1,
+                             const real *crd2,
+                             const real *crd3,
+                             const real *crd4,
+                             const real &param_ene,
+                             const real &param_overlaps,
+                             const real &param_symmetry,
+                             const real &param_phase) {
     ene = 0.0;
     for (int d = 0; d < 3; d++) {
         work1[d] = 0.0;
@@ -184,7 +212,7 @@ int ForceField::calc_torsion(real &ene, real_fc work1[], real_fc work2[], real_f
     // cout << "dbg0204:torsion " << ene << " " << param_ene << " ";
     // cout << phimod << " " << div << endl;
     real_bp sinp    = sin(phi);
-    int nrot        = (int)param_symmetry;
+    int     nrot    = (int)param_symmetry;
     real_bp sinp_sq = sinp * sinp;
     real_bp cosp_sq = cosp * cosp;
 
@@ -222,7 +250,8 @@ int ForceField::calc_torsion(real &ene, real_fc work1[], real_fc work2[], real_f
     real_bp op_p23_d43[3];
     cross(p23, d43, op_p23_d43);
 
-    for (int i = 0; i < 3; i++) work2[i] = work_coeff * (op_d2132_p23[i] + op_p12_d43[i] - r12 * op_d2132_p12[i] - r23 * op_p23_d43[i]);
+    for (int i   = 0; i < 3; i++)
+        work2[i] = work_coeff * (op_d2132_p23[i] + op_p12_d43[i] - r12 * op_d2132_p12[i] - r23 * op_p23_d43[i]);
 
     real_bp op_p12_d32[3];
     cross(p12, d32, op_p12_d32);
@@ -239,8 +268,16 @@ int ForceField::calc_torsion(real &ene, real_fc work1[], real_fc work2[], real_f
     return 0;
 }
 
-int ForceField::calc_14pair(real &ene_vdw, real &ene_ele, real_fc work[], const real *crd1, const real *crd4, const real &lj_6term,
-                            const real &lj_12term, const real &charge1, const real &charge4, const real &param_coeff_vdw,
+int ForceField::calc_14pair(real &      ene_vdw,
+                            real &      ene_ele,
+                            real_fc     work[],
+                            const real *crd1,
+                            const real *crd4,
+                            const real &lj_6term,
+                            const real &lj_12term,
+                            const real &charge1,
+                            const real &charge4,
+                            const real &param_coeff_vdw,
                             const real &param_coeff_ele) {
 
     real d14[3];
@@ -256,14 +293,14 @@ int ForceField::calc_14pair(real &ene_vdw, real &ene_ele, real_fc work[], const 
     real term12     = lj_12term * r14_inv_12;
     ene_vdw         = (-term6 + term12) * param_coeff_vdw;
     // cout << "dbg0204: t6,t23,coef: " << term6 << " " << term12 << " " << param_coeff_vdw << " " << sqrt(r14_2)<<endl;
-    real coef_work = r14_2_inv * param_coeff_vdw * (-12.0 * term12 + 6.0 * term6);
+    real    coef_work = r14_2_inv * param_coeff_vdw * (-12.0 * term12 + 6.0 * term6);
     real_bp work_vdw[3];
     for (int d = 0; d < 3; d++) work_vdw[d] = coef_work * d14[d];
 
     // ELE
-    real cc       = charge1 * charge4 * CHARGE_COEFF * param_coeff_ele;
-    ene_ele       = cc * r14_inv;
-    real coef_ele = -cc * r14_2_inv * r14_inv;
+    real cc          = charge1 * charge4 * CHARGE_COEFF * param_coeff_ele;
+    ene_ele          = cc * r14_inv;
+    real    coef_ele = -cc * r14_2_inv * r14_inv;
     real_bp work_ele[3];
     for (int d = 0; d < 3; d++) work_ele[d] = coef_ele * d14[d];
 
@@ -272,8 +309,15 @@ int ForceField::calc_14pair(real &ene_vdw, real &ene_ele, real_fc work[], const 
     return 0;
 }
 
-real_pw ForceField::calc_pairwise(real_pw &ene_vdw, real_pw &ene_ele, real_fc work[], real_pw *crd1, real_pw *crd2, real_pw &param_6term,
-                                  real_pw &param_12term, real_pw &charge1, real_pw &charge2) {
+real_pw ForceField::calc_pairwise(real_pw &ene_vdw,
+                                  real_pw &ene_ele,
+                                  real_fc  work[],
+                                  real_pw *crd1,
+                                  real_pw *crd2,
+                                  real_pw &param_6term,
+                                  real_pw &param_12term,
+                                  real_pw &charge1,
+                                  real_pw &charge2) {
 
     real_pw d12[3] = {0.0, 0.0, 0.0};
 
@@ -302,7 +346,8 @@ real_pw ForceField::calc_pairwise(real_pw &ene_vdw, real_pw &ene_ele, real_fc wo
     ene_vdw            = -term6 + term12;
     real_pw work_coef  = r12_2_inv * (-12.0 * term12 + 6.0 * term6);
     for (int d = 0; d < 3; d++) work_vdw[d] = work_coef * d12[d];
-    // cout << "dbg vdw " << r12 << " " << param_6term << " " << param_12term <<  " " << work_vdw[0] << " "  << work_vdw[1] << " " <<
+    // cout << "dbg vdw " << r12 << " " << param_6term << " " << param_12term <<  " " << work_vdw[0] << " "  <<
+    // work_vdw[1] << " " <<
     // work_vdw[2] << endl;
     real_pw cc = charge1 * charge2 * CHARGE_COEFF;
 
@@ -341,7 +386,9 @@ int ForceField::calc_zms_excess(real &ene, real_fc work[], real *crd1, real *crd
     return 0;
 }
 
-int ForceField::cal_self_energy(const int &n_atoms, const int &n_excess, const int **&excess_pairs,
+int ForceField::cal_self_energy(const int &  n_atoms,
+                                const int &  n_excess,
+                                const int **&excess_pairs,
                                 /*const int& n_atoms,
                                 const int& n_bonds,
                                 const int**& bond_atomid_pairs,
@@ -351,7 +398,9 @@ int ForceField::cal_self_energy(const int &n_atoms, const int &n_excess, const i
                                 const int**& torsion_atomid_quads,
                                 const int*& torsion_nb14,
                                 */
-                                real_pw *&charge, real *&energy_self, real &energy_self_sum) {
+                                real_pw *&charge,
+                                real *&   energy_self,
+                                real &    energy_self_sum) {
     ele->cal_self_energy(n_atoms, n_excess, excess_pairs,
                          /*n_atoms,
                          n_bonds,    bond_atomid_pairs,

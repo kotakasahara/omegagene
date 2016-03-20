@@ -49,7 +49,8 @@ int DynamicsMode::initial_preprocess() {
         writer_trr->open();
     }
     if (cfg->constraint_type != CONST_NONE) {
-        int n_shake_dist = mmsys.constraint.get_n_pair() + 3 * mmsys.constraint.get_n_trio() + 6 * mmsys.constraint.get_n_quad();
+        int n_shake_dist =
+            mmsys.constraint.get_n_pair() + 3 * mmsys.constraint.get_n_trio() + 6 * mmsys.constraint.get_n_quad();
         mmsys.d_free -= n_shake_dist;
     }
 
@@ -91,8 +92,8 @@ int DynamicsMode::initial_preprocess() {
     // cout << "DBG MmSystem.n_bonds: " << mmsys.n_bonds << endl;
 
     subbox.copy_vel_next(mmsys.vel_just);
-    subbox.set_com_motion(mmsys.n_com_cancel_groups, mmsys.com_cancel_groups, mmsys.n_atoms_in_groups, mmsys.atom_groups,
-                          mmsys.mass_inv_groups);
+    subbox.set_com_motion(mmsys.n_com_cancel_groups, mmsys.com_cancel_groups, mmsys.n_atoms_in_groups,
+                          mmsys.atom_groups, mmsys.mass_inv_groups);
 
     mmsys.print_com_cancel_groups();
     // mmsys.print_enhance_groups();
@@ -143,8 +144,8 @@ int DynamicsMode::output_restart() {
     subbox.copy_vel_next(mmsys.vel_just);
     writer_restart.set_fn(cfg->fn_o_restart);
     writer_restart.write_restart(mmsys.n_atoms, (int)mmsys.cur_step, (double)mmsys.cur_time,
-                                 (double)(mmsys.pote_bond + mmsys.pote_angle + mmsys.pote_torsion + mmsys.pote_impro + mmsys.pote_14vdw
-                                          + mmsys.pote_14ele + mmsys.pote_vdw + mmsys.pote_ele),
+                                 (double)(mmsys.pote_bond + mmsys.pote_angle + mmsys.pote_torsion + mmsys.pote_impro
+                                          + mmsys.pote_14vdw + mmsys.pote_14ele + mmsys.pote_vdw + mmsys.pote_ele),
                                  (double)mmsys.kinetic_e, mmsys.crd, mmsys.vel_just);
 
     if (cfg->extended_ensemble == EXTENDED_VAUS) { subbox.extended_write_aus_restart(cfg->fn_o_aus_restart); }
@@ -152,7 +153,9 @@ int DynamicsMode::output_restart() {
     return 0;
 }
 
-int DynamicsMode::calc_in_each_step() { return 0; }
+int DynamicsMode::calc_in_each_step() {
+    return 0;
+}
 int DynamicsMode::apply_constraint() {
 
     // if(mmsys.leapfrog_coeff == 1.0){
@@ -184,16 +187,18 @@ int DynamicsMode::sub_output() {
     // cout << "cur_step: " << mmsys.cur_step << " ";
     // cout << mmsys.cur_step % cfg->print_intvl_crd << endl;
 
-    bool out_crd   = cfg->print_intvl_crd > 0 && mmsys.cur_step != 1 && (mmsys.cur_step - 1) % cfg->print_intvl_crd == 0;
-    bool out_vel   = cfg->print_intvl_vel > 0 && mmsys.cur_step != 1 && (mmsys.cur_step - 1) % cfg->print_intvl_vel == 0;
-    bool out_force = cfg->print_intvl_force > 0 && mmsys.cur_step != 1 && (mmsys.cur_step - 1) % cfg->print_intvl_force == 0;
+    bool out_crd = cfg->print_intvl_crd > 0 && mmsys.cur_step != 1 && (mmsys.cur_step - 1) % cfg->print_intvl_crd == 0;
+    bool out_vel = cfg->print_intvl_vel > 0 && mmsys.cur_step != 1 && (mmsys.cur_step - 1) % cfg->print_intvl_vel == 0;
+    bool out_force =
+        cfg->print_intvl_force > 0 && mmsys.cur_step != 1 && (mmsys.cur_step - 1) % cfg->print_intvl_force == 0;
     if (out_crd) subbox.copy_crd_prev(mmsys.crd);
     if (out_vel) subbox.copy_vel(mmsys.vel_just);
     if (out_crd || out_vel || out_force) {
         real total_e = mmsys.set_potential_e() + mmsys.kinetic_e;
 
-        writer_trr->write_trr(mmsys.n_atoms, (int)mmsys.cur_step, mmsys.cur_time, mmsys.pbc.L[0], mmsys.pbc.L[1], mmsys.pbc.L[2], mmsys.crd,
-                              mmsys.vel_just, mmsys.force, (float)mmsys.ctime_per_step / (float)CLOCKS_PER_SEC, total_e, mmsys.kinetic_e,
+        writer_trr->write_trr(mmsys.n_atoms, (int)mmsys.cur_step, mmsys.cur_time, mmsys.pbc.L[0], mmsys.pbc.L[1],
+                              mmsys.pbc.L[2], mmsys.crd, mmsys.vel_just, mmsys.force,
+                              (float)mmsys.ctime_per_step / (float)CLOCKS_PER_SEC, total_e, mmsys.kinetic_e,
                               mmsys.temperature, mmsys.potential_e, mmsys.pote_vdw, true, out_crd, out_vel, out_force,
                               mmsys.n_atoms_in_groups[mmsys.out_group], mmsys.atom_groups[mmsys.out_group]);
     }
@@ -202,8 +207,8 @@ int DynamicsMode::sub_output() {
 
 int DynamicsMode::sub_output_log() {
     stringstream ss;
-    string strbuf;
-    char buf[1024];
+    string       strbuf;
+    char         buf[1024];
     sprintf(buf, "Step: %8lu    Time: %10.4f\n", mmsys.cur_step, mmsys.cur_time);
     ss << string(buf);
     real total_e = mmsys.set_potential_e() + mmsys.kinetic_e;
@@ -266,7 +271,8 @@ int DynamicsMode::cal_kinetic_energy(const real **vel) {
 
 int DynamicsMode::subbox_setup() {
     // cout << "subbox.set_parameters" << endl;
-    subbox.set_parameters(mmsys.n_atoms, &(mmsys.pbc), cfg, cfg->nsgrid_cutoff, cfg->box_div[0], cfg->box_div[1], cfg->box_div[2]);
+    subbox.set_parameters(mmsys.n_atoms, &(mmsys.pbc), cfg, cfg->nsgrid_cutoff, cfg->box_div[0], cfg->box_div[1],
+                          cfg->box_div[2]);
     subbox.set_lj_param(mmsys.n_lj_types, mmsys.lj_6term, mmsys.lj_12term);
     // subbox.set_max_n_atoms_region();
     // cout << "alloc_variables" << endl;
@@ -282,8 +288,9 @@ int DynamicsMode::subbox_setup() {
     subbox_set_bonding_potentials();
 
     if (cfg->constraint_type != CONST_NONE) {
-        subbox.init_constraint(cfg->constraint_type, cfg->constraint_max_loops, cfg->constraint_tolerance, mmsys.constraint.get_n_pair(),
-                               mmsys.constraint.get_n_trio(), mmsys.constraint.get_n_quad(), mmsys.settle.get_n_trio());
+        subbox.init_constraint(cfg->constraint_type, cfg->constraint_max_loops, cfg->constraint_tolerance,
+                               mmsys.constraint.get_n_pair(), mmsys.constraint.get_n_trio(),
+                               mmsys.constraint.get_n_quad(), mmsys.settle.get_n_trio());
 
         subbox.set_subset_constraint(mmsys.constraint, mmsys.settle);
     }
@@ -303,11 +310,12 @@ int DynamicsMode::subbox_setup() {
 int DynamicsMode::subbox_set_bonding_potentials() {
     subbox.set_bond_potentials(mmsys.bond_atomid_pairs, mmsys.bond_epsiron, mmsys.bond_r0);
     subbox.set_angle_potentials(mmsys.angle_atomid_triads, mmsys.angle_epsiron, mmsys.angle_theta0);
-    subbox.set_torsion_potentials(mmsys.torsion_atomid_quads, mmsys.torsion_energy, mmsys.torsion_overlaps, mmsys.torsion_symmetry,
-                                  mmsys.torsion_phase, mmsys.torsion_nb14);
-    subbox.set_impro_potentials(mmsys.impro_atomid_quads, mmsys.impro_energy, mmsys.impro_overlaps, mmsys.impro_symmetry, mmsys.impro_phase,
-                                mmsys.impro_nb14);
-    subbox.set_nb14_potentials(mmsys.nb14_atomid_pairs, mmsys.nb14_atomtype_pairs, mmsys.nb14_coeff_vdw, mmsys.nb14_coeff_ele);
+    subbox.set_torsion_potentials(mmsys.torsion_atomid_quads, mmsys.torsion_energy, mmsys.torsion_overlaps,
+                                  mmsys.torsion_symmetry, mmsys.torsion_phase, mmsys.torsion_nb14);
+    subbox.set_impro_potentials(mmsys.impro_atomid_quads, mmsys.impro_energy, mmsys.impro_overlaps,
+                                mmsys.impro_symmetry, mmsys.impro_phase, mmsys.impro_nb14);
+    subbox.set_nb14_potentials(mmsys.nb14_atomid_pairs, mmsys.nb14_atomtype_pairs, mmsys.nb14_coeff_vdw,
+                               mmsys.nb14_coeff_ele);
     subbox.set_ele_excess(mmsys.excess_pairs);
     subbox.set_nb15off(mmsys.nb15off);
     return 0;
@@ -480,7 +488,9 @@ int DynamicsModeZhang::calc_in_each_step() {
     const clock_t endTimeEne = clock();
     mmsys.ctime_calc_energy += endTimeEne - startTimeEne;
 
-    if (cfg->extended_ensemble != EXTENDED_NONE) { subbox.extended_apply_bias(mmsys.cur_step, mmsys.set_potential_e()); }
+    if (cfg->extended_ensemble != EXTENDED_NONE) {
+        subbox.extended_apply_bias(mmsys.cur_step, mmsys.set_potential_e());
+    }
     if (cfg->dist_restraint_type != DISTREST_NONE) { apply_dist_restraint(); }
     if (cfg->pos_restraint_type != POSREST_NONE) { apply_pos_restraint(); }
 

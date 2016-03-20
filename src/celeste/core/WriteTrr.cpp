@@ -5,9 +5,27 @@ WriteTrr::WriteTrr() : Write() {}
 
 WriteTrr::~WriteTrr() {}
 
-int WriteTrr::write_trr(int n_atoms, int cur_step, real cur_time, real lx, real ly, real lz, real **crd, real **vel_just, real_fc **force,
-                        real cpu_time, real total_e, real kinetic_e, real temperature, real potential_e, real vdw_e, bool out_box,
-                        bool out_crd, bool out_vel, bool out_force, int n_atoms_group, int *atom_group) {
+int WriteTrr::write_trr(int       n_atoms,
+                        int       cur_step,
+                        real      cur_time,
+                        real      lx,
+                        real      ly,
+                        real      lz,
+                        real **   crd,
+                        real **   vel_just,
+                        real_fc **force,
+                        real      cpu_time,
+                        real      total_e,
+                        real      kinetic_e,
+                        real      temperature,
+                        real      potential_e,
+                        real      vdw_e,
+                        bool      out_box,
+                        bool      out_crd,
+                        bool      out_vel,
+                        bool      out_force,
+                        int       n_atoms_group,
+                        int *     atom_group) {
     return 0;
 }
 
@@ -15,9 +33,27 @@ WriteTrrGromacs::WriteTrrGromacs() : WriteTrr() {}
 
 WriteTrrGromacs::~WriteTrrGromacs() {}
 
-int WriteTrrGromacs::write_trr(int n_atoms, int cur_step, real cur_time, real lx, real ly, real lz, real **crd, real **vel_just,
-                               real_fc **force, real cpu_time, real total_e, real kinetic_e, real temperature, real potential_e, real vdw_e,
-                               bool out_box, bool out_crd, bool out_vel, bool out_force, int n_atoms_group, int *atom_group) {
+int WriteTrrGromacs::write_trr(int       n_atoms,
+                               int       cur_step,
+                               real      cur_time,
+                               real      lx,
+                               real      ly,
+                               real      lz,
+                               real **   crd,
+                               real **   vel_just,
+                               real_fc **force,
+                               real      cpu_time,
+                               real      total_e,
+                               real      kinetic_e,
+                               real      temperature,
+                               real      potential_e,
+                               real      vdw_e,
+                               bool      out_box,
+                               bool      out_crd,
+                               bool      out_vel,
+                               bool      out_force,
+                               int       n_atoms_group,
+                               int *     atom_group) {
 
     int box_size          = 0;
     if (out_box) box_size = 9 * sizeof(real);
@@ -28,11 +64,11 @@ int WriteTrrGromacs::write_trr(int n_atoms, int cur_step, real cur_time, real lx
     int f_size            = 0;
     if (out_force) f_size = n_atoms * 3 * sizeof(real);
 
-    int magic       = 1993;
-    int nchar1      = 13;
-    int nchar2      = 12;
+    int  magic      = 1993;
+    int  nchar1     = 13;
+    int  nchar2     = 12;
     real dummy_real = 0.0;
-    int dummy       = 0;
+    int  dummy      = 0;
 
     if (!out_crd && !out_vel && !out_force) { return 1; }
     ofs.write((const char *)&magic, sizeof magic);
@@ -140,9 +176,27 @@ WriteTrrPresto::WriteTrrPresto() : WriteTrr() {}
 
 WriteTrrPresto::~WriteTrrPresto() {}
 
-int WriteTrrPresto::write_trr(int n_atoms, int cur_step, real cur_time, real lx, real ly, real lz, real **crd, real **vel_just,
-                              real_fc **force, real cpu_time, real total_e, real kinetic_e, real temperature, real potential_e, real vdw_e,
-                              bool out_box, bool out_crd, bool out_vel, bool out_force, int n_atoms_group, int *atom_group) {
+int WriteTrrPresto::write_trr(int       n_atoms,
+                              int       cur_step,
+                              real      cur_time,
+                              real      lx,
+                              real      ly,
+                              real      lz,
+                              real **   crd,
+                              real **   vel_just,
+                              real_fc **force,
+                              real      cpu_time,
+                              real      total_e,
+                              real      kinetic_e,
+                              real      temperature,
+                              real      potential_e,
+                              real      vdw_e,
+                              bool      out_box,
+                              bool      out_crd,
+                              bool      out_vel,
+                              bool      out_force,
+                              int       n_atoms_group,
+                              int *     atom_group) {
     int buf = 44;
     ofs.write((const char *)&buf, sizeof(int));
     ofs.write((const char *)&cur_step, sizeof(int));
@@ -201,14 +255,20 @@ int WriteTrrPresto::write_trr(int n_atoms, int cur_step, real cur_time, real lx,
 
 WriteRestart::WriteRestart() : Write() {}
 WriteRestart::~WriteRestart() {}
-int WriteRestart::write_restart(int n_atoms, int n_steps, double time, double e_potential, double e_kinetic, real **crd, real **vel) {
-    int buf_int;
+int WriteRestart::write_restart(int    n_atoms,
+                                int    n_steps,
+                                double time,
+                                double e_potential,
+                                double e_kinetic,
+                                real **crd,
+                                real **vel) {
+    int    buf_int;
     double buf_dbl;
     open();
     // title
     buf_int = 80;
     char title[80];
-    int i;
+    int  i;
     strcpy(title, ABOUT_ME.c_str());
 
     ofs.write((const char *)&buf_int, sizeof(int));
@@ -256,8 +316,11 @@ int WriteRestart::write_restart(int n_atoms, int n_steps, double time, double e_
 WriteGroupCoord::WriteGroupCoord() {}
 WriteGroupCoord::~WriteGroupCoord() {}
 
-int WriteGroupCoord::write_aus_restart(const int aus_type, int n_enhance_groups, vector<int> enhance_groups, int *n_atoms_in_groups,
-                                       real ***crd_groups) {
+int WriteGroupCoord::write_aus_restart(const int   aus_type,
+                                       int         n_enhance_groups,
+                                       vector<int> enhance_groups,
+                                       int *       n_atoms_in_groups,
+                                       real ***    crd_groups) {
 
     int buf = 5;
     ofs.write((const char *)&buf, sizeof(int));
@@ -266,7 +329,9 @@ int WriteGroupCoord::write_aus_restart(const int aus_type, int n_enhance_groups,
     ofs.write((const char *)&aus_type, sizeof(int));
     ofs.write((const char *)&n_enhance_groups, sizeof(int));
     for (int k = 0; k < n_enhance_groups; k++) { ofs.write((const char *)&enhance_groups[k], sizeof(int)); }
-    for (int k = 0; k < n_enhance_groups; k++) { ofs.write((const char *)&n_atoms_in_groups[enhance_groups[k]], sizeof(int)); }
+    for (int k = 0; k < n_enhance_groups; k++) {
+        ofs.write((const char *)&n_atoms_in_groups[enhance_groups[k]], sizeof(int));
+    }
 
     for (int k = 0; k < n_enhance_groups; k++) {
         for (int i = 0; i < n_atoms_in_groups[enhance_groups[k]]; i++) {

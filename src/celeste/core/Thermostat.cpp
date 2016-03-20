@@ -14,14 +14,33 @@ int ThermostatObject::set_temperature_coeff(int in_d_free) {
     temperature_coeff = (2.0 * JOULE_CAL * 1e+3) / (GAS_CONST * (real)d_free) * KINETIC_COEFF;
     return 0;
 }
-int ThermostatObject::set_constant(int n_atoms, real_pw *mass_inv, real *vel, real *force) { return 0; }
-int ThermostatObject::apply_thermostat(const int n_atoms, real_fc *work, real *vel, real *vel_next, real_pw *mass, real_pw *mass_inv) {
+int ThermostatObject::set_constant(int n_atoms, real_pw *mass_inv, real *vel, real *force) {
+    return 0;
+}
+int ThermostatObject::apply_thermostat(const int n_atoms,
+                                       real_fc * work,
+                                       real *    vel,
+                                       real *    vel_next,
+                                       real_pw * mass,
+                                       real_pw * mass_inv) {
 
     return 0;
 }
-int ThermostatObject::apply_thermostat_with_shake(int n_atoms, real_fc *work, real *crd, real *crd_prev, real *vel, real *vel_next,
-                                                  real_pw *mass, real_pw *mass_inv, ConstraintObject *constraint, PBC *pbc, real *buf_crd,
-                                                  const int max_loops, const real tolerance, COMMotion *commotion, int *atomids_rev) {
+int ThermostatObject::apply_thermostat_with_shake(int               n_atoms,
+                                                  real_fc *         work,
+                                                  real *            crd,
+                                                  real *            crd_prev,
+                                                  real *            vel,
+                                                  real *            vel_next,
+                                                  real_pw *         mass,
+                                                  real_pw *         mass_inv,
+                                                  ConstraintObject *constraint,
+                                                  PBC *             pbc,
+                                                  real *            buf_crd,
+                                                  const int         max_loops,
+                                                  const real        tolerance,
+                                                  COMMotion *       commotion,
+                                                  int *             atomids_rev) {
 
     return 0;
 }
@@ -30,9 +49,16 @@ int ThermostatObject::apply_thermostat_with_shake(int n_atoms, real_fc *work, re
 
 ThermostatScaling::ThermostatScaling() : ThermostatObject() {}
 ThermostatScaling::~ThermostatScaling() {}
-int ThermostatScaling::set_constant(int n_atoms, real_pw *mass_inv, real *vel, real *force) { return 0; }
+int ThermostatScaling::set_constant(int n_atoms, real_pw *mass_inv, real *vel, real *force) {
+    return 0;
+}
 
-int ThermostatScaling::apply_thermostat(int n_atoms, real_fc *work, real *vel, real *vel_next, real_pw *mass, real_pw *mass_inv) {
+int ThermostatScaling::apply_thermostat(int      n_atoms,
+                                        real_fc *work,
+                                        real *   vel,
+                                        real *   vel_next,
+                                        real_pw *mass,
+                                        real_pw *mass_inv) {
 
     real_fc kine_pre = 0.0;
 
@@ -56,9 +82,21 @@ int ThermostatScaling::apply_thermostat(int n_atoms, real_fc *work, real *vel, r
     return 0;
 }
 
-int ThermostatScaling::apply_thermostat_with_shake(int n_atoms, real_fc *work, real *crd, real *crd_prev, real *vel, real *vel_next,
-                                                   real_pw *mass, real_pw *mass_inv, ConstraintObject *constraint, PBC *pbc, real *buf_crd,
-                                                   const int max_loops, const real tolerance, COMMotion *commotion, int *atomids_rev) {
+int ThermostatScaling::apply_thermostat_with_shake(int               n_atoms,
+                                                   real_fc *         work,
+                                                   real *            crd,
+                                                   real *            crd_prev,
+                                                   real *            vel,
+                                                   real *            vel_next,
+                                                   real_pw *         mass,
+                                                   real_pw *         mass_inv,
+                                                   ConstraintObject *constraint,
+                                                   PBC *             pbc,
+                                                   real *            buf_crd,
+                                                   const int         max_loops,
+                                                   const real        tolerance,
+                                                   COMMotion *       commotion,
+                                                   int *             atomids_rev) {
     // DBG
     bool converge = false;
     for (int idx = 0; idx < n_atoms * 3; idx++) buf_crd[idx] = crd[idx];
@@ -92,8 +130,8 @@ int ThermostatScaling::apply_thermostat_with_shake(int n_atoms, real_fc *work, r
             for (int d = 0; d < 3; d++) {
                 // buf_crd2[i_atom_3+d] += (crd[i_atom_3+d] - buf_crd1[i_atom_3+d]) * time_step_inv_sq;
                 // real vel_diff = -FORCE_VEL * work[i_atom_3+d] * mass_inv[i_atom] + buf_crd2[i_atom_3+d];
-                real vel_diff =
-                    -FORCE_VEL * work[i_atom_3 + d] * mass_inv[i_atom] + (crd[i_atom_3 + d] - buf_crd[i_atom_3 + d]) * time_step_inv_sq;
+                real vel_diff = -FORCE_VEL * work[i_atom_3 + d] * mass_inv[i_atom]
+                                + (crd[i_atom_3 + d] - buf_crd[i_atom_3 + d]) * time_step_inv_sq;
                 // real vel_tmp = vel[i_atom_3+d] + 0.5 * cfg->time_step * vel_diff;
                 vel_next[i_atom_3 + d] = vel[i_atom_3 + d] + 0.5 * time_step * vel_diff;
                 real vel_tmp           = vel_next[i_atom_3 + d];
@@ -111,8 +149,8 @@ int ThermostatScaling::apply_thermostat_with_shake(int n_atoms, real_fc *work, r
             real vel_norm = 0.0;
             for (int d = 0; d < 3; d++) {
                 // real vel_diff = -FORCE_VEL * work[i_atom_3+d] * mass_inv[i_atom] + buf_crd[i_atom_3+d];
-                real vel_diff =
-                    -FORCE_VEL * work[i_atom_3 + d] * mass_inv[i_atom] + (crd[i_atom_3 + d] - buf_crd[i_atom_3 + d]) * time_step_inv_sq;
+                real vel_diff = -FORCE_VEL * work[i_atom_3 + d] * mass_inv[i_atom]
+                                + (crd[i_atom_3 + d] - buf_crd[i_atom_3 + d]) * time_step_inv_sq;
                 vel_next[i_atom_3 + d] = (2.0 * scale - 1.0) * vel[i_atom_3 + d] + scale * time_step * vel_diff;
                 real tmp_vel           = (vel_next[i_atom_3 + d] + vel[i_atom_3 + d]) * 0.5;
                 vel_norm += tmp_vel * tmp_vel;
@@ -121,7 +159,9 @@ int ThermostatScaling::apply_thermostat_with_shake(int n_atoms, real_fc *work, r
         }
         commotion->cancel_translation(atomids_rev, vel_next);
         for (int i_atom = 0, i_atom_3 = 0; i_atom < n_atoms; i_atom++, i_atom_3 += 3) {
-            for (int d = 0; d < 3; d++) { crd[i_atom_3 + d] = crd_prev[i_atom_3 + d] + time_step * vel_next[i_atom_3 + d]; }
+            for (int d = 0; d < 3; d++) {
+                crd[i_atom_3 + d] = crd_prev[i_atom_3 + d] + time_step * vel_next[i_atom_3 + d];
+            }
         }
     }
     if (!converge) { cout << "Thermostat was not converged." << endl; }
@@ -144,7 +184,12 @@ int ThermostatHooverEvans::set_constant(int n_atoms, real_pw *mass_inv, real *ve
     return 0;
 }
 
-int ThermostatHooverEvans::apply_thermostat(int n_atoms, real_fc *work, real *vel, real *vel_next, real_pw *mass, real_pw *mass_inv) {
+int ThermostatHooverEvans::apply_thermostat(int      n_atoms,
+                                            real_fc *work,
+                                            real *   vel,
+                                            real *   vel_next,
+                                            real_pw *mass,
+                                            real_pw *mass_inv) {
     real vf = 0.0;
     real ff = 0.0;
     for (int i = 0, i_3 = 0; i < n_atoms; i++) {
@@ -163,16 +208,27 @@ int ThermostatHooverEvans::apply_thermostat(int n_atoms, real_fc *work, real *ve
     real gamma      = (xi - alpha) / (xi + alpha);
     real gamma_beta = gamma / beta;
     for (int i = 0, i_3 = 0; i < n_atoms * 3; i++) {
-        vel_next[i_3] =
-            (1.0 - gamma) / (beta - gamma_beta) * (vel[i_3] + work[i_3] * (1.0 + gamma - beta - gamma_beta) / (alpha - gamma * alpha));
+        vel_next[i_3] = (1.0 - gamma) / (beta - gamma_beta)
+                        * (vel[i_3] + work[i_3] * (1.0 + gamma - beta - gamma_beta) / (alpha - gamma * alpha));
     }
 
     return 0;
 }
-int ThermostatHooverEvans::apply_thermostat_with_shake(int n_atoms, real_fc *work, real *crd, real *crd_prev, real *vel, real *vel_next,
-                                                       real_pw *mass, real_pw *mass_inv, ConstraintObject *constraint, PBC *pbc,
-                                                       real *buf_crd, const int max_loops, const real tolerance, COMMotion *commotion,
-                                                       int *atomids_rev) {
+int ThermostatHooverEvans::apply_thermostat_with_shake(int               n_atoms,
+                                                       real_fc *         work,
+                                                       real *            crd,
+                                                       real *            crd_prev,
+                                                       real *            vel,
+                                                       real *            vel_next,
+                                                       real_pw *         mass,
+                                                       real_pw *         mass_inv,
+                                                       ConstraintObject *constraint,
+                                                       PBC *             pbc,
+                                                       real *            buf_crd,
+                                                       const int         max_loops,
+                                                       const real        tolerance,
+                                                       COMMotion *       commotion,
+                                                       int *             atomids_rev) {
     cout << "Warning: This function does nothing. ThermostatHooverEvans::apply_thermostat_with_shake " << endl;
     return 0;
 }
@@ -182,14 +238,32 @@ int ThermostatHooverEvans::apply_thermostat_with_shake(int n_atoms, real_fc *wor
 ThermostatNoseHoover::ThermostatNoseHoover() : ThermostatObject() {}
 ThermostatNoseHoover::~ThermostatNoseHoover() {}
 
-int ThermostatNoseHoover::set_constant(int n_atoms, real *mass_inv, real *vel, real *force) { return 0; }
-int ThermostatNoseHoover::apply_thermostat(int n_atoms, real_fc *work, real *vel, real *vel_next, real_pw *mass, real_pw *mass_inv) {
+int ThermostatNoseHoover::set_constant(int n_atoms, real *mass_inv, real *vel, real *force) {
     return 0;
 }
-int ThermostatNoseHoover::apply_thermostat_with_shake(int n_atoms, real_fc *work, real *crd, real *crd_prev, real *vel, real *vel_next,
-                                                      real_pw *mass, real_pw *mass_inv, ConstraintObject *constraint, PBC *pbc,
-                                                      real *buf_crd, const int max_loops, const real tolerance, COMMotion *commotion,
-                                                      int *atomids_rev) {
+int ThermostatNoseHoover::apply_thermostat(int      n_atoms,
+                                           real_fc *work,
+                                           real *   vel,
+                                           real *   vel_next,
+                                           real_pw *mass,
+                                           real_pw *mass_inv) {
+    return 0;
+}
+int ThermostatNoseHoover::apply_thermostat_with_shake(int               n_atoms,
+                                                      real_fc *         work,
+                                                      real *            crd,
+                                                      real *            crd_prev,
+                                                      real *            vel,
+                                                      real *            vel_next,
+                                                      real_pw *         mass,
+                                                      real_pw *         mass_inv,
+                                                      ConstraintObject *constraint,
+                                                      PBC *             pbc,
+                                                      real *            buf_crd,
+                                                      const int         max_loops,
+                                                      const real        tolerance,
+                                                      COMMotion *       commotion,
+                                                      int *             atomids_rev) {
     cout << "Warning: This function does nothing. ThermostatNoseHoover::apply_thermostat_with_shake " << endl;
     return 0;
 }

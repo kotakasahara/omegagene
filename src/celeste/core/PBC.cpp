@@ -23,12 +23,13 @@ int PBC::set_pbc(real val[]) {
         }
     }
     for (int i = 0; i < 3; i++) { lower_bound[i] = val[9 + i]; }
-    L[0]                                         = val[0];
-    L[1]                                         = val[4];
-    L[2]                                         = val[8];
-    angle[0]                                     = 90.0;
-    angle[1]                                     = 90.0;
-    angle[2]                                     = 90.0;
+
+    L[0]     = val[0];
+    L[1]     = val[4];
+    L[2]     = val[8];
+    angle[0] = 90.0;
+    angle[1] = 90.0;
+    angle[2] = 90.0;
     for (int i = 0; i < 3; i++) {
         L_half[i]      = L[i] * 0.5;
         L_inv[i]       = 1.0 / L[i];
@@ -98,7 +99,9 @@ int PBC::print_pbc() {
     return 0;
 }
 
-real PBC::cal_volume() { return L[0] * L[1] * L[2]; }
+real PBC::cal_volume() {
+    return L[0] * L[1] * L[2];
+}
 
 int PBC::fix_pbc_image(float *crd, const int image) {
     if (image == 0) return 1;

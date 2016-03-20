@@ -21,7 +21,9 @@ PosRestraintObject::PosRestraintObject() {
     max_n_prunits = 0;
     // boltz = -GAS_CONST*FORCE_VEL;
 }
-PosRestraintObject::~PosRestraintObject() { free_prunits(); }
+PosRestraintObject::~PosRestraintObject() {
+    free_prunits();
+}
 int PosRestraintObject::alloc_prunits(const int in_n) {
     max_n_prunits = in_n;
     cout << "alloc " << max_n_prunits << endl;
@@ -37,12 +39,16 @@ int PosRestraintObject::add_prunit(int in_aid, real in_x, real in_y, real in_z, 
     n_prunits++;
     return n_prunits;
 }
-real_fc PosRestraintObject::apply_restraint(int n_atoms, real **crd, PBC &pbc, real **force) { return 0; }
+real_fc PosRestraintObject::apply_restraint(int n_atoms, real **crd, PBC &pbc, real **force) {
+    return 0;
+}
 
 ///////////////////////////////////////////////////////////////
 
 PosRestraintHarmonic::PosRestraintHarmonic() : PosRestraintObject() {}
-PosRestraintHarmonic::~PosRestraintHarmonic() { free_prunits(); }
+PosRestraintHarmonic::~PosRestraintHarmonic() {
+    free_prunits();
+}
 
 real_fc PosRestraintHarmonic::apply_restraint(int n_atoms, real **crd, PBC &pbc, real **force) {
 
@@ -68,7 +74,7 @@ real_fc PosRestraintHarmonic::apply_restraint(int n_atoms, real **crd, PBC &pbc,
         ene += k * dist_diff * dist_diff;
 
         // force
-        real k_g = 2.0 * k * dist_diff;
+        real    k_g = 2.0 * k * dist_diff;
         real_fc frc[3];
         for (int d = 0; d < 3; d++) {
             // force[drunits[i].atomid1] += diff[d] / r;

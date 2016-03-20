@@ -7,7 +7,7 @@ extern "C" int cuda_set_device(int device_id) {
 
 extern "C" int cuda_print_device_info(int myrank = 0, bool verbose = false) {
     cudaDeviceProp prop;
-    int count;
+    int            count;
     HANDLE_ERROR(cudaGetDeviceCount(&count));
     int count_bak = count;
     for (int i = 0; i < count_bak; i++) {
@@ -39,7 +39,8 @@ extern "C" int cuda_print_device_info(int myrank = 0, bool verbose = false) {
         printf("  Registers per mp: %d\n", prop.regsPerBlock);
         printf("  Thread in warp: %d\n", prop.warpSize);
         printf("  Max threads per block: %d\n", prop.maxThreadsPerBlock);
-        printf("  Max threads dimensions: (%d, %d, %d)\n", prop.maxThreadsDim[0], prop.maxThreadsDim[1], prop.maxThreadsDim[2]);
+        printf("  Max threads dimensions: (%d, %d, %d)\n", prop.maxThreadsDim[0], prop.maxThreadsDim[1],
+               prop.maxThreadsDim[2]);
         printf("  Max grid dimensions: (%d, %d, %d)\n", prop.maxGridSize[0], prop.maxGridSize[1], prop.maxGridSize[2]);
         printf("\n");
     }

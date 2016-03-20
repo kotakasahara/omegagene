@@ -14,7 +14,9 @@ ConstraintObject::ConstraintObject() : CelesteObject() {
     tolerance  = 1e-5;
 }
 
-ConstraintObject::~ConstraintObject() { free_constraint(); }
+ConstraintObject::~ConstraintObject() {
+    free_constraint();
+}
 
 int ConstraintObject::alloc_constraint() {
     if (max_n_pair > 0) {
@@ -108,8 +110,16 @@ int ConstraintObject::add_trio(int atom1, int atom2, int atom3, real_cst dist1, 
     return 0;
 }
 
-int ConstraintObject::add_quad(int atom1, int atom2, int atom3, int atom4, real_cst dist1, real_cst dist2,
-                               real_cst dist3, real_cst dist4, real_cst dist5, real_cst dist6) {
+int ConstraintObject::add_quad(int      atom1,
+                               int      atom2,
+                               int      atom3,
+                               int      atom4,
+                               real_cst dist1,
+                               real_cst dist2,
+                               real_cst dist3,
+                               real_cst dist4,
+                               real_cst dist5,
+                               real_cst dist6) {
     quad_atomids[n_quad][0] = atom1;
     quad_atomids[n_quad][1] = atom2;
     quad_atomids[n_quad][2] = atom3;
@@ -124,11 +134,13 @@ int ConstraintObject::add_quad(int atom1, int atom2, int atom3, int atom4, real_
     return 0;
 }
 
-int ConstraintObject::apply_constraint(real *in_crd, real *in_crd_prev, real_pw *mass, PBC *pbc) { return 0; }
+int ConstraintObject::apply_constraint(real *in_crd, real *in_crd_prev, real_pw *mass, PBC *pbc) {
+    return 0;
+}
 int ConstraintObject::calc_linear_eq(real_cst a[6][6], real_cst x[6], real_cst b[6], int size) {
     int *pivot = new int[size];
     for (int i = 0; i < size; i++) { pivot[i] = i; }
-    int index;
+    int      index;
     for (int i = 0; i < size; i++) {
         index          = i;
         real_cst max_a = fabs(a[i][pivot[i]]);

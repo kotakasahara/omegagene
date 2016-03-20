@@ -5,8 +5,12 @@ COMMotion::COMMotion() {}
 
 COMMotion::~COMMotion() {}
 
-int COMMotion::set_groups(const int in_n_groups, int *in_group_ids, int *in_n_atoms_in_groups, int **in_groups, real_pw *in_mass_inv_groups,
-                          real_pw *in_mass) {
+int COMMotion::set_groups(const int in_n_groups,
+                          int *     in_group_ids,
+                          int *     in_n_atoms_in_groups,
+                          int **    in_groups,
+                          real_pw * in_mass_inv_groups,
+                          real_pw * in_mass) {
     n_groups          = in_n_groups;
     group_ids         = in_group_ids;
     n_atoms_in_groups = in_n_atoms_in_groups;

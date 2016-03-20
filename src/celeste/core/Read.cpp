@@ -27,7 +27,7 @@ int Read::close() {
 vector<int> Read::load_integers() {
     vector<int> intvec;
     open();
-    int tmp;
+    int    tmp;
     string buf;
     while (getline(ifs, buf)) { intvec.push_back(atoi(buf.c_str())); }
     close();
@@ -39,7 +39,7 @@ vector<string> Read::load_strings() {
     string buf;
     while (getline(ifs, buf)) {
         stringstream ss(buf);
-        string str;
+        string       str;
         ss >> str;
         strvec.push_back(str);
     }
@@ -112,13 +112,14 @@ int Read::load_ls_header(MmSystem &mmsys) {
         magic = reverse_endian(magic);
         if (magic != MAGIC_NUMBER) {
             stringstream ss;
-            ss << "ERROR: " << filename << " : the first 4 bytes were not [" << MAGIC_NUMBER << "] but [" << magic << "]" << endl;
+            ss << "ERROR: " << filename << " : the first 4 bytes were not [" << MAGIC_NUMBER << "] but [" << magic
+               << "]" << endl;
             error_exit(ss.str(), "1A00004");
             exit(1);
         }
     }
 
-    int buf_int;
+    int  buf_int;
     char version_c[MAX_LEN_NAME];
     read_bin_values(&buf_int, 1); // length of string
     ifs.read(version_c, buf_int);
@@ -294,7 +295,7 @@ int Read::load_ls_tpl(MmSystem &mmsys) {
     mmsys.alloc_lj_params();
 
     for (int i = 0; i < mmsys.n_lj_type_pairs; i++) {
-        int type1, type2;
+        int    type1, type2;
         double lj6, lj12;
         read_bin_values(&type1, 1);
         read_bin_values(&type2, 1);
@@ -313,7 +314,7 @@ int Read::load_ls_tpl(MmSystem &mmsys) {
 
     mmsys.alloc_bonds();
     for (int i = 0; i < mmsys.n_bonds; i++) {
-        int atomid1, atomid2;
+        int    atomid1, atomid2;
         double eps, r0;
         read_bin_values(&atomid1, 1);
         read_bin_values(&atomid2, 1);
@@ -331,7 +332,7 @@ int Read::load_ls_tpl(MmSystem &mmsys) {
 
     mmsys.alloc_angles();
     for (int i = 0; i < mmsys.n_angles; i++) {
-        int atomid1, atomid2, atomid3;
+        int    atomid1, atomid2, atomid3;
         double eps, theta0;
         read_bin_values(&atomid1, 1);
         read_bin_values(&atomid2, 1);
@@ -349,9 +350,9 @@ int Read::load_ls_tpl(MmSystem &mmsys) {
 
     mmsys.alloc_torsions();
     for (int i = 0; i < mmsys.n_torsions; i++) {
-        int atomid1, atomid2, atomid3, atomid4;
+        int    atomid1, atomid2, atomid3, atomid4;
         double ene, phase;
-        int overlaps, symmetry, flag_14nb;
+        int    overlaps, symmetry, flag_14nb;
         read_bin_values(&atomid1, 1);
         read_bin_values(&atomid2, 1);
         read_bin_values(&atomid3, 1);
@@ -361,7 +362,8 @@ int Read::load_ls_tpl(MmSystem &mmsys) {
         read_bin_values(&symmetry, 1);
         read_bin_values(&phase, 1);
         read_bin_values(&flag_14nb, 1);
-        mmsys.set_torsion_param(i, atomid1, atomid2, atomid3, atomid4, (real)ene, overlaps, symmetry, (real)phase, flag_14nb);
+        mmsys.set_torsion_param(i, atomid1, atomid2, atomid3, atomid4, (real)ene, overlaps, symmetry, (real)phase,
+                                flag_14nb);
         // cout << "torsion: " << atomid1 << "-" << atomid4 << " " << flag_14nb << endl;
     }
 
@@ -373,9 +375,9 @@ int Read::load_ls_tpl(MmSystem &mmsys) {
 
     mmsys.alloc_impros();
     for (int i = 0; i < mmsys.n_impros; i++) {
-        int atomid1, atomid2, atomid3, atomid4;
+        int    atomid1, atomid2, atomid3, atomid4;
         double ene, phase;
-        int overlaps, symmetry, flag_14nb;
+        int    overlaps, symmetry, flag_14nb;
         read_bin_values(&atomid1, 1);
         read_bin_values(&atomid2, 1);
         read_bin_values(&atomid3, 1);
@@ -385,7 +387,8 @@ int Read::load_ls_tpl(MmSystem &mmsys) {
         read_bin_values(&symmetry, 1);
         read_bin_values(&phase, 1);
         read_bin_values(&flag_14nb, 1);
-        mmsys.set_impro_param(i, atomid1, atomid2, atomid3, atomid4, (real)ene, overlaps, symmetry, (real)phase, flag_14nb);
+        mmsys.set_impro_param(i, atomid1, atomid2, atomid3, atomid4, (real)ene, overlaps, symmetry, (real)phase,
+                              flag_14nb);
     }
 
     // 14 nonbond
@@ -396,8 +399,8 @@ int Read::load_ls_tpl(MmSystem &mmsys) {
 
     mmsys.alloc_nb14();
     for (int i = 0; i < mmsys.n_nb14; i++) {
-        int atomid1, atomid2;
-        int atomtype1, atomtype2;
+        int    atomid1, atomid2;
+        int    atomtype1, atomtype2;
         double coeff_vdw, coeff_ele;
         read_bin_values(&atomid1, 1);
         read_bin_values(&atomid2, 1);
@@ -433,7 +436,7 @@ int Read::load_ls_constraint(ConstraintObject *cst) {
     int n_const_3;
     int n_const_4;
 
-    int atom[4];
+    int   atom[4];
     float dist[6];
 
     read_bin_values(&n_const_2, 1);
@@ -443,7 +446,7 @@ int Read::load_ls_constraint(ConstraintObject *cst) {
     cst->set_max_n_constraints(n_const_2, n_const_3, n_const_4);
     cst->alloc_constraint();
 
-    int atomid1, atomid2, atomid3, atomid4;
+    int    atomid1, atomid2, atomid3, atomid4;
     double dist1, dist2, dist3, dist4, dist5, dist6;
     // 2 atoms
     for (int i = 0; i < n_const_2; i++) {
@@ -484,8 +487,8 @@ int Read::load_ls_constraint(ConstraintObject *cst) {
         dist4 = dist4 * dist4;
         dist5 = dist5 * dist5;
         dist6 = dist6 * dist6;
-        cst->add_quad(atomid1, atomid2, atomid3, atomid4, (real_cst)dist1, (real_cst)dist2, (real_cst)dist3, (real_cst)dist4,
-                      (real_cst)dist5, (real_cst)dist6);
+        cst->add_quad(atomid1, atomid2, atomid3, atomid4, (real_cst)dist1, (real_cst)dist2, (real_cst)dist3,
+                      (real_cst)dist4, (real_cst)dist5, (real_cst)dist6);
     }
 
     return 0;
@@ -521,8 +524,8 @@ int Read::load_ls_vmcmd(MmSystem &mmsys) {
         double alpha_low, alpha_high;
         read_bin_values(&alpha_low, 1);
         read_bin_values(&alpha_high, 1);
-        mmsys.vmcmd->set_vs_params(i, (real)lambda_low, (real)lambda_high, (real)prob_low, (real)prob_high, (real)alpha_low,
-                                   (real)alpha_high);
+        mmsys.vmcmd->set_vs_params(i, (real)lambda_low, (real)lambda_high, (real)prob_low, (real)prob_high,
+                                   (real)alpha_low, (real)alpha_high);
     }
     int init, seed;
     read_bin_values(&init, 1);
@@ -533,7 +536,7 @@ int Read::load_ls_vmcmd(MmSystem &mmsys) {
     return 0;
 }
 int Read::load_ls_atom_groups(MmSystem &mmsys) {
-    int n_groups;
+    int  n_groups;
     int *n_atoms_in_group;
     read_bin_values(&n_groups, 1);
     n_groups++;
@@ -542,14 +545,15 @@ int Read::load_ls_atom_groups(MmSystem &mmsys) {
     cout << "n_groups " << n_groups << endl;
     mmsys.atom_group_names.push_back(string("null"));
     for (int i = 1; i < n_groups; i++) {
-        int len_name;
+        int  len_name;
         char name[MAX_LEN_NAME];
         read_bin_values(&len_name, 1);
         ifs.read(name, len_name);
         int n_atoms;
         read_bin_values(&n_atoms_in_group[i], 1);
         mmsys.atom_group_names.push_back(string(name));
-        cout << "read atom groups : " << i << " " << n_atoms_in_group[i] << " " << name << " " << mmsys.atom_group_names[i] << endl;
+        cout << "read atom groups : " << i << " " << n_atoms_in_group[i] << " " << name << " "
+             << mmsys.atom_group_names[i] << endl;
     }
     mmsys.alloc_atom_groups(n_groups, n_atoms_in_group);
     int buf;
@@ -567,7 +571,7 @@ int Read::load_ls_dist_restraint(DistRestraintObject *dr) {
     read_bin_values(&n_drunits, 1);
     dr->alloc_drunits(n_drunits);
     for (int i = 0; i < n_drunits; i++) {
-        int aid1, aid2;
+        int   aid1, aid2;
         float coef_low, coef_high;
         float dist_low, dist_high;
         read_bin_values(&aid1, 1);
@@ -585,7 +589,7 @@ int Read::load_ls_pos_restraint(PosRestraintObject *pr) {
     read_bin_values(&n_prunits, 1);
     pr->alloc_prunits(n_prunits);
     for (int i = 0; i < n_prunits; i++) {
-        int aid;
+        int   aid;
         float crd_x, crd_y, crd_z;
         float dist_margin, coef;
         read_bin_values(&aid, 1);

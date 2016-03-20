@@ -18,7 +18,7 @@ vector<string> Config::extract_args_from_file(const string &filepath) {
     }
 
     vector<string> args;
-    string buf;
+    string         buf;
 
     cout << "-----------------------------------\nReading from configuration file:  " << filepath << "\n";
     while (ifs && getline(ifs, buf)) {
