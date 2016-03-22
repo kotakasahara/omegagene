@@ -89,7 +89,8 @@ int DynamicsMode::initial_preprocess(){
     mmsys.vmcmd->print_info();
 
     mmsys.vmcmd->set_params(&mmsys.random_mt, 
-			    cfg->enhance_sigma, cfg->enhance_recov_coef); //, cfg->aus_type);
+			    cfg->enhance_sigma, cfg->enhance_recov_coef,
+			    cfg->n_steps); //, cfg->aus_type);
     
     //for(int i_grp=0; i_grp < mmsys.n_groups; i_grp++){
     //cout << "dbg1130 massDM " << i_grp << " " << mmsys.mass_inv_groups[i_grp]<<endl;
@@ -135,20 +136,23 @@ int DynamicsMode::terminal_process(){
 }
 
 int DynamicsMode::main_stream(){
-  for(mmsys.cur_step = 1;
+  mmsys.cur_step = 0;
+  //while(mmsys.cur_step <= cfg->n_steps){
+  for(mmsys.cur_step = 0;
       mmsys.cur_step <= cfg->n_steps;
       mmsys.cur_step++){
 
+    sub_output();
     calc_in_each_step();
+    mmsys.cur_time += cfg->time_step;
 
     if((cfg->print_intvl_log > 0 &&
 	mmsys.cur_step % cfg->print_intvl_log == 0) ||
-       mmsys.cur_step == 1 ||
-       mmsys.cur_step == cfg->n_steps){
-      
+       mmsys.cur_step == 0 ||
+       mmsys.cur_step == cfg->n_steps-1){
       sub_output_log();
     }
-    sub_output();
+
   }
   
   output_restart();
@@ -214,9 +218,9 @@ int DynamicsMode::sub_output(){
   //cout << "cur_step: " << mmsys.cur_step << " ";
   //cout << mmsys.cur_step % cfg->print_intvl_crd << endl;
 
-  bool out_crd = cfg->print_intvl_crd > 0 && mmsys.cur_step != 1 && (mmsys.cur_step-1) % cfg->print_intvl_crd == 0;
-  bool out_vel = cfg->print_intvl_vel > 0 && mmsys.cur_step != 1 && (mmsys.cur_step-1) % cfg->print_intvl_vel == 0;
-  bool out_force = cfg->print_intvl_force > 0 && mmsys.cur_step != 1 && (mmsys.cur_step-1) % cfg->print_intvl_force == 0;
+  bool out_crd = cfg->print_intvl_crd > 0 && mmsys.cur_step != 0 && (mmsys.cur_step) % cfg->print_intvl_crd == 0;
+  bool out_vel = cfg->print_intvl_vel > 0 && mmsys.cur_step != 0 && (mmsys.cur_step) % cfg->print_intvl_vel == 0;
+  bool out_force = cfg->print_intvl_force > 0 && mmsys.cur_step != 0 && (mmsys.cur_step) % cfg->print_intvl_force == 0;
   if(out_crd) subbox.copy_crd_prev(mmsys.crd);
   if(out_vel) subbox.copy_vel(mmsys.vel_just);
   if(out_crd || out_vel || out_force){
@@ -416,10 +420,11 @@ DynamicsModePresto::~DynamicsModePresto(){
 int DynamicsModePresto::calc_in_each_step(){
 
   const clock_t startTimeStep = clock();
-
   const clock_t startTimeReset = clock();
-  mmsys.cur_time += cfg->time_step;
+
+
   mmsys.reset_energy();
+
   const clock_t endTimeReset = clock();
   mmsys.ctime_cuda_reset_work_ene += endTimeReset - startTimeReset;
 
@@ -458,6 +463,7 @@ int DynamicsModePresto::calc_in_each_step(){
     //cout << "test1"<<endl;
     subbox.extended_apply_bias_struct_param(mmsys.cur_step);
   }
+
   const clock_t startTimeVel = clock();
   //cout << "update_velocities"<<endl;
   subbox.cpy_vel_prev();
