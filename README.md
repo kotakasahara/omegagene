@@ -5,7 +5,7 @@ Celeste is a Molecular Dynamics package (more description here).
 
 ## Celeste Software Requirements
 
-* CMake 3.2+
+* CMake 3.4+
 * For the GPU-version of Celeste, CUDA 7.0+ is required for C++11 support.
 * A C++11 compiler:
     * GCC: 4.8+

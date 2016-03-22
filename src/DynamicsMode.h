@@ -69,8 +69,8 @@ class DynamicsModePresto : public DynamicsMode {
   ~DynamicsModePresto();
   virtual int calc_in_each_step();
   virtual int apply_constraint();
-
 };
+
 class DynamicsModeZhang : public DynamicsMode {
  private:
   

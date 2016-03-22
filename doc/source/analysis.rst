@@ -5,18 +5,16 @@ Analysis
 :Author: Kota Kasahara
 
 --------------------------
-計算ログ
+Log
 --------------------------
 
-エネルギー値が標準出力に打ち出されます。
-Microcanonical ensembleでは理論上 Total energy は一定となります。
-Total energy のドリフトが大きい場合は、
+Calculation log is printed to the standard output.
+The total energy of the system should be constant, in the microcanonical ensemble.
+When the total energy drifts, you should take care of the following points:
 
-1. --nsgrid-cutoff を増やす
-2. --nsgrid-update-intvl を減らす
-3. --cutoff を増やす
-
-などの対策が必要となります。
+1. Increase --nsgrid-cutoff 
+2. Decrease --nsgrid-update-intvl
+3. Increase --cutoff
 
 ::
   
@@ -38,10 +36,11 @@ Total energy のドリフトが大きい場合は、
 
 
 --------------------------
-トラジェクトリの可視化
+Trajectory
 --------------------------
 
-Celesteが出力するトラジェクトリはGromacs .trr 形式で書かれています。
-VMD [#VMD]_ などの可視化ソフトウェアで読み込んでください。
+*omegagene* output the trajectory in the format compatible with myPresto/psygene-G.
+If you want to convert the trajectory file into Gromacs .trr format, the script to do it is included in *omega-toolkit*.
 
-.. [#VMD] http://www.ks.uiuc.edu/Research/vmd/
+python ${OMEGATK}/convert_trajectory_presto.py --i-pdb initia.pdb --i-crd traj.crd -o traj.trr
+

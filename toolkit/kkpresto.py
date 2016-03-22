@@ -534,6 +534,10 @@ class TPL(object):
         self.atom_id_14nb = {}
         self.atom_pair_non15 = set()
         self.zm_excess_pairs = set()
+
+        self.enumerated = False
+        ## Flag for completion of the enumerate_12_13_14()
+
     def get_mol_by_name(name):
         for m in self.mols:
             if m.mol_name == name: return m
@@ -596,6 +600,16 @@ class TPL(object):
             b = tmp
         return (a,b)
     def enumerate_12_13_14(self):
+        """
+        The bonded information is recorded in each molecule.
+        The instances of each bonded information is enumerated.
+        For example, when the molecule A consisting of 10 atoms 
+        have 3 instances in the system,
+        the instances of bond 1-2 in the molecule A should be
+          1-2
+          11-12
+          21-22
+        """
     ## (atom_id1, atom_id2, atom_id1_in_mol, atom_id2_in_mol, mol_id)
         atom_id_12 = []
         atom_id_13 = []
@@ -682,6 +696,7 @@ class TPL(object):
         self.atom_id_14nb = atom_id_14nb
         #print "1-2 atoms:"
         #print self.atom_id_12
+        self.enumerated = True
         return self.atom_id_12, self.atom_id_13, self.atom_id_14, self.atom_id_14_imp
     def import_from_gromacs(self, gromtopol):
         for atomtype_id, atom in enumerate(gromtopol.nonbonds):

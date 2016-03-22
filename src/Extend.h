@@ -53,6 +53,8 @@ class VirtualState : public CelesteObject{
 class ExtendedVMcMD : public Extended {
  private:
  protected:
+  int n_steps;
+
   int n_vstates;
   int trans_interval;
   real temperature;
@@ -144,7 +146,8 @@ class ExtendedVMcMD : public Extended {
 				    int in_n_enhance_groups,
 				 vector<int> in_enhance_groups);
   int set_mass(real_pw* in_mass, real_pw* in_mass_groups, real_pw* in_mass_groups_inv);
-  int set_params(RandomNum* in_mt, real in_sigma, real in_recov_coef);
+  int set_params(RandomNum* in_mt, real in_sigma, real in_recov_coef,
+		 int in_n_steps);
   void set_aus_type(int in_aus_type){ aus_type = in_aus_type; };
 
   int write_aus_restart(string fn_out);

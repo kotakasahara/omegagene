@@ -5,13 +5,12 @@ Samples
 :Author: Kota Kasahara
 
 --------------------------
-サンプルファイル
+Sample files
 --------------------------
 
-サンプル計算ファイルとしてEndothelin-1 dimer (PDB-ID: 1t7h) を付属しています。
+As a sample, the files for the simulation of a mini-protein, Trp-cage, are included.
 
 :: 
 
-  python2.7 ${CELESTETK}/mdinput_generator.py -i gen_input.cfg -o et1.cls
-  celeste_gpu --inp et1.cls --cfg md_input.cfg
-
+  python ${CELESTETK}/mdinput_generator.py -i system.cfg -o trpc.cls -v v.0.36.f
+  omegagene --inp trpc.cls --cfg md.cfg

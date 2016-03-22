@@ -141,13 +141,15 @@ int ExtendedVMcMD::apply_bias(unsigned long cur_step,
 			    real in_lambda,
 			    real_fc* work,
 			    int n_atoms_box){
-  if(cur_step%trans_interval == 0){
+  if(cur_step > 0 && cur_step%trans_interval == 0){
     if(flg_vs_transition) set_current_vstate(in_lambda);
-    write_vslog(cur_step);
+    if(cur_step <= n_steps){
+      write_vslog(cur_step);
+    }
   }
   scale_force(in_lambda, work, n_atoms_box);
-  if(cur_step%write_lambda_interval == 0){
-    write_lambda(in_lambda);
+  if(cur_step > 0 && cur_step%write_lambda_interval == 0 && cur_step <= n_steps){
+      write_lambda(in_lambda);
   }
   return 0;
 }
@@ -231,7 +233,7 @@ int ExtendedVMcMD::set_files(string fn_vslog, string fn_lambda, int format_lambd
   writer_lambda->open();
   writer_lambda->set_ncolumns(1);
   writer_lambda->write_header();
-  write_vslog(0);
+  //write_vslog(0);
   return 0;
 }
 int ExtendedVMcMD::close_files(){
@@ -240,7 +242,7 @@ int ExtendedVMcMD::close_files(){
   return 0;
 }
 int ExtendedVMcMD::write_vslog(int cur_steps){
-  writer_vslog.write_ttpvMcMDLog(cur_steps+1, cur_vs);
+  writer_vslog.write_ttpvMcMDLog(cur_steps, cur_vs);
   return 0;
 }
 int ExtendedVMcMD::write_lambda(real lambda){
@@ -326,12 +328,15 @@ int ExtendedVMcMD::set_mass(real_pw* in_mass, real_pw* in_mass_groups, real_pw* 
 
   return 0;
 }
-int ExtendedVMcMD::set_params(RandomNum* in_mt, real in_sigma, real in_recov_coef){
+int ExtendedVMcMD::set_params(RandomNum* in_mt,
+			      real in_sigma, real in_recov_coef,
+			      int in_n_steps){
   random_mt = in_mt;
   sigma = in_sigma;
   //sigma_half = sigma * 0.5;  
   //sigma_sq_inv = 1.0 / (sigma * sigma);
   recov_coef = in_recov_coef;
+  n_steps = in_n_steps;
   //aus_type = in_aus_type;
   return 0;
 }
