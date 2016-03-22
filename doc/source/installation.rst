@@ -2,67 +2,101 @@
 Installation
 ========================
 
-
 :Author: Kota Kasahara
 
-------------------------------------
-Summary
-------------------------------------
+Celeste is written in C++, and its build system utilizes CMake.  The following is a non-exhaustive description for building Celeste.  Currently there are three compile options of Celeste:
 
-Celeste is written in C++ language. Build the binary by using *make* command.
+1. CPU
+2. CPU without the neighbor search algorithm (inefficient)
+3. CPU with GPU (CUDA)
 
-There are three compile options:
-
-1. For CPU
-2. For CPU, without the neighbor search algorithm (not efficient)
-3. For CPU with GPU (Cuda)
-
-They can be switched by changeng the EXECUTABLE variable in Makefile:
-
-::
-
-  EXECUTABLE = celeste
-  #EXECUTABLE = celeste_wons  #without neighbor search
-  #EXECUTABLE = celeste_gpu   #CUDA
+For platform-specific details on building Celeste, please refer to the :doc:`build_notes`.
 
 ------------------------------------
-Without neighbor search
+Software Requirements
 ------------------------------------
 
-The neighbor search is effective for fast calculation, but the implementation is too complecated. For debugging or tests, the computation witouht the neighbor search is available.
-
-::
- 
-  EXECUTABLE = celeste_wons
+* CMake 3.4+
+* For the GPU version of Celeste, CUDA 7.0+ is required for C++11 support.
+* A C++11 compiler:
+    * GCC: 4.8+
+    * Clang: 3.6+
+    * AppleClang: 5.0+
+    * Intel: 15.0+ (minimal version required by CUDA 7.0+)
+* OpenMP 3.1+
+* Python 2.7.x
+* numpy
 
 ------------------------------------
-Acceleration with GPU
+Building Celeste - Standard Version
 ------------------------------------
 
-For GPU mode NVIDIA GPU Computer capability 3.5 or later is required.
+1. Set up a target build folder:
 
-The path to the CUDA library should be specified as CUDALOC variable in Makefile.
+.. code-block:: bash
 
-::
+        # in <PROJECT_ROOT> directory
+        localhost:celeste local$ mkdir target
+        localhost:celeste local$ cd target
 
-  EXECUTABLE = celeste_gpu
-  CUDALOC = /opt/cuda/5.5/lib64
+2. Configure the build.  CMake will determine all the external software dependencies for the selected build variant, and exit with errors if the dependency requirements are not met.  CMake must be invoked on the ``CMakeLists.txt`` file in the ``<PROJECT_ROOT>`` directory:
+
+.. code-block:: bash
+
+        # in <PROJECT_ROOT>/target directory
+        localhost:target local$ cmake ..
+
+3. Build the software:
+
+.. code-block:: bash
+
+        # The verbose flag is optional
+        localhost:target local$ make VERBOSE=1
+
+------------------------------------------------------------------------
+Building Celeste Without Neighbor Search Routines
+------------------------------------------------------------------------
+
+While neighbor search is effective for fast calculations, the implementation is complicated and may be difficult to debug MD runs.  For this reason, a version of Celeste without the neighbor search routines can be built for debugging or testing.
+
+To build this version of Celeste, simply run the following command instead when configuring the build (Step 2):
+
+.. code-block:: bash
+
+        localhost:target local$ cmake -DCELESTE_WO_NS=1 ..
+
+The compiled executable will be named ``celeste_wons``.
+
+------------------------------------------------------------------------
+Building Celeste With GPU Acceleration
+------------------------------------------------------------------------
+
+For building this version of Celeste, CUDA 7.0+ is required.  For running the binary, an NVIDIA GPU with Compute Capability >= 3.5 or later is required.
+
+To build this version of Celeste, simply run the following command instead when configuring the build (Step 2):
+
+.. code-block:: bash
+
+        localhost:target local$ cmake -DCELESTE_GPU=1 ..
+
+CMake will automatically determine the default installation paths for the CUDA libraries and ``nvcc``.  Please refer to the Build Notes if you have installed CUDA to a custom filesystem path.
+
+The compiled executable will be named ``celeste_gpu``.
 
 ------------------------------------
 Celeste Toolkit
 ------------------------------------
 
-*CelesteTookit* is a series of scripts for pre- and post-processing for MD simulations with Celeste.
-It requires *python2.7.x* and *numpy* library.
-In this manual, is is supposed that the all files of *CelesteToolkit* is contained in the diretory specified in the environmental variable ${CELESTETK}. This path should be added in ${PYTHONPATH}.
+*CelesteTookit* is a library of pre- and post-processing scripts for MD simulations to be used with Celeste.  It requires Python 2.7.x and the ``numpy`` library.
 
-bash::
+This manual assumes that the CelesteToolkit directory specified in the environmental variable ``${CELESTETK}``. This path should be added in ``${PYTHONPATH}``:
 
-  export CELESTETK="${HOME}/celeste/toolkit"
-  export PYTHONPATH=${CELESTETK}:${PYTHONPATH}
+.. code-block:: bash
 
-csh::
+    export CELESTETK="${HOME}/celeste/toolkit"
+    export PYTHONPATH=${CELESTETK}:${PYTHONPATH}
 
-  setenv CELESTETK "${HOME}/celeste/toolkit"
-  setenv PYTHONPATH ${CELESTETK}:${PYTHONPATH}
+.. code-block:: csh
 
+    setenv CELESTETK "${HOME}/celeste/toolkit"
+    setenv PYTHONPATH ${CELESTETK}:${PYTHONPATH}
