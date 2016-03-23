@@ -3,11 +3,12 @@
 
 #include "CelesteObject.h"
 #include "PBC.h"
+using namespace std;
 
 class COMMotion : public CelesteObject {
   private:
-    int      n_groups;
-    int *    group_ids;
+    int      n_mod_groups;
+    int *    mod_group_ids;
     int *    n_atoms_in_groups;
     int **   groups;
     real_pw *mass;

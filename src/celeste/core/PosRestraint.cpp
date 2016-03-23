@@ -3,7 +3,9 @@
 using namespace std;
 
 PRUnit::PRUnit() {}
+
 PRUnit::~PRUnit() {}
+
 int PRUnit::set_parameters(int in_atomid, real crd_x, real crd_y, real crd_z, real in_dist_margin, real in_coef) {
     atomid      = in_atomid;
     crd[0]      = crd_x;
@@ -21,31 +23,38 @@ PosRestraintObject::PosRestraintObject() {
     max_n_prunits = 0;
     // boltz = -GAS_CONST*FORCE_VEL;
 }
+
 PosRestraintObject::~PosRestraintObject() {
     free_prunits();
 }
+
 int PosRestraintObject::alloc_prunits(const int in_n) {
     max_n_prunits = in_n;
     cout << "alloc " << max_n_prunits << endl;
     prunits = new PRUnit[max_n_prunits];
     return 0;
 }
+
 int PosRestraintObject::free_prunits() {
     delete[] prunits;
     return 0;
 }
+
 int PosRestraintObject::add_prunit(int in_aid, real in_x, real in_y, real in_z, real in_margin, real in_coef) {
     prunits[n_prunits].set_parameters(in_aid, in_x, in_y, in_z, in_margin, in_coef);
     n_prunits++;
     return n_prunits;
 }
+
 real_fc PosRestraintObject::apply_restraint(int n_atoms, real **crd, PBC &pbc, real **force) {
+
     return 0;
 }
 
 ///////////////////////////////////////////////////////////////
 
 PosRestraintHarmonic::PosRestraintHarmonic() : PosRestraintObject() {}
+
 PosRestraintHarmonic::~PosRestraintHarmonic() {
     free_prunits();
 }
@@ -78,7 +87,7 @@ real_fc PosRestraintHarmonic::apply_restraint(int n_atoms, real **crd, PBC &pbc,
         real_fc frc[3];
         for (int d = 0; d < 3; d++) {
             // force[drunits[i].atomid1] += diff[d] / r;
-            force[prunits[i].get_atomid()][d] -= k_g * diff[d] / r;
+            force[prunits[i].get_atomid()][d] += k_g * diff[d] / r;
             // frc[d] += diff[d] / r;
         }
     }

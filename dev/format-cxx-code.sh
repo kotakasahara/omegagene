@@ -19,5 +19,5 @@ fi
 
 find $1 -name '*.c' -o -name '*.cpp' -o -name '*.h' -o -name '*.hpp' -o -name '*.cc' -o -name '*.cu' | while read -r source_file; do
     echo "running:  $code_formatter -i $source_file";
-    # $code_formatter -i $source_file;
+    $code_formatter -i $source_file;
 done

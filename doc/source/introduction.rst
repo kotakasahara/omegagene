@@ -5,33 +5,35 @@ Introduction
 :Author: Kota Kasahara
 
 ------------------------------------
-About Celeste
+About omegagene
 ------------------------------------
 
-　**"Celeste"** is the code name of the molecular dynamics (MD) simulation software.
-  For the 
-  Celeste has several unique features, such as, the zero-dipole summation method [Ref:ZD]_ and the virtual-system coupled multi-canonical MD method [Ref: TTP]_.
+**"omegamgene"** is the code name of the molecular dynamics (MD) simulation software.
+omegagene has several unique features, such as, the zero-multipole summation method [Fukuda 2013]_ and the virtual-system coupled multi-canonical MD method [Higo 2013]_.
 
-  The current version of Celeste can perform,
+  The current version of omegagene can perform,
 
 1. MD simulations on NVE ensemble
 2. MD simulations on NVT ensemble (The velocity rescaling, or Hoover-Evans thermostat)
 3. MD simulations on Multi-canonical ensemble, with the Virtual-system coupled McMD method.
 4. Applying constraints with SHAKE algorithm
 5. Calculations of electrostatic potentials based on the zero-dipole summation method.
-6. Calculations of pairwise potentials on GPGPU (powered by CUDA 6.0, Computer Capability 3.5 is required).
+6. Calculations of pairwise potentials on GPGPU (powered by CUDA 7.0, Computer Capability 3.5 is required).
 
 ------------------------------------
 Developers
 ------------------------------------
 
-* KASAHARA, Kota, Osaka Univ., Japan
-* MASHIMO, Tadaaki, AIST, Japan
-* Gert-jan BEKKER, Osaka Univ., Japan
+* KASAHARA Kota, Ritsumeikan Univ., Japan
 * Ma BENSON, UC Berkeley, US
-* HARIYAMA, Masanori, Tohoku Univ., Japan
-* Hasitha M. WAIDYASOORIYA, Tohoku Univ., Japan
+* GOTO Kota, TITECH, Japan
+* HIGO Junichi, Osaka Univ., Japan
+* FUKUDA Ikuo, Osaka Univ., Japan
+* MASHIMO Tadaaki, AIST, Japan
+* FUKUNISHI Yoshifumi, AIST, Japan
+* AKIYAMA Yutaka, TITECH, Japan
+* NAKAMURA Haruki, Osaka Univ., Japan
 
-.. [Ref:ZD] Zero-dipole summation method
-.. [Ref:TTP] Trivial Trajectory Parallelization, Virtual system coupled, Multicanonical MD
+.. [Fukuda 2013] Zero-dipole summation method
+.. [Higo 2013] Virtual system coupled, Multicanonical MD
 

@@ -47,6 +47,7 @@ int DistRestraintObject::add_drunit(int  in_aid1,
     return n_drunits;
 }
 real_fc DistRestraintObject::apply_restraint(int n_atoms, real **crd, PBC &pbc, real **force) {
+
     return 0;
 }
 
@@ -90,8 +91,8 @@ real_fc DistRestraintHarmonic::apply_restraint(int n_atoms, real **crd, PBC &pbc
         real_fc frc[3];
         for (int d = 0; d < 3; d++) {
             // force[drunits[i].atomid1] += diff[d] / r;
-            force[drunits[i].get_atomid1()][d] -= k_g * diff[d] / r;
-            force[drunits[i].get_atomid2()][d] += k_g * diff[d] / r;
+            force[drunits[i].get_atomid1()][d] += k_g * diff[d] / r;
+            force[drunits[i].get_atomid2()][d] -= k_g * diff[d] / r;
             // frc[d] += diff[d] / r;
         }
     }
