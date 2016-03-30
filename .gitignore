@@ -47,6 +47,8 @@ Makefile*
 *.out
 *.app
 
+# Target build directory
+target/
 
 
 #############
