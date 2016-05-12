@@ -15,9 +15,7 @@ Celeste is a Molecular Dynamics package (more description here).
 * OpenMP 3.1+
 
 
-## Building Celeste
-
-This is non-exhaustive description for building Celeste.  For platform-specific details, please refer to the [Build Notes](BuildNotes.md).
+## Building Celeste (Simple)
 
 1. Set up a target build folder:
 
@@ -46,3 +44,17 @@ Additional build options and configurations can be found by invoking CMake `help
     ...
     ... help and custom build flag descriptions
     ...
+
+## Documentation
+
+Extensive documentation for celeste is available under the `/docs` directory.  The documention consists of the following three components:
+
+1. Users' Manual
+1. Build/Installation Manual
+1. Developers' Manual
+
+To generate the documentation in HTML form:
+
+    localhost:celeste local$ cd docs
+    localhost:docs local$ cmake .
+    localhost:docs local$ make
