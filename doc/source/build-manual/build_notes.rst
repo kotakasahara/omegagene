@@ -4,6 +4,8 @@ Celeste Build Notes
 
 :Author: Benson Ma
 
+.. contents::
+
 Below is an assortment of build notes for handling different software dependencies and different platforms.
 
 ------------------------------------

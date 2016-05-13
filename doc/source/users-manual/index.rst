@@ -12,5 +12,5 @@ Contents:
     in_out_files
     analysis
     samples
-..  theory
-..  pairwise_code
+    theory
+    pairwise_code

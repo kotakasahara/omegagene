@@ -34,10 +34,10 @@ omegagene has several unique features, such as, the zero-multipole summation met
 
 
 ------------------------------------
-About celeste
+About |Celeste|
 ------------------------------------
 
-**"celeste"** is the code name for the collection of libraries that build omegagene
+|Celeste| is the code name for the collection of libraries that build omegagene
 
 
 ------------------------------------

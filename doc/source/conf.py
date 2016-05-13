@@ -12,8 +12,7 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
-import os
+import sys, os, datetime
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -53,7 +52,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'omegagene'
-copyright = u'2016, myPresto/omegagene team'
+copyright = str(datetime.datetime.now().year) + u', myPresto/omegagene development team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -91,7 +90,7 @@ exclude_patterns = []
 
 # If true, sectionauthor and moduleauthor directives will be shown in the
 # output. They are ignored by default.
-#show_authors = False
+show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -102,12 +101,18 @@ pygments_style = 'sphinx'
 # If true, keep warnings as "system message" paragraphs in the built documents.
 #keep_warnings = False
 
+# Configure the values for all the variables that might later configure any of the .rst files.
+rst_epilog = """
+.. |Celeste| replace:: CELESTE
+.. _Jenkins: http://jenkins-ci.org
+"""
+
 
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'default'
+html_theme = 'classic'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -161,11 +166,14 @@ html_static_path = ['_static']
 # If false, no module index is generated.
 #html_domain_indices = True
 
+# If false, no module index is generated.
+html_use_modindex = True
+
 # If false, no index is generated.
-#html_use_index = True
+html_use_index = True
 
 # If true, the index is split into individual pages for each letter.
-#html_split_index = False
+html_split_index = False
 
 # If true, links to the reST sources are added to the pages.
 #html_show_sourcelink = True
@@ -192,11 +200,12 @@ htmlhelp_basename = 'omegagenedoc'
 
 latex_elements = {
 # The paper size ('letterpaper' or 'a4paper').
-#'papersize': 'letterpaper',
+'papersize': 'a4paper',
 
 # The font size ('10pt', '11pt' or '12pt').
-#'pointsize': '10pt',
+'pointsize': '10',
 
+'inputenc': '\\usepackage[utf8]{inputenc}',
 # Additional stuff for the LaTeX preamble.
 #'preamble': '',
 }
@@ -208,6 +217,13 @@ latex_documents = [
   ('index', 'omegagene.tex', u'omegagene Documentation',
    u'myPresto/omegagene team', 'manual'),
 ]
+
+# Additional stuff for the LaTeX preamble.
+latex_preamble = """
+   \usepackage{amsmath}
+   \usepackage{amsfonts}
+   \usepackage{amssymb}
+   \usepackage{txfonts}"""
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
@@ -273,7 +289,7 @@ texinfo_documents = [
 epub_title = u'omegagene'
 epub_author = u'myPresto/omegagene team'
 epub_publisher = u'myPresto/omegagene team'
-epub_copyright = u'2016, myPresto/omegagene team'
+epub_copyright = u'{}, myPresto/omegagene team'.format(datetime.datetime.now().year)
 
 # The basename for the epub file. It defaults to the project name.
 #epub_basename = u'Celeste'
