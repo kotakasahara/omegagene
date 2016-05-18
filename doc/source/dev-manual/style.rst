@@ -6,15 +6,12 @@ Style Guidelines
    :maxdepth: 2
 
    formatting
+   cpp-language-guidance
    naming
-..   language-features
 
 :doc:`formatting`
   Guidelines for indentation and other code formatting.
 :doc:`naming`
   Naming conventions for files and various code constructs.
-:doc:`language-features`
+:doc:`cpp-language-guidance`
   Allowed language features.
-:ref:`dev-doxygen-guidelines`
-  Guidelines for using Doxygen to document the source code are currently in a
-  section on the page on general Doxygen usage.

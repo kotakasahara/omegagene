@@ -25,11 +25,8 @@ Source Code Management
 
 **Jenkins [FUTURE]**
   All changes pushed to Gerrit are automatically compiled and otherwise
-  checked on various platforms using a continuous integration system at
+  checked on various platforms using a continuous integration system
   [to be determined].
-  :doc:`jenkins` documents how Jenkins interacts with the build system,
-  providing information on how to replicate the builds Jenkins does (e.g., to
-  diagnose issues).
 
 **Redmine [FUTURE]**
   Bugs and issues, as well as some random features and discussions,
