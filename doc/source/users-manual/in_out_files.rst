@@ -29,18 +29,18 @@ In the configuration file, a set of a key and value(s) is specified in each line
 
 * --fn-i-tpl          md.tpl
   * The file name of the topology file (.tpl).
-* --fn-i-initial-pdb  md.pdb 
+* --fn-i-initial-pdb  md.pdb
   * The file name of the structure file (.pdb).
 * --fn-i-restart      md.restart
   * The file name of the initial coordinates and velocities file (.restart)
-* --cell-x            61.2425 
+* --cell-x            61.2425
 * --cell-y            61.2425
 * --cell-z            61.2425
   * The lengths of the periodic boundary cell in each axis in angestrome unit.
 * --fn-i-shake        system.shk
   * The file name of the shake setting file.
 * --fn-i-ttp-v-mcmd-inp      ttp_v_mcmd.inp
-* --fn-i-ttp-v-mcmd-initial  start.vert    
+* --fn-i-ttp-v-mcmd-initial  start.vert
   * The file name of the V-McMD setting files.
 * --fn-i-atom-group          atom_groups.inp
   * The file name of the atom group definition file.
@@ -78,7 +78,7 @@ Common configurations
     * Hoover-Evans. This can be applied for the integrator "zhang".
 * --cutoff                12.0
   * The cutoff length for non-bonded potential (angestrome unit)
-* --n-steps               10 
+* --n-steps               10
   * The number of steps of the simulation.
 * --time-step             2.0
   * The integration time step
@@ -93,31 +93,31 @@ Common configurations
 * --ele-alpha             0.0
   * The dumping factor fo ZM method.
   * For GPU mode, only 0.0 is acceptable
-* --temperature           300        
+* --temperature           300
   * Temperature for the thermostat.
 *--temperature-init
   * The initial temperature. Default value is the temperature specified by "--temperature" setting.
   * With this setting, "--heating-steps" should be set.
 *--heating-steps
   * The temperature is linearly increased or decreased from the --temperature-init to --temperature during the steps specified in this setting.
-* --print-interval-log    1          
+* --print-interval-log    1
   * Output interval for the log (the standard output)
-* --print-interval-coord  1          
+* --print-interval-coord  1
   * Output interval for the trajectory file.
-* --fn-o-coord            et1.trr    
+* --fn-o-coord            et1.trr
   * Output file name for the trajectory file.
-* --format-o-coord        gromacs    
+* --format-o-coord        gromacs
   * The file format of the trajectory.
   * presto
   * gromacs
-    * (!) The little endian 
+    * (!) The little endian
 * --fn-o-restart          md.restart
   * Output restart file name.
-#* --fn-o-log              et1.log    
-#  * 
-#* --fn-o-energy           et1.ene    
-#  * 
-* --nsgrid-cutoff         13.0       
+#* --fn-o-log              et1.log
+#  *
+#* --fn-o-energy           et1.ene
+#  *
+* --nsgrid-cutoff         13.0
   * The cutoff length for the neighbor search (angestrome unit).
 * --nsgrid-update-intvl   10
   * The interval steps for execution of the neighbor search.
@@ -144,7 +144,7 @@ Configuration for restraints
 #  * none
 #  * harmonic
 #* --position-restraint-weight
-#  * Scaling coefficient for the 
+#  * Scaling coefficient for the
 
 Configuration for the extended ensemble methods
 ----------------------------------------------------
@@ -153,16 +153,16 @@ Configuration for the extended ensemble methods
   * none
     * Extended ensemble is not used
   * v-mcmd
-    * The TTP-V-McMD method [Higo et al. (2013)]_ 
+    * The TTP-V-McMD method [Higo et al. (2013)]_
   * v-aus
-    * The TTP-V-AUS method [Higo et al. (2015)]_ 
+    * The TTP-V-AUS method [Higo et al. (2015)]_
 * --fn-o-vmcmd-log                ttp_v_mcmd.out
   * Output file name of a virtual-system trajecotry.
-* --fn-o-extended-lambda            mule.ene       
+* --fn-o-extended-lambda            mule.ene
   * Output file name of a log of the lambda value.
-* --print-interval-extended-lambda  1              
+* --print-interval-extended-lambda  1
   * Output interval for the log of the lambda value.
-* --format-o-extended-lambda        ascii          
+* --format-o-extended-lambda        ascii
   * File format of the log of the lambda value.
   * ascii
   * binary
@@ -199,19 +199,19 @@ SHAKE setting file.
 This file is compatible for myPresto/Psygene SHAKE file.
 It can be prepared by using SHAKEinp program.
 
-It shoul be specified in the system configuration file:
+It should be specified in the system configuration file:
 
 * --fn-i-shake system.shk
 
 V-McMD (or V-AUS) setting files (.inp, .vert)
 -----------------------------------------------
 
-These fiels are compatible for myPresto/Psygene files.  
+These fiels are compatible for myPresto/Psygene files.
 
 They should be specified in the system configuration file:
 
 * --fn-i-ttp-v-mcmd-inp      ttp_v_mcmd.inp
-* --fn-i-ttp-v-mcmd-initial  start.vert    
+* --fn-i-ttp-v-mcmd-initial  start.vert
 
 V-AUS restart file (.dat)
 -----------------------------------------------
@@ -237,7 +237,7 @@ For example::
   group1 1 4 6-9
   group2 3 10-11 13
 
-The group1 is composed of atoms 1, 4, 6, 7, 8, and 9. The group2 is composed of atoms 3, 10, 11, and 13. 
+The group1 is composed of atoms 1, 4, 6, 7, 8, and 9. The group2 is composed of atoms 3, 10, 11, and 13.
 
 The atom-ID are began from 1.
 
@@ -252,7 +252,7 @@ Output files
 5. V-McMD (or V-AUS) virtual-system trajectory
 6. V-AUS restart file
 
-Standard output 
+Standard output
 ------------------
 
 A simulation log will be output for the standard output.
@@ -266,7 +266,7 @@ The trajectory file format is compatible to myPresto/Psygene.
 This file repeats the two pars: a header of the frame, and atomic coordinates at the frame.
 
 For the header part:
-    
+
 * [4 bytes, INT] The size of header parts in bytes. Always "44".
 * [4 bytes, INT] Step number
 * [4 bytes, FLOAT] Time
@@ -295,7 +295,7 @@ The restart file format is compatible to myPresto/Psygene.
 This file is composed of the three pars: a header of the frame, atomic coordinates, and velocities.
 
 For the header part:
-    
+
 * [4 bytes, INT] The length of the following text. Alwasy "80".
 * [80 bytes, CHAR] Description of this simulation (version information)
 * [4 bytes, INT] Alwasy "80".
@@ -313,15 +313,15 @@ For the header part:
 
 For the coordinates part:
 
-* [4 bytes, INT] The size of this part in bytes. The number of atoms * 3 dimenstions * 8 bytes. 
+* [4 bytes, INT] The size of this part in bytes. The number of atoms * 3 dimenstions * 8 bytes.
 * [DOUBLE] X, Y, Z coordinates of each atom.
-* [4 bytes, INT] The size of this part in bytes. The number of atoms * 3 dimenstions * 8 bytes. 
+* [4 bytes, INT] The size of this part in bytes. The number of atoms * 3 dimenstions * 8 bytes.
 
 For the velocity part:
 
-* [4 bytes, INT] The size of this part in bytes. The number of atoms * 3 dimenstions * 8 bytes. 
+* [4 bytes, INT] The size of this part in bytes. The number of atoms * 3 dimenstions * 8 bytes.
 * [DOUBLE] X, Y, Z velocities of each atom.
-* [4 bytes, INT] The size of this part in bytes. The number of atoms * 3 dimenstions * 8 bytes. 
+* [4 bytes, INT] The size of this part in bytes. The number of atoms * 3 dimenstions * 8 bytes.
 
 
 V-McMD (or V-AUS) lambda trajectory
@@ -334,7 +334,7 @@ When *--format-o-extended-lambda  ascii* is specified, a lambda value is recorde
 When *--format-o-extended-lambda  binary*, is specified, the values are dumped as a binary file.
 
 * [1-4 bytes] The magic number
-* [5-8 bytes] The precisino (4 or 8)
+* [5-8 bytes] The precision (4 or 8)
 * [9-14 bytes] Always 1.
 * [After that] The lambda values
 

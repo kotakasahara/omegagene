@@ -4,6 +4,8 @@ Installation
 
 :Author: Kota Kasahara
 
+.. contents::
+
 Celeste is written in C++, and its build system utilizes CMake.  The following is a non-exhaustive description for building Celeste.  Currently there are three compile options of Celeste:
 
 1. CPU
