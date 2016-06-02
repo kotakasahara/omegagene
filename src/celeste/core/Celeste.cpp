@@ -5,7 +5,7 @@ int Celeste::setup(int argn, char *argv[]) {
     cout << ABOUT_ME << endl;
     string fn_cfg;
     if (argn < 2) {
-        cerr << "Usage: celeste [mode]" << endl;
+        cerr << "Usage: " << CelesteObject::EXE << " [mode]" << endl;
         cerr << "------------------------------------" << endl;
         std::exit(1);
     }

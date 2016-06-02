@@ -11,7 +11,9 @@ PROJECT( CELESTE )
 
 # SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 # SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-# SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# Set the output binaries to be located in target/bin
+SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 INCLUDE(SetCMakeMessageColors)
 
@@ -38,7 +40,6 @@ ENDIF()
 
 # Build project in the following subdirectories
 ADD_SUBDIRECTORY(src)
-
 
 # Remove all files not tracked by git
 ADD_CUSTOM_TARGET(gitclean COMMAND git clean -d -f -x)

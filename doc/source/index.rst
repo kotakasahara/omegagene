@@ -20,7 +20,7 @@ First-time users are advised to consult :doc:`users-manual/index` first to learn
 About omegagene
 ------------------------------------
 
-**"omegamgene"** is the code name of the molecular dynamics (MD) simulation software.
+**"omegagene"** is the name of the molecular dynamics (MD) simulation software.
 omegagene has several unique features, such as, the zero-multipole summation method [Fukuda 2013]_ and the virtual-system coupled multi-canonical MD method [Higo 2013]_.
 
   The current version of omegagene can perform:
