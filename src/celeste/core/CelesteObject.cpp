@@ -17,8 +17,8 @@ CelesteObject::CelesteObject() {}
 
 // const int CelesteObject::MAX_N_ATOMTYPE = 40;
 
-const string CelesteObject::EXE         = "celeste";
-const string CelesteObject::ABOUT_ME    = string("celeste ") + MACRO_BUILD_VERSION + " (" + MACRO_BUILD_TIMESTAMP + ")";
+const string CelesteObject::EXE         = "omegagene";
+const string CelesteObject::ABOUT_ME    = CelesteObject::EXE + " " + MACRO_BUILD_VERSION + " (" + MACRO_BUILD_TIMESTAMP + ")";
 const string CelesteObject::DESCRIPTION = "";
 // const int CelesteObject::REAL_BYTE = 4;
 const int    CelesteObject::REAL_BYTE     = sizeof(real);
