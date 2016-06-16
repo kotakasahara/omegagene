@@ -17,7 +17,7 @@ int randlib::Random::get_seed() {
     return _seed;
 }
 
-void randlib::Random::reseed(int new_seed) {
+void randlib::Random::set_seed(int new_seed) {
     generator.seed(new_seed);
 }
 

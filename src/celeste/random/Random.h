@@ -15,7 +15,7 @@ namespace celeste {
             Random(int seed);
             Random() = default;
             int  get_seed();
-            void reseed(int new_seed);
+            void set_seed(int new_seed);
             double operator()();
             double operator()(double high);
             double operator()(double low, double high);

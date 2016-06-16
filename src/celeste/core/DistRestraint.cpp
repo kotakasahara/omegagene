@@ -88,7 +88,7 @@ real_fc DistRestraintHarmonic::apply_restraint(int n_atoms, real **crd, PBC &pbc
 
         // force
         real    k_g = 2.0 * k * dist_diff;
-        real_fc frc[3];
+        // real_fc frc[3];
         for (int d = 0; d < 3; d++) {
             // force[drunits[i].atomid1] += diff[d] / r;
             force[drunits[i].get_atomid1()][d] += k_g * diff[d] / r;

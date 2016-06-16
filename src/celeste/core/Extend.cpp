@@ -1,6 +1,9 @@
 #include "Extend.h"
 #include <ciso646>
 
+using namespace std;
+using namespace celeste;
+
 Extended::Extended() : CelesteObject() {
     write_lambda_interval = 0;
 }
@@ -149,8 +152,7 @@ int ExtendedVMcMD::trial_transition(int source, int rel_dest, real lambda) {
     int up_down                 = rel_dest;
     if (rel_dest == -1) up_down = 0;
     if (vstates[source + rel_dest].is_in_range(lambda)) {
-        float dice = random_mt->get_float_01();
-        if (dice > (1.0 - vstates[source].get_trans_prob(up_down))) { return source + rel_dest; }
+        if ((*random_mt)() > (1.0 - vstates[source].get_trans_prob(up_down))) { return source + rel_dest; }
     }
     return source;
 }
@@ -292,7 +294,7 @@ int ExtendedVMcMD::set_mass(real_pw *in_mass, real_pw *in_mass_groups, real_pw *
 
     return 0;
 }
-int ExtendedVMcMD::set_params(RandomNum *in_mt, real in_sigma, real in_recov_coef, int in_n_steps) {
+int ExtendedVMcMD::set_params(random::Random *in_mt, real in_sigma, real in_recov_coef, int in_n_steps) {
     random_mt = in_mt;
     sigma     = in_sigma;
     // sigma_half = sigma * 0.5;
@@ -325,7 +327,7 @@ real ExtendedVAUS::set_crd_centers(real *crd, PBC *pbc) {
         int aid0   = atom_groups[grp_id][0];
         int aid0_3 = aid0 * 3;
         // cout << "dbg1130 grp " << i_grp << " " << grp_id << " " << n_atoms_in_groups[grp_id] << endl;
-        real crd0[3] = {crd[aid0_3], crd[aid0_3 + 1], crd[aid0_3 + 2]};
+        // real crd0[3] = {crd[aid0_3], crd[aid0_3 + 1], crd[aid0_3 + 2]};
         for (int d = 0; d < 3; d++) { crd_centers[i_grp][d] = 0.0; }
         for (int i_atm = 0; i_atm < n_atoms_in_groups[grp_id]; i_atm++) {
             int aid   = atom_groups[grp_id][i_atm];
@@ -417,7 +419,7 @@ int ExtendedVAUS::scale_force(real lambda, real_fc *work, int n_atoms) {
     // real k = (GAS_CONST / JOULE_CAL) * 1e-3;
     real dew = const_k * (d_ln_p + recovery);
     // cout << "dbg0522 "<<dew << endl;
-    int n_atoms_3 = n_atoms * 3;
+    // int n_atoms_3 = n_atoms * 3;
     for (int i_pair = 0; i_pair < n_enhance_group_pairs; i_pair++) {
         real direction = 1.0;
         for (int pair_ab = 0; pair_ab < 2; pair_ab++) {

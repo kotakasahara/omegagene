@@ -528,9 +528,8 @@ int MiniCell::reset_cell_assignment() {
 }
 int MiniCell::swap_atomid_crd(const int i, const int j) {
     //  cout << "swap " << i << "-" << j << endl;
-    int     t;
     real_pw x0, x1, x2;
-    t              = atomids[i];
+    int t           = atomids[i];
     atomids[i]     = atomids[j];
     atomids[j]     = t;
     x0             = crd[i * 3 + 0];
@@ -726,7 +725,7 @@ int MiniCell::set_idx_xy_head() {
         }
         int n_dummies = n_cells_z[column_id] * N_ATOM_CELL - n_atoms_col[column_id];
         n_dummies_all += n_dummies;
-        int i;
+        // int i;
 
         // for(i = 0; i < n_dummies; i++){
         // cout << "dummy " << column_id << "-" << n_atoms_col[column_id] << " " << i <<" " <<
@@ -821,9 +820,9 @@ int MiniCell::enumerate_cell_pairs() {
 
     n_cell_pairs = 0;
     int     cell1[3];
-    int     tmp_cell1        = 0;
+    // int     tmp_cell1        = 0;
     int     tmp_column_pairs = 0;
-    int     tmp_n_cell_pair  = 0;
+    // int     tmp_n_cell_pair  = 0;
     real_pw dx[3]            = {0.0, 0.0, 0.0};
     for (int cell1_id = 0; cell1_id < n_cells; cell1_id++) {
         cell1[0]       = cell_crd[cell1_id][0];

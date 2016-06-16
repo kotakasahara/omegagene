@@ -3,13 +3,13 @@
 
 #include "CelesteObject.h"
 
-#include "General.h"
 #include "PBC.h"
 #include "Write.h"
 #include "WriteTrr.h"
+
+#include "celeste/random/Random.h"
+
 #include <cmath>
-#include <random>
-using namespace std;
 
 class Extended : public CelesteObject {
   private:
@@ -79,7 +79,7 @@ class ExtendedVMcMD : public Extended {
     int *       n_atoms_in_groups;
     int **      atom_groups;
     int         n_enhance_groups;
-    vector<int> enhance_groups;
+    std::vector<int> enhance_groups;
     int         n_enhance_group_pairs;
     int **      enhance_group_pairs;
 
@@ -91,7 +91,7 @@ class ExtendedVMcMD : public Extended {
     // unit_vec[group][xyz]
 
     int        aus_type;
-    RandomNum *random_mt;
+    celeste::random::Random *random_mt;
     // uniform_real_distribution<float> random_gen;
 
   public:
@@ -122,7 +122,7 @@ class ExtendedVMcMD : public Extended {
     virtual int scale_force(real lambda, real_fc *work, int n_atoms);
 
     // files
-    int set_files(string fn_vslog, string fn_lambda, int format_lambda);
+    int set_files(std::string fn_vslog, std::string fn_lambda, int format_lambda);
     int close_files();
     int write_vslog(int cur_steps);
     int write_lambda(real lambda);
@@ -142,12 +142,12 @@ class ExtendedVMcMD : public Extended {
     int set_enhance_groups(int *       in_n_atoms_in_groups,
                            int **      in_atom_groups,
                            int         in_n_enhance_groups,
-                           vector<int> in_enhance_groups);
+                           std::vector<int> in_enhance_groups);
     int set_mass(real_pw *in_mass, real_pw *in_mass_groups, real_pw *in_mass_groups_inv);
-    int set_params(RandomNum *in_mt, real in_sigma, real in_recov_coef, int in_n_steps);
+    int set_params(celeste::random::Random *in_mt, real in_sigma, real in_recov_coef, int in_n_steps);
     void set_aus_type(int in_aus_type) { aus_type = in_aus_type; };
 
-    int write_aus_restart(string fn_out);
+    int write_aus_restart(std::string fn_out);
     real ***get_crd_groups() { return crd_groups; };
 };
 
