@@ -9,8 +9,8 @@ using namespace randlib;
 
 randlib::Random::Random(int seed) {
     _seed     = seed;
-    generator = std::mt19937(seed);
-    dist      = std::uniform_real_distribution<double>(0, 1);
+    generator = std::mt19937(_seed);
+    // dist      = std::uniform_real_distribution<double>(0, 1);
 }
 
 int randlib::Random::get_seed() {
@@ -18,17 +18,21 @@ int randlib::Random::get_seed() {
 }
 
 void randlib::Random::set_seed(int new_seed) {
-    generator.seed(new_seed);
+	_seed = new_seed;
+    generator.seed(_seed);
 }
 
 double randlib::Random::operator()() {
-    return dist(generator);
+    // return dist(generator);
+    return generator() / double(generator.max());
 }
 
 double randlib::Random::operator()(double high) {
-    return dist(generator) * high;
+    // return dist(generator) * high;
+    return operator()() * high;
 }
 
 double randlib::Random::operator()(double low, double high) {
-    return dist(generator) * (high - low) + low;
+    // return dist(generator) * (high - low) + low;
+    return operator()() * (high - low) + low;
 }

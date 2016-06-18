@@ -9,7 +9,7 @@ namespace celeste {
           protected:
             int                                    _seed = 0;
             std::mt19937                           generator;
-            std::uniform_real_distribution<double> dist;
+            // std::uniform_real_distribution<double> dist;
 
           public:
             Random(int seed);
