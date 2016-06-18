@@ -7,8 +7,8 @@ namespace celeste {
     namespace random {
         class Random {
           protected:
-            int                                    _seed = 0;
-            std::mt19937                           generator;
+            int          _seed = 0;
+            std::mt19937 generator;
             // std::uniform_real_distribution<double> dist;
 
           public:

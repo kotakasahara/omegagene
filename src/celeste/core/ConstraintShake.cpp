@@ -164,13 +164,13 @@ int ConstraintShake::shake_quad(real *in_crd, real *in_crd_prev, real_pw *in_mas
                 crd_prev[i][d] = in_crd_prev[atomid_3[i] + d];
             }
         }
-        real_cst weight[6]
-                       [6] = {{mass_inv[0] + mass_inv[1], -mass_inv[1], -mass_inv[0], -mass_inv[0], 0.0, -mass_inv[1]},
-                              {-mass_inv[1], mass_inv[1] + mass_inv[2], -mass_inv[2], 0.0, -mass_inv[2], mass_inv[1]},
-                              {-mass_inv[0], -mass_inv[2], mass_inv[2] + mass_inv[0], mass_inv[0], mass_inv[2], 0.0},
-                              {-mass_inv[0], 0.0, mass_inv[0], mass_inv[3] + mass_inv[0], -mass_inv[3], -mass_inv[3]},
-                              {0.0, -mass_inv[2], mass_inv[2], -mass_inv[3], mass_inv[2] + mass_inv[3], mass_inv[3]},
-                              {-mass_inv[1], mass_inv[1], 0.0, -mass_inv[3], mass_inv[3], mass_inv[1] + mass_inv[3]}};
+        real_cst weight[6][6] = {
+            {mass_inv[0] + mass_inv[1], -mass_inv[1], -mass_inv[0], -mass_inv[0], 0.0, -mass_inv[1]},
+            {-mass_inv[1], mass_inv[1] + mass_inv[2], -mass_inv[2], 0.0, -mass_inv[2], mass_inv[1]},
+            {-mass_inv[0], -mass_inv[2], mass_inv[2] + mass_inv[0], mass_inv[0], mass_inv[2], 0.0},
+            {-mass_inv[0], 0.0, mass_inv[0], mass_inv[3] + mass_inv[0], -mass_inv[3], -mass_inv[3]},
+            {0.0, -mass_inv[2], mass_inv[2], -mass_inv[3], mass_inv[2] + mass_inv[3], mass_inv[3]},
+            {-mass_inv[1], mass_inv[1], 0.0, -mass_inv[3], mass_inv[3], mass_inv[1] + mass_inv[3]}};
 
         // 1-2 calculate distances between atoms
         real_cst d_cur[6][3];

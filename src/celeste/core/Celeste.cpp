@@ -49,7 +49,7 @@ int Celeste::dynamics_mode() {
     //  cout << "F_CUDA flag = ON" << endl;
     //  GpuDynamicsMode* dynamics = new GpuDynamicsMode;
     //#else
-    DynamicsMode *dynamics = nullptr;
+    DynamicsMode *dynamics;
     if (config.integrator_type == INTGRTR_LEAPFROG_PRESTO) {
         dynamics = new DynamicsModePresto();
     } else if (config.integrator_type == INTGRTR_ZHANG) {

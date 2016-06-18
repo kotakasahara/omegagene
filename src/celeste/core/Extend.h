@@ -76,12 +76,12 @@ class ExtendedVMcMD : public Extended {
     // real sigma_half;
     // real sigma_sq_inv;
     //
-    int *       n_atoms_in_groups;
-    int **      atom_groups;
-    int         n_enhance_groups;
+    int *            n_atoms_in_groups;
+    int **           atom_groups;
+    int              n_enhance_groups;
     std::vector<int> enhance_groups;
-    int         n_enhance_group_pairs;
-    int **      enhance_group_pairs;
+    int              n_enhance_group_pairs;
+    int **           enhance_group_pairs;
 
     real ***crd_groups;
     // crd_groups[group][atom][xyz]
@@ -90,7 +90,7 @@ class ExtendedVMcMD : public Extended {
     real **unit_vec;
     // unit_vec[group][xyz]
 
-    int        aus_type;
+    int                      aus_type;
     celeste::random::Random *random_mt;
     // uniform_real_distribution<float> random_gen;
 
@@ -139,9 +139,9 @@ class ExtendedVMcMD : public Extended {
     int set_vs_poly_param(int vs_id, int ord, real param);
     int          print_info();
     virtual real cal_struct_parameters(real *crd, PBC *pbc);
-    int set_enhance_groups(int *       in_n_atoms_in_groups,
-                           int **      in_atom_groups,
-                           int         in_n_enhance_groups,
+    int set_enhance_groups(int *            in_n_atoms_in_groups,
+                           int **           in_atom_groups,
+                           int              in_n_enhance_groups,
                            std::vector<int> in_enhance_groups);
     int set_mass(real_pw *in_mass, real_pw *in_mass_groups, real_pw *in_mass_groups_inv);
     int set_params(celeste::random::Random *in_mt, real in_sigma, real in_recov_coef, int in_n_steps);

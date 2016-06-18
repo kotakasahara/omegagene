@@ -529,7 +529,7 @@ int MiniCell::reset_cell_assignment() {
 int MiniCell::swap_atomid_crd(const int i, const int j) {
     //  cout << "swap " << i << "-" << j << endl;
     real_pw x0, x1, x2;
-    int t           = atomids[i];
+    int     t      = atomids[i];
     atomids[i]     = atomids[j];
     atomids[j]     = t;
     x0             = crd[i * 3 + 0];
@@ -819,11 +819,11 @@ int MiniCell::enumerate_cell_pairs() {
     set_uniform_grid();
 
     n_cell_pairs = 0;
-    int     cell1[3];
+    int cell1[3];
     // int     tmp_cell1        = 0;
-    int     tmp_column_pairs = 0;
+    int tmp_column_pairs = 0;
     // int     tmp_n_cell_pair  = 0;
-    real_pw dx[3]            = {0.0, 0.0, 0.0};
+    real_pw dx[3] = {0.0, 0.0, 0.0};
     for (int cell1_id = 0; cell1_id < n_cells; cell1_id++) {
         cell1[0]       = cell_crd[cell1_id][0];
         cell1[1]       = cell_crd[cell1_id][1];

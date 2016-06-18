@@ -164,8 +164,8 @@ class MiniCell : public CelesteObject {
     real_pw L_z_uni;
     int     n_uni_z;
     // int *   n_uni2cell_z;
-    int **  uni2cell_z;
-    int **  cell2uni_z;
+    int **uni2cell_z;
+    int **cell2uni_z;
     int get_uni_z(int uni_id);
     int get_uni_id_from_crd(int x, int y, int z);
 

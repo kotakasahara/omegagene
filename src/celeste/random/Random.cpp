@@ -18,7 +18,7 @@ int randlib::Random::get_seed() {
 }
 
 void randlib::Random::set_seed(int new_seed) {
-	_seed = new_seed;
+    _seed = new_seed;
     generator.seed(_seed);
 }
 

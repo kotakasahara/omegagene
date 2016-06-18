@@ -1,11 +1,11 @@
 #ifndef __MM_SYSTEM_H__
 #define __MM_SYSTEM_H__
 
+#include <cstdio>
+#include <cstdlib>
 #include <ctime>
 #include <iostream>
 #include <set>
-#include <cstdio>
-#include <cstdlib>
 #include <string>
 #include <vector>
 
@@ -21,7 +21,6 @@
 #include "celeste/random/Random.h"
 
 using namespace celeste;
-
 
 class MmSystem : public CelesteObject {
   private:
