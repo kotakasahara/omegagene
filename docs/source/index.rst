@@ -21,7 +21,7 @@ About omegagene
 ------------------------------------
 
 **"omegagene"** is the name of the molecular dynamics (MD) simulation software.
-omegagene has several unique features, such as, the zero-multipole summation method [Fukuda 2013]_ and the virtual-system coupled multi-canonical MD method [Higo 2013]_.
+omegagene has several unique features, such as, the zero-multipole summation method and the virtual-system coupled multi-canonical MD method.
 
   The current version of omegagene can perform:
 
@@ -45,17 +45,14 @@ Developers
 ------------------------------------
 
 * KASAHARA Kota, Ritsumeikan Univ., Japan
-* Ma BENSON, UC Berkeley, US
+* MA Benson, Univ. Illinois, US
 * GOTO Kota, TITECH, Japan
+* BHASKAR Dasgupta, Osaka Univ., Japan
 * HIGO Junichi, Osaka Univ., Japan
 * FUKUDA Ikuo, Osaka Univ., Japan
 * MASHIMO Tadaaki, AIST, Japan
-* FUKUNISHI Yoshifumi, AIST, Japan
 * AKIYAMA Yutaka, TITECH, Japan
 * NAKAMURA Haruki, Osaka Univ., Japan
-
-.. [Fukuda 2013] Zero-dipole summation method
-.. [Higo 2013] Virtual system coupled, Multicanonical MD
 
 
 
@@ -65,4 +62,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

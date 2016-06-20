@@ -8,7 +8,7 @@ System Preparation
 Input files
 ------------------------------------
 
-The input files required for MD simulations by *omegagene* are compatible with myPresto/Psygene.
+The input files required for MD simulations by *omegagene* are compatible with myPresto/psygene.
 *omegagene* requires
 
 1. Restart file (including the initial coordinates and velocities)
@@ -20,7 +20,7 @@ In addition, two configuration files are required.
 4. System configuration file (system.cfg)
 5. Simulation configuration file (md.cfg)
 
-OmegaToolkit generates a binary file by combining some of the input files.
+omega_toolkit generates a binary file by combining some of the input files.
 
 ::
 
@@ -45,31 +45,35 @@ md_input.cfg::
   --mode                  md                 ; Only the keyword "md" is accepted
   --integrator            leapfrog-presto    ; "leapfrog-presto" or "zhang"
   --thermostat            scaling     ; Thermostat algorithm
-                                      ; "none", "scaling", "hoover-evans"
+                                      ; "none" or "scaling"
   --cutoff                12.0        ; Cutoff distance in angestrome
   --n-steps               10          ; The number of steps to be calculated
   --time-step             2.0         ; Integration time step in fs
-  --electrostatic         zero-dipole ; Only "zero-dipole" is accepted
+  --electrostatic         zero-dipole ; Only "zero-dipole" is accepted for GPU
+  			  	      ; "zero-quadrupole", "zero-octupole", and
+				      ; "zero-hexadecapole" are also aceppted for CPU.
   --ele-alpha             0           ; Dumping factor for ZD
   			  	      ;   only 0 is OK for GPU version
   --temperature           300         ; The target temperature
+  ;--temperature-init     10          ; The initial temperature
+  ;--heating-steps        10000       ; The number of steps for heating
   --print-interval-log    1           ; Interval steps for printing logs
   --print-interval-coord  1           ; Interval steps for output the trajectory
   --fn-o-coord            trpc.trr    ; File name for the output trajectory
-  --format-o-coord        gromacs     ; File format for the output trajectory
-                                      ; "presto" or "gromacs"
+  --format-o-coord        presto      ; File format for the output trajectory
+                                      ; only "presto" is allowed.
   ;--fn-o-log              et1.log     ; Not used in the current version
   ;--fn-o-energy           et1.ene     ; Not used in the current version
   --nsgrid-cutoff         13.0        ; Neighbor search cutoff radius (angstrom)
   --nsgrid-update-intvl   50          ; Interval time steps for update the neighbor search grid
 
   ; Expanded ensemble 
-  ;--expanded-ensemble             v-mcmd         ; "none", or "v-mcmd"
+  ;--expanded-ensemble             v-mcmd         ; "none", "v-mcmd", or "v-aus"
   ;--fn-o-vmcmd-log                ttp_v_mcmd.out ; Output filename
   ;--fn-o-expand-lambda            mule.ene       ; Output filename
   ;--print-interval-expand-lambda  1              ; Interval steps for the output
   ;--format-o-expand-lambda        ascii          ; "ascii", or "binary"
-  
+
 ------------------------------------
 Execute
 ------------------------------------

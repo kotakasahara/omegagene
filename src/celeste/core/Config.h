@@ -51,14 +51,14 @@ struct Config : public CelesteObject {
     int print_intvl_extended_lambda;
 
     std::string fn_o_restart     = "md_o.restart";
-    std::string fn_o_crd         = "md_o.trr";
+    std::string fn_o_crd         = "md_o.cod";
     std::string group_o_crd_name = "";
     std::string fn_o_log         = "md_o.log";
     std::string fn_o_energy      = "md_o.erg";
     std::string fn_o_vmcmd_log;
     std::string fn_o_extended_lambda;
     std::string fn_o_energyflow          = "md_o.efl";
-    int         format_o_crd             = CRDOUT_GROMACS;
+    int         format_o_crd             = CRDOUT_PRESTO;
     int         format_o_extended_lambda = LAMBDAOUT_BIN;
 
     int init_vel_just = 0;
