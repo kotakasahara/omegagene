@@ -268,7 +268,6 @@ int WriteRestart::write_restart(int    n_atoms,
     // title
     buf_int = 80;
     char title[80];
-    int  i;
     strcpy(title, ABOUT_ME.c_str());
 
     ofs.write((const char *)&buf_int, sizeof(int));

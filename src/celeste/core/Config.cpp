@@ -1,4 +1,5 @@
 #include "Config.h"
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -27,7 +28,7 @@ vector<string> Config::extract_args_from_file(const string &filepath) {
         if (buf.size() == 0) continue;
         cout << buf << endl;
         stringstream ss(buf);
-        while (ss >> buf) { args.emplace_back(buf); }
+        while (ss >> buf) { args.push_back(buf); }
     }
     cout << "-----------------------------------" << endl;
     return args;

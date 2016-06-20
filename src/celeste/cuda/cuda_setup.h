@@ -1,8 +1,8 @@
 #ifndef __CUDA_SETUP_H__
 #define __CUDA_SETUP_H__
 
-#include "../CelesteObject.h"
-#include "../MiniCell.h"
+#include "celeste/core/CelesteObject.h"
+#include "celeste/core/MiniCell.h"
 #include "cuda_common.h"
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,7 +1,7 @@
 #ifndef __CUDA_COMMON_H__
 #define __CUDA_COMMON_H__
 
-#include "../CelesteObject.h"
+#include "celeste/core/CelesteObject.h"
 #include <stdio.h>
 
 static void HandleError(cudaError_t err, const char *file, int line) {

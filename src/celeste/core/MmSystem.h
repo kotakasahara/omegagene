@@ -1,13 +1,11 @@
 #ifndef __MM_SYSTEM_H__
 #define __MM_SYSTEM_H__
 
+#include <cstdio>
+#include <cstdlib>
 #include <ctime>
 #include <iostream>
 #include <set>
-
-//#include <random>
-#include <cstdio>
-#include <cstdlib>
 #include <string>
 #include <vector>
 
@@ -17,9 +15,12 @@
 #include "DistRestraint.h"
 #include "Extend.h"
 #include "ForceField.h"
-#include "General.h"
 #include "PBC.h"
 #include "PosRestraint.h"
+
+#include "celeste/random/Random.h"
+
+using namespace celeste;
 
 class MmSystem : public CelesteObject {
   private:
@@ -138,7 +139,7 @@ class MmSystem : public CelesteObject {
     DistRestraintObject *dist_restraint;
     PosRestraintObject * pos_restraint;
 
-    RandomNum random_mt;
+    random::Random random_mt;
 
     // time
 

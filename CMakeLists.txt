@@ -36,7 +36,9 @@ ENDIF()
 IF(CELESTE_USE_MPI)
     INCLUDE(CheckMPI)
 ENDIF()
-# INCLUDE_DIRECTORIES(include)
+
+# Make src/ a search path for include files
+INCLUDE_DIRECTORIES(src)
 
 # Build project in the following subdirectories
 ADD_SUBDIRECTORY(src)

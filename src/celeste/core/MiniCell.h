@@ -68,7 +68,7 @@ class MiniCell : public CelesteObject {
     int *idx_cell_n_atoms;
 
     // flg_dummy[atom_id_grid] = 1 ... dummy, 0 ... not dummy
-    int *flg_dummy;
+    // int *flg_dummy;
 
     // idx_atom_cell_xy
     //  idx_atom_cell_xy[atom_id (original)] = cell_id_xy
@@ -117,7 +117,7 @@ class MiniCell : public CelesteObject {
     int *nb15off;
     int  max_n_nb15off;
 
-    // for mpi
+    // For MPI usage
     int      mpi_n_atoms;
     real_pw *mpi_sendbuf_crd;
     real_pw *mpi_recvbuf_crd;
@@ -163,9 +163,9 @@ class MiniCell : public CelesteObject {
     int     n_uni;
     real_pw L_z_uni;
     int     n_uni_z;
-    int *   n_uni2cell_z;
-    int **  uni2cell_z;
-    int **  cell2uni_z;
+    // int *   n_uni2cell_z;
+    int **uni2cell_z;
+    int **cell2uni_z;
     int get_uni_z(int uni_id);
     int get_uni_id_from_crd(int x, int y, int z);
 
