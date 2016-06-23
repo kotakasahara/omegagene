@@ -10,11 +10,14 @@ Documentation Structure
 
 The documention consists of the following three components:
 
-1. :doc:`users-manual/index`
-2. :doc:`build-manual/index`
-3. :doc:`dev-manual/index`
+.. toctree::
+   :maxdepth: 1
 
-First-time users are advised to consult :doc:`users-manual/index` first to learn how to get started with omegagene.
+   users-manual/index
+   build-manual/index
+   dev-manual/index
+
+First-time users are advised to consult the :doc:`users-manual/index` first to learn how to get started with omegagene.
 
 ------------------------------------
 About omegagene
