@@ -59,6 +59,7 @@ class SubBox : public CelesteObject {
     real *   vel_next;
     real *   vel_just;
     real_fc *work;
+    real_fc *work_prev;
     real_pw *charge;
     real_pw *mass;
     real_pw *mass_inv;
@@ -248,6 +249,7 @@ class SubBox : public CelesteObject {
     int   get_n_atoms_box() { return n_atoms_box; };
 
     int cpy_crd_prev();
+    int cpy_work_prev();
     int cpy_crd_from_prev();
     int cpy_vel_buf_from_prev();
     int cpy_vel_prev_from_buf();
@@ -323,6 +325,11 @@ class SubBox : public CelesteObject {
     // int get_box_id_from_crd(int bx, int by, int bz);
     // int get_box_crd_from_id(int boxid, int& bx, int& by, int&bz);
     // int get_global_region_id_from_box_region(int boxid, int regionid);
+    
+    //vv
+    int update_velocities_vv(const real time_step);
+    int update_coordinates_vv(const real time_step);
+
 };
 
 #endif

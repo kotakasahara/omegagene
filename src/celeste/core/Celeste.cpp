@@ -52,6 +52,8 @@ int Celeste::dynamics_mode() {
     DynamicsMode *dynamics;
     if (config.integrator_type == INTGRTR_LEAPFROG_PRESTO) {
         dynamics = new DynamicsModePresto();
+    } else if (config.integrator_type == INTGRTR_VELOCITY_VERLET) {
+        dynamics = new DynamicsModeVelocityVerlet();
     } else if (config.integrator_type == INTGRTR_ZHANG) {
         dynamics = new DynamicsModeZhang();
     } else {
@@ -74,11 +76,12 @@ int Celeste::dynamics_mode() {
 
     // dynamics->mmsys.writeData();
     dynamics->terminal_process();
-
+    cout << "dbg20160625 a";
 #if defined(F_MPI)
     MPI_Finalize();
 #endif
-
+    cout << "dbg20160625 b";
     delete dynamics;
+    cout << "dbg20160625 c";
     return 0;
 }

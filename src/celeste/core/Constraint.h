@@ -24,13 +24,14 @@ class ConstraintObject : public CelesteObject {
     int              n_quad;
     int **           quad_atomids;
     real_cst **      quad_dist;
+    real time_step;
 
   public:
     ConstraintObject();
     ~ConstraintObject();
     int alloc_constraint();
     int free_constraint();
-    int set_parameters(int in_max_loops, real_cst in_tolerance);
+    int set_parameters(int in_max_loops, real_cst in_tolerance, real in_time_step);
     int set_max_n_constraints(int in_n_pair, int in_n_trio, int in_n_quad);
     int add_pair(int atom1, int atom2, real_cst dist1);
     int add_trio(int atom1, int atom2, int atom3, real_cst dist1, real_cst dist2, real_cst dist3);
@@ -57,6 +58,7 @@ class ConstraintObject : public CelesteObject {
     const real_cst * get_pair_dist() const { return (const real_cst *)pair_dist; };
     const real_cst **get_trio_dist() const { return (const real_cst **)trio_dist; };
     const real_cst **get_quad_dist() const { return (const real_cst **)quad_dist; };
+
 };
 
 #endif

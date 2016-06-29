@@ -284,3 +284,68 @@ ConstraintSettle::~ConstraintSettle() {
 int ConstraintSettle::apply_constraint(real *in_crd, real *in_crd_prev, real_pw *in_mass_inv, PBC *pbc) {
     return 0;
 }
+ConstraintRattle::ConstraintRattle() : ConstraintObject() {}
+
+ConstraintRattle::~ConstraintRattle() {
+    free_constraint();
+}
+
+int ConstraintRattle::apply_rattle(real *in_crd, real *in_crd_prev, real *in_vel, real *in_work, real_pw *in_mass_inv, PBC *pbc) {
+  rattle_pair(in_crd, in_crd_prev, in_vel, in_work, in_mass_inv, pbc);
+  rattle_trio(in_crd, in_crd_prev, in_vel, in_work, in_mass_inv, pbc);
+  rattle_quad(in_crd, in_crd_prev, in_vel, in_work, in_mass_inv, pbc);
+  return 0;
+}
+
+int ConstraintRattle::rattle_pair(real *in_crd, real *in_crd_prev, real *in_vel, real *in_work, real_pw *in_mass_inv, PBC *pbc) {
+  for (int i_cst = 0; i_cst < n_pair; i_cst++) {
+    int      atomid1_3    = pair_atomids[i_cst][0] * 3;
+    int      atomid2_3    = pair_atomids[i_cst][1] * 3;
+    real     crd1[3]      = {in_crd[atomid1_3], in_crd[atomid1_3 + 1], in_crd[atomid1_3 + 2]};
+    real     crd2[3]      = {in_crd[atomid2_3], in_crd[atomid2_3 + 1], in_crd[atomid2_3 + 2]};
+    real     crd1_prev[3] = {in_crd_prev[atomid1_3], in_crd_prev[atomid1_3 + 1], in_crd_prev[atomid1_3 + 2]};
+    real     crd2_prev[3] = {in_crd_prev[atomid2_3], in_crd_prev[atomid2_3 + 1], in_crd_prev[atomid2_3 + 2]};
+    real_cst d12[3];
+    real_cst d12_prev[3];
+    pbc->diff_crd_minim_image(d12, crd2, crd1);
+    pbc->diff_crd_minim_image(d12_prev, crd2_prev, crd1_prev);
+    real_cst mass1_inv    = in_mass_inv[pair_atomids[i_cst][0]];
+    real_cst mass2_inv    = in_mass_inv[pair_atomids[i_cst][1]];
+    real_cst mass12_inv   = mass1_inv + mass2_inv;
+    real_cst diff_sq      = d12[0] * d12[0] + d12[1] * d12[1] + d12[2] * d12[2];
+    real_cst diff_sq_prev = d12_prev[0] * d12_prev[0] + d12_prev[1] * d12_prev[1] + d12_prev[2] * d12_prev[2];
+    real_cst diff_ip      = d12[0] * d12_prev[0] + d12[1] * d12_prev[1] + d12[2] * d12_prev[2];
+    
+    real q1[3], q2[3];
+    real s[3];
+    for(int d=0; d<3; d++){
+      q1[d] = in_vel[atomid1_3+d] + time_step * mass1_inv * 0.5 * -FORCE_VEL * in_work[atomid1_3+d];
+      q2[d] = in_vel[atomid2_3+d] + time_step * mass2_inv * 0.5 * -FORCE_VEL * in_work[atomid2_3+d];
+      s[d] = in_crd[atomid1_3+d] + time_step * q1[d] - in_crd[atomid2_3+d] - time_step * q2[d];
+    }
+    real s2 = s[0]*s[0] + s[1]*s[1] + s[2]*s[2];
+    while(s2 >  pair_dist[i_cst]){
+      
+
+    }
+   real_cst val_a = mass12_inv * mass12_inv * diff_sq_prev;
+    real_cst val_b = mass12_inv * diff_ip;
+    real_cst val_c = diff_sq - pair_dist[i_cst];
+    real_cst val_g = (val_b - sqrt(max(val_b * val_b - val_c * val_a, (real_cst)0.0))) / val_a;
+    
+    for (int d = 0; d < 3; d++) {
+      in_crd[atomid1_3 + d] += mass1_inv * val_g * d12_prev[d];
+      in_crd[atomid2_3 + d] -= mass2_inv * val_g * d12_prev[d];
+    }
+  }
+  return 0;
+}
+
+int ConstraintRattle::rattle_trio(real *in_crd, real *in_crd_prev, real *in_vel, real *in_work, real_pw *in_mass_inv, PBC *pbc){
+    return 0;
+}
+
+int ConstraintRattle::rattle_quad(real *in_crd, real *in_crd_prev, real *in_vel, real *in_work, real_pw *in_mass_inv, PBC *pbc){
+    return 0;
+}
+

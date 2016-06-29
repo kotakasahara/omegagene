@@ -57,6 +57,7 @@ class DynamicsMode : public RunMode {
     int subbox_set_bonding_potentials();
     int gather_energies();
     int output_restart();
+    int calc_energy_force();
 };
 
 class DynamicsModePresto : public DynamicsMode {
@@ -79,4 +80,13 @@ class DynamicsModeZhang : public DynamicsMode {
     virtual int apply_constraint();
 };
 
+class DynamicsModeVelocityVerlet : public DynamicsMode {
+  private:
+  protected:
+  public:
+    DynamicsModeVelocityVerlet();
+    ~DynamicsModeVelocityVerlet();
+    virtual int calc_in_each_step();
+    virtual int apply_constraint();
+};
 #endif

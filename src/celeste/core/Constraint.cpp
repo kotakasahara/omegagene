@@ -78,9 +78,10 @@ int ConstraintObject::free_constraint() {
     }
     return 0;
 }
-int ConstraintObject::set_parameters(int in_max_loops, real_cst in_tolerance) {
+int ConstraintObject::set_parameters(int in_max_loops, real_cst in_tolerance, real in_time_step) {
     max_loops = in_max_loops;
     tolerance = in_tolerance;
+    time_step = in_time_step;
     return 0;
 }
 int ConstraintObject::set_max_n_constraints(int in_n_pair, int in_n_trio, int in_n_quad) {

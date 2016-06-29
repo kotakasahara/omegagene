@@ -38,7 +38,7 @@ import kkpresto_distrest as disres
 import kkceleste_posrest as posres
 import kkatomgroup as atgrp
 import kkceleste_ausrestart as ausrest
-import evaluate_structure as evst
+#import evaluate_structure as evst
 
 def get_options():
     p = OptionParser()
@@ -615,21 +615,22 @@ class MDInputGen(object):
                 warn = self.aus_restart.check_com_proximity(self.restart, self.system.mass,
                                                             self.atom_groups, self.atom_group_names,
                                                             self.config.get_val("enhance-group-name"))
-                for w in warn: self.add_warn(w)
+#                for w in warn: self.add_warn(w)
             ## check bonds exceeding the boundary
             ##  (other than molecules with < 4 atoms) 
-            bnds = evst.check_bond_exceeding_boundary(self.restart, self.tpl)
-            if len(bnds) > 0:
-                warn = "The bonds exceeds PBC:\n"
-                warn += ", ".join([str(x) for x in bnds])
-                self.add_warn(warn)
+#            bnds = evst.check_bond_exceeding_boundary(self.restart, self.tpl)
+#            if len(bnds) > 0:
+#                warn = "The bonds exceeds PBC:\n"
+#                warn += ", ".join([str(x) for x in bnds])
+#                self.add_warn(warn)
 
     def evaluate_structures(self):
         ## check total charge
-        tcharge = evst.check_total_charge(self.tpl)
-        if tcharge > 1e-6 or tcharge < -1e-6:
-            warn = "The total charge is not zero : " + str(tcharge)
-            self.add_warn(warn)
-        
+#        tcharge = evst.check_total_charge(self.tpl)
+#        if tcharge > 1e-6 or tcharge < -1e-6:
+#            warn = "The total charge is not zero : " + str(tcharge)
+#            self.add_warn(warn)
+        return
+    
 if __name__ == "__main__":
     _main()

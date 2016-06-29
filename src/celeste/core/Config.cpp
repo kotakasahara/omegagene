@@ -74,6 +74,8 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
                 integrator_type = INTGRTR_ZHANG;
             } else if (*itr == "leapfrog-presto") {
                 integrator_type = INTGRTR_LEAPFROG_PRESTO;
+            } else if (*itr == "velocity-verlet") {
+                integrator_type = INTGRTR_VELOCITY_VERLET;
             } else {
                 integrator_type = INTGRTR_DUMMY;
             }

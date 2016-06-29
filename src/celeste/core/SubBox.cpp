@@ -93,6 +93,7 @@ int SubBox::alloc_variables() {
     vel_next = new real[max_n_atoms_exbox * 3];
     vel_just = new real[max_n_atoms_exbox * 3];
     work     = new real_fc[max_n_atoms_exbox * 3];
+    work_prev= new real_fc[max_n_atoms_exbox * 3];
 
     //
     if (cfg->thermostat_type != THMSTT_NONE) { buf_crd = new real[max_n_atoms_exbox * 3]; }
@@ -264,7 +265,8 @@ int SubBox::free_variables() {
     delete[] vel_next;
     delete[] vel_just;
     delete[] work;
-    // delete[] frc;
+    delete[] work_prev;
+    //delete[] frc;
     delete[] atomids;
 
     if (cfg->thermostat_type != THMSTT_NONE) { delete[] buf_crd; }
@@ -1315,6 +1317,10 @@ int SubBox::cpy_crd_prev() {
     memcpy(crd_prev, crd, sizeof(real) * max_n_atoms_exbox * 3);
     return 0;
 }
+int SubBox::cpy_work_prev() {
+    memcpy(work_prev, work, sizeof(real) * max_n_atoms_exbox * 3);
+    return 0;
+}
 int SubBox::cpy_crd_from_prev() {
     // memcpy(crd, crd_prev, sizeof(real) * max_n_atoms_exbox*3);
     for (int i = 0; i < n_atoms_box * 3; i++) { crd[i] = crd_prev[i]; }
@@ -1338,7 +1344,6 @@ int SubBox::swap_velocity_buffer() {
     vel_next  = tmp;
     return 0;
 }
-
 int SubBox::update_velocities(const real time_step) {
     // swap_velocity_buffer();
     for (int atomid_b = 0, atomid_b3 = 0; atomid_b < all_n_atoms[rank]; atomid_b++, atomid_b3 += 3) {
@@ -1521,7 +1526,7 @@ int SubBox::init_constraint(int  in_constraint,
     }
     if (flg_constraint != 0) {
         constraint = new ConstraintShake();
-        constraint->set_parameters(in_max_loops, in_tolerance);
+        constraint->set_parameters(in_max_loops, in_tolerance, cfg->time_step);
         constraint->set_max_n_constraints(max_n_pair, max_n_trio, max_n_quad);
         // cout << "max_n_const: " << max_n_pair << " " << max_n_trio << " " << max_n_quad  << endl;
         constraint->alloc_constraint();
@@ -1809,3 +1814,24 @@ int SubBox::print_work(int atom_id) {
     cout << work[atom_id * 3 + 0] << " " << work[atom_id * 3 + 1] << " " << work[atom_id * 3 + 2] << endl;
     return 0;
 }
+
+int SubBox::update_velocities_vv(const real time_step) {
+    for (int atomid_b = 0, atomid_b3 = 0; atomid_b < all_n_atoms[rank]; atomid_b++, atomid_b3 += 3) {
+        for (int d = 0; d < 3; d++) {
+            vel_next[atomid_b3 + d] =
+	      vel[atomid_b3 + d] + 0.5*time_step * (-FORCE_VEL * (work[atomid_b3+d]+work_prev[atomid_b3+d]) * mass_inv[atomid_b]);
+        }
+    }
+    return 0;
+}
+int SubBox::update_coordinates_vv(const real time_step){
+  real dt_sq = 0.5 * time_step * time_step;
+    // subbox.cpy_crd_prev();
+    for (int atomid_b = 0, atomid_b3 = 0; atomid_b < all_n_atoms[rank]; atomid_b++, atomid_b3 += 3) {
+        for (int d = 0; d < 3; d++) {
+	  crd[atomid_b3+d] += time_step * vel_next[atomid_b3+d] + dt_sq * (-FORCE_VEL * work[atomid_b3+d] * mass_inv[atomid_b]);
+        }
+    }
+    return 0;
+}
+

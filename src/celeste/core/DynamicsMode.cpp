@@ -91,6 +91,7 @@ int DynamicsMode::initial_preprocess() {
 
     // cout << "DBG MmSystem.n_bonds: " << mmsys.n_bonds << endl;
 
+    //subbox.copy_vel(mmsys.vel_just);
     subbox.copy_vel_next(mmsys.vel_just);
     subbox.set_com_motion(mmsys.n_com_cancel_groups, mmsys.com_cancel_groups, mmsys.n_atoms_in_groups,
                           mmsys.atom_groups, mmsys.mass_inv_groups);
@@ -110,13 +111,18 @@ int DynamicsMode::initial_preprocess() {
     cout << "Initial temperature : " << mmsys.temperature << endl;
     cout << "Degree of freedom : " << mmsys.d_free << endl;
 
+    // for velocity-Verlet
+    calc_energy_force();
+    
     return 0;
 }
 
 int DynamicsMode::terminal_process() {
     cout << "DynamicsMode::terminal_process()" << endl;
     writer_trr->close();
+    cout << "DynamicsMode::terminal_process() cls" << endl;
     if (cfg->extended_ensemble != EXTENDED_NONE) mmsys.vmcmd->close_files();
+    cout << "DynamicsMode::terminal_process() cls2" << endl;    
     return 0;
 }
 
@@ -548,3 +554,115 @@ int DynamicsModeZhang::apply_constraint() {
     subbox.apply_constraint();
     return 0;
 }
+//////////////////////
+
+DynamicsModeVelocityVerlet::DynamicsModeVelocityVerlet() : DynamicsMode() {}
+DynamicsModeVelocityVerlet::~DynamicsModeVelocityVerlet() {}
+
+int DynamicsMode::calc_energy_force() {
+
+    const clock_t startTimeReset = clock();
+
+    mmsys.reset_energy();
+
+    const clock_t endTimeReset = clock();
+    mmsys.ctime_cuda_reset_work_ene += endTimeReset - startTimeReset;
+
+#ifndef F_WO_NS
+    const clock_t startTimeHtod = clock();
+    if (mmsys.cur_step % cfg->nsgrid_update_intvl == 0) {
+        subbox.nsgrid_update();
+    } else {
+#if defined(F_CUDA)
+        subbox.nsgrid_crd_to_gpu();
+#endif
+    }
+    const clock_t endTimeHtod = clock();
+    mmsys.ctime_cuda_htod_atomids += endTimeHtod - startTimeHtod;
+#endif
+    const clock_t startTimeEne = clock();
+    subbox.calc_energy();
+    // cout << "gather_energies()"<<endl;
+    gather_energies();
+    if (cfg->dist_restraint_type != DISTREST_NONE || cfg->pos_restraint_type != POSREST_NONE) {
+        subbox.copy_crd(mmsys.crd);
+        if (cfg->dist_restraint_type != DISTREST_NONE) apply_dist_restraint();
+        if (cfg->pos_restraint_type != POSREST_NONE) apply_pos_restraint();
+    }
+
+    const clock_t endTimeEne = clock();
+    mmsys.ctime_calc_energy += endTimeEne - startTimeEne;
+
+    if (cfg->extended_ensemble == EXTENDED_VMCMD) {
+        subbox.extended_apply_bias(mmsys.cur_step, mmsys.set_potential_e());
+    } else if (cfg->extended_ensemble == EXTENDED_VAUS) {
+        // cout << "test1"<<endl;
+        subbox.extended_apply_bias_struct_param(mmsys.cur_step);
+    }
+    return 0;
+}
+int DynamicsModeVelocityVerlet::calc_in_each_step() {
+    const clock_t startTimeStep  = clock();
+
+    const clock_t startTimeCoord = clock();
+    // if(mmsys.leapfrog_coef == 1.0){
+    //if (cfg->thermostat_type == THMSTT_SCALING) {
+    //subbox.update_thermostat(mmsys.cur_step);
+    //if (cfg->constraint_type == CONST_NONE) {
+    // mmsys.leapfrog_coef == 1.0){
+    //subbox.apply_thermostat();
+    //}
+    //}
+
+    //}
+    // cout << "update_coordinates"<<endl;
+    subbox.cpy_crd_prev();
+    subbox.update_coordinates_vv(cfg->time_step);
+    subbox.cpy_work_prev();
+    calc_energy_force();
+
+    if (cfg->constraint_type != CONST_NONE) { apply_constraint(); }
+// cout << "revise_coordinates"<<endl;
+#ifndef F_WO_NS
+    subbox.update_coordinates_nsgrid();
+#endif
+    subbox.revise_coordinates_pbc();
+
+    const clock_t endTimeCoord = clock();
+    mmsys.ctime_update_coord += endTimeCoord - startTimeCoord;
+
+    const clock_t startTimeVel = clock();
+    // cout << "update_velocities"<<endl;
+    subbox.cpy_vel_prev();
+    subbox.update_velocities_vv(cfg->time_step);
+    const clock_t endTimeVel = clock();
+    mmsys.ctime_update_velo += endTimeVel - startTimeVel;
+
+    subbox.cancel_com_motion();
+
+    const clock_t startTimeKine = clock();
+    subbox.copy_vel(mmsys.vel_just);
+    cal_kinetic_energy((const real **)mmsys.vel_just);
+    const clock_t endTimeKine = clock();
+    mmsys.ctime_calc_kinetic += endTimeKine - startTimeKine;
+
+    const clock_t endTimeStep = clock();
+    mmsys.ctime_per_step += endTimeStep - startTimeStep;
+
+    return 0;
+}
+
+int DynamicsModeVelocityVerlet::apply_constraint() {
+    // if(mmsys.leapfrog_coeff == 1.0){
+
+    if (cfg->thermostat_type == THMSTT_SCALING) {
+        subbox.apply_thermostat_with_shake(cfg->thermo_const_max_loops, cfg->thermo_const_tolerance);
+        // mmsys.leapfrog_coef = 1.0 ;
+    } else {
+        subbox.apply_constraint();
+    }
+
+    //}
+    return 0;
+}
+
