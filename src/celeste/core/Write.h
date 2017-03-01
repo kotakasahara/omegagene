@@ -33,6 +33,7 @@ class WriteTTPVMcMDLog : public Write {
     WriteTTPVMcMDLog();
     ~WriteTTPVMcMDLog();
     int write_ttpvMcMDLog(int step, int vstate);
+    int write_VcMDLog(int step, std::vector<int> vstate);
 };
 
 class WriteTableLog : public Write {
@@ -47,17 +48,19 @@ class WriteTableLog : public Write {
     virtual int                  write_header();
     virtual int write_row(int *values);
     virtual int write_row(real *values);
-};
+    virtual int write_row(std::vector<real> values);
+}
 
 class WriteTableLogBinary : public WriteTableLog {
-  private:
-  protected:
-  public:
-    WriteTableLogBinary();
-    ~WriteTableLogBinary();
-    virtual int write_header();
-    virtual int write_row(int *values);
-    virtual int write_row(real *values);
+ private:
+ protected:
+ public:
+  WriteTableLogBinary();
+  ~WriteTableLogBinary();
+  virtual int write_header();
+  virtual int write_row(int *values);
+  virtual int write_row(real *values);
+  virtual int write_row(std::vector<real> values);
 };
 
 class WriteTableLogAscii : public WriteTableLog {

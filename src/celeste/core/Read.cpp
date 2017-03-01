@@ -535,6 +535,7 @@ int Read::load_ls_vmcmd(MmSystem &mmsys) {
 
     return 0;
 }
+
 int Read::load_ls_atom_groups(MmSystem &mmsys) {
     int  n_groups;
     int *n_atoms_in_group;
@@ -646,6 +647,46 @@ int Read::load_ls_group_coord(MmSystem &mmsys) {
         }
     }
     return 0;
+}
+
+int Read::load_ls_vcmd(MmSystem &mmsys) {
+  int interval;
+  read_bin_values(&interval, 1);
+  int dim;
+  read_bin_values(&dim, 1);
+
+  mmsys.vmcmd->set_n_vstates(n_vs);
+  mmsys.vmcmd->set_trans_interval(interval);
+  mmsys.vmcmd->set_temperature((real)temperature);
+  
+  for (int i = 0; i < n_vs; i++) {
+    int ord;
+    read_bin_values(&ord, 1);
+    mmsys.vmcmd->set_vs_order(i, ord);
+    double lambda_low, lambda_high;
+    double prob_low, prob_high;
+    read_bin_values(&lambda_low, 1);
+    read_bin_values(&lambda_high, 1);
+    read_bin_values(&prob_low, 1);
+    read_bin_values(&prob_high, 1);
+    for (int j = 0; j < ord + 1; j++) {
+      double buf;
+      read_bin_values(&buf, 1);
+      mmsys.vmcmd->set_vs_poly_param(i, j, (real)buf);
+    }
+    double alpha_low, alpha_high;
+    read_bin_values(&alpha_low, 1);
+    read_bin_values(&alpha_high, 1);
+    mmsys.vmcmd->set_vs_params(i, (real)lambda_low, (real)lambda_high, (real)prob_low, (real)prob_high,
+			       (real)alpha_low, (real)alpha_high);
+  }
+  int init, seed;
+  read_bin_values(&init, 1);
+  read_bin_values(&seed, 1);
+  mmsys.vmcmd->set_init_vs(init - 1);
+  mmsys.vmcmd->set_random_seed(seed);
+  
+  return 0;
 }
 
 template <typename TYPE>

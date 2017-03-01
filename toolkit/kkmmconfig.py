@@ -62,6 +62,9 @@ class Config(object):
             "aus-type":ConfigReader.STR,
             "enhance-group-name":ConfigReader.ARRAY_STR,
 
+            "fn-i-vcmd-inp":ConfigReader.STR,
+            "fn-i-vcmd-initial":ConfigReader.STR,
+
             "dummy":ConfigReader.STR
 
             }

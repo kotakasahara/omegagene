@@ -22,6 +22,7 @@ class Extended : public CelesteObject {
     void set_lambda_interval(int in_lambda_interval);
 };
 
+
 class VirtualState : public CelesteObject {
   private:
   protected:
@@ -216,6 +217,52 @@ class ExtendedVAUS : public ExtendedVMcMD {
     // real alpha_low, real alpha_high);
     // int set_vs_poly_param(int vs_id, int ord, real param);
     // int print_info();
+};
+
+class ExtendedVcMD : public ExtendedVMcMD {
+  private:
+  protected:
+    int  n_dim;
+    
+    std::vector< std::vector<int> > vc_range_min;
+    std::vector< std::vector<int> > vc_range_max;
+    // range_min[dim][vs]
+    // range_max[dim][vs]
+    std::vector<real> vc_init_vs;
+    // init_vs[dim] = vs
+
+    int random_seed;
+    
+    std::map< std::vector<int>, real > vc_param;
+    
+    std::vector<int> vc_cur_vs;
+
+  public:
+    ExtendedVcMD();
+    ~ExtendedVcMD();
+
+    int apply_bias_vc(unsigned long cur_step, vector<real> in_lambda,
+		      real_fc *work, int n_atoms_box);
+    vector<int>  get_init_vs_vc() { return init_vs; };
+    void set_init_vs_vc(int in_init_vs) {
+        init_vs = in_init_vs;
+        cur_vs  = init_vs;
+    };
+    int trial_transition_vc(vector<int> source, vector<int> rel_dest, vector<real> lambda);
+
+    int set_current_vstate_vc(vector<real> lambda);
+
+    int write_vslog_vc(int cur_steps);
+    int write_lambda_vc(std::vector<real> lambda);
+
+    virtual int print_info();
+    // virtual real cal_struct_parameters(real *crd, PBC *pbc);
+    int set_enhance_groups(int *            in_n_atoms_in_groups,
+                           int **           in_atom_groups,
+                           int              in_n_enhance_groups,
+                           std::vector<int> in_enhance_groups);
+
+    real ***get_crd_groups() { return crd_groups; };
 };
 
 #endif

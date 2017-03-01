@@ -1,10 +1,5 @@
 #!/usr/bin/python2.7
 
-################################
-##  Celeste input
-##    version 
-##    15032221
-################################
 MAGIC=66261
 #VERSION = 13111501
 #VERSION = 14013101 
@@ -16,7 +11,7 @@ MAGIC=66261
 #VERSION = "v.0.36.c" ## version_info
 #VERSION = "v.0.36.f" ## version_info
 
-VERSION_LIST = ["v.0.34.b", "v.0.36.c", "v.0.36.f"]
+VERSION_LIST = ["v.0.34.b", "v.0.36.c", "v.0.36.f", "v.0.39.a"]
 #VERSION_ID = 0
 #VERSION = VERSION_LIST[VERSION_ID]
 
@@ -39,6 +34,7 @@ import kkceleste_posrest as posres
 import kkatomgroup as atgrp
 import kkceleste_ausrestart as ausrest
 #import evaluate_structure as evst
+import kkmm_vcmd
 
 def get_options():
     p = OptionParser()
@@ -93,6 +89,7 @@ class MDInputGen(object):
         self.tpl = None
         self.settle = None
         self.extended = None
+        self.extended_vcmd = None
         self.atom_groups = []
         self.atom_group_names = []
         self.dist_rest = []
@@ -153,6 +150,7 @@ class MDInputGen(object):
         self.read_shake()
         self.read_settle()
         self.read_extended()
+        self.read_extended_vcmd()
 
         if self.config.get_val("fn-i-atom-groups"):
             atom_groups_reader = atgrp.AtomGroupsReader(self.config.get_val("fn-i-atom-groups"))
@@ -214,7 +212,7 @@ class MDInputGen(object):
             self.settle = shkreader.shake_sys
             shkreader.print_shake_info()
         return
-        
+
     def read_extended(self):
         self.extended = None
         if self.config.get_val("fn-i-ttp-v-mcmd-inp"):
@@ -234,7 +232,15 @@ class MDInputGen(object):
                 print "For mcmd, --ttp-v-mcmd-initial or the two options --ttp-v-mcmd-initial-vs and --ttp-v-mcmd-seed are required."
                 sys.exit(1)
         return
-    
+
+    def read_extended_vcmd(self):
+        self.extended_vcmd = None
+        if self.config.get_val("fn-i-vcmd-inp"):
+            self.extended_vcmd = kkmm_vcmd.VcMDConf()
+            self.extended_vcmd.read_params(self.config.get_val("fn-i-vcmd-inp"))
+            self.extended_vcmd.read_init(self.config.get_val("fn-i-vcmd-initial"))
+        return
+
     def dump_mdinput(self):
         f = open(self.fn_out, "wb")
         ## Magic number 66261
@@ -258,6 +264,7 @@ class MDInputGen(object):
         buf_shake = ""
         buf_settle = ""
         buf_extended = ""
+        buf_extended_vcmd = ""
         if self.system.shake:
             buf_shake = self.dump_shake(self.system.model, self.tpl,
                                         self.system.shake)
@@ -266,6 +273,8 @@ class MDInputGen(object):
                                          self.settle)
         if self.extended:
             buf_extended = self.dump_extended(self.extended)
+        if self.extended_vcmd:
+            buf_extended_vcmd = self.dump_extended_vcmd(self.extended_vcmd)
 
         buf_atom_groups = self.dump_atom_groups(self.atom_groups, self.atom_group_names)
 
@@ -292,19 +301,24 @@ class MDInputGen(object):
             f.write(st.pack("@i", len(buf_pos_rest)))
         if self.version_id >= 2:
             f.write(st.pack("@i", len(buf_group_coord)))
-        print "size: buf_box        : " + str(len(buf_box))
-        print "size: buf_coordinates: " + str(len(buf_coordinates))
-        print "size: buf_velocities : " + str(len(buf_velocities))
-        print "size: buf_topol      : " + str(len(buf_topol))
-        print "size: buf_shake      : " + str(len(buf_shake))
-        print "size: buf_settle     : " + str(len(buf_settle))
+        if self.version_id >= 3:
+            f.write(st.pack("@i", len(buf_extended_vcmd)))
+        print "size: buf_box          : " + str(len(buf_box))
+        print "size: buf_coordinates  : " + str(len(buf_coordinates))
+        print "size: buf_velocities   : " + str(len(buf_velocities))
+        print "size: buf_topol        : " + str(len(buf_topol))
+        print "size: buf_shake        : " + str(len(buf_shake))
+        print "size: buf_settle       : " + str(len(buf_settle))
         print "size: buf_extended     : " + str(len(buf_extended))
-        print "size: buf_atom_groups: " + str(len(buf_atom_groups))
-        print "size: buf_dist_rest: " + str(len(buf_dist_rest))
+        print "size: buf_atom_groups  : " + str(len(buf_atom_groups))
+        print "size: buf_dist_rest    : " + str(len(buf_dist_rest))
         if self.version_id >= 1:
-            print "size: buf_pos_rest: " + str(len(buf_pos_rest))
+            print "size: buf_pos_rest     : " + str(len(buf_pos_rest))
         if self.version_id >= 2:
-            print "size: buf_group_coord: " + str(len(buf_group_coord))
+            print "size: buf_group_coord  : " + str(len(buf_group_coord))
+        if self.version_id >= 3:
+            print "size: buf_extended_vcmd: " + str(len(buf_extended_vcmd))
+
         f.write(buf_box)
         f.write(buf_coordinates)
         f.write(buf_velocities)
@@ -318,6 +332,8 @@ class MDInputGen(object):
             f.write(buf_pos_rest)
         if self.version_id >= 2:
             f.write(buf_group_coord)
+        if self.version_id >= 3:
+            f.write(buf_extended)
         f.close()
         return
 
@@ -566,6 +582,31 @@ class MDInputGen(object):
                 buf += st.pack("@d", float(prm))
         buf += st.pack("@ii", extended.init_vs, extended.seed)
         return buf
+
+    def dump_extended_vcmd(self, extended):
+        buf = ""
+        buf += st.pack("@i", extended.interval)
+        buf += st.pack("@i", extended.dim)
+        for cur_dim in range(1, extended.dim+1):
+            n_vs = len(extended.lambda_ranges[cur_dim]) -1 
+            # print "dim : " + str(cur_dim) + " n_vs : " + str(n_vs)
+            buf += st.pack("@i", n_vs)
+            for vs in range(1, n_vs + 1):
+                buf += st.pack("@dd",
+                               extended.lambda_ranges[cur_dim][vs][0],
+                               extended.lambda_ranges[cur_dim][vs][1])
+        for cur_dim in range(1, extended.dim+1):
+            buf += st.pack("@i", extended.init_vs[cur_dim])
+
+        buf += st.pack("@i", extended.seed)            
+
+        for vscrd, prm in extended.params.items():
+            for vscrd_x in vscrd:
+                buf += st.pack("@i", vscrd_x)
+            buf += st.pack("@d", prm[0])
+        
+        return buf
+
     def dump_atom_groups(self, atom_groups, atom_group_names):
         buf = ""
         buf += st.pack("@i", len(atom_group_names)-1)

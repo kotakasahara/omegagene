@@ -40,6 +40,15 @@ int WriteTTPVMcMDLog::write_ttpvMcMDLog(int step, int vstate) {
     ofs << step << "\t" << vstate + 1 << endl;
     return 0;
 }
+int WriteTTPVMcMDLog::write_VcMDLog(int step, std::vector<int> vstate) {
+  ofs << step;
+  for(std::vector<int>::iterator itr = vstate.begin();
+      itr != vstate.end(); ++itr){
+    ofs << "\t" << vstate + 1;
+  }
+  ofs << std::endl;
+  return 0;
+}
 
 WriteTableLog::WriteTableLog() : Write() {}
 WriteTableLog::~WriteTableLog() {}
@@ -78,6 +87,17 @@ int WriteTableLogBinary::write_row(real *values) {
     ofs.write((const char *)values, sizeof(real) * n_cols);
     return 0;
 }
+int WriteTableLogBinary::write_row(std::vector<real> values) {
+    //  for(int i=0; i<n_cols; i++){
+    // real val = values[i];
+    //    ofs.write((const char*)&val, sizeof(real));
+    //  }
+  for(std::vector<real>::iterator itr = values.begin();
+      itr != values.end(); itr++){
+    ofs.write((const char*)*itr, sizeof(real));
+  }
+  return 0;
+}
 WriteTableLogAscii::WriteTableLogAscii() : WriteTableLog() {}
 WriteTableLogAscii::~WriteTableLogAscii() {}
 int WriteTableLogAscii::write_header() {
@@ -90,6 +110,17 @@ int WriteTableLogAscii::write_row(int *values) {
     return 0;
 }
 int WriteTableLogAscii::write_row(real *values) {
+    char buf[1024];
+    sprintf(buf, "%14.10e", values[0]);
+    ofs << buf;
+    for (int i = 1; i < n_cols; i++) {
+        sprintf(buf, "%14.10e", values[i]);
+        ofs << "\t" << buf;
+    }
+    ofs << endl;
+    return 0;
+}
+int WriteTableLogAscii::write_row(std::vector<real> values) {
     char buf[1024];
     sprintf(buf, "%14.10e", values[0]);
     ofs << buf;
