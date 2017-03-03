@@ -150,7 +150,9 @@ class SubBox : public CelesteObject {
     int               flg_settle;
     ConstraintObject *constraint;
     ConstraintObject *settle;
+    int               flg_extended;
     ExtendedVMcMD *   extended;
+    ExtendedVcMD *    vcmd;
 
     int               flg_thermostat;
     ThermostatObject *thermostat;
@@ -306,8 +308,10 @@ class SubBox : public CelesteObject {
     int update_thermostat(const int cur_step);
     int apply_thermostat();
     int apply_thermostat_with_shake(const int max_loop, const real tolerance);
-    void set_extended(ExtendedVMcMD *in_exp) { extended = in_exp; };
+    int set_extended(int flg, ExtendedVMcMD *in_ext);
+    int set_vcmd(int flg, ExtendedVcMD *in_ext);
     int extended_apply_bias(unsigned long cur_step, real in_lambda);
+    int vcmd_apply_bias(unsigned long cur_step);
     int extended_apply_bias_struct_param(unsigned long cur_step);
     int extended_write_aus_restart(std::string fn_out);
     void extended_enable_vs_transition();

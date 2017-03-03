@@ -18,6 +18,7 @@ int DynamicsMode::set_config_parameters(Config *in_cfg) {
     // enecal = new EnergyCalc(&mmsys, &subbox);
     cfg = in_cfg;
     RunMode::set_config_parameters(cfg);
+    mmsys.extended_mode = cfg->extended_ensemble;
     if (cfg->extended_ensemble == EXTENDED_VMCMD) {
       mmsys.vmcmd = new ExtendedVMcMD();
     } else if (cfg->extended_ensemble == EXTENDED_VAUS) {
@@ -73,28 +74,40 @@ int DynamicsMode::initial_preprocess() {
     } else {
         mmsys.set_random(cfg->random_seed);
     }
-    ExtendedVMcMD* ext;
     if (cfg->extended_ensemble == EXTENDED_VMCMD ||
 	cfg->extended_ensemble == EXTENDED_VAUS ) {
-      ext = mmsys.vmcmd;
-    }else if(cfg->extended_ensemble == EXTENDED_VCMD){
-      ext = mmsys.vcmd;
-    }
-    if (cfg->extended_ensemble != EXTENDED_NONE){
       cout << "V_McMD: " << endl;
       cout << "  VS log output ... " << cfg->fn_o_vmcmd_log << endl;
       cout << "  Lambda output ... " << cfg->fn_o_extended_lambda << endl;
-      ext->set_files(cfg->fn_o_vmcmd_log, cfg->fn_o_extended_lambda, cfg->format_o_extended_lambda);
-      ext->set_lambda_interval(cfg->print_intvl_extended_lambda);
-      ext->print_info();
+      mmsys.vmcmd->set_files(cfg->fn_o_vmcmd_log, cfg->fn_o_extended_lambda, cfg->format_o_extended_lambda);
+      mmsys.vmcmd->set_lambda_interval(cfg->print_intvl_extended_lambda);
+      mmsys.vmcmd->print_info();
       
-      ext->set_params(&mmsys.random_mt, cfg->enhance_sigma, cfg->enhance_recov_coef,
+      mmsys.vmcmd->set_params(&mmsys.random_mt, cfg->enhance_sigma, cfg->enhance_recov_coef,
 			      cfg->n_steps); //, cfg->aus_type);
 
       // for(int i_grp=0; i_grp < mmsys.n_groups; i_grp++){
       // cout << "dbg1130 massDM " << i_grp << " " << mmsys.mass_inv_groups[i_grp]<<endl;
       //}
-      ext->set_mass(subbox.get_mass(), mmsys.mass_groups, mmsys.mass_inv_groups);
+      mmsys.vmcmd->set_mass(subbox.get_mass(), mmsys.mass_groups, mmsys.mass_inv_groups);
+
+    }else if(cfg->extended_ensemble == EXTENDED_VCMD){
+      cout << "VcMD: " << endl;
+      cout << "  VS log output ... " << cfg->fn_o_vmcmd_log << endl;
+      cout << "  Lambda output ... " << cfg->fn_o_extended_lambda << endl;
+      mmsys.vcmd->set_files(cfg->fn_o_vmcmd_log, cfg->fn_o_extended_lambda, cfg->format_o_extended_lambda);
+      mmsys.vcmd->set_lambda_interval(cfg->print_intvl_extended_lambda);
+      mmsys.vcmd->print_info();
+      cout << "print_info" << endl;
+      mmsys.vcmd->set_params(&mmsys.random_mt, cfg->enhance_sigma, cfg->enhance_recov_coef,
+			      cfg->n_steps); //, cfg->aus_type);
+
+      // for(int i_grp=0; i_grp < mmsys.n_groups; i_grp++){
+      // cout << "dbg1130 massDM " << i_grp << " " << mmsys.mass_inv_groups[i_grp]<<endl;
+      //}
+      cout << "set_mass"<< endl;
+      mmsys.vcmd->set_mass(subbox.get_mass(), mmsys.mass_groups, mmsys.mass_inv_groups);
+      cout << "vcmd"<<endl;
     }      
 
     // cout << "DBG MmSystem.n_bonds: " << mmsys.n_bonds << endl;
@@ -128,15 +141,11 @@ int DynamicsMode::initial_preprocess() {
 int DynamicsMode::terminal_process() {
     cout << "DynamicsMode::terminal_process()" << endl;
     writer_trr->close();
-    if (cfg->extended_ensemble != EXTENDED_NONE){
-      ExtendedVMcMD *ext;
-      if (cfg->extended_ensemble == EXTENDED_VMCMD ||
-	  cfg->extended_ensemble == EXTENDED_VAUS ) {
-	ext = mmsys.vmcmd;
-      }else if(cfg->extended_ensemble == EXTENDED_VCMD){
-	ext = mmsys.vcmd;
-      }
-      ext->close_files();
+    if (cfg->extended_ensemble == EXTENDED_VMCMD ||
+	cfg->extended_ensemble == EXTENDED_VAUS ) {
+      mmsys.vmcmd->close_files();
+    }else if(cfg->extended_ensemble == EXTENDED_VCMD){
+      mmsys.vcmd->close_files();
     }
     return 0;
 }
@@ -171,7 +180,10 @@ int DynamicsMode::output_restart() {
                                           + mmsys.pote_14vdw + mmsys.pote_14ele + mmsys.pote_vdw + mmsys.pote_ele),
                                  (double)mmsys.kinetic_e, mmsys.crd, mmsys.vel_just);
 
-    if (cfg->extended_ensemble == EXTENDED_VAUS) { subbox.extended_write_aus_restart(cfg->fn_o_aus_restart); }
+    if (cfg->extended_ensemble == EXTENDED_VAUS ||
+	cfg->extended_ensemble == EXTENDED_VCMD) { 
+      subbox.extended_write_aus_restart(cfg->fn_o_aus_restart);
+    }
 
     return 0;
 }
@@ -318,7 +330,12 @@ int DynamicsMode::subbox_setup() {
         subbox.set_subset_constraint(mmsys.constraint, mmsys.settle);
     }
     subbox.init_thermostat(cfg->thermostat_type, cfg->temperature_init, mmsys.d_free);
-    if (cfg->extended_ensemble != EXTENDED_NONE) { subbox.set_extended(mmsys.vmcmd); }
+
+    if (cfg->extended_ensemble == EXTENDED_VCMD) {
+      subbox.set_vcmd(cfg->extended_ensemble, mmsys.vcmd);
+    }else if(cfg->extended_ensemble != EXTENDED_NONE) {
+      subbox.set_extended(cfg->extended_ensemble, mmsys.vmcmd);
+    }
 
     // cout << "set_nsgrid" << endl;
     subbox.revise_coordinates_pbc();
@@ -402,10 +419,12 @@ int DynamicsModePresto::calc_in_each_step() {
     mmsys.ctime_calc_energy += endTimeEne - startTimeEne;
 
     if (cfg->extended_ensemble == EXTENDED_VMCMD) {
-        subbox.extended_apply_bias(mmsys.cur_step, mmsys.set_potential_e());
+      subbox.extended_apply_bias(mmsys.cur_step, mmsys.set_potential_e());
     } else if (cfg->extended_ensemble == EXTENDED_VAUS) {
         // cout << "test1"<<endl;
-        subbox.extended_apply_bias_struct_param(mmsys.cur_step);
+      subbox.extended_apply_bias_struct_param(mmsys.cur_step);
+    } else if (cfg->extended_ensemble == EXTENDED_VCMD) {
+      subbox.vcmd_apply_bias(mmsys.cur_step);
     }
 
     const clock_t startTimeVel = clock();

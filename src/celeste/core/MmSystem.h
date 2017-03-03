@@ -121,6 +121,7 @@ class MmSystem : public CelesteObject {
 
     ConstraintObject constraint;
     ConstraintObject settle;
+    int extended_mode;
     ExtendedVMcMD *  vmcmd;
     ExtendedVcMD  *  vcmd;
 

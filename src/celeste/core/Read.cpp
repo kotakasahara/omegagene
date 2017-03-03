@@ -95,6 +95,10 @@ int Read::load_launch_set(MmSystem &mmsys) {
         cout << "--- Load group coordinates for restarting V-AUS: " << size_group_coord << " bytes." << endl;
         load_ls_group_coord(mmsys);
     }
+    if (size_extended_vcmd > 0) {
+        cout << "--- Load VcMD: " << size_extended_vcmd << " bytes." << endl;
+        load_ls_vcmd(mmsys);
+    }
     // cout << "load_ls_pcluster()" << endl;
     // load_ls_pcluster(mmsys);
     close();
@@ -572,6 +576,7 @@ int Read::load_ls_atom_groups(MmSystem &mmsys) {
 int Read::load_ls_dist_restraint(DistRestraintObject *dr) {
     int n_drunits;
     read_bin_values(&n_drunits, 1);
+    cout << "dbg 0303 dist_rest " << n_drunits << endl;
     dr->alloc_drunits(n_drunits);
     for (int i = 0; i < n_drunits; i++) {
         int   aid1, aid2;
@@ -590,6 +595,7 @@ int Read::load_ls_dist_restraint(DistRestraintObject *dr) {
 int Read::load_ls_pos_restraint(PosRestraintObject *pr) {
     int n_prunits;
     read_bin_values(&n_prunits, 1);
+    cout << "dbg 0303 pos_rest " << n_prunits << endl;
     pr->alloc_prunits(n_prunits);
     for (int i = 0; i < n_prunits; i++) {
         int   aid;
@@ -615,7 +621,6 @@ int Read::load_ls_group_coord(MmSystem &mmsys) {
     // cout << "dbg1130 group_coord : " << string(header) << endl;
     int aus_type = 0;
     read_bin_values(&aus_type, 1);
-    mmsys.vmcmd->set_aus_type(aus_type);
     // cout << "dbg1130 aus_type: " << aus_type << endl;
     int n_groups = 0;
     read_bin_values(&n_groups, 1);
@@ -623,30 +628,48 @@ int Read::load_ls_group_coord(MmSystem &mmsys) {
 
     vector<int> enhance_groups;
     for (int i = 0; i < n_groups; i++) {
-        read_bin_values(&buf, 1);
-        enhance_groups.push_back(buf);
+      read_bin_values(&buf, 1);
+      enhance_groups.push_back(buf);
     }
-    mmsys.vmcmd->set_enhance_groups(mmsys.n_atoms_in_groups, mmsys.atom_groups, n_groups, enhance_groups);
-
     for (int i = 0; i < n_groups; i++) {
-        read_bin_values(&buf, 1);
-        // if(buf != mmsys.n_atoms_in_groups[enhance_groups[i]]){
-        // stringstream ss;
-        // ss << "Information in the V-AUS restart file is inconsistent"<<endl;
-        // ss << "Enhanced group " << i << " (atom group " << enhance_groups[i] << ") " << endl;
-        // ss << mmsys.n_atoms_in_groups[enhance_groups[i]] << " atoms in the group definition." << endl;
-        // ss << buf << " atoms in the V-AUS restart file." << endl;
-        // error_exit(ss.str(), "1A00005");
-        //}
+      read_bin_values(&buf, 1);
+      // if(buf != mmsys.n_atoms_in_groups[enhance_groups[i]]){
+      // stringstream ss;
+      // ss << "Information in the V-AUS restart file is inconsistent"<<endl;
+      // ss << "Enhanced group " << i << " (atom group " << enhance_groups[i] << ") " << endl;
+      // ss << mmsys.n_atoms_in_groups[enhance_groups[i]] << " atoms in the group definition." << endl;
+      // ss << buf << " atoms in the V-AUS restart file." << endl;
+      // error_exit(ss.str(), "1A00005");
+      //}
     }
-
-    double buf_dbl;
-    for (int i = 0; i < n_groups; i++) {
-        for (int j = 0; j < mmsys.n_atoms_in_groups[enhance_groups[i]]; j++) {
-            read_bin_values(&(mmsys.vmcmd->get_crd_groups()[i][j][0]), 1);
-            read_bin_values(&(mmsys.vmcmd->get_crd_groups()[i][j][1]), 1);
-            read_bin_values(&(mmsys.vmcmd->get_crd_groups()[i][j][2]), 1);
-        }
+    
+    if(mmsys.extended_mode == EXTENDED_VAUS){
+      mmsys.vmcmd->set_aus_type(aus_type);
+      mmsys.vmcmd->set_enhance_groups(mmsys.n_atoms_in_groups,
+				      mmsys.atom_groups, 
+				      n_groups, enhance_groups);
+      
+      double buf_dbl;
+      for (int i = 0; i < n_groups; i++) {
+	for (int j = 0; j < mmsys.n_atoms_in_groups[enhance_groups[i]]; j++) {
+	  read_bin_values(&(mmsys.vmcmd->get_crd_groups()[i][j][0]), 1);
+	  read_bin_values(&(mmsys.vmcmd->get_crd_groups()[i][j][1]), 1);
+	  read_bin_values(&(mmsys.vmcmd->get_crd_groups()[i][j][2]), 1);
+	}
+      }
+    }else if(mmsys.extended_mode == EXTENDED_VCMD){
+      mmsys.vcmd->set_reactcrd_type(aus_type);
+      mmsys.vcmd->set_enhance_groups(mmsys.n_atoms_in_groups,
+				     mmsys.atom_groups, 
+				     n_groups, enhance_groups);
+      double buf_dbl;
+      for (int i = 0; i < n_groups; i++) {
+	for (int j = 0; j < mmsys.n_atoms_in_groups[enhance_groups[i]]; j++) {
+	  read_bin_values(&(mmsys.vcmd->get_crd_groups()[i][j][0]), 1);
+	  read_bin_values(&(mmsys.vcmd->get_crd_groups()[i][j][1]), 1);
+	  read_bin_values(&(mmsys.vcmd->get_crd_groups()[i][j][2]), 1);
+	}
+      }
     }
     return 0;
 }
@@ -656,24 +679,24 @@ int Read::load_ls_vcmd(MmSystem &mmsys) {
   read_bin_values(&interval, 1);
   int dim;
   read_bin_values(&dim, 1);
+  //cout << "dbg 0303 intrv: " << interval << " dim: " << dim << endl;;
+
   mmsys.vcmd->set_n_dim(dim);
   mmsys.vcmd->set_trans_interval(interval);
   int n_states = 1;
-  std::vector< std::vector<string> > grp_names;
+  std::vector< std::vector<int> > grp_id;
   for (int d = 0; d < dim; d++) {
     int n_vs;
     read_bin_values(&n_vs, 1);
     int n_grp;
     read_bin_values(&n_grp, 1);
-    std::vector<string> grp_names_dim;
+    std::vector<int> grp_dim;
     for(int i = 0; i < n_grp; i++){
-      int len;
-      char grp_name[MAX_LEN_NAME];
-      read_bin_values(&len, 1);
-      ifs.read(grp_name, len);
-      grp_names_dim.push_back(string(grp_name));
+      int grp_id;
+      read_bin_values(&grp_id, 1);
+      grp_dim.push_back(grp_id);
     }
-    mmsys.vcmd->push_grp_names(grp_names_dim);
+    mmsys.vcmd->push_grp_ids(grp_dim);
     n_states *= n_vs;
     std::vector<int> range_min;
     std::vector<int> range_max;
@@ -694,10 +717,11 @@ int Read::load_ls_vcmd(MmSystem &mmsys) {
     read_bin_values(&vs, 1);
     init_vs.push_back(vs);
   }
-  mmsys.vcmd->set_vc_init_vs(init_vs);
-  double seed;
+  mmsys.vcmd->set_init_vs(init_vs);
+  int seed;
   read_bin_values(&seed, 1);
   mmsys.vcmd->set_random_seed(seed);
+
   std::map< std::vector<int>, real > vc_param;  
   for (int i = 0; i < n_states; i++){
     std::vector<int> state;
@@ -710,6 +734,7 @@ int Read::load_ls_vcmd(MmSystem &mmsys) {
     read_bin_values(&param, 1);
     vc_param[state] = param;
   }
+  mmsys.vcmd->set_vc_param(vc_param);
   return 0;
 }
 

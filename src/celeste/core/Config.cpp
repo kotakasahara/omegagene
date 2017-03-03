@@ -145,37 +145,37 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
         } else if (*itr == "--extended-ensemble") {
             itr++;
             if (*itr == "none") {
-                extended_ensemble = EXTENDED_NONE;
+	      extended_ensemble = EXTENDED_NONE;
             } else if (*itr == "v-mcmd") {
-                extended_ensemble = EXTENDED_VMCMD;
+	      extended_ensemble = EXTENDED_VMCMD;
             } else if (*itr == "v-aus") {
-                extended_ensemble = EXTENDED_VAUS;
+	      extended_ensemble = EXTENDED_VAUS;
             } else if (*itr == "vcmd") {
-                extended_ensemble = EXTENDED_VCMD;
+	      extended_ensemble = EXTENDED_VCMD;
             } else {
-                extended_ensemble = EXTENDED_NONE;
+	      extended_ensemble = EXTENDED_NONE;
             }
-
+	    
         } else if (*itr == "--temperature") {
-            temperature = atof((*++itr).c_str());
-
+	  temperature = atof((*++itr).c_str());
+	  
         } else if (*itr == "--temperature-init") {
-            temperature_init = atof((*++itr).c_str());
+	  temperature_init = atof((*++itr).c_str());
 
         } else if (*itr == "--heating-steps") {
-            heating_steps = atoi((*++itr).c_str());
-
+	  heating_steps = atoi((*++itr).c_str());
+	  
         } else if (*itr == "--com-motion") {
-            itr++;
+	  itr++;
             if (*itr == "none") {
-                com_motion = COM_NONE;
+	      com_motion = COM_NONE;
             } else if (*itr == "cancel") {
-                com_motion = COM_CANCEL;
+	      com_motion = COM_CANCEL;
             }
 
         } else if (*itr == "--com-cancel-group-name") {
-            com_cancel_groups_name[n_com_cancel_groups_name] = ((*++itr).c_str());
-            // cout << "name " << com_cancel_groups_name[n_com_cancel_groups_name] << endl;
+	  com_cancel_groups_name[n_com_cancel_groups_name] = ((*++itr).c_str());
+	  // cout << "name " << com_cancel_groups_name[n_com_cancel_groups_name] << endl;
             n_com_cancel_groups_name++;
 
         } else if (*itr == "--com-cancel-group-id") {

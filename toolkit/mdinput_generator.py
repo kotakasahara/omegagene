@@ -176,7 +176,7 @@ class MDInputGen(object):
                 aus_restart_reader = ausrest.CelesteAUSRestartReader(self.config.get_val("fn-i-aus-restart"))
                 print self.config.get_val("fn-i-aus-restart")
                 self.aus_restart = aus_restart_reader.read_aus_restart(self.atom_groups, self.atom_group_names)
-            elif self.config.get_val("aus-type") :
+            elif self.config.get_val("aus-type") or self.config.get_val("fn-i-vcmd-inp"):
                 print "Generate AUS restart from the input coordinates"
                 if not self.config.get_val("enhance-group-name"):
                     print "Options --enhance-group-name is required for AUS simulation"
@@ -239,6 +239,12 @@ class MDInputGen(object):
             self.extended_vcmd = kkmm_vcmd.VcMDConf()
             self.extended_vcmd.read_params(self.config.get_val("fn-i-vcmd-inp"))
             self.extended_vcmd.read_init(self.config.get_val("fn-i-vcmd-initial"))
+            grp_names = set()
+            for grps in self.extended_vcmd.group_names[1:]:
+                for grp in grps:
+                    grp_names.add(grp)
+            print grp_names
+            self.config.set_val("enhance-group-name", grp_names)
         return
 
     def dump_mdinput(self):
@@ -274,7 +280,7 @@ class MDInputGen(object):
         if self.extended:
             buf_extended = self.dump_extended(self.extended)
         if self.extended_vcmd:
-            buf_extended_vcmd = self.dump_extended_vcmd(self.extended_vcmd)
+            buf_extended_vcmd = self.dump_extended_vcmd(self.extended_vcmd, self.atom_group_names)
 
         buf_atom_groups = self.dump_atom_groups(self.atom_groups, self.atom_group_names)
 
@@ -333,7 +339,7 @@ class MDInputGen(object):
         if self.version_id >= 2:
             f.write(buf_group_coord)
         if self.version_id >= 3:
-            f.write(buf_extended)
+            f.write(buf_extended_vcmd)
         f.close()
         return
 
@@ -583,8 +589,9 @@ class MDInputGen(object):
         buf += st.pack("@ii", extended.init_vs, extended.seed)
         return buf
 
-    def dump_extended_vcmd(self, extended):
+    def dump_extended_vcmd(self, extended, atom_group_names):
         buf = ""
+        print "dbg dump interval " + str(extended.interval) + " dim " + str(extended.dim)
         buf += st.pack("@i", extended.interval)
         buf += st.pack("@i", extended.dim)
         for cur_dim in range(1, extended.dim+1):
@@ -592,9 +599,9 @@ class MDInputGen(object):
             # print "dim : " + str(cur_dim) + " n_vs : " + str(n_vs)
             buf += st.pack("@i", n_vs)
             buf += st.pack("@i", len(extended.group_names[cur_dim]))
-            for grp in extended.group_names[cur_dim]:
-                buf += st.pack("@i", len(grp)+1)
-                buf += grp+'\0'
+            for grp_name in extended.group_names[cur_dim]:
+                grp_id = atom_group_names.index(grp_name)             
+                buf += st.pack("@i", grp_id)
             for vs in range(1, n_vs + 1):
                 buf += st.pack("@dd",
                                extended.lambda_ranges[cur_dim][vs][0],
@@ -602,14 +609,19 @@ class MDInputGen(object):
 
         for cur_dim in range(1, extended.dim+1):
             buf += st.pack("@i", extended.init_vs[cur_dim])
-
+            
         buf += st.pack("@i", extended.seed)            
-
+        print extended.seed
         for vscrd, prm in extended.params.items():
+            tmp = "" 
             for vscrd_x in vscrd:
                 buf += st.pack("@i", vscrd_x)
+                tmp += " " + str(vscrd_x)
             buf += st.pack("@d", prm[0])
-        
+            print tmp + " " + str(prm[0])
+            
+        print "dbg " + str(st.unpack("@i", buf[0:4]))
+        print "dbg " + str(st.unpack("@i", buf[4:8]))
         return buf
 
     def dump_atom_groups(self, atom_groups, atom_group_names):

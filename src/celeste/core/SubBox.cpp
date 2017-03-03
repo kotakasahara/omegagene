@@ -1644,9 +1644,26 @@ int SubBox::apply_thermostat_with_shake(const int max_loops, const real toleranc
                                             pbc, buf_crd, max_loops, tolerance, &commotion, atomids_rev);
     return 0;
 }
+
+int SubBox::set_extended(int flg, ExtendedVMcMD *in_ext) { 
+  flg_extended = flg;
+  extended = in_ext;
+  return 0;
+}
+int SubBox::set_vcmd(int flg, ExtendedVcMD *in_ext) { 
+  flg_extended = flg;
+  vcmd = in_ext;
+  return 0;
+}
+
+int SubBox::vcmd_apply_bias(unsigned long cur_step){
+  vcmd->set_struct_parameters(crd, pbc);
+  vcmd->apply_bias(cur_step, work, n_atoms_box);
+  return 0;
+}
 int SubBox::extended_apply_bias(unsigned long cur_step, real in_lambda) {
-    extended->apply_bias(cur_step, in_lambda, work, n_atoms_box);
-    return 0;
+  extended->apply_bias(cur_step, in_lambda, work, n_atoms_box);
+  return 0;
 }
 int SubBox::extended_apply_bias_struct_param(unsigned long cur_step) {
     real param = extended->cal_struct_parameters(crd, pbc);

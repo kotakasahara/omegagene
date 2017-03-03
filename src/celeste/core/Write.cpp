@@ -124,13 +124,17 @@ int WriteTableLogAscii::write_row(real *values) {
     return 0;
 }
 int WriteTableLogAscii::write_row(std::vector<real> values) {
-    char buf[1024];
-    sprintf(buf, "%14.10e", values[0]);
-    ofs << buf;
-    for (int i = 1; i < n_cols; i++) {
-        sprintf(buf, "%14.10e", values[i]);
+  cout << "dbg 0303 write_row" << endl;
+  for(const auto v : values){
+    cout << v << endl;
+  }
+  char buf[1024];
+  sprintf(buf, "%14.10e", values[0]);
+  ofs << buf;
+  for (int i = 1; i < values.size(); i++) {
+    sprintf(buf, "%14.10e", values[i]);
         ofs << "\t" << buf;
-    }
-    ofs << endl;
-    return 0;
+  }
+  ofs << endl;
+  return 0;
 }

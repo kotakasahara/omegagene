@@ -33,12 +33,12 @@ int VirtualState::set_poly_param(int ord, real param) {
     return ord;
 }
 int VirtualState::set_params(real in_lambda_low, real in_lambda_high, real in_prob_low, real in_prob_high) {
-    lambda_range[0] = in_lambda_low;
-    lambda_range[1] = in_lambda_high;
-    trans_prob[0]   = in_prob_low;
-    trans_prob[1]   = in_prob_high;
-    // cout << "dbg1225 vs set_param "<< trans_prob[0] << " " << trans_prob[1] << endl;
-    return 0;
+  lambda_range[0] = in_lambda_low;
+  lambda_range[1] = in_lambda_high;
+  trans_prob[0]   = in_prob_low;
+  trans_prob[1]   = in_prob_high;
+  // cout << "dbg1225 vs set_param "<< trans_prob[0] << " " << trans_prob[1] << endl;
+  return 0;
 }
 int VirtualState::set_alpha(real in_alpha_low, real in_alpha_high) {
     alpha[0] = in_alpha_low;
@@ -321,37 +321,38 @@ ExtendedVAUS::ExtendedVAUS() {
 ExtendedVAUS::~ExtendedVAUS() {
     free_crd_centers();
 }
+
 real ExtendedVAUS::set_crd_centers(real *crd, PBC *pbc) {
     for (int i_grp = 0; i_grp < n_enhance_groups; i_grp++) {
-        int grp_id = enhance_groups[i_grp];
-        int aid0   = atom_groups[grp_id][0];
-        int aid0_3 = aid0 * 3;
+      int grp_id = enhance_groups[i_grp];
+      int aid0   = atom_groups[grp_id][0];
+      int aid0_3 = aid0 * 3;
         // cout << "dbg1130 grp " << i_grp << " " << grp_id << " " << n_atoms_in_groups[grp_id] << endl;
         // real crd0[3] = {crd[aid0_3], crd[aid0_3 + 1], crd[aid0_3 + 2]};
-        for (int d = 0; d < 3; d++) { crd_centers[i_grp][d] = 0.0; }
-        for (int i_atm = 0; i_atm < n_atoms_in_groups[grp_id]; i_atm++) {
-            int aid   = atom_groups[grp_id][i_atm];
-            int aid_3 = aid * 3;
-            for (int d = 0; d < 3; d++) {
-                real tmp_crd = crd[aid_3 + d];
-                real diff    = tmp_crd - crd_groups[i_grp][i_atm][d];
-                while (diff > pbc->L_half[d]) {
-                    diff -= pbc->L[d];
-                    tmp_crd -= pbc->L[d];
-                }
-                while (-diff > pbc->L_half[d]) {
-                    diff += pbc->L[d];
-                    tmp_crd += pbc->L[d];
-                }
-                crd_groups[i_grp][i_atm][d] = tmp_crd;
-                crd_centers[i_grp][d] += tmp_crd * mass[aid];
-            }
-            // cout << "dbg1130 crd " << crd_groups[i_grp][i_atm][0] << " "
-            //<< crd_groups[i_grp][i_atm][1] << " "
-            //<< crd_groups[i_grp][i_atm][2] << " "
-            //<< endl;
-        }
-        for (int d = 0; d < 3; d++) { crd_centers[i_grp][d] *= mass_groups_inv[grp_id]; }
+      for (int d = 0; d < 3; d++) { crd_centers[i_grp][d] = 0.0; }
+      for (int i_atm = 0; i_atm < n_atoms_in_groups[grp_id]; i_atm++) {
+	int aid   = atom_groups[grp_id][i_atm];
+	int aid_3 = aid * 3;
+	for (int d = 0; d < 3; d++) {
+	  real tmp_crd = crd[aid_3 + d];
+	  real diff    = tmp_crd - crd_groups[i_grp][i_atm][d];
+	  while (diff > pbc->L_half[d]) {
+	    diff -= pbc->L[d];
+	    tmp_crd -= pbc->L[d];
+	  }
+	  while (-diff > pbc->L_half[d]) {
+	    diff += pbc->L[d];
+	    tmp_crd += pbc->L[d];
+	  }
+	  crd_groups[i_grp][i_atm][d] = tmp_crd;
+	  crd_centers[i_grp][d] += tmp_crd * mass[aid];
+	}
+	// cout << "dbg1130 crd " << crd_groups[i_grp][i_atm][0] << " "
+	//<< crd_groups[i_grp][i_atm][1] << " "
+	//<< crd_groups[i_grp][i_atm][2] << " "
+	//<< endl;
+      }
+      for (int d = 0; d < 3; d++) { crd_centers[i_grp][d] *= mass_groups_inv[grp_id]; }
     }
     //  cout << "dbg1126 center " << crd_centers[0][0] << " "
     //<< crd_centers[0][1] << " "
@@ -381,20 +382,59 @@ real ExtendedVAUS::cal_struct_parameters(real *crd, PBC *pbc) {
     real lambda = 0.0;
     for (int i_grp = 0; i_grp < n_enhance_groups; i_grp++) {
         for (int j_grp = i_grp + 1; j_grp < n_enhance_groups; j_grp++) {
-            real diff[3];
-            pbc->diff_crd_minim_image(diff, crd_centers[i_grp], crd_centers[j_grp]);
-            real dist = sqrt(diff[0] * diff[0] + diff[1] * diff[1] + diff[2] * diff[2]);
-            for (int d = 0; d < 3; d++) unit_vec[i_pair][d] = diff[d] / dist;
-            lambda += dist;
-            i_pair++;
+	  real diff[3];
+	  pbc->diff_crd_minim_image(diff, crd_centers[i_grp], crd_centers[j_grp]);
+	  real dist = sqrt(diff[0] * diff[0] + diff[1] * diff[1] + diff[2] * diff[2]);
+	  for (int d = 0; d < 3; d++) unit_vec[i_pair][d] = diff[d] / dist;
+	  lambda += dist;
+	  i_pair++;
         }
     }
     return lambda;
 }
+real ExtendedVcMD::set_crd_centers(real *crd, PBC *pbc) {
+  for (int i_grp = 0; i_grp < n_enhance_groups; i_grp++) {
+    int grp_id = enhance_groups[i_grp];
+    int aid0   = atom_groups[grp_id][0];
+    int aid0_3 = aid0 * 3;
+    // cout << "dbg1130 grp " << i_grp << " " << grp_id << " " << n_atoms_in_groups[grp_id] << endl;
+    // real crd0[3] = {crd[aid0_3], crd[aid0_3 + 1], crd[aid0_3 + 2]};
+    for (int d = 0; d < 3; d++) { crd_centers[i_grp][d] = 0.0; }
+    for (int i_atm = 0; i_atm < n_atoms_in_groups[grp_id]; i_atm++) {
+      int aid   = atom_groups[grp_id][i_atm];
+      int aid_3 = aid * 3;
+      for (int d = 0; d < 3; d++) {
+	real tmp_crd = crd[aid_3 + d];
+	real diff    = tmp_crd - crd_groups[i_grp][i_atm][d];
+	while (diff > pbc->L_half[d]) {
+	  diff -= pbc->L[d];
+	  tmp_crd -= pbc->L[d];
+	}
+	while (-diff > pbc->L_half[d]) {
+	  diff += pbc->L[d];
+	  tmp_crd += pbc->L[d];
+	}
+	crd_groups[i_grp][i_atm][d] = tmp_crd;
+	crd_centers[i_grp][d] += tmp_crd * mass[aid];
+      }
+      // cout << "dbg1130 crd " << crd_groups[i_grp][i_atm][0] << " "
+      //<< crd_groups[i_grp][i_atm][1] << " "
+      //<< crd_groups[i_grp][i_atm][2] << " "
+      //<< endl;
+    }
+    for (int d = 0; d < 3; d++) { crd_centers[i_grp][d] *= mass_groups_inv[grp_id]; }
+  }
+  //  cout << "dbg1126 center " << crd_centers[0][0] << " "
+  //<< crd_centers[0][1] << " "
+  //<< crd_centers[0][2] << " "
+  //<< crd_centers[1][0] << " "
+  //<< crd_centers[1][1] << " "<< crd_centers[1][2] << endl;
+  return 0;
+}
 
 int ExtendedVAUS::scale_force(real lambda, real_fc *work, int n_atoms) {
-
-    // case 1 : under the lower limit
+  
+  // case 1 : under the lower limit
     real param    = lambda;
     real recovery = 0.0;
 
@@ -486,15 +526,32 @@ int ExtendedVAUS::scale_force(real lambda, real_fc *work, int n_atoms) {
 
 ///////////// VcMD //////////////
 
-ExtendedVcMD::ExtendedVcMD() : ExtendedVMcMD() {
+ExtendedVcMD::ExtendedVcMD() : Extended() {
     flg_vs_transition = true;
 }
 
 ExtendedVcMD::~ExtendedVcMD() {
     delete writer_lambda;
-    for (int i = 0; i < n_enhance_group_pairs; i++) { delete[] enhance_group_pairs[i]; }
-    delete[] enhance_group_pairs;
     free_crd_centers();
+}
+void ExtendedVcMD::set_trans_interval(int in_trans_interval) {
+    trans_interval = in_trans_interval;
+}
+int ExtendedVcMD::set_params(random::Random *in_mt, real in_sigma, real in_recov_coef, int in_n_steps) {
+  lambda.resize(n_dim);
+  random_mt = in_mt;
+  sigma     = in_sigma;
+  // sigma_half = sigma * 0.5;
+  // sigma_sq_inv = 1.0 / (sigma * sigma);
+  recov_coef = in_recov_coef;
+  n_steps    = in_n_steps;
+  // aus_type = in_aus_type;
+  return 0;
+}
+int ExtendedVcMD::close_files() {
+    writer_vslog.close();
+    writer_lambda->close();
+    return 0;
 }
 
 int ExtendedVcMD::push_vs_range(std::vector<int> new_min,
@@ -503,20 +560,46 @@ int ExtendedVcMD::push_vs_range(std::vector<int> new_min,
   vc_range_max.push_back(new_max);
   return 0;
 }
-int ExtendedVcMD::apply_bias_vc(unsigned long cur_step, std::vector<real> in_lambda,
-				real_fc *work, int n_atoms_box) {
-  if (cur_step > 0 && cur_step % trans_interval == 0) {
-    if (flg_vs_transition) set_current_vstate_vc(in_lambda);
-    if (cur_step <= n_steps) { write_vslog(cur_step); }
+
+int ExtendedVcMD::set_struct_parameters(real *crd, PBC *pbc) {
+  cout << "dbg 0303 set_struct_parameters" << endl;
+  // center of mass for each groups
+  set_crd_centers(crd, pbc);
+  cout << "dbg 0303 set_crd_centers (finished)" << endl;
+  //  real dist = 0.0;
+  int  i_pair = 0;
+  for(const auto itr_dim : enhance_group_pairs){
+    real diff[3];
+    int i_grp = itr_dim[0];
+    int j_grp = itr_dim[1];
+    pbc->diff_crd_minim_image(diff, crd_centers[i_grp], crd_centers[j_grp]);
+    real dist = sqrt(diff[0] * diff[0] + diff[1] * diff[1] + diff[2] * diff[2]);
+    for (int d = 0; d < 3; d++) unit_vec[i_pair][d] = diff[d] / dist;
+    lambda[i_pair]=dist;
+    i_pair++;
   }
-  scale_force_vc(in_lambda, work, n_atoms_box);
-  if (cur_step > 0 &&
-      cur_step % write_lambda_interval == 0 &&
-      cur_step <= n_steps) { write_lambda_vc(in_lambda); }
   return 0;
 }
 
-int ExtendedVcMD::set_current_vstate_vc(std::vector<real> lambda) {
+
+int ExtendedVcMD::apply_bias(unsigned long cur_step,
+			     real_fc *work, int n_atoms_box) {
+  cout << "dbg 0303 apply_bias" << endl;
+  if (cur_step > 0 && cur_step % trans_interval == 0) {
+    if (flg_vs_transition) set_current_vstate(lambda);
+    if (cur_step <= n_steps) { write_vslog(cur_step); }
+  }
+  cout << "dbg 0303 apply_bias 10" << endl;
+  scale_force(work, n_atoms_box);
+  cout << "dbg 0303 apply_bias 20" << endl;
+  if (cur_step > 0 &&
+      cur_step % write_lambda_interval == 0 &&
+      cur_step <= n_steps) { write_lambda(); }
+  cout << "dbg 0303 apply_bias (finished)" << endl;
+  return 0;
+}
+
+int ExtendedVcMD::set_current_vstate(std::vector<real> lambda) {
   /*
     int dest_vs;
     dest_vs = trial_transition(cur_vs, 1, lambda);
@@ -532,7 +615,7 @@ int ExtendedVcMD::set_current_vstate_vc(std::vector<real> lambda) {
   */
   return 0;
 }
-std::vector<int> ExtendedVcMD::trial_transition_vc(std::vector<int> source,
+std::vector<int> ExtendedVcMD::trial_transition(std::vector<int> source,
 						   std::vector<int> rel_dest, 
 						   std::vector<real> lambda) {
   // source ... vs_id of current state
@@ -555,8 +638,7 @@ std::vector<int> ExtendedVcMD::trial_transition_vc(std::vector<int> source,
   return source;
 }
 
-int ExtendedVcMD::scale_force_vc(std::vector<real> lambda,
-				 real_fc *work, int n_atoms) {
+int ExtendedVcMD::scale_force(real_fc *work, int n_atoms) {
   /*
     // case 1 : under the lower limit
     real param = lambda;
@@ -600,31 +682,39 @@ int ExtendedVcMD::set_files(string fn_vslog, string fn_lambda, int format_lambda
     // write_vslog(0);
     return 0;
 }
-int ExtendedVcMD::write_vslog_vc(int cur_steps) {
-  writer_vslog.write_VcMDLog(cur_steps, vc_cur_vs);
+int ExtendedVcMD::write_vslog(int cur_steps) {
+  writer_vslog.write_VcMDLog(cur_steps, cur_vs);
   return 0;
 }
-int ExtendedVcMD::write_lambda_vc(std::vector<real> lambda) {
-    writer_lambda->write_row(lambda);
+int ExtendedVcMD::write_lambda(){
+  writer_lambda->write_row(lambda);
     return 0;
 }
 
 int ExtendedVcMD::print_info() {
   std::cout << "V-McMD parameters" << endl;
   for (int d = 0; d < n_dim; d++){
-    std::cout << "  Dimension : " << d << endl;
+    std::cout << "  Dimension : " << d+1 << endl;
     for (int i = 0; i < vc_range_min[d].size(); i++) {
       std::cout << "    Virtual state: " << i+1 << " ... ";
       std::cout << vc_range_min[d][i] << " - ";
       std::cout << vc_range_max[d][i] << endl;
     }
   }
-  for ( const auto &pair : vc_param ) {
+  cout << "initial virtual states :" << endl;
+  for ( const auto vs : init_vs ) {
+    cout << " " << vs;
+  }
+  cout << endl;
+  cout << "seed : " << random_seed << endl;
+  cout << "param size: " << vc_param.size() << endl;
+  for ( const auto pair : vc_param ) {
     for ( const auto vs : pair.first ) { 
       std::cout << " " << vs;
     }
     std::cout << " : " << pair.second << endl;
   }
+  cout << "end print" << endl;
   return 0;
 }
 
@@ -636,24 +726,68 @@ int ExtendedVcMD::set_enhance_groups(int *       in_n_atoms_in_groups,
 				     int **      in_atom_groups,
 				     int         in_n_enhance_groups,
 				     std::vector<int> in_enhance_groups) {
-  /*
-    n_atoms_in_groups = in_n_atoms_in_groups;
-    atom_groups       = in_atom_groups;
-    n_enhance_groups  = in_n_enhance_groups;
-    enhance_groups    = in_enhance_groups;
+  
+  n_atoms_in_groups = in_n_atoms_in_groups;
+  atom_groups       = in_atom_groups;
+  n_enhance_groups  = in_n_enhance_groups;
+  enhance_groups    = in_enhance_groups;
+  
+  //n_enhance_group_pairs = (n_enhance_groups * (n_enhance_groups - 1)) / 2;
+  int i_pair            = 0;
+  std::vector< std::vector<int> >::iterator itr_pair;
+  for ( auto itr_pair : grp_ids ){
+    std::vector<int> grp_pair;
+    grp_pair.push_back(itr_pair[0]);
+    grp_pair.push_back(itr_pair[1]);
+    enhance_group_pairs.push_back(grp_pair);
+    i_pair++;
+  }
 
-    n_enhance_group_pairs = (n_enhance_groups * (n_enhance_groups - 1)) / 2;
-    enhance_group_pairs   = new int *[n_enhance_group_pairs];
-    int i_pair            = 0;
-    for (int i = 0; i < n_enhance_groups; i++) {
-        for (int j = i + 1; i < n_enhance_groups; i++) {
-            enhance_group_pairs[i_pair]    = new int[2];
-            enhance_group_pairs[i_pair][0] = i;
-            enhance_group_pairs[i_pair][1] = j;
-            i_pair++;
-        }
+  alloc_crd_centers();
+  return 0;
+}
+
+int ExtendedVcMD::alloc_crd_centers() {
+  crd_groups = new real **[n_enhance_groups];
+  for (int i_grp = 0; i_grp < n_enhance_groups; i_grp++) {
+    int grp_id        = enhance_groups[i_grp];
+    crd_groups[i_grp] = new real *[n_atoms_in_groups[grp_id]];
+    for (int j = 0; j < n_atoms_in_groups[grp_id]; j++) { crd_groups[i_grp][j] = new real[3]; }
+  }
+  
+  crd_centers = new real *[n_enhance_groups];
+  for (int i = 0; i < n_enhance_groups; i++) { crd_centers[i] = new real[3]; }
+  unit_vec = new real *[n_dim];
+  for (int i = 0; i < n_dim; i++) { unit_vec[i] = new real[3]; }
+  return 0;
+}
+int ExtendedVcMD::free_crd_centers() {
+  for (int i = 0; i < n_enhance_groups; i++) {
+    int grp_id = enhance_groups[i];
+    for (int j = 0; j < n_atoms_in_groups[grp_id]; j++) { delete[] crd_groups[i][j]; }
+    delete[] crd_groups[i];
+  }
+  delete[] crd_groups;
+  
+  for (int i = 0; i < n_enhance_groups; i++) { delete[] crd_centers[i]; }
+  delete[] crd_centers;
+  for (int i = 0; i < n_dim; i++) { delete[] unit_vec[i]; }
+  delete[] unit_vec;
+  return 0;
+}
+
+int ExtendedVcMD::set_mass(real_pw *in_mass, real_pw *in_mass_groups, real_pw *in_mass_groups_inv) {
+  mass = in_mass;
+  mass_groups     = in_mass_groups;
+  mass_groups_inv = in_mass_groups_inv;
+  mass_sum        = 0.0;
+  for (int i_grp = 0; i_grp < n_enhance_groups; i_grp++) {
+    int grp_id = enhance_groups[i_grp];
+    for (int i_atm = 1; i_atm < n_atoms_in_groups[grp_id]; i_atm++) {
+      int aid = atom_groups[grp_id][i_atm];
+      mass_sum += mass[aid];
     }
-    alloc_crd_centers();
-  */
-    return 0;
+  }
+  
+  return 0;
 }

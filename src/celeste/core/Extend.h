@@ -118,7 +118,7 @@ class ExtendedVMcMD : public Extended {
     int  get_random_seed() { return random_seed; };
     void set_random_seed(int in_seed) { random_seed = in_seed; };
     int trial_transition(int source, int rel_dest, real lambda);
-
+    virtual real cal_struct_parameters(real *crd, PBC *pbc);
     int set_current_vstate(real lambda);
     virtual int scale_force(real lambda, real_fc *work, int n_atoms);
     // files
@@ -137,12 +137,12 @@ class ExtendedVMcMD : public Extended {
                       real alpha_low,
                       real alpha_high);
     int set_vs_poly_param(int vs_id, int ord, real param);
-    int          print_info();
-    virtual real cal_struct_parameters(real *crd, PBC *pbc);
-    int set_enhance_groups(int *            in_n_atoms_in_groups,
-                           int **           in_atom_groups,
-                           int              in_n_enhance_groups,
-                           std::vector<int> in_enhance_groups);
+    int print_info();
+
+    virtual int set_enhance_groups(int *            in_n_atoms_in_groups,
+				   int **           in_atom_groups,
+				   int              in_n_enhance_groups,
+				   std::vector<int> in_enhance_groups);
     int set_mass(real_pw *in_mass, real_pw *in_mass_groups, real_pw *in_mass_groups_inv);
     int set_params(celeste::random::Random *in_mt, real in_sigma, real in_recov_coef, int in_n_steps);
     void set_aus_type(int in_aus_type) { aus_type = in_aus_type; };
@@ -218,62 +218,109 @@ class ExtendedVAUS : public ExtendedVMcMD {
     // int print_info();
 };
 
-class ExtendedVcMD : public ExtendedVMcMD {
+class ExtendedVcMD : public Extended {
   private:
   protected:
+    int  n_steps;
+    int  random_seed;
+    int  trans_interval;
+    bool          flg_vs_transition;
+    WriteTTPVMcMDLog writer_vslog;
+
+    WriteTableLog *writer_lambda;
+
+    int reactcrd_type;
+    real_pw *mass;
+    real_pw  mass_sum;
+    real_pw *mass_groups;
+    real_pw *mass_groups_inv;
+    real     sigma;
+    real     recov_coef;
+    // real sigma_half;
+    // real sigma_sq_inv;
+    //
+    int *            n_atoms_in_groups;
+    int **           atom_groups;
+
+    real ***crd_groups;
+    // crd_groups[group][atom][xyz]
+    real **crd_centers;
+    // crd_centers[group][xyz]
+    real **unit_vec;
+    // unit_vec[group][xyz]
+
+    int              n_enhance_groups;
+    std::vector<int> enhance_groups;
+    std::vector< std::vector<int> > enhance_group_pairs;
+
+    int                      aus_type;
+    celeste::random::Random *random_mt;
+    // uniform_real_distribution<float> random_gen;
+
     int  n_dim;
     
     std::vector< std::vector<int> > vc_range_min;
     std::vector< std::vector<int> > vc_range_max;
     // range_min[dim][vs]
     // range_max[dim][vs]
-    std::vector<int> vc_init_vs;
+    std::vector<int> init_vs;
     // init_vs[dim] = vs
-    std::vector< std::vector<std::string> > grp_names;
     std::vector< std::vector<int> > grp_ids;
     std::map< std::vector<int>, real > vc_param;
     std::map< std::vector<int>, real > vc_count;
     
-    std::vector<int> vc_cur_vs;
+    std::vector<int> cur_vs;
     
-    
+    std::vector<real> lambda;
+
 
  public:
     ExtendedVcMD();
     ~ExtendedVcMD();
+
+    int alloc_crd_centers();
+    int free_crd_centers();
+
+    void set_reactcrd_type(int in_type) { reactcrd_type = in_type; };
+    void set_trans_interval(int in_trans_interval);
+    int  get_random_seed() { return random_seed; };
+    void set_random_seed(int in_seed) { random_seed = in_seed; };
     void set_n_dim(int in_n_dim){n_dim = in_n_dim;}
+    int close_files();
     int get_n_dim(){return n_dim;}
+    void enable_vs_transition() { flg_vs_transition = true; }
     int push_vs_range(std::vector<int> new_min,
 		      std::vector<int> new_max);
-    void set_vc_init_vs(std::vector<int> in_vs){ vc_init_vs = in_vs; };
-    void sed_vc_param(std::map< std::vector<int>, real > in_param){ vc_param = in_param; }
-    void push_grp_names(std::vector<std::string> in_names){ grp_names.push_back(in_names); }
-    int apply_bias_vc(unsigned long cur_step, std::vector<real> in_lambda,
-		      real_fc *work, int n_atoms_box);
-    int scale_force_vc(std::vector<real> lambda,
-		       real_fc *work, int n_atoms);
-    virtual int set_files(std::string fn_vslog, std::string fn_lambda, int format_lambda);
+    void set_vc_param(std::map< std::vector<int>, real > in_param){ vc_param = in_param; }
+    void push_grp_ids(std::vector<int> in_ids){ grp_ids.push_back(in_ids); }
+    int set_params(celeste::random::Random *in_mt, real in_sigma, real in_recov_coef, int in_n_steps);
+    real set_crd_centers(real *crd, PBC *pbc);
+    int apply_bias(unsigned long cur_step,
+		   real_fc *work, int n_atoms_box);
+    int scale_force(real_fc *work, int n_atoms);
+    int set_files(std::string fn_vslog, std::string fn_lambda, int format_lambda);
     
-    std::vector<int> get_init_vs() { return vc_init_vs; };
-    void set_init_vs_vc(std::vector<int> in_vs) {
-      copy(in_vs.begin(), in_vs.end(), back_inserter(vc_init_vs) );
-      copy(in_vs.begin(), in_vs.end(), back_inserter(vc_cur_vs) );
+    std::vector<int> get_init_vs() { return init_vs; };
+    void set_init_vs(std::vector<int> in_vs) {
+      copy(in_vs.begin(), in_vs.end(), back_inserter(init_vs) );
+      copy(in_vs.begin(), in_vs.end(), back_inserter(cur_vs) );
     };
-    std::vector<int> trial_transition_vc(std::vector<int> source, std::vector<int> rel_dest, std::vector<real> lambda);
+    std::vector<int> trial_transition(std::vector<int> source, std::vector<int> rel_dest, std::vector<real> lambda);
 
-    int set_current_vstate_vc(std::vector<real> lambda);
+    int set_current_vstate(std::vector<real> lambda);
 
-    int write_vslog_vc(int cur_steps);
-    int write_lambda_vc(std::vector<real> lambda);
+    int write_vslog(int cur_steps);
+    int write_lambda();
 
-    virtual int print_info();
-    // virtual real cal_struct_parameters(real *crd, PBC *pbc);
+    int print_info();
+    int set_struct_parameters(real *crd, PBC *pbc);
     int set_enhance_groups(int *            in_n_atoms_in_groups,
-                           int **           in_atom_groups,
-                           int              in_n_enhance_groups,
-                           std::vector<int> in_enhance_groups);
+			   int **           in_atom_groups,
+			   int              in_n_enhance_groups,
+			   std::vector<int> in_enhance_groups);
 
     real ***get_crd_groups() { return crd_groups; };
+    int set_mass(real_pw *in_mass, real_pw *in_mass_groups, real_pw *in_mass_groups_inv);
 };
 
 #endif
