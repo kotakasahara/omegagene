@@ -145,6 +145,7 @@ int Read::load_ls_header(MmSystem &mmsys) {
     read_bin_values(&size_dist_restraint, 1);
     read_bin_values(&size_pos_restraint, 1);
     read_bin_values(&size_group_coord, 1);
+    read_bin_values(&size_extended_vcmd, 1);
 
     if (DBG == 1) {
         cout << "size_box:            " << size_box << endl;
@@ -153,11 +154,12 @@ int Read::load_ls_header(MmSystem &mmsys) {
         cout << "size_topol:          " << size_topol << endl;
         cout << "size_constraint:     " << size_constraint << endl;
         cout << "size_settle:         " << size_settle << endl;
-        cout << "size_extended:         " << size_extended << endl;
+        cout << "size_extended:       " << size_extended << endl;
         cout << "size_groups:         " << size_groups << endl;
         cout << "size_dist_restraint: " << size_dist_restraint << endl;
-        cout << "size_pos_restraint: " << size_pos_restraint << endl;
-        cout << "size_group_coord: " << size_group_coord << endl;
+        cout << "size_pos_restraint:  " << size_pos_restraint << endl;
+        cout << "size_group_coord:    " << size_group_coord << endl;
+        cout << "size_extended_vcmd:  " << size_extended_vcmd << endl;
     }
 
     return 0;
@@ -654,38 +656,60 @@ int Read::load_ls_vcmd(MmSystem &mmsys) {
   read_bin_values(&interval, 1);
   int dim;
   read_bin_values(&dim, 1);
-
-  mmsys.vmcmd->set_n_vstates(n_vs);
-  mmsys.vmcmd->set_trans_interval(interval);
-  mmsys.vmcmd->set_temperature((real)temperature);
-  
-  for (int i = 0; i < n_vs; i++) {
-    int ord;
-    read_bin_values(&ord, 1);
-    mmsys.vmcmd->set_vs_order(i, ord);
-    double lambda_low, lambda_high;
-    double prob_low, prob_high;
-    read_bin_values(&lambda_low, 1);
-    read_bin_values(&lambda_high, 1);
-    read_bin_values(&prob_low, 1);
-    read_bin_values(&prob_high, 1);
-    for (int j = 0; j < ord + 1; j++) {
-      double buf;
-      read_bin_values(&buf, 1);
-      mmsys.vmcmd->set_vs_poly_param(i, j, (real)buf);
+  mmsys.vcmd->set_n_dim(dim);
+  mmsys.vcmd->set_trans_interval(interval);
+  int n_states = 1;
+  std::vector< std::vector<string> > grp_names;
+  for (int d = 0; d < dim; d++) {
+    int n_vs;
+    read_bin_values(&n_vs, 1);
+    int n_grp;
+    read_bin_values(&n_grp, 1);
+    std::vector<string> grp_names_dim;
+    for(int i = 0; i < n_grp; i++){
+      int len;
+      char grp_name[MAX_LEN_NAME];
+      read_bin_values(&len, 1);
+      ifs.read(grp_name, len);
+      grp_names_dim.push_back(string(grp_name));
     }
-    double alpha_low, alpha_high;
-    read_bin_values(&alpha_low, 1);
-    read_bin_values(&alpha_high, 1);
-    mmsys.vmcmd->set_vs_params(i, (real)lambda_low, (real)lambda_high, (real)prob_low, (real)prob_high,
-			       (real)alpha_low, (real)alpha_high);
+    mmsys.vcmd->push_grp_names(grp_names_dim);
+    n_states *= n_vs;
+    std::vector<int> range_min;
+    std::vector<int> range_max;
+    for (int i = 0; i < n_vs; i++) {
+      double buf_min;
+      double buf_max;
+      read_bin_values(&buf_min, 1);
+      read_bin_values(&buf_max, 1);
+      range_min.push_back(buf_min);
+      range_max.push_back(buf_max);
+    }
+    mmsys.vcmd->push_vs_range(range_min, range_max);
   }
-  int init, seed;
-  read_bin_values(&init, 1);
+
+  std::vector<int> init_vs;
+  for (int d = 0; d < dim; d++) {
+    int vs;
+    read_bin_values(&vs, 1);
+    init_vs.push_back(vs);
+  }
+  mmsys.vcmd->set_vc_init_vs(init_vs);
+  double seed;
   read_bin_values(&seed, 1);
-  mmsys.vmcmd->set_init_vs(init - 1);
-  mmsys.vmcmd->set_random_seed(seed);
-  
+  mmsys.vcmd->set_random_seed(seed);
+  std::map< std::vector<int>, real > vc_param;  
+  for (int i = 0; i < n_states; i++){
+    std::vector<int> state;
+    for(int d = 0; d < dim; d++){
+      int vs;
+      read_bin_values(&vs, 1);      
+      state.push_back(vs);
+    }
+    double param;
+    read_bin_values(&param, 1);
+    vc_param[state] = param;
+  }
   return 0;
 }
 

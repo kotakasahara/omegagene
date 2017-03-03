@@ -121,9 +121,8 @@ class ExtendedVMcMD : public Extended {
 
     int set_current_vstate(real lambda);
     virtual int scale_force(real lambda, real_fc *work, int n_atoms);
-
     // files
-    int set_files(std::string fn_vslog, std::string fn_lambda, int format_lambda);
+    virtual int set_files(std::string fn_vslog, std::string fn_lambda, int format_lambda);
     int close_files();
     int write_vslog(int cur_steps);
     int write_lambda(real lambda);
@@ -228,29 +227,41 @@ class ExtendedVcMD : public ExtendedVMcMD {
     std::vector< std::vector<int> > vc_range_max;
     // range_min[dim][vs]
     // range_max[dim][vs]
-    std::vector<real> vc_init_vs;
+    std::vector<int> vc_init_vs;
     // init_vs[dim] = vs
-
-    int random_seed;
-    
+    std::vector< std::vector<std::string> > grp_names;
+    std::vector< std::vector<int> > grp_ids;
     std::map< std::vector<int>, real > vc_param;
+    std::map< std::vector<int>, real > vc_count;
     
     std::vector<int> vc_cur_vs;
+    
+    
 
-  public:
+ public:
     ExtendedVcMD();
     ~ExtendedVcMD();
-
-    int apply_bias_vc(unsigned long cur_step, vector<real> in_lambda,
+    void set_n_dim(int in_n_dim){n_dim = in_n_dim;}
+    int get_n_dim(){return n_dim;}
+    int push_vs_range(std::vector<int> new_min,
+		      std::vector<int> new_max);
+    void set_vc_init_vs(std::vector<int> in_vs){ vc_init_vs = in_vs; };
+    void sed_vc_param(std::map< std::vector<int>, real > in_param){ vc_param = in_param; }
+    void push_grp_names(std::vector<std::string> in_names){ grp_names.push_back(in_names); }
+    int apply_bias_vc(unsigned long cur_step, std::vector<real> in_lambda,
 		      real_fc *work, int n_atoms_box);
-    vector<int>  get_init_vs_vc() { return init_vs; };
-    void set_init_vs_vc(int in_init_vs) {
-        init_vs = in_init_vs;
-        cur_vs  = init_vs;
+    int scale_force_vc(std::vector<real> lambda,
+		       real_fc *work, int n_atoms);
+    virtual int set_files(std::string fn_vslog, std::string fn_lambda, int format_lambda);
+    
+    std::vector<int> get_init_vs() { return vc_init_vs; };
+    void set_init_vs_vc(std::vector<int> in_vs) {
+      copy(in_vs.begin(), in_vs.end(), back_inserter(vc_init_vs) );
+      copy(in_vs.begin(), in_vs.end(), back_inserter(vc_cur_vs) );
     };
-    int trial_transition_vc(vector<int> source, vector<int> rel_dest, vector<real> lambda);
+    std::vector<int> trial_transition_vc(std::vector<int> source, std::vector<int> rel_dest, std::vector<real> lambda);
 
-    int set_current_vstate_vc(vector<real> lambda);
+    int set_current_vstate_vc(std::vector<real> lambda);
 
     int write_vslog_vc(int cur_steps);
     int write_lambda_vc(std::vector<real> lambda);

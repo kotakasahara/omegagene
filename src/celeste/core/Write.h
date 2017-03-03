@@ -49,7 +49,7 @@ class WriteTableLog : public Write {
     virtual int write_row(int *values);
     virtual int write_row(real *values);
     virtual int write_row(std::vector<real> values);
-}
+};
 
 class WriteTableLogBinary : public WriteTableLog {
  private:
@@ -72,6 +72,7 @@ class WriteTableLogAscii : public WriteTableLog {
     virtual int write_header();
     virtual int write_row(int *values);
     virtual int write_row(real *values);
+  virtual int write_row(std::vector<real> values);
 };
 
 #endif

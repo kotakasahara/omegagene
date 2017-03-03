@@ -256,7 +256,7 @@ real ExtendedVMcMD::cal_struct_parameters(real *crd, PBC *pbc) {
 int ExtendedVMcMD::set_enhance_groups(int *       in_n_atoms_in_groups,
                                       int **      in_atom_groups,
                                       int         in_n_enhance_groups,
-                                      vector<int> in_enhance_groups) {
+                                      std::vector<int> in_enhance_groups) {
     n_atoms_in_groups = in_n_atoms_in_groups;
     atom_groups       = in_atom_groups;
     n_enhance_groups  = in_n_enhance_groups;
@@ -486,7 +486,7 @@ int ExtendedVAUS::scale_force(real lambda, real_fc *work, int n_atoms) {
 
 ///////////// VcMD //////////////
 
-ExtendedVcMD::ExtendedVcMD() : Extended() {
+ExtendedVcMD::ExtendedVcMD() : ExtendedVMcMD() {
     flg_vs_transition = true;
 }
 
@@ -497,18 +497,26 @@ ExtendedVcMD::~ExtendedVcMD() {
     free_crd_centers();
 }
 
+int ExtendedVcMD::push_vs_range(std::vector<int> new_min,
+				std::vector<int> new_max){
+  vc_range_min.push_back(new_min);
+  vc_range_max.push_back(new_max);
+  return 0;
+}
 int ExtendedVcMD::apply_bias_vc(unsigned long cur_step, std::vector<real> in_lambda,
 				real_fc *work, int n_atoms_box) {
   if (cur_step > 0 && cur_step % trans_interval == 0) {
-    if (flg_vs_transition) set_current_vstate(in_lambda);
+    if (flg_vs_transition) set_current_vstate_vc(in_lambda);
     if (cur_step <= n_steps) { write_vslog(cur_step); }
   }
-  scale_force(in_lambda, work, n_atoms_box);
-  if (cur_step > 0 && cur_step % write_lambda_interval == 0 && cur_step <= n_steps) { write_lambda(in_lambda); }
+  scale_force_vc(in_lambda, work, n_atoms_box);
+  if (cur_step > 0 &&
+      cur_step % write_lambda_interval == 0 &&
+      cur_step <= n_steps) { write_lambda_vc(in_lambda); }
   return 0;
 }
 
-int ExtendedVcMD::set_current_vstate(std::vector<real> lambda) {
+int ExtendedVcMD::set_current_vstate_vc(std::vector<real> lambda) {
   /*
     int dest_vs;
     dest_vs = trial_transition(cur_vs, 1, lambda);
@@ -522,27 +530,29 @@ int ExtendedVcMD::set_current_vstate(std::vector<real> lambda) {
         return 0;
     }
   */
-    return 0;
+  return 0;
 }
-int ExtendedVcMD::trial_transition(std::vector<int> source,
-				   std::vector<int> rel_dest, 
-				   std::vector<real> lambda) {
-    // source ... vs_id of current state
-    // rel_dest ... -1 or 1, down or up
-    // lambda
-
-    // return ...
-
-    // std::uniform_real_distribution<> random_gen(0.0, 1.0);
-    if (!vstates[source].is_in_range(lambda)) return source;
-    if (source == 0 and rel_dest == -1) return source;
-    if (source == n_vstates - 1 and rel_dest == 1) return source;
-    int up_down                 = rel_dest;
-    if (rel_dest == -1) up_down = 0;
-    if (vstates[source + rel_dest].is_in_range(lambda)) {
-        if ((*random_mt)() > (1.0 - vstates[source].get_trans_prob(up_down))) { return source + rel_dest; }
-    }
-    return source;
+std::vector<int> ExtendedVcMD::trial_transition_vc(std::vector<int> source,
+						   std::vector<int> rel_dest, 
+						   std::vector<real> lambda) {
+  // source ... vs_id of current state
+  // rel_dest ... -1 or 1, down or up
+  // lambda
+  
+  // return ...
+  
+  // std::uniform_real_distribution<> random_gen(0.0, 1.0);
+  /*
+  if (!vstates[source].is_in_range(lambda)) return source;
+  if (source == 0 and rel_dest == -1) return source;
+  if (source == n_vstates - 1 and rel_dest == 1) return source;
+  int up_down                 = rel_dest;
+  if (rel_dest == -1) up_down = 0;
+  if (vstates[source + rel_dest].is_in_range(lambda)) {
+    if ((*random_mt)() > (1.0 - vstates[source].get_trans_prob(up_down))) { return source + rel_dest; }
+  }
+  */
+  return source;
 }
 
 int ExtendedVcMD::scale_force_vc(std::vector<real> lambda,
@@ -590,42 +600,37 @@ int ExtendedVcMD::set_files(string fn_vslog, string fn_lambda, int format_lambda
     // write_vslog(0);
     return 0;
 }
-int ExtendedVcMD::close_files() {
-    writer_vslog.close();
-    writer_lambda->close();
-    return 0;
-}
-int ExtendedVcMD::write_vslog(int cur_steps) {
-  writer_vslog.write_VcMDLog(cur_steps, cur_vs);
+int ExtendedVcMD::write_vslog_vc(int cur_steps) {
+  writer_vslog.write_VcMDLog(cur_steps, vc_cur_vs);
   return 0;
 }
-int ExtendedVcMD::write_lambda(std::vector<real> lambda) {
+int ExtendedVcMD::write_lambda_vc(std::vector<real> lambda) {
     writer_lambda->write_row(lambda);
     return 0;
 }
 
 int ExtendedVcMD::print_info() {
-  cout << "V-McMD parameters" << endl;
+  std::cout << "V-McMD parameters" << endl;
   for (int d = 0; d < n_dim; d++){
-    cout << "  Dimension : " << d << endl;
-    for (int i = 0; i < ; i++) {
-      cout << "    Virtual state: " << i + 1 << " ... ";
-      cout << vstates[i].get_lambda_low() << " ~ ";
-      cout << vstates[i].get_lambda_high() << " , ";
-      cout << vstates[i].get_trans_prob(0) << " - ";
-      cout << vstates[i].get_trans_prob(1) << endl;
-      
-      for (int j = 0; j < vstates[i].get_order() + 1; j++) {
-	cout << "    " << j << ": " << vstates[i].get_poly_param(j) << endl;
-      }
+    std::cout << "  Dimension : " << d << endl;
+    for (int i = 0; i < vc_range_min[d].size(); i++) {
+      std::cout << "    Virtual state: " << i+1 << " ... ";
+      std::cout << vc_range_min[d][i] << " - ";
+      std::cout << vc_range_max[d][i] << endl;
     }
-    return 0;
   }
+  for ( const auto &pair : vc_param ) {
+    for ( const auto vs : pair.first ) { 
+      std::cout << " " << vs;
+    }
+    std::cout << " : " << pair.second << endl;
+  }
+  return 0;
 }
 
-real ExtendedVcMD::cal_struct_parameters(real *crd, PBC *pbc) {
-    return 0.0;
-}
+//real ExtendedVcMD::cal_struct_parameters(real *crd, PBC *pbc) {
+//    return 0.0;
+//}
 
 int ExtendedVcMD::set_enhance_groups(int *       in_n_atoms_in_groups,
 				     int **      in_atom_groups,

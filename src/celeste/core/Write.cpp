@@ -42,9 +42,9 @@ int WriteTTPVMcMDLog::write_ttpvMcMDLog(int step, int vstate) {
 }
 int WriteTTPVMcMDLog::write_VcMDLog(int step, std::vector<int> vstate) {
   ofs << step;
-  for(std::vector<int>::iterator itr = vstate.begin();
-      itr != vstate.end(); ++itr){
-    ofs << "\t" << vstate + 1;
+  std::vector<int>::iterator itr;
+  for(auto itr: vstate){
+    ofs << "\t" << itr;
   }
   ofs << std::endl;
   return 0;
@@ -60,6 +60,9 @@ int WriteTableLog::write_row(int *values) {
     return 0;
 }
 int WriteTableLog::write_row(real *values) {
+    return 0;
+}
+int WriteTableLog::write_row(std::vector<real> values) {
     return 0;
 }
 
@@ -92,9 +95,9 @@ int WriteTableLogBinary::write_row(std::vector<real> values) {
     // real val = values[i];
     //    ofs.write((const char*)&val, sizeof(real));
     //  }
-  for(std::vector<real>::iterator itr = values.begin();
-      itr != values.end(); itr++){
-    ofs.write((const char*)*itr, sizeof(real));
+  std::vector<real>::iterator itr;
+  for(auto itr: values){
+    ofs.write((const char *)&itr, sizeof(real));
   }
   return 0;
 }

@@ -139,7 +139,7 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
             } else if (*itr == "hoover-evans") {
                 thermostat_type = THMSTT_HOOVER_EVANS;
             } else {
-                thermostat_type = THMSTT_DUMMY;
+                thermostat_type = THMSTT_NONE;
             }
 
         } else if (*itr == "--extended-ensemble") {
@@ -150,8 +150,10 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
                 extended_ensemble = EXTENDED_VMCMD;
             } else if (*itr == "v-aus") {
                 extended_ensemble = EXTENDED_VAUS;
+            } else if (*itr == "vcmd") {
+                extended_ensemble = EXTENDED_VCMD;
             } else {
-                extended_ensemble = EXTENDED_DUMMY;
+                extended_ensemble = EXTENDED_NONE;
             }
 
         } else if (*itr == "--temperature") {

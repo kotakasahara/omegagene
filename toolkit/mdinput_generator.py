@@ -591,10 +591,15 @@ class MDInputGen(object):
             n_vs = len(extended.lambda_ranges[cur_dim]) -1 
             # print "dim : " + str(cur_dim) + " n_vs : " + str(n_vs)
             buf += st.pack("@i", n_vs)
+            buf += st.pack("@i", len(extended.group_names[cur_dim]))
+            for grp in extended.group_names[cur_dim]:
+                buf += st.pack("@i", len(grp)+1)
+                buf += grp+'\0'
             for vs in range(1, n_vs + 1):
                 buf += st.pack("@dd",
                                extended.lambda_ranges[cur_dim][vs][0],
                                extended.lambda_ranges[cur_dim][vs][1])
+
         for cur_dim in range(1, extended.dim+1):
             buf += st.pack("@i", extended.init_vs[cur_dim])
 

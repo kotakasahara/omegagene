@@ -35,6 +35,7 @@ class Read : private CelesteObject {
     int size_dist_restraint;
     int size_pos_restraint;
     int size_group_coord;
+    int size_extended_vcmd;
 
   public:
     std::ifstream ifs;
@@ -64,6 +65,7 @@ class Read : private CelesteObject {
     int load_ls_dist_restraint(DistRestraintObject *dr);
     int load_ls_pos_restraint(PosRestraintObject *dr);
     int load_ls_group_coord(MmSystem &mmsys);
+    int load_ls_vcmd(MmSystem &mmsys);
 };
 
 inline int reverse_endian(int value) {
