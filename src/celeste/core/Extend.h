@@ -332,6 +332,7 @@ class ExtendedVcMD : public Extended {
 
     real ***get_crd_groups() { return crd_groups; };
     int set_mass(real_pw *in_mass, real_pw *in_mass_groups, real_pw *in_mass_groups_inv);
+    int write_aus_restart(std::string fn_out);
 };
 
 #endif

@@ -146,6 +146,7 @@ int DynamicsMode::terminal_process() {
 	cfg->extended_ensemble == EXTENDED_VAUS ) {
       mmsys.vmcmd->close_files();
     }else if(cfg->extended_ensemble == EXTENDED_VCMD){
+      
       mmsys.vcmd->close_files();
     }
     return 0;
@@ -165,7 +166,6 @@ int DynamicsMode::main_stream() {
             sub_output_log();
         }
     }
-
     output_restart();
     cout << "== An additional step. ==" << endl;
     calc_in_each_step();
@@ -181,9 +181,10 @@ int DynamicsMode::output_restart() {
                                           + mmsys.pote_14vdw + mmsys.pote_14ele + mmsys.pote_vdw + mmsys.pote_ele),
                                  (double)mmsys.kinetic_e, mmsys.crd, mmsys.vel_just);
 
-    if (cfg->extended_ensemble == EXTENDED_VAUS ||
-	cfg->extended_ensemble == EXTENDED_VCMD) { 
-      subbox.extended_write_aus_restart(cfg->fn_o_aus_restart);
+    if (cfg->extended_ensemble == EXTENDED_VAUS){
+      subbox.extended_write_aus_restart(cfg->fn_o_aus_restart, EXTENDED_VAUS);
+    }else if(cfg->extended_ensemble == EXTENDED_VCMD) { 
+      subbox.extended_write_aus_restart(cfg->fn_o_aus_restart, EXTENDED_VCMD);
     }
 
     return 0;

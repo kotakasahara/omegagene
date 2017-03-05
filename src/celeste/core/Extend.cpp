@@ -560,8 +560,6 @@ int ExtendedVcMD::close_files() {
   write_q();
   writer_vslog.close();
   writer_lambda->close();
-  writer_qcano.close();
-  writer_qraw.close();
   return 0;
 }
 int ExtendedVcMD::push_vs_range(std::vector<real> new_min,
@@ -577,44 +575,44 @@ void ExtendedVcMD::set_q_cano(std::map< std::vector<int>, real > in_q){
   }
 }
 int ExtendedVcMD::set_struct_parameters(real *crd, PBC *pbc) {
-  cout << "dbg 0303 set_struct_parameters" << endl;
+  //cout << "dbg 0303 set_struct_parameters" << endl;
   // center of mass for each groups
   set_crd_centers(crd, pbc);
-  cout << "dbg 0303 set_crd_centers (finished)" << endl;
+  ///cout << "dbg 0303 set_crd_centers (finished)" << endl;
   //  real dist = 0.0;
   int  i_pair = 0;
   for(const auto itr_dim : enhance_group_pairs){
     real diff[3];
     int i_grp = itr_dim[0];
     int j_grp = itr_dim[1];
-    cout << "test i_grp: "<<i_grp<<" j_grp: " << j_grp << endl;
+    // cout << "test i_grp: "<<i_grp<<" j_grp: " << j_grp << endl;
     pbc->diff_crd_minim_image(diff, crd_centers[i_grp], crd_centers[j_grp]);
     real dist = sqrt(diff[0] * diff[0] + diff[1] * diff[1] + diff[2] * diff[2]);
     for (int d = 0; d < 3; d++) unit_vec[i_pair][d] = diff[d] / dist;
     lambda[i_pair]=dist;
-    cout << lambda[i_pair] << endl;
+    //cout << lambda[i_pair] << endl;
     i_pair++;
   }
-  cout << "dbg 0303 set_struct_parameters (finished)" << endl;  
+  //cout << "dbg 0303 set_struct_parameters (finished)" << endl;  
   return 0;
 }
 
 
 int ExtendedVcMD::apply_bias(unsigned long cur_step,
 			     real_fc *work, int n_atoms_box) {
-  cout << "dbg 0303 apply_bias" << endl;
+  //cout << "dbg 0303 apply_bias" << endl;
   if (cur_step > 0 && cur_step % trans_interval == 0) {
     if (cur_step <= n_steps) q_raw[cur_vs] += trans_interval;
     if (flg_vs_transition) trial_transition();
     if (cur_step <= n_steps) write_vslog(cur_step);
   }
-  cout << "dbg 0303 apply_bias 10" << endl;
+  //cout << "dbg 0303 apply_bias 10" << endl;
   scale_force(work, n_atoms_box);
-  cout << "dbg 0303 apply_bias 20" << endl;
+  //cout << "dbg 0303 apply_bias 20" << endl;
   if (cur_step > 0 &&
       cur_step % write_lambda_interval == 0 &&
       cur_step <= n_steps) { write_lambda(); }
-  cout << "dbg 0303 apply_bias (finished)" << endl;
+  //cout << "dbg 0303 apply_bias (finished)" << endl;
   return 0;
 }
 
@@ -634,7 +632,7 @@ int ExtendedVcMD::trial_transition(){  // source ... vs_id of current state
     else if(lambda[d] < vc_range_min[d][cur_vs[d]]) { flg = false; break; }
   }
   if (!flg) { return 0; }
-  cout << "dbg 0304 trial [2]" << endl;
+  //cout << "dbg 0304 trial [2]" << endl;
   std::vector<int> vs_next_crd(n_dim);
   // vs_next_crd[dimension] = ID of the overlapping virtual states
   for(int d=0; d<n_dim; d++){
@@ -671,9 +669,9 @@ int ExtendedVcMD::trial_transition(){  // source ... vs_id of current state
       vs_next.push_back(tmp_vs);
     }
 
-    std::cout << "dbg 0304 vs_next : "  << endl;
-    for(const auto x: vs_next)
-      std::cout << x[0] << "-" << x[1] << endl;
+    //std::cout << "dbg 0304 vs_next : "  << endl;
+    //for(const auto x: vs_next)
+    //std::cout << x[0] << "-" << x[1] << endl;
     
   }else{
     error_exit(string("In this version, the VcMD allows upto 2 dimension."), "1A00006");
@@ -717,28 +715,28 @@ int ExtendedVcMD::scale_force(real_fc *work, int n_atoms) {
   for ( int d = 0; d < n_dim; d++){
     real param    = lambda[d];
     real recovery = 0.0;
-      cout << "dbg 0304 scale d:"<<d<< " lambda:"<<lambda[d]
-	   << " cur_vs:" << cur_vs[d] 
-	   << " " << vc_range_min[d][cur_vs[d]]<< "~" 
-	   << " " << vc_range_max[d][cur_vs[d]]<< endl;
+    //cout << "dbg 0304 scale d:"<<d<< " lambda:"<<lambda[d]
+    //<< " cur_vs:" << cur_vs[d] 
+    //<< " " << vc_range_min[d][cur_vs[d]]<< "~" 
+    //<< " " << vc_range_max[d][cur_vs[d]]<< endl;
     
     // case 1 : under the lower limit
     if (lambda[d] < vc_range_min[d][cur_vs[d]] - sigma){
       recovery = recov_coef * (lambda[d] - (vc_range_min[d][cur_vs[d]] - sigma));
     }else if (lambda[d] >= vc_range_max[d][cur_vs[d]] + sigma){
-      cout << "dbg 0304 scale d:"<<d<< " max lambda:"<<lambda[d]
-	   << " " << vc_range_max[d][cur_vs[d]]<< endl;
+      //cout << "dbg 0304 scale d:"<<d<< " max lambda:"<<lambda[d]
+      //<< " " << vc_range_max[d][cur_vs[d]]<< endl;
       recovery = recov_coef * (lambda[d] - (vc_range_max[d][cur_vs[d]] + sigma));
     }
     int i_pair = 0;
     real dew = const_k * recovery;
-    cout << "dbg 0304 scale d:"<<d<<" recov: " << recovery << endl;
+    //cout << "dbg 0304 scale d:"<<d<<" recov: " << recovery << endl;
     real direction = 1.0;
     for (int pair_ab = 0; pair_ab < 2; pair_ab++) {
       int i_grp = enhance_group_pairs[d][pair_ab];
       int grp_id = enhance_groups[i_grp];
       real bias[3];
-      cout << "dbg 0304 scale pair " << pair_ab << endl;
+      //cout << "dbg 0304 scale pair " << pair_ab << endl;
       for (int xd = 0; xd < 3; xd++)
 	bias[d] = dew * unit_vec[i_pair][d] * (real)mass_groups_inv[grp_id];
       for (int i_at = 0; i_at < n_atoms_in_groups[grp_id]; i_at++) {
@@ -749,7 +747,7 @@ int ExtendedVcMD::scale_force(real_fc *work, int n_atoms) {
       }
       direction *= -1.0;
     }
-    cout << "dbg 0304 scale " << endl;
+    //cout << "dbg 0304 scale " << endl;
     i_pair++;
   }
   return 0;
@@ -772,9 +770,7 @@ int ExtendedVcMD::set_files(string fn_vslog, string fn_lambda, int format_lambda
     writer_lambda->write_header();
     // write_vslog(0);
     writer_qcano.set_fn(fn_qcano);
-    writer_qcano.open();
     writer_qraw.set_fn(fn_qraw);
-    writer_qraw.open();
     return 0;
 }
 int ExtendedVcMD::write_vslog(int cur_steps) {
@@ -786,19 +782,22 @@ int ExtendedVcMD::write_lambda(){
     return 0;
 }
 int ExtendedVcMD::write_q(){
+  writer_qraw.open();
   writer_qraw.write(trans_interval,
 		    grp_names,
 		    vc_range_min, vc_range_max,
 		    q_raw);
+  writer_qraw.close();
   std::map< std::vector<int>, real > q_cano_next;  
+  int pseudocount = 10;
   for ( const auto vs_q : q_raw ){
-    q_cano_next[vs_q.first] = q_cano[vs_q.first] * vs_q.second;
+    q_cano_next[vs_q.first] = q_cano[vs_q.first] * (vs_q.second + pseudocount); 
   }
-  for ( const auto vs_q : q_cano_next ){  
-    if(vs_q.second==0){
-      q_cano_next[vs_q.first] = 10;
-    }
-  }
+  //for ( const auto vs_q : q_cano_next ){  
+    //if(vs_q.second==0){
+    //q_cano_next[vs_q.first] += 10;
+    //}
+  //}
   real sum_q;
   for ( const auto vs_q : q_cano_next ){  
     sum_q += vs_q.second;
@@ -806,11 +805,12 @@ int ExtendedVcMD::write_q(){
   for ( const auto vs_q : q_cano_next ){  
     q_cano_next[vs_q.first] /= sum_q;
   }
+  writer_qcano.open();
   writer_qcano.write(trans_interval,
 		      grp_names,
 		      vc_range_min, vc_range_max,
 		      q_cano_next);
-
+  writer_qcano.close();
   return 0;
 }
 int ExtendedVcMD::print_info() {
@@ -869,10 +869,10 @@ int ExtendedVcMD::set_enhance_groups(int *       in_n_atoms_in_groups,
     enhance_group_pairs.push_back(grp_pair);
     i_pair++;
   }
-  cout << "dbg 0304[1a] group_pairs size : " << enhance_group_pairs.size() << endl;
+  //cout << "dbg 0304[1a] group_pairs size : " << enhance_group_pairs.size() << endl;
   int tmp = 0;
   for( const auto itr : enhance_group_pairs ){
-    cout << "dbg 0304 1b enhance_gropu_pairs: " << tmp << " :";
+    //cout << "dbg 0304 1b enhance_gropu_pairs: " << tmp << " :";
     for (const auto itr2 : itr){
       cout << " " << itr2;
     }
@@ -929,4 +929,14 @@ int ExtendedVcMD::set_mass(real_pw *in_mass, real_pw *in_mass_groups, real_pw *i
   }
   
   return 0;
+}
+int ExtendedVcMD::write_aus_restart(std::string fn_out) {
+    WriteGroupCoord writer;
+    writer.set_fn(fn_out);
+    writer.open();
+    writer.write_aus_restart(reactcrd_type, n_enhance_groups,
+			     enhance_groups,
+			     n_atoms_in_groups, crd_groups);
+    writer.close();
+    return 0;
 }

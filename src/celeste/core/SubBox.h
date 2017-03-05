@@ -313,7 +313,7 @@ class SubBox : public CelesteObject {
     int extended_apply_bias(unsigned long cur_step, real in_lambda);
     int vcmd_apply_bias(unsigned long cur_step);
     int extended_apply_bias_struct_param(unsigned long cur_step);
-    int extended_write_aus_restart(std::string fn_out);
+    int extended_write_aus_restart(std::string fn_out, int type_ext);
     void extended_enable_vs_transition();
     int  cancel_com_motion();
 
