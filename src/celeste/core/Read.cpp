@@ -91,13 +91,13 @@ int Read::load_launch_set(MmSystem &mmsys) {
         cout << "--- Load position restraint definition : " << size_pos_restraint << " bytes." << endl;
         load_ls_pos_restraint(mmsys.pos_restraint);
     }
-    if (size_group_coord > 0) {
-        cout << "--- Load group coordinates for restarting V-AUS: " << size_group_coord << " bytes." << endl;
-        load_ls_group_coord(mmsys);
-    }
     if (size_extended_vcmd > 0) {
         cout << "--- Load VcMD: " << size_extended_vcmd << " bytes." << endl;
         load_ls_vcmd(mmsys);
+    }
+    if (size_group_coord > 0) {
+        cout << "--- Load group coordinates for restarting V-AUS: " << size_group_coord << " bytes." << endl;
+        load_ls_group_coord(mmsys);
     }
     // cout << "load_ls_pcluster()" << endl;
     // load_ls_pcluster(mmsys);
@@ -576,7 +576,6 @@ int Read::load_ls_atom_groups(MmSystem &mmsys) {
 int Read::load_ls_dist_restraint(DistRestraintObject *dr) {
     int n_drunits;
     read_bin_values(&n_drunits, 1);
-    cout << "dbg 0303 dist_rest " << n_drunits << endl;
     dr->alloc_drunits(n_drunits);
     for (int i = 0; i < n_drunits; i++) {
         int   aid1, aid2;
@@ -595,7 +594,6 @@ int Read::load_ls_dist_restraint(DistRestraintObject *dr) {
 int Read::load_ls_pos_restraint(PosRestraintObject *pr) {
     int n_prunits;
     read_bin_values(&n_prunits, 1);
-    cout << "dbg 0303 pos_rest " << n_prunits << endl;
     pr->alloc_prunits(n_prunits);
     for (int i = 0; i < n_prunits; i++) {
         int   aid;
@@ -679,8 +677,9 @@ int Read::load_ls_vcmd(MmSystem &mmsys) {
   read_bin_values(&interval, 1);
   int dim;
   read_bin_values(&dim, 1);
+  
   //cout << "dbg 0303 intrv: " << interval << " dim: " << dim << endl;;
-
+  //cout << "dbg 0304 read a inter: " << interval << " dim:" << dim << endl;
   mmsys.vcmd->set_n_dim(dim);
   mmsys.vcmd->set_trans_interval(interval);
   int n_states = 1;
@@ -691,15 +690,22 @@ int Read::load_ls_vcmd(MmSystem &mmsys) {
     int n_grp;
     read_bin_values(&n_grp, 1);
     std::vector<int> grp_dim;
+    std::vector<string> grp_name;
     for(int i = 0; i < n_grp; i++){
       int grp_id;
       read_bin_values(&grp_id, 1);
       grp_dim.push_back(grp_id);
+      int len;
+      read_bin_values(&len, 1);
+      char name[MAX_LEN_NAME];
+      ifs.read(name, len);
+      grp_name.push_back(string(name));
+      cout << "read 0304 d:" <<d << " grp:"<< grp_id << ": " << name << endl;
     }
-    mmsys.vcmd->push_grp_ids(grp_dim);
+    mmsys.vcmd->push_grp_ids_name(grp_dim, grp_name);
     n_states *= n_vs;
-    std::vector<int> range_min;
-    std::vector<int> range_max;
+    std::vector<real> range_min;
+    std::vector<real> range_max;
     for (int i = 0; i < n_vs; i++) {
       double buf_min;
       double buf_max;
@@ -710,31 +716,32 @@ int Read::load_ls_vcmd(MmSystem &mmsys) {
     }
     mmsys.vcmd->push_vs_range(range_min, range_max);
   }
-
+  //cout << "dbg 0304 read b" << endl;
   std::vector<int> init_vs;
   for (int d = 0; d < dim; d++) {
     int vs;
     read_bin_values(&vs, 1);
-    init_vs.push_back(vs);
+    init_vs.push_back(vs - 1);
   }
   mmsys.vcmd->set_init_vs(init_vs);
   int seed;
   read_bin_values(&seed, 1);
   mmsys.vcmd->set_random_seed(seed);
-
-  std::map< std::vector<int>, real > vc_param;  
+  //cout << "dbg 0304 read c" << endl;
+  std::map< std::vector<int>, real > q_cano;
   for (int i = 0; i < n_states; i++){
     std::vector<int> state;
     for(int d = 0; d < dim; d++){
       int vs;
       read_bin_values(&vs, 1);      
-      state.push_back(vs);
+      state.push_back(vs-1);
     }
     double param;
     read_bin_values(&param, 1);
-    vc_param[state] = param;
+    q_cano[state] = param;
   }
-  mmsys.vcmd->set_vc_param(vc_param);
+  //cout << "dbg 0304 read d" << endl;
+  mmsys.vcmd->set_q_cano(q_cano);
   return 0;
 }
 

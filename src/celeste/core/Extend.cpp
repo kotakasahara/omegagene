@@ -435,8 +435,8 @@ real ExtendedVcMD::set_crd_centers(real *crd, PBC *pbc) {
 int ExtendedVAUS::scale_force(real lambda, real_fc *work, int n_atoms) {
   
   // case 1 : under the lower limit
-    real param    = lambda;
-    real recovery = 0.0;
+  real param    = lambda;
+   real recovery = 0.0;
 
     if (param <= vstates[cur_vs].get_lambda_low()) {
         if (param <= vstates[cur_vs].get_lambda_low() - sigma)
@@ -537,6 +537,10 @@ ExtendedVcMD::~ExtendedVcMD() {
 void ExtendedVcMD::set_trans_interval(int in_trans_interval) {
     trans_interval = in_trans_interval;
 }
+void ExtendedVcMD::set_temperature(real in_tmp) {
+    temperature = in_tmp;
+    const_k     = (GAS_CONST / JOULE_CAL) * 1e-3 * temperature;
+}
 int ExtendedVcMD::set_params(random::Random *in_mt, real in_sigma, real in_recov_coef, int in_n_steps) {
   lambda.resize(n_dim);
   random_mt = in_mt;
@@ -548,19 +552,30 @@ int ExtendedVcMD::set_params(random::Random *in_mt, real in_sigma, real in_recov
   // aus_type = in_aus_type;
   return 0;
 }
-int ExtendedVcMD::close_files() {
-    writer_vslog.close();
-    writer_lambda->close();
-    return 0;
+void ExtendedVcMD::set_n_dim(int in_n_dim){
+  n_dim = in_n_dim;
+  lambda.resize(n_dim);
 }
-
-int ExtendedVcMD::push_vs_range(std::vector<int> new_min,
-				std::vector<int> new_max){
+int ExtendedVcMD::close_files() {
+  write_q();
+  writer_vslog.close();
+  writer_lambda->close();
+  writer_qcano.close();
+  writer_qraw.close();
+  return 0;
+}
+int ExtendedVcMD::push_vs_range(std::vector<real> new_min,
+				std::vector<real> new_max){
   vc_range_min.push_back(new_min);
   vc_range_max.push_back(new_max);
   return 0;
 }
-
+void ExtendedVcMD::set_q_cano(std::map< std::vector<int>, real > in_q){
+  q_cano = in_q; 
+  for ( const auto itr : q_cano ) {
+    q_raw[itr.first] = 0;
+  }
+}
 int ExtendedVcMD::set_struct_parameters(real *crd, PBC *pbc) {
   cout << "dbg 0303 set_struct_parameters" << endl;
   // center of mass for each groups
@@ -572,12 +587,15 @@ int ExtendedVcMD::set_struct_parameters(real *crd, PBC *pbc) {
     real diff[3];
     int i_grp = itr_dim[0];
     int j_grp = itr_dim[1];
+    cout << "test i_grp: "<<i_grp<<" j_grp: " << j_grp << endl;
     pbc->diff_crd_minim_image(diff, crd_centers[i_grp], crd_centers[j_grp]);
     real dist = sqrt(diff[0] * diff[0] + diff[1] * diff[1] + diff[2] * diff[2]);
     for (int d = 0; d < 3; d++) unit_vec[i_pair][d] = diff[d] / dist;
     lambda[i_pair]=dist;
+    cout << lambda[i_pair] << endl;
     i_pair++;
   }
+  cout << "dbg 0303 set_struct_parameters (finished)" << endl;  
   return 0;
 }
 
@@ -586,8 +604,9 @@ int ExtendedVcMD::apply_bias(unsigned long cur_step,
 			     real_fc *work, int n_atoms_box) {
   cout << "dbg 0303 apply_bias" << endl;
   if (cur_step > 0 && cur_step % trans_interval == 0) {
-    if (flg_vs_transition) set_current_vstate(lambda);
-    if (cur_step <= n_steps) { write_vslog(cur_step); }
+    if (cur_step <= n_steps) q_raw[cur_vs] += trans_interval;
+    if (flg_vs_transition) trial_transition();
+    if (cur_step <= n_steps) write_vslog(cur_step);
   }
   cout << "dbg 0303 apply_bias 10" << endl;
   scale_force(work, n_atoms_box);
@@ -599,73 +618,145 @@ int ExtendedVcMD::apply_bias(unsigned long cur_step,
   return 0;
 }
 
-int ExtendedVcMD::set_current_vstate(std::vector<real> lambda) {
-  /*
-    int dest_vs;
-    dest_vs = trial_transition(cur_vs, 1, lambda);
-    if (dest_vs != cur_vs) {
-        cur_vs = dest_vs;
-        return 0;
-    }
-    dest_vs = trial_transition(cur_vs, -1, lambda);
-    if (dest_vs != cur_vs) {
-        cur_vs = dest_vs;
-        return 0;
-    }
-  */
-  return 0;
-}
-std::vector<int> ExtendedVcMD::trial_transition(std::vector<int> source,
-						   std::vector<int> rel_dest, 
-						   std::vector<real> lambda) {
-  // source ... vs_id of current state
+int ExtendedVcMD::trial_transition(){  // source ... vs_id of current state
   // rel_dest ... -1 or 1, down or up
   // lambda
   
   // return ...
-  
-  // std::uniform_real_distribution<> random_gen(0.0, 1.0);
-  /*
-  if (!vstates[source].is_in_range(lambda)) return source;
-  if (source == 0 and rel_dest == -1) return source;
-  if (source == n_vstates - 1 and rel_dest == 1) return source;
-  int up_down                 = rel_dest;
-  if (rel_dest == -1) up_down = 0;
-  if (vstates[source + rel_dest].is_in_range(lambda)) {
-    if ((*random_mt)() > (1.0 - vstates[source].get_trans_prob(up_down))) { return source + rel_dest; }
+  //cout << "dbg 0304 trial [1]" << endl;
+  bool flg = true;
+  for(int d=0; d<n_dim; d++){
+    //cout << "dbg 0304 trial d[" << d << "] " << lambda[d]
+    //<< " cur_vs: " <<cur_vs[d] 
+    //<<" "<<vc_range_min[d][cur_vs[d]]<<" ~ "
+    //<<vc_range_max[d][cur_vs[d]]<< endl;
+    if(lambda[d] >= vc_range_max[d][cur_vs[d]])     { flg = false; break; }
+    else if(lambda[d] < vc_range_min[d][cur_vs[d]]) { flg = false; break; }
   }
-  */
-  return source;
+  if (!flg) { return 0; }
+  cout << "dbg 0304 trial [2]" << endl;
+  std::vector<int> vs_next_crd(n_dim);
+  // vs_next_crd[dimension] = ID of the overlapping virtual states
+  for(int d=0; d<n_dim; d++){
+    if ( cur_vs[d] > 0 ){
+      if (lambda[d] < vc_range_max[d][cur_vs[d]-1]){
+	vs_next_crd[d] = cur_vs[d]-1;
+      }else{
+	vs_next_crd[d] = cur_vs[d]+1;
+      }
+    }else if(vc_range_min[d].size() > 1){
+      vs_next_crd[d] = 1;
+    }else{
+      vs_next_crd[d] = 0;
+    }
+  }
+
+  std::vector< std::vector<int> > vs_next;
+  // vs_next[0,1,2,3] = [x1,y1],[x1,y2],[x2,y1],[x2,y2]
+  // the candidate states for the next step
+  std::vector<int> tmp_vs(2);
+  if (n_dim == 2){
+    tmp_vs[0] = cur_vs[0];      tmp_vs[1] = cur_vs[1];
+    vs_next.push_back(tmp_vs);
+    if ( vs_next_crd[0] != cur_vs[0] ){
+      tmp_vs[0] = vs_next_crd[0]; tmp_vs[1] = cur_vs[1];
+      vs_next.push_back(tmp_vs);
+      if ( vs_next_crd[1] != cur_vs[1] ){
+	tmp_vs[0] = vs_next_crd[0]; tmp_vs[1] = vs_next_crd[1];
+	vs_next.push_back(tmp_vs);
+      }
+    }
+    if ( vs_next_crd[1] != cur_vs[1] ){
+      tmp_vs[0] = cur_vs[0];      tmp_vs[1] = vs_next_crd[1];
+      vs_next.push_back(tmp_vs);
+    }
+
+    std::cout << "dbg 0304 vs_next : "  << endl;
+    for(const auto x: vs_next)
+      std::cout << x[0] << "-" << x[1] << endl;
+    
+  }else{
+    error_exit(string("In this version, the VcMD allows upto 2 dimension."), "1A00006");
+  }
+  
+  std::vector<real> i_val;
+  i_val.resize(vs_next.size());
+  int idx_vs1=0;
+  for ( const auto vs1 : vs_next ) {
+    //std::cout << "dbg 0304a";
+    //for(const auto v : vs1){
+    //cout << " " << v;
+    //}
+    //cout << " , q_cano: " << q_cano[vs1] << endl;;
+    int idx_vs2=0;
+    for ( const auto vs2 : vs_next ) {
+      
+      i_val[idx_vs1] += q_cano[vs1] / q_cano[vs2];
+      idx_vs2++;
+    }
+    //std::cout << "dbg 0304b i_val1 : "  << i_val[idx_vs1] << endl;
+    i_val[idx_vs1] = 1.0 / i_val[idx_vs1];
+    //std::cout << "dbg 0304c i_val2 : " << i_val[idx_vs1] << endl;
+    idx_vs1++;
+  }
+  
+  real rnd = (*random_mt)();
+  real i_acc = 0.0;
+  int idx = 0;
+  for ( const auto val : i_val ){
+    i_acc += val;
+    if ( rnd < i_acc ) break;
+    idx++;
+  }
+  
+  cur_vs = vs_next[idx];
+  return idx;
 }
 
 int ExtendedVcMD::scale_force(real_fc *work, int n_atoms) {
-  /*
+  for ( int d = 0; d < n_dim; d++){
+    real param    = lambda[d];
+    real recovery = 0.0;
+      cout << "dbg 0304 scale d:"<<d<< " lambda:"<<lambda[d]
+	   << " cur_vs:" << cur_vs[d] 
+	   << " " << vc_range_min[d][cur_vs[d]]<< "~" 
+	   << " " << vc_range_max[d][cur_vs[d]]<< endl;
+    
     // case 1 : under the lower limit
-    real param = lambda;
-    if (lambda <= vstates[cur_vs].get_lambda_low()) {
-        param = vstates[cur_vs].get_lambda_low();
-    } else if (lambda >= vstates[cur_vs].get_lambda_high()) {
-        param = vstates[cur_vs].get_lambda_high();
+    if (lambda[d] < vc_range_min[d][cur_vs[d]] - sigma){
+      recovery = recov_coef * (lambda[d] - (vc_range_min[d][cur_vs[d]] - sigma));
+    }else if (lambda[d] >= vc_range_max[d][cur_vs[d]] + sigma){
+      cout << "dbg 0304 scale d:"<<d<< " max lambda:"<<lambda[d]
+	   << " " << vc_range_max[d][cur_vs[d]]<< endl;
+      recovery = recov_coef * (lambda[d] - (vc_range_max[d][cur_vs[d]] + sigma));
     }
-    real d_ln_p = vstates[cur_vs].get_poly_param(0);
-    // cout << "dbg0522 1 " << param << " " << d_ln_p << endl;
-    real tmp = 1.0;
-    for (int i = 1; i < vstates[cur_vs].get_order() + 1; i++) {
-        tmp *= param;
-        d_ln_p += vstates[cur_vs].get_poly_param(i) * tmp;
-        // cout << "dbg0522 2 "<<i << " " << vstates[cur_vs].get_poly_param(i) << " " << d_ln_p << endl;
+    int i_pair = 0;
+    real dew = const_k * recovery;
+    cout << "dbg 0304 scale d:"<<d<<" recov: " << recovery << endl;
+    real direction = 1.0;
+    for (int pair_ab = 0; pair_ab < 2; pair_ab++) {
+      int i_grp = enhance_group_pairs[d][pair_ab];
+      int grp_id = enhance_groups[i_grp];
+      real bias[3];
+      cout << "dbg 0304 scale pair " << pair_ab << endl;
+      for (int xd = 0; xd < 3; xd++)
+	bias[d] = dew * unit_vec[i_pair][d] * (real)mass_groups_inv[grp_id];
+      for (int i_at = 0; i_at < n_atoms_in_groups[grp_id]; i_at++) {
+	int atom_id3 = atom_groups[grp_id][i_at] * 3;
+	for (int xd = 0; xd < 3; xd++) {
+	  work[atom_id3 + d] += direction * bias[d] * (real)mass[atom_groups[grp_id][i_at]];
+	}
+      }
+      direction *= -1.0;
     }
-
-    // real k = (GAS_CONST / JOULE_CAL) * 1e-3;
-    real dew = const_k * d_ln_p;
-    // cout << "dbg0522 "<<dew << endl;
-    int n_atoms_3 = n_atoms * 3;
-    for (int i = 0; i < n_atoms_3; i++) { work[i] *= dew; }
-  */
-    return 0;
+    cout << "dbg 0304 scale " << endl;
+    i_pair++;
+  }
+  return 0;
 }
 
-int ExtendedVcMD::set_files(string fn_vslog, string fn_lambda, int format_lambda) {
+int ExtendedVcMD::set_files(string fn_vslog, string fn_lambda, int format_lambda,
+			    string fn_qcano, string fn_qraw) {
     writer_vslog.set_fn(fn_vslog);
     writer_vslog.open();
     if (format_lambda == LAMBDAOUT_BIN) {
@@ -680,6 +771,10 @@ int ExtendedVcMD::set_files(string fn_vslog, string fn_lambda, int format_lambda
     writer_lambda->set_ncolumns(n_dim);
     writer_lambda->write_header();
     // write_vslog(0);
+    writer_qcano.set_fn(fn_qcano);
+    writer_qcano.open();
+    writer_qraw.set_fn(fn_qraw);
+    writer_qraw.open();
     return 0;
 }
 int ExtendedVcMD::write_vslog(int cur_steps) {
@@ -690,7 +785,34 @@ int ExtendedVcMD::write_lambda(){
   writer_lambda->write_row(lambda);
     return 0;
 }
+int ExtendedVcMD::write_q(){
+  writer_qraw.write(trans_interval,
+		    grp_names,
+		    vc_range_min, vc_range_max,
+		    q_raw);
+  std::map< std::vector<int>, real > q_cano_next;  
+  for ( const auto vs_q : q_raw ){
+    q_cano_next[vs_q.first] = q_cano[vs_q.first] * vs_q.second;
+  }
+  for ( const auto vs_q : q_cano_next ){  
+    if(vs_q.second==0){
+      q_cano_next[vs_q.first] = 10;
+    }
+  }
+  real sum_q;
+  for ( const auto vs_q : q_cano_next ){  
+    sum_q += vs_q.second;
+  }
+  for ( const auto vs_q : q_cano_next ){  
+    q_cano_next[vs_q.first] /= sum_q;
+  }
+  writer_qcano.write(trans_interval,
+		      grp_names,
+		      vc_range_min, vc_range_max,
+		      q_cano_next);
 
+  return 0;
+}
 int ExtendedVcMD::print_info() {
   std::cout << "V-McMD parameters" << endl;
   for (int d = 0; d < n_dim; d++){
@@ -707,8 +829,8 @@ int ExtendedVcMD::print_info() {
   }
   cout << endl;
   cout << "seed : " << random_seed << endl;
-  cout << "param size: " << vc_param.size() << endl;
-  for ( const auto pair : vc_param ) {
+  cout << "param size: " << q_cano.size() << endl;
+  for ( const auto pair : q_cano ) {
     for ( const auto vs : pair.first ) { 
       std::cout << " " << vs;
     }
@@ -734,31 +856,48 @@ int ExtendedVcMD::set_enhance_groups(int *       in_n_atoms_in_groups,
   
   //n_enhance_group_pairs = (n_enhance_groups * (n_enhance_groups - 1)) / 2;
   int i_pair            = 0;
-  std::vector< std::vector<int> >::iterator itr_pair;
-  for ( auto itr_pair : grp_ids ){
+  for ( const auto itr_pair : grp_ids ){
     std::vector<int> grp_pair;
-    grp_pair.push_back(itr_pair[0]);
-    grp_pair.push_back(itr_pair[1]);
+    for ( const auto itr_grpid : itr_pair ){    
+      int grpid_in_enhance = 0;
+      for ( const auto itr_grp_vc  : enhance_groups ){
+	if ( itr_grp_vc == itr_grpid ) break;	  
+	grpid_in_enhance++;
+      }
+      grp_pair.push_back(grpid_in_enhance);
+    }
     enhance_group_pairs.push_back(grp_pair);
     i_pair++;
   }
-
+  cout << "dbg 0304[1a] group_pairs size : " << enhance_group_pairs.size() << endl;
+  int tmp = 0;
+  for( const auto itr : enhance_group_pairs ){
+    cout << "dbg 0304 1b enhance_gropu_pairs: " << tmp << " :";
+    for (const auto itr2 : itr){
+      cout << " " << itr2;
+    }
+    cout << endl;
+    tmp++;
+  }
   alloc_crd_centers();
   return 0;
 }
 
 int ExtendedVcMD::alloc_crd_centers() {
+  cout << "dbg 0304 1a[2]" << endl;
   crd_groups = new real **[n_enhance_groups];
   for (int i_grp = 0; i_grp < n_enhance_groups; i_grp++) {
     int grp_id        = enhance_groups[i_grp];
     crd_groups[i_grp] = new real *[n_atoms_in_groups[grp_id]];
     for (int j = 0; j < n_atoms_in_groups[grp_id]; j++) { crd_groups[i_grp][j] = new real[3]; }
   }
-  
+  cout << "dbg 0304 1a[3] " << n_enhance_groups << endl;  
   crd_centers = new real *[n_enhance_groups];
   for (int i = 0; i < n_enhance_groups; i++) { crd_centers[i] = new real[3]; }
+  cout << "dbg 0304 1a[4] " << n_dim << endl;  
   unit_vec = new real *[n_dim];
   for (int i = 0; i < n_dim; i++) { unit_vec[i] = new real[3]; }
+  cout << "dbg 0304 1a[5]" << endl;
   return 0;
 }
 int ExtendedVcMD::free_crd_centers() {

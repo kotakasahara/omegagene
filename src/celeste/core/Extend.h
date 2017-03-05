@@ -225,9 +225,13 @@ class ExtendedVcMD : public Extended {
     int  random_seed;
     int  trans_interval;
     bool          flg_vs_transition;
-    WriteTTPVMcMDLog writer_vslog;
+    real temperature;
+    real const_k;
 
+    WriteTTPVMcMDLog writer_vslog;
     WriteTableLog *writer_lambda;
+    WriteVcMDParam writer_qcano;
+    WriteVcMDParam writer_qraw;
 
     int reactcrd_type;
     real_pw *mass;
@@ -259,15 +263,16 @@ class ExtendedVcMD : public Extended {
 
     int  n_dim;
     
-    std::vector< std::vector<int> > vc_range_min;
-    std::vector< std::vector<int> > vc_range_max;
+    std::vector< std::vector<real> > vc_range_min;
+    std::vector< std::vector<real> > vc_range_max;
     // range_min[dim][vs]
     // range_max[dim][vs]
     std::vector<int> init_vs;
     // init_vs[dim] = vs
     std::vector< std::vector<int> > grp_ids;
-    std::map< std::vector<int>, real > vc_param;
-    std::map< std::vector<int>, real > vc_count;
+    std::vector< std::vector<std::string> > grp_names;
+    std::map< std::vector<int>, real > q_cano;
+    std::map< std::vector<int>, real > q_raw;
     
     std::vector<int> cur_vs;
     
@@ -283,34 +288,40 @@ class ExtendedVcMD : public Extended {
 
     void set_reactcrd_type(int in_type) { reactcrd_type = in_type; };
     void set_trans_interval(int in_trans_interval);
+    void set_temperature(real in_tmp);
     int  get_random_seed() { return random_seed; };
     void set_random_seed(int in_seed) { random_seed = in_seed; };
-    void set_n_dim(int in_n_dim){n_dim = in_n_dim;}
+    void set_n_dim(int in_n_dim);
     int close_files();
     int get_n_dim(){return n_dim;}
     void enable_vs_transition() { flg_vs_transition = true; }
-    int push_vs_range(std::vector<int> new_min,
-		      std::vector<int> new_max);
-    void set_vc_param(std::map< std::vector<int>, real > in_param){ vc_param = in_param; }
-    void push_grp_ids(std::vector<int> in_ids){ grp_ids.push_back(in_ids); }
+    int push_vs_range(std::vector<real> new_min,
+		      std::vector<real> new_max);
+    void set_q_cano(std::map< std::vector<int>, real > in_q);
+    void push_grp_ids_name(std::vector<int> in_ids,
+			   std::vector<std::string> in_names){
+     grp_ids.push_back(in_ids); 
+     grp_names.push_back(in_names);
+    }
     int set_params(celeste::random::Random *in_mt, real in_sigma, real in_recov_coef, int in_n_steps);
     real set_crd_centers(real *crd, PBC *pbc);
     int apply_bias(unsigned long cur_step,
 		   real_fc *work, int n_atoms_box);
     int scale_force(real_fc *work, int n_atoms);
-    int set_files(std::string fn_vslog, std::string fn_lambda, int format_lambda);
+    int set_files(std::string fn_vslog, std::string fn_lambda, int format_lambda,
+		  std::string fn_qcano, std::string fn_qraw);
     
     std::vector<int> get_init_vs() { return init_vs; };
     void set_init_vs(std::vector<int> in_vs) {
-      copy(in_vs.begin(), in_vs.end(), back_inserter(init_vs) );
-      copy(in_vs.begin(), in_vs.end(), back_inserter(cur_vs) );
+      init_vs = in_vs;
+      cur_vs = in_vs;
     };
-    std::vector<int> trial_transition(std::vector<int> source, std::vector<int> rel_dest, std::vector<real> lambda);
+    int trial_transition();
 
-    int set_current_vstate(std::vector<real> lambda);
 
     int write_vslog(int cur_steps);
     int write_lambda();
+    int write_q();
 
     int print_info();
     int set_struct_parameters(real *crd, PBC *pbc);

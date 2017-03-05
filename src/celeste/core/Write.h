@@ -51,6 +51,21 @@ class WriteTableLog : public Write {
     virtual int write_row(std::vector<real> values);
 };
 
+class WriteVcMDParam : public Write {
+  private:
+  protected:
+
+  public:
+    WriteVcMDParam();
+    ~WriteVcMDParam();
+    int write(int interval,
+	      std::vector< std::vector<std::string> > grp_names,
+	      std::vector< std::vector<real> > min,
+	      std::vector< std::vector<real> > max,
+	      std::map< std::vector<int>, real > q_cano);
+};
+
+
 class WriteTableLogBinary : public WriteTableLog {
  private:
  protected:

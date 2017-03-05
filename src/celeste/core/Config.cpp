@@ -307,6 +307,10 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
         //    else if (*itr == "--aus-type") {  aus_type = atoi((*++itr).c_str()); }
         else if (*itr == "--fn-o-aus-restart") {
             fn_o_aus_restart = *++itr;
+	}else if (*itr == "--fn-o-vcmd-q-cano") {
+	  fn_o_vcmd_qcano = *++itr;
+	}else if (*itr == "--fn-o-vcmd-q-raw") {
+	  fn_o_vcmd_qraw = *++itr;
 
         } else {
             stringstream ss;

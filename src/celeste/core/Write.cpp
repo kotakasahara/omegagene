@@ -41,10 +41,10 @@ int WriteTTPVMcMDLog::write_ttpvMcMDLog(int step, int vstate) {
     return 0;
 }
 int WriteTTPVMcMDLog::write_VcMDLog(int step, std::vector<int> vstate) {
-  ofs << step;
+  //ofs << step;
   std::vector<int>::iterator itr;
   for(auto itr: vstate){
-    ofs << "\t" << itr;
+    ofs << "\t" << itr+1;
   }
   ofs << std::endl;
   return 0;
@@ -64,6 +64,33 @@ int WriteTableLog::write_row(real *values) {
 }
 int WriteTableLog::write_row(std::vector<real> values) {
     return 0;
+}
+
+WriteVcMDParam::WriteVcMDParam() : Write() {}
+WriteVcMDParam::~WriteVcMDParam() {}
+int WriteVcMDParam::write(int interval,
+			  std::vector< std::vector<string> > grp_names,
+			  std::vector< std::vector<real> > min,
+			  std::vector< std::vector<real> > max,
+			  std::map< std::vector<int>, real > q_cano){
+  ofs << min.size() << endl;
+  for ( int i = 0; i < min.size(); i++){
+    ofs << min[i].size();
+    for ( const auto name : grp_names[i] )
+      ofs << " " << name;
+    ofs << endl;
+    for ( int j = 0; j < min[i].size(); j++){
+      ofs << min[i][j] << " " << max[i][j] << endl;
+    }
+  }
+  for ( const auto q : q_cano ){
+    for ( const auto vs : q.first ) {
+      ofs << vs+1 << " ";
+    }
+    ofs << q.second << endl;
+  }
+  ofs<<"END"<<endl;
+  return 0;
 }
 
 WriteTableLogBinary::WriteTableLogBinary() : WriteTableLog() {}

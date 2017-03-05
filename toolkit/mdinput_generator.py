@@ -305,10 +305,10 @@ class MDInputGen(object):
         f.write(st.pack("@i", len(buf_dist_rest)))
         if self.version_id >= 1:
             f.write(st.pack("@i", len(buf_pos_rest)))
-        if self.version_id >= 2:
-            f.write(st.pack("@i", len(buf_group_coord)))
         if self.version_id >= 3:
             f.write(st.pack("@i", len(buf_extended_vcmd)))
+        if self.version_id >= 2:
+            f.write(st.pack("@i", len(buf_group_coord)))
         print "size: buf_box          : " + str(len(buf_box))
         print "size: buf_coordinates  : " + str(len(buf_coordinates))
         print "size: buf_velocities   : " + str(len(buf_velocities))
@@ -320,10 +320,10 @@ class MDInputGen(object):
         print "size: buf_dist_rest    : " + str(len(buf_dist_rest))
         if self.version_id >= 1:
             print "size: buf_pos_rest     : " + str(len(buf_pos_rest))
-        if self.version_id >= 2:
-            print "size: buf_group_coord  : " + str(len(buf_group_coord))
         if self.version_id >= 3:
             print "size: buf_extended_vcmd: " + str(len(buf_extended_vcmd))
+        if self.version_id >= 2:
+            print "size: buf_group_coord  : " + str(len(buf_group_coord))
 
         f.write(buf_box)
         f.write(buf_coordinates)
@@ -336,10 +336,10 @@ class MDInputGen(object):
         f.write(buf_dist_rest)
         if self.version_id >= 1:
             f.write(buf_pos_rest)
-        if self.version_id >= 2:
-            f.write(buf_group_coord)
         if self.version_id >= 3:
             f.write(buf_extended_vcmd)
+        if self.version_id >= 2:
+            f.write(buf_group_coord)
         f.close()
         return
 
@@ -591,7 +591,7 @@ class MDInputGen(object):
 
     def dump_extended_vcmd(self, extended, atom_group_names):
         buf = ""
-        print "dbg dump interval " + str(extended.interval) + " dim " + str(extended.dim)
+        # print "dbg dump interval " + str(extended.interval) + " dim " + str(extended.dim)
         buf += st.pack("@i", extended.interval)
         buf += st.pack("@i", extended.dim)
         for cur_dim in range(1, extended.dim+1):
@@ -600,8 +600,10 @@ class MDInputGen(object):
             buf += st.pack("@i", n_vs)
             buf += st.pack("@i", len(extended.group_names[cur_dim]))
             for grp_name in extended.group_names[cur_dim]:
-                grp_id = atom_group_names.index(grp_name)             
+                grp_id = atom_group_names.index(grp_name)
                 buf += st.pack("@i", grp_id)
+                buf += st.pack("@i", len(grp_name)+1)
+                buf += grp_name+"\0"
             for vs in range(1, n_vs + 1):
                 buf += st.pack("@dd",
                                extended.lambda_ranges[cur_dim][vs][0],

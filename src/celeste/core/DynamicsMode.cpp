@@ -95,13 +95,14 @@ int DynamicsMode::initial_preprocess() {
       cout << "VcMD: " << endl;
       cout << "  VS log output ... " << cfg->fn_o_vmcmd_log << endl;
       cout << "  Lambda output ... " << cfg->fn_o_extended_lambda << endl;
-      mmsys.vcmd->set_files(cfg->fn_o_vmcmd_log, cfg->fn_o_extended_lambda, cfg->format_o_extended_lambda);
+      mmsys.vcmd->set_files(cfg->fn_o_vmcmd_log, cfg->fn_o_extended_lambda, cfg->format_o_extended_lambda,
+			    cfg->fn_o_vcmd_qcano, cfg->fn_o_vcmd_qraw);
       mmsys.vcmd->set_lambda_interval(cfg->print_intvl_extended_lambda);
       mmsys.vcmd->print_info();
       cout << "print_info" << endl;
       mmsys.vcmd->set_params(&mmsys.random_mt, cfg->enhance_sigma, cfg->enhance_recov_coef,
 			      cfg->n_steps); //, cfg->aus_type);
-
+      mmsys.vcmd->set_temperature(cfg->temperature);
       // for(int i_grp=0; i_grp < mmsys.n_groups; i_grp++){
       // cout << "dbg1130 massDM " << i_grp << " " << mmsys.mass_inv_groups[i_grp]<<endl;
       //}
