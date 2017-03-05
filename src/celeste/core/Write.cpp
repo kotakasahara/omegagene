@@ -73,6 +73,7 @@ int WriteVcMDParam::write(int interval,
 			  std::vector< std::vector<real> > min,
 			  std::vector< std::vector<real> > max,
 			  std::map< std::vector<int>, real > q_cano){
+  ofs << interval << endl;
   ofs << min.size() << endl;
   for ( int i = 0; i < min.size(); i++){
     ofs << min[i].size();

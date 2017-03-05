@@ -3,12 +3,17 @@
 import sys
 import kkkit
 import re
+import numpy as np
 
 class VcMDConf():
     def __init__(self):
         self.interval = 0
+        #self.n_params = 0
         self.dim = 0
         self.group_names = []
+        # group_names[dim] = [name, name]
+        # self.group_names[0] is must be empty ("")
+
         # lambda_ranges[dim] = (group A, group B)
         self.lambda_ranges = []
         # lambda_ranges[dim][vsid] = (min, max)
@@ -24,6 +29,30 @@ class VcMDConf():
             self.lambda_ranges, self.params = VcMDParamsReader(fn).read()
     def read_init(self, fn):
         self.init_vs, self.seed = VcMDInitReader(fn).read(self.dim)
+    def add_params(self, conf):
+        for vs, param in conf.params.items():
+            for i, p in enumerate(conf.params[vs]):
+                self.params[vs][i] += p
+        return
+    def multiply_params(self, conf):
+        for vs, param in conf.params.items():
+            for i, p in enumerate(conf.params[vs]):
+                self.params[vs][i] *= p
+        return
+    def normalize_params(self):
+        p_sum = np.zeros(len(self.params.values()[0]), dtype=np.float)
+        for vs, param in self.params.items():
+            p_sum += np.array(param)
+        for vs, param in self.params.items():
+            for i, q in enumerate(param):
+                self.params[vs][i] /= p_sum[i]
+        return
+    def add_const(self, const):
+        for vs, param in self.params.items():
+            for i, p in enumerate(param):
+                self.params[vs][i] += const
+        return
+        
 
 class VcMDInitReader(kkkit.FileI):
     def __init__(self, fn):
@@ -45,6 +74,28 @@ class VcMDInitReader(kkkit.FileI):
         print "dbg kkmm_vcmd : seed " + str(seed) + "  dim " + str(dim)
         return init_vs, seed
 
+class VcMDParamsWriter(kkkit.FileO):
+    def __init__(self, fn):
+        super(VcMDParamsWriter, self).__init__(fn)
+    def write(self, vc):
+        self.open()
+        self.f.write(str(vc.interval)+"\n")
+        self.f.write(str(vc.dim)+"\n")        
+        for d in range(1, vc.dim+1):
+            buf = ""
+            buf += str(len(vc.lambda_ranges[d]))
+            for name in vc.group_names[d]:
+                buf += " " + name
+            self.f.write(buf+"\n")
+            for lmbd in vc.lambda_ranges[d][1:]:
+                self.f.write(str(lmbd[0]) + " " + str(lmbd[1]) + "\n")
+        for vs, param in vc.params.items():
+            buf = " ".join([str(x) for x in vs]) 
+            for x in param:
+                buf += " " + str(x)
+            self.f.write(buf+"\n")
+        self.f.write("END")
+        self.close()
 
 class VcMDParamsReader(kkkit.FileI):
     def __init__(self, fn):
