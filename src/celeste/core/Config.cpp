@@ -219,16 +219,12 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
 
         } else if (*itr == "--print-interval-extended-lambda") {
             print_intvl_extended_lambda = atoi((*++itr).c_str());
-
         } else if (*itr == "--fn-o-restart") {
             fn_o_restart = *++itr;
-
         } else if (*itr == "--fn-o-coord") {
             fn_o_crd = *++itr;
-
         } else if (*itr == "--group-o-coord") {
             group_o_crd_name = ((*++itr).c_str());
-
         } else if (*itr == "--format-o-coord") {
             itr++;
             if (*itr == "gromacs") {
@@ -307,11 +303,12 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
         //    else if (*itr == "--aus-type") {  aus_type = atoi((*++itr).c_str()); }
         else if (*itr == "--fn-o-aus-restart") {
             fn_o_aus_restart = *++itr;
-	}else if (*itr == "--fn-o-vcmd-q-cano") {
-	  fn_o_vcmd_qcano = *++itr;
+	}else if (*itr == "--fn-o-vcmd-start") {
+	  fn_o_vcmd_start = *++itr;
 	}else if (*itr == "--fn-o-vcmd-q-raw") {
 	  fn_o_vcmd_qraw = *++itr;
-
+	}else if (*itr == "--begin-count-q-raw") {
+	  begin_count_qraw = atoi((*++itr).c_str());
         } else {
             stringstream ss;
             error_exit(ss.str(), "1A00001");

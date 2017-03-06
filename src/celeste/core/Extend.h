@@ -230,8 +230,11 @@ class ExtendedVcMD : public Extended {
 
     WriteTTPVMcMDLog writer_vslog;
     WriteTableLog *writer_lambda;
-    WriteVcMDParam writer_qcano;
+    //WriteVcMDParam writer_qcano;
     WriteVcMDParam writer_qraw;
+    WriteTableLogAscii writer_start;
+
+    int begin_count_q_raw;
 
     int reactcrd_type;
     real_pw *mass;
@@ -303,7 +306,9 @@ class ExtendedVcMD : public Extended {
      grp_ids.push_back(in_ids); 
      grp_names.push_back(in_names);
     }
-    int set_params(celeste::random::Random *in_mt, real in_sigma, real in_recov_coef, int in_n_steps);
+    int set_params(celeste::random::Random *in_mt, real in_sigma,
+		   real in_recov_coef, int in_n_steps,
+		   int in_begin_count_q_raw);
     real set_crd_centers(real *crd, PBC *pbc);
     int apply_bias(unsigned long cur_step,
 		   real_fc *work, int n_atoms_box);

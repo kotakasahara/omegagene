@@ -541,7 +541,9 @@ void ExtendedVcMD::set_temperature(real in_tmp) {
     temperature = in_tmp;
     const_k     = (GAS_CONST / JOULE_CAL) * 1e-3 * temperature;
 }
-int ExtendedVcMD::set_params(random::Random *in_mt, real in_sigma, real in_recov_coef, int in_n_steps) {
+int ExtendedVcMD::set_params(random::Random *in_mt, real in_sigma,
+			     real in_recov_coef, int in_n_steps,
+			     int in_begin_count_q_raw) {
   lambda.resize(n_dim);
   random_mt = in_mt;
   sigma     = in_sigma;
@@ -550,6 +552,7 @@ int ExtendedVcMD::set_params(random::Random *in_mt, real in_sigma, real in_recov
   recov_coef = in_recov_coef;
   n_steps    = in_n_steps;
   // aus_type = in_aus_type;
+  begin_count_q_raw = in_begin_count_q_raw;
   return 0;
 }
 void ExtendedVcMD::set_n_dim(int in_n_dim){
@@ -602,7 +605,7 @@ int ExtendedVcMD::apply_bias(unsigned long cur_step,
 			     real_fc *work, int n_atoms_box) {
   //cout << "dbg 0303 apply_bias " << cur_step+1 << " / " << n_steps << " " << trans_interval<<endl;
   if ((cur_step+1) % trans_interval == 0) {
-    if (cur_step < n_steps){
+    if (cur_step < n_steps && cur_step > begin_count_q_raw){
       q_raw[cur_vs] += trans_interval;
       write_vslog(cur_step);
     }
@@ -653,8 +656,14 @@ int ExtendedVcMD::trial_transition(){  // source ... vs_id of current state
   std::vector< std::vector<int> > vs_next;
   // vs_next[0,1,2,3] = [x1,y1],[x1,y2],[x2,y1],[x2,y2]
   // the candidate states for the next step
-  std::vector<int> tmp_vs(2);
-  if (n_dim == 2){
+  if (n_dim == 1){
+    std::vector<int> tmp_vs(1);
+    tmp_vs[0] = cur_vs[0];
+    vs_next.push_back(tmp_vs);
+    tmp_vs[0] = vs_next_crd[0];
+    vs_next.push_back(tmp_vs);
+  }else if (n_dim == 2){
+    std::vector<int> tmp_vs(2);
     tmp_vs[0] = cur_vs[0];      tmp_vs[1] = cur_vs[1];
     vs_next.push_back(tmp_vs);
     if ( vs_next_crd[0] != cur_vs[0] ){
@@ -755,7 +764,7 @@ int ExtendedVcMD::scale_force(real_fc *work, int n_atoms) {
 }
 
 int ExtendedVcMD::set_files(string fn_vslog, string fn_lambda, int format_lambda,
-			    string fn_qcano, string fn_qraw) {
+			    string fn_qraw, string fn_start) {
     writer_vslog.set_fn(fn_vslog);
     writer_vslog.open();
     if (format_lambda == LAMBDAOUT_BIN) {
@@ -770,8 +779,8 @@ int ExtendedVcMD::set_files(string fn_vslog, string fn_lambda, int format_lambda
     writer_lambda->set_ncolumns(n_dim);
     writer_lambda->write_header();
     // write_vslog(0);
-    writer_qcano.set_fn(fn_qcano);
     writer_qraw.set_fn(fn_qraw);
+    writer_start.set_fn(fn_start);
     return 0;
 }
 int ExtendedVcMD::write_vslog(int cur_steps) {
@@ -789,29 +798,17 @@ int ExtendedVcMD::write_q(){
 		    vc_range_min, vc_range_max,
 		    q_raw);
   writer_qraw.close();
-  std::map< std::vector<int>, real > q_cano_next;  
-  int pseudocount = 10;
-  for ( const auto vs_q : q_raw ){
-    q_cano_next[vs_q.first] = q_cano[vs_q.first] * (vs_q.second + pseudocount); 
+
+  writer_start.open();
+  writer_start.set_ncolumns(1);
+  int rnd = (int)((*random_mt)() * 1000000);
+  writer_start.write_row(&n_dim);
+  for(const auto itr : cur_vs){
+    int vs = itr + 1;
+    writer_start.write_row(&vs);
   }
-  //for ( const auto vs_q : q_cano_next ){  
-    //if(vs_q.second==0){
-    //q_cano_next[vs_q.first] += 10;
-    //}
-  //}
-  real sum_q;
-  for ( const auto vs_q : q_cano_next ){  
-    sum_q += vs_q.second;
-  }
-  for ( const auto vs_q : q_cano_next ){  
-    q_cano_next[vs_q.first] /= sum_q;
-  }
-  writer_qcano.open();
-  writer_qcano.write(trans_interval,
-		      grp_names,
-		      vc_range_min, vc_range_max,
-		      q_cano_next);
-  writer_qcano.close();
+  writer_start.write_row(&rnd);
+  writer_start.close();
   return 0;
 }
 int ExtendedVcMD::print_info() {

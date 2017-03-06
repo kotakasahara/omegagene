@@ -58,8 +58,9 @@ struct Config : public CelesteObject {
     std::string fn_o_vmcmd_log;
     std::string fn_o_extended_lambda;
     std::string fn_o_energyflow          = "md_o.efl";
-    std::string fn_o_vcmd_qcano;
-    std::string fn_o_vcmd_qraw;
+    std::string fn_o_vcmd_start  = "start_o.virt";
+    std::string fn_o_vcmd_qraw   = "vcmd_qraw.dat";  
+    int         begin_count_qraw = 0;
     int         format_o_crd             = CRDOUT_PRESTO;
     int         format_o_extended_lambda = LAMBDAOUT_BIN;
 

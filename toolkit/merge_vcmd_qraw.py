@@ -11,6 +11,8 @@ def opt_parse():
                  help="q_cano file in the previous run")
     p.add_option('-o', dest='fn_out',
                  help="filename for output")
+    p.add_option('--o-qraw', dest='fn_out_qraw',
+                 help="filename for output")
     p.add_option('--i-qraw', dest='fn_list_qraw',
                  action="append",
                  help="q_raw files")
@@ -35,12 +37,16 @@ def _main():
     vc.add_const(opts.pseudo_count)
     vc.normalize_params()
 
+    if opts.fn_out_qraw:
+        kkmm_vcmd.VcMDParamsWriter(opts.fn_out_qraw).write(vc)
+
     vc_prev = kkmm_vcmd.VcMDConf()
     vc_prev.read_params(opts.fn_qcano)
 
     vc.multiply_params(vc_prev)
 
-    kkmm_vcmd.VcMDParamsWriter(opts.fn_out).write(vc)
+    if opts.fn_out:
+        kkmm_vcmd.VcMDParamsWriter(opts.fn_out).write(vc)
 
 
 if __name__ == "__main__":
