@@ -155,7 +155,7 @@ int DynamicsMode::terminal_process() {
 int DynamicsMode::main_stream() {
     mmsys.cur_step = 0;
     // while(mmsys.cur_step <= cfg->n_steps){
-    for (mmsys.cur_step = 0; mmsys.cur_step <= cfg->n_steps; mmsys.cur_step++) {
+    for (mmsys.cur_step = 0; mmsys.cur_step < cfg->n_steps; mmsys.cur_step++) {
 
         sub_output();
         calc_in_each_step();
@@ -167,7 +167,7 @@ int DynamicsMode::main_stream() {
         }
     }
     output_restart();
-    cout << "== An additional step. ==" << endl;
+    cout << "== The last step ==" << endl;
     calc_in_each_step();
     sub_output_log();
     return 0;
@@ -407,7 +407,7 @@ int DynamicsModePresto::calc_in_each_step() {
     mmsys.ctime_cuda_htod_atomids += endTimeHtod - startTimeHtod;
 #endif
     const clock_t startTimeEne = clock();
-    subbox.calc_energy();
+     subbox.calc_energy();
     // cout << "gather_energies()"<<endl;
     gather_energies();
 

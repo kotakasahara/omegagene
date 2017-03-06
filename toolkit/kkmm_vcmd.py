@@ -83,7 +83,7 @@ class VcMDParamsWriter(kkkit.FileO):
         self.f.write(str(vc.dim)+"\n")        
         for d in range(1, vc.dim+1):
             buf = ""
-            buf += str(len(vc.lambda_ranges[d]))
+            buf += str(len(vc.lambda_ranges[d])-1)
             for name in vc.group_names[d]:
                 buf += " " + name
             self.f.write(buf+"\n")
