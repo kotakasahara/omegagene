@@ -604,8 +604,9 @@ int ExtendedVcMD::set_struct_parameters(real *crd, PBC *pbc) {
 int ExtendedVcMD::apply_bias(unsigned long cur_step,
 			     real_fc *work, int n_atoms_box) {
   //cout << "dbg 0303 apply_bias " << cur_step+1 << " / " << n_steps << " " << trans_interval<<endl;
-  if ((cur_step+1) % trans_interval == 0) {
-    if (cur_step < n_steps && cur_step > begin_count_q_raw){
+  if (cur_step > 0 && cur_step % trans_interval == 0) {
+    //if ((cur_step+1) % trans_interval == 0) {
+    if (cur_step <= n_steps && cur_step >= begin_count_q_raw){
       q_raw[cur_vs] += trans_interval;
       write_vslog(cur_step);
     }
@@ -614,8 +615,8 @@ int ExtendedVcMD::apply_bias(unsigned long cur_step,
   //cout << "dbg 0303 apply_bias 10" << endl;
   scale_force(work, n_atoms_box);
   //cout << "dbg 0303 apply_bias 20" << endl;
-  if ((cur_step+1) % write_lambda_interval == 0 &&
-      cur_step < n_steps) { write_lambda(); }
+  if (cur_step > 0 && cur_step % write_lambda_interval == 0 &&
+      cur_step <= n_steps) { write_lambda(); }
   //cout << "dbg 0303 apply_bias (finished)" << endl;
   return 0;
 }
