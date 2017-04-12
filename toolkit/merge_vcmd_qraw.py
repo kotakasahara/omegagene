@@ -13,8 +13,10 @@ def opt_parse():
                  help="filename for output")
     p.add_option('--o-qraw', dest='fn_out_qraw',
                  help="filename for output")
-    p.add_option('--i-qraw', dest='fn_list_qraw',
+    p.add_option('--i-qraw', dest='fn_qraw',
                  action="append",
+                 help="q_raw files")
+    p.add_option('--i-qraw-list', dest='fn_qraw_list',
                  help="q_raw files")
     p.add_option('--p-count', dest='pseudo_count',
                  type="int", default = 0,
@@ -26,11 +28,25 @@ def opt_parse():
     print "----------------------------"
     return opts, args
 
+def read_fnlist(fn):
+    f = open(fn)
+    fnlist = []
+    for line in f:
+        tmp = line.strip().split()[0]
+        fnlist.append(tmp)
+    f.close()
+    return fnlist
+
 def _main():
     opts, args = opt_parse()
     vc = kkmm_vcmd.VcMDConf()
-    vc.read_params(opts.fn_list_qraw[0])
-    for fn_qraw in opts.fn_list_qraw[1:]:
+    fn_list = []
+    if opts.fn_qraw:
+        fn_list = opts.fn_qraw
+    if opts.fn_qraw_list:
+        fn_list.extend(read_fnlist(opts.fn_qraw_list))
+    vc.read_params(fn_list[0])
+    for fn_qraw in fn_list[1:]:
         vc_sub = kkmm_vcmd.VcMDConf()
         vc_sub.read_params(fn_qraw)
         vc.add_params(vc_sub)
@@ -44,6 +60,7 @@ def _main():
     vc_prev.read_params(opts.fn_qcano)
 
     vc.multiply_params(vc_prev)
+    vc.normalize_params()
 
     if opts.fn_out:
         kkmm_vcmd.VcMDParamsWriter(opts.fn_out).write(vc)

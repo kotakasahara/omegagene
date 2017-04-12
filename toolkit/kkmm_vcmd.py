@@ -71,7 +71,7 @@ class VcMDInitReader(kkkit.FileI):
             sys.stderr.write("VcMD paramter file:      " + str(in_dim) + "\n")
             sys.stderr.write("VcMD initial state file: " + str(dim) + "\n")
             sys.exit(1)
-        print "dbg kkmm_vcmd : seed " + str(seed) + "  dim " + str(dim)
+        #print "dbg kkmm_vcmd : seed " + str(seed) + "  dim " + str(dim)
         return init_vs, seed
 
 class VcMDParamsWriter(kkkit.FileO):
@@ -109,7 +109,7 @@ class VcMDParamsReader(kkkit.FileI):
         lambda_ranges = [(0.0, 0.0)]
         n_states = 1
         group_names = [[""]]
-        print "dbg kkmm_vcmd : dim " + str(dim) 
+        #print "dbg kkmm_vcmd : dim " + str(dim) 
 
         for i in range(dim):
             cur_dim = i+1
@@ -124,10 +124,10 @@ class VcMDParamsReader(kkkit.FileI):
                 terms = self.readline_comment().strip().split()
                 cur_ranges.append((float(terms[0]), float(terms[1])))
             lambda_ranges.append(cur_ranges)
-            print "dim " + str(cur_dim)
-            print group_names[-1]
-            print n_vs
-            print cur_ranges
+            #print "dim " + str(cur_dim)
+            #print group_names[-1]
+            #print n_vs
+            #print cur_ranges
 
         for i in range(n_states):
             try:
@@ -143,7 +143,6 @@ class VcMDParamsReader(kkkit.FileI):
             param = [float(x) for x in terms[dim:]]
             params[crd] = param
         
-        print params
 
         buf = self.readline_comment().strip()
         if not re.match("end", buf, re.IGNORECASE):
