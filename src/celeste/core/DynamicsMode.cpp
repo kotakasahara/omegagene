@@ -419,11 +419,9 @@ int DynamicsModePresto::calc_in_each_step() {
 
     const clock_t endTimeEne = clock();
     mmsys.ctime_calc_energy += endTimeEne - startTimeEne;
-
     if (cfg->extended_ensemble == EXTENDED_VMCMD) {
       subbox.extended_apply_bias(mmsys.cur_step, mmsys.set_potential_e());
     } else if (cfg->extended_ensemble == EXTENDED_VAUS) {
-        // cout << "test1"<<endl;
       subbox.extended_apply_bias_struct_param(mmsys.cur_step);
     } else if (cfg->extended_ensemble == EXTENDED_VCMD) {
       subbox.vcmd_apply_bias(mmsys.cur_step);
@@ -448,7 +446,6 @@ int DynamicsModePresto::calc_in_each_step() {
             subbox.apply_thermostat();
         }
     }
-
     //}
     // cout << "update_coordinates"<<endl;
     subbox.cpy_crd_prev();

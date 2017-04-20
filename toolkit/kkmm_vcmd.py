@@ -89,7 +89,11 @@ class VcMDParamsWriter(kkkit.FileO):
             self.f.write(buf+"\n")
             for lmbd in vc.lambda_ranges[d][1:]:
                 self.f.write(str(lmbd[0]) + " " + str(lmbd[1]) + "\n")
-        for vs, param in vc.params.items():
+        keys = vc.params.keys()
+        keys.sort()
+        for vs in keys:
+            param = vc.params[vs]
+            # for vs, param in vc.params.items():
             buf = " ".join([str(x) for x in vs]) 
             for x in param:
                 buf += " " + str(x)
