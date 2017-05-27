@@ -310,6 +310,7 @@ class ExtendedVcMD : public Extended {
 		   real in_recov_coef, int in_n_steps,
 		   int in_begin_count_q_raw);
     real set_crd_centers(real *crd, PBC *pbc);
+    bool is_in_range();
     int apply_bias(unsigned long cur_step,
 		   real_fc *work, int n_atoms_box);
     int scale_force(real_fc *work, int n_atoms);

@@ -148,8 +148,8 @@ int Read::load_ls_header(MmSystem &mmsys) {
     read_bin_values(&size_groups, 1);
     read_bin_values(&size_dist_restraint, 1);
     read_bin_values(&size_pos_restraint, 1);
-    read_bin_values(&size_group_coord, 1);
     read_bin_values(&size_extended_vcmd, 1);
+    read_bin_values(&size_group_coord, 1);
 
     if (DBG == 1) {
         cout << "size_box:            " << size_box << endl;

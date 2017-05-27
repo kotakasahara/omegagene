@@ -603,19 +603,28 @@ real ExtendedVcMD::set_crd_centers(real *crd, PBC *pbc) {
   return 0;
 }
 
+bool ExtendedVcMD::is_in_range(){
+  bool flg=true;
+  for(int d=0; d<n_dim; d++){
+    if(lambda[d] >= vc_range_max[d][cur_vs[d]])     { return false; }
+    else if(lambda[d] < vc_range_min[d][cur_vs[d]]) { return false; }
+  }
+  return flg;
+}
+
 int ExtendedVcMD::apply_bias(unsigned long cur_step,
 			     real_fc *work, int n_atoms_box) {
   //cout << "dbg 0303 apply_bias " << cur_step << " / " << n_steps << " " << trans_interval<<endl;
   if (cur_step > 0 && cur_step % trans_interval == 0) {
     //if ((cur_step+1) % trans_interval == 0) {
     if (cur_step <= n_steps && cur_step >= begin_count_q_raw){
-      q_raw[cur_vs] += trans_interval;
+      if(is_in_range()) q_raw[cur_vs] += trans_interval;
       write_vslog(cur_step);
     }
     if (flg_vs_transition) trial_transition();
   }
   //cout << "dbg 0303 apply_bias 10" << endl;
-  //scale_force(work, n_atoms_box);
+  scale_force(work, n_atoms_box);
   //cout << "dbg 0303 apply_bias 20" << endl;
   if (cur_step > 0 && cur_step % write_lambda_interval == 0 &&
       cur_step <= n_steps) { write_lambda(); }
@@ -762,9 +771,11 @@ int ExtendedVcMD::trial_transition(){  // source ... vs_id of current state
 	bias[xd] = dew * unit_vec[i_pair][xd] * (real)mass_groups_inv[grp_id];
       //cout << " bias " << bias[0]*direction << ", " << bias[1]*direction << ", " << bias[2]*direction << endl; 
       for (int i_at = 0; i_at < n_atoms_in_groups[grp_id]; i_at++) {
+	//cout << " " << atom_groups[grp_id][i_at]; 
 	int atom_id3 = atom_groups[grp_id][i_at] * 3;
 	for (int xd = 0; xd < 3; xd++) {
 	  work[atom_id3 + xd] += direction * bias[xd] * (real)mass[atom_groups[grp_id][i_at]];
+	  
 	}
       }
       direction *= -1.0;

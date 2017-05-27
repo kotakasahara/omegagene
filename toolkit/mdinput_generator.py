@@ -236,6 +236,7 @@ class MDInputGen(object):
     def read_extended_vcmd(self):
         self.extended_vcmd = None
         if self.config.get_val("fn-i-vcmd-inp"):
+            print "debug vcmd"
             self.extended_vcmd = kkmm_vcmd.VcMDConf()
             self.extended_vcmd.read_params(self.config.get_val("fn-i-vcmd-inp"))
             self.extended_vcmd.read_init(self.config.get_val("fn-i-vcmd-initial"))
