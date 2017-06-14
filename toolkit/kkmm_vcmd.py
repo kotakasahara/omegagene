@@ -61,11 +61,11 @@ class VcMDInitReader(kkkit.FileI):
     def read(self, in_dim):
         self.open()
         init_vs = [0]
-        dim = int(self.f.readline().strip())
+        dim = int(self.f.readline_comment().strip())
         for i in range(dim):
-            tmp = int(self.f.readline().strip())
+            tmp = int(self.f.readline_comment().strip())
             init_vs.append(tmp)
-        seed = int(self.f.readline().strip())
+        seed = int(self.f.readline_comment().strip())
         if not dim == in_dim:
             sys.stderr.write("Inconsistency in the definition of dimensions.\n")
             sys.stderr.write("VcMD paramter file:      " + str(in_dim) + "\n")

@@ -593,14 +593,12 @@ DynamicsModeVelocityVerlet::DynamicsModeVelocityVerlet() : DynamicsMode() {}
 DynamicsModeVelocityVerlet::~DynamicsModeVelocityVerlet() {}
 
 int DynamicsMode::calc_energy_force() {
-
     const clock_t startTimeReset = clock();
 
     mmsys.reset_energy();
 
     const clock_t endTimeReset = clock();
     mmsys.ctime_cuda_reset_work_ene += endTimeReset - startTimeReset;
-
 #ifndef F_WO_NS
     const clock_t startTimeHtod = clock();
     if (mmsys.cur_step % cfg->nsgrid_update_intvl == 0) {
@@ -622,15 +620,13 @@ int DynamicsMode::calc_energy_force() {
         if (cfg->dist_restraint_type != DISTREST_NONE) apply_dist_restraint();
         if (cfg->pos_restraint_type != POSREST_NONE) apply_pos_restraint();
     }
-
     const clock_t endTimeEne = clock();
     mmsys.ctime_calc_energy += endTimeEne - startTimeEne;
 
     if (cfg->extended_ensemble == EXTENDED_VMCMD) {
-        subbox.extended_apply_bias(mmsys.cur_step, mmsys.set_potential_e());
+      subbox.extended_apply_bias(mmsys.cur_step, mmsys.set_potential_e());
     } else if (cfg->extended_ensemble == EXTENDED_VAUS) {
-        // cout << "test1"<<endl;
-        subbox.extended_apply_bias_struct_param(mmsys.cur_step);
+      subbox.extended_apply_bias_struct_param(mmsys.cur_step);
     }
     return 0;
 }

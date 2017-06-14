@@ -116,11 +116,14 @@ int ExtendedVMcMD::get_temperature() {
 }
 
 int ExtendedVMcMD::apply_bias(unsigned long cur_step, real in_lambda, real_fc *work, int n_atoms_box) {
+  //cout << "test in_lambda "<< in_lambda<<endl;
     if (cur_step > 0 && cur_step % trans_interval == 0) {
         if (flg_vs_transition) set_current_vstate(in_lambda);
         if (cur_step <= n_steps) { write_vslog(cur_step); }
     }
+    //cout << " test 1 2 " << endl;
     scale_force(in_lambda, work, n_atoms_box);
+    //cout << " test 1 3 " << endl;
     if (cur_step > 0 && cur_step % write_lambda_interval == 0 && cur_step <= n_steps) { write_lambda(in_lambda); }
     return 0;
 }
@@ -163,20 +166,21 @@ int ExtendedVMcMD::scale_force(real lambda, real_fc *work, int n_atoms) {
     if (lambda <= vstates[cur_vs].get_lambda_low()) {
         param = vstates[cur_vs].get_lambda_low();
     } else if (lambda >= vstates[cur_vs].get_lambda_high()) {
-        param = vstates[cur_vs].get_lambda_high();
+      param = vstates[cur_vs].get_lambda_high();
     }
+    //cout << "dbg0522" << endl;
     real d_ln_p = vstates[cur_vs].get_poly_param(0);
-    // cout << "dbg0522 1 " << param << " " << d_ln_p << endl;
+    //cout << "dbg0522 1 " << param << " " << d_ln_p << endl;
     real tmp = 1.0;
     for (int i = 1; i < vstates[cur_vs].get_order() + 1; i++) {
         tmp *= param;
         d_ln_p += vstates[cur_vs].get_poly_param(i) * tmp;
-        // cout << "dbg0522 2 "<<i << " " << vstates[cur_vs].get_poly_param(i) << " " << d_ln_p << endl;
+	//cout << "dbg0522 2 "<<i << " " << vstates[cur_vs].get_poly_param(i) << " " << d_ln_p << endl;
     }
 
     // real k = (GAS_CONST / JOULE_CAL) * 1e-3;
     real dew = const_k * d_ln_p;
-    // cout << "dbg0522 "<<dew << endl;
+    //cout << "dbg0522 "<<dew << endl;
     int n_atoms_3 = n_atoms * 3;
     for (int i = 0; i < n_atoms_3; i++) { work[i] *= dew; }
 
