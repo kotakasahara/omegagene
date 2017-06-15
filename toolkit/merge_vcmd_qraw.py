@@ -49,6 +49,7 @@ def _main():
     for fn_qraw in fn_list[1:]:
         vc_sub = kkmm_vcmd.VcMDConf()
         vc_sub.read_params(fn_qraw)
+        print  "%30s : %15.1f"%(fn_qraw, vc_sub.sum_params())
         vc.add_params(vc_sub)
     vc.add_const(opts.pseudo_count)
     vc.normalize_params()

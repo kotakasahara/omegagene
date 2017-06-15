@@ -24,6 +24,11 @@ class VcMDConf():
         # init_vs[dim] = vsid
 
         self.seed = -1
+    def sum_params(self, param_od=0):
+        s = 0.0;
+        for k,v in self.params.items():
+            s += v[param_od]
+        return s;
     def read_params(self, fn):
         self.interval, self.dim, self.group_names, \
             self.lambda_ranges, self.params = VcMDParamsReader(fn).read()
