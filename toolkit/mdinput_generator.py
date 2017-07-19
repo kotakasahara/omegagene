@@ -11,7 +11,7 @@ MAGIC=66261
 #VERSION = "v.0.36.c" ## version_info
 #VERSION = "v.0.36.f" ## version_info
 
-VERSION_LIST = ["v.0.34.b", "v.0.36.c", "v.0.36.f", "v.0.39.a"]
+VERSION_LIST = ["v.0.34.b", "v.0.36.c", "v.0.36.f", "v.0.39.a", "v.0.39.h"]
 #VERSION_ID = 0
 #VERSION = VERSION_LIST[VERSION_ID]
 
@@ -236,7 +236,6 @@ class MDInputGen(object):
     def read_extended_vcmd(self):
         self.extended_vcmd = None
         if self.config.get_val("fn-i-vcmd-inp"):
-            print "debug vcmd"
             self.extended_vcmd = kkmm_vcmd.VcMDConf()
             self.extended_vcmd.read_params(self.config.get_val("fn-i-vcmd-inp"))
             self.extended_vcmd.read_init(self.config.get_val("fn-i-vcmd-initial"))
@@ -614,7 +613,9 @@ class MDInputGen(object):
             buf += st.pack("@i", extended.init_vs[cur_dim])
             
         buf += st.pack("@i", extended.seed)            
-        print extended.seed
+        #print extended.seed
+        if self.version_id >= 4:
+            buf += st.pack("@i", len(extended.params))
         for vscrd, prm in extended.params.items():
             tmp = "" 
             for vscrd_x in vscrd:

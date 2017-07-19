@@ -61,6 +61,7 @@ struct Config : public CelesteObject {
     std::string fn_o_vcmd_start  = "start_o.virt";
     std::string fn_o_vcmd_qraw   = "vcmd_qraw.dat";  
     int         begin_count_qraw = 0;
+    real        extend_default_q_raw = 1e-5;
     int         format_o_crd             = CRDOUT_PRESTO;
     int         format_o_extended_lambda = LAMBDAOUT_BIN;
 

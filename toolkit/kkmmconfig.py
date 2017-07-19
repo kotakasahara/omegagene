@@ -45,7 +45,7 @@ class Config(object):
             "barostat":ConfigReader.STR,
             "pressure":ConfigReader.FLOAT,
 
-            "center-of-motion":ConfigReader.STR,
+            "com-motion":ConfigReader.STR,
             #"particle-cluster-shake":ConfigReader.INT,
             
             "fn-i-ttp-v-mcmd-inp":ConfigReader.STR,

@@ -276,12 +276,17 @@ class ExtendedVcMD : public Extended {
     std::vector< std::vector<std::string> > grp_names;
     std::map< std::vector<int>, real > q_cano;
     std::map< std::vector<int>, real > q_raw;
+    real default_q_raw;
     
     std::vector<int> cur_vs;
     
     std::vector<real> lambda;
 
-
+    std::vector< std::vector<int> > vs_next;
+    // vs_next[0,1,2,3] = [x1,y1],[x1,y2],[x2,y1],[x2,y2]
+    // the list of destination state for virtual state transition trials
+    
+    
  public:
     ExtendedVcMD();
     ~ExtendedVcMD();
@@ -289,6 +294,7 @@ class ExtendedVcMD : public Extended {
     int alloc_crd_centers();
     int free_crd_centers();
 
+    void set_default_q_raw(real in_qr) { default_q_raw = in_qr; };
     void set_reactcrd_type(int in_type) { reactcrd_type = in_type; };
     void set_trans_interval(int in_trans_interval);
     void set_temperature(real in_tmp);
@@ -322,6 +328,9 @@ class ExtendedVcMD : public Extended {
       init_vs = in_vs;
       cur_vs = in_vs;
     };
+    int set_vs_next();
+    int set_vs_next_sub(const std::vector<int> tmp_vs_next,
+			const std::vector< std::vector<int> > vs_next_crd);
     int trial_transition();
 
 

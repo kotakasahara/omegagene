@@ -656,6 +656,7 @@ int Read::load_ls_group_coord(MmSystem &mmsys) {
 	}
       }
     }else if(mmsys.extended_mode == EXTENDED_VCMD){
+      //mmsys.vcmd->set_default_q_raw(default_q_raw);
       mmsys.vcmd->set_reactcrd_type(aus_type);
       mmsys.vcmd->set_enhance_groups(mmsys.n_atoms_in_groups,
 				     mmsys.atom_groups, 
@@ -682,7 +683,7 @@ int Read::load_ls_vcmd(MmSystem &mmsys) {
   //cout << "dbg 0304 read a inter: " << interval << " dim:" << dim << endl;
   mmsys.vcmd->set_n_dim(dim);
   mmsys.vcmd->set_trans_interval(interval);
-  int n_states = 1;
+  //int n_states = 1;
   std::vector< std::vector<int> > grp_id;
   for (int d = 0; d < dim; d++) {
     int n_vs;
@@ -700,10 +701,10 @@ int Read::load_ls_vcmd(MmSystem &mmsys) {
       char name[MAX_LEN_NAME];
       ifs.read(name, len);
       grp_name.push_back(string(name));
-      cout << "read 0304 d:" <<d << " grp:"<< grp_id << ": " << name << endl;
+      //cout << "read 0304 d:" <<d << " grp:"<< grp_id << ": " << name << endl;
     }
     mmsys.vcmd->push_grp_ids_name(grp_dim, grp_name);
-    n_states *= n_vs;
+    //n_states *= n_vs;
     std::vector<real> range_min;
     std::vector<real> range_max;
     for (int i = 0; i < n_vs; i++) {
@@ -728,6 +729,8 @@ int Read::load_ls_vcmd(MmSystem &mmsys) {
   read_bin_values(&seed, 1);
   mmsys.vcmd->set_random_seed(seed);
   //cout << "dbg 0304 read c" << endl;
+  int n_states;
+  read_bin_values(&n_states, 1);
   std::map< std::vector<int>, real > q_cano;
   for (int i = 0; i < n_states; i++){
     std::vector<int> state;

@@ -103,6 +103,7 @@ int DynamicsMode::initial_preprocess() {
       mmsys.vcmd->set_params(&mmsys.random_mt, cfg->enhance_sigma, cfg->enhance_recov_coef,
 			     cfg->n_steps, cfg->begin_count_qraw); //, cfg->aus_type);
       mmsys.vcmd->set_temperature(cfg->temperature);
+      mmsys.vcmd->set_default_q_raw(cfg->extend_default_q_raw);
       // for(int i_grp=0; i_grp < mmsys.n_groups; i_grp++){
       // cout << "dbg1130 massDM " << i_grp << " " << mmsys.mass_inv_groups[i_grp]<<endl;
       //}

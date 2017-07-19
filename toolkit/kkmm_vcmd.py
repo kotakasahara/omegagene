@@ -66,11 +66,11 @@ class VcMDInitReader(kkkit.FileI):
     def read(self, in_dim):
         self.open()
         init_vs = [0]
-        dim = int(self.f.readline_comment().strip())
+        dim = int(self.readline_comment().strip())
         for i in range(dim):
-            tmp = int(self.f.readline_comment().strip())
+            tmp = int(self.readline_comment().strip())
             init_vs.append(tmp)
-        seed = int(self.f.readline_comment().strip())
+        seed = int(self.readline_comment().strip())
         if not dim == in_dim:
             sys.stderr.write("Inconsistency in the definition of dimensions.\n")
             sys.stderr.write("VcMD paramter file:      " + str(in_dim) + "\n")
@@ -139,24 +139,13 @@ class VcMDParamsReader(kkkit.FileI):
             #print cur_ranges
 
         for i in range(n_states):
-            try:
-                terms = self.readline_comment().strip().split()
-            except:
-                sys.stderr.write("An read error was occurred in VcMD param file\n")
-                sys.stderr.write(fn+"\n")
-                sys.stderr.write("The number of parameters may not be enough.\n")
-                sys.stderr.write("The number of combinations of VS was "+pustr(n_states) +"\n")
-                sys.exit(0)
+            terms = self.readline_comment().strip().split()
+            if re.match("end", terms[0], re.IGNORECASE):
+                break
             crd = tuple([int(x) for x in terms[:dim]])
             assert(not crd in params)
             param = [float(x) for x in terms[dim:]]
             params[crd] = param
-        
-
-        buf = self.readline_comment().strip()
-        if not re.match("end", buf, re.IGNORECASE):
-            sys.stderr.write("Missing the END keyword.\n")
-            sys.exit(0)
 
         return interval, dim, group_names, lambda_ranges, params
 
