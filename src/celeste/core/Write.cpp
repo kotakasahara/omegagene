@@ -43,7 +43,7 @@ int WriteTTPVMcMDLog::write_ttpvMcMDLog(int step, int vstate) {
 int WriteTTPVMcMDLog::write_VcMDLog(int step, std::vector<int> vstate) {
   //ofs << step;
   std::vector<int>::iterator itr;
-  for(auto itr: vstate){
+  for (auto itr: vstate){
     ofs << "\t" << itr+1;
   }
   ofs << std::endl;

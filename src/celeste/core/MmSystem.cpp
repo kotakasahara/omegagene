@@ -561,7 +561,7 @@ int MmSystem::set_atom_group_info(Config *cfg) {
             //<< mass[atom_groups[i_grp][i_atom]] << endl;;
         }
         mass_inv_groups[i_grp] = 1.0 / mass_groups[i_grp];
-        // cout << "dbg1130 massMS " << i_grp << " " << mass_groups[i_grp] << " " << mass_inv_groups[i_grp] << endl;
+	cout << "dbg1130 massMS " << i_grp << " " << mass_groups[i_grp] << " " << mass_inv_groups[i_grp] << endl;
     }
     set_com_cancel_groups(cfg);
     // set_enhance_groups(cfg);
