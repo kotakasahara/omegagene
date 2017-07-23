@@ -99,6 +99,7 @@ int ExtendedVMcMD::set_n_vstates(int in_n_vstates) {
     return 0;
 }
 
+
 void ExtendedVMcMD::set_trans_interval(int in_trans_interval) {
     trans_interval = in_trans_interval;
 }
@@ -500,6 +501,26 @@ ExtendedVcMD::~ExtendedVcMD() {
     delete writer_lambda;
     free_crd_centers();
 }
+int ExtendedVcMD::set_default_q_cano(){
+  std::vector<int> key;
+  for(int i=0; i < n_dim; i++){
+    key.push_back(-1);
+  }
+  if(q_cano.find(key) == q_cano.end()){
+    real min_q_cano = 1e10;
+    for(auto i_q : q_cano){
+      if (i_q.second < min_q_cano)
+	min_q_cano = i_q.second;
+    }
+    if (min_q_cano == 1e10) min_q_cano=1;
+    default_q_cano = min_q_cano;
+  }else{
+    default_q_cano = q_cano[key];
+  }
+  cout << "dbg 039j default_q_cano = "  << default_q_cano << endl;
+  return 0;
+}
+
 void ExtendedVcMD::set_trans_interval(int in_trans_interval) {
     trans_interval = in_trans_interval;
 }
@@ -755,11 +776,11 @@ int ExtendedVcMD::trial_transition(){  // source ... vs_id of current state
     //}
     //cout << " , q_cano: " << q_cano[vs1] << endl;;
     real q1 = q_cano[vs1];
-    if(q1==0) q1=default_q_raw;
+    if(q1==0) q1 = default_q_cano;
     int idx_vs2=0;
     for ( const auto vs2 : vs_next ) {
       real q2 = q_cano[vs2];
-      if(q2==0) q2=default_q_raw;
+      if(q2==0) q2 = default_q_cano;
       //i_val[idx_vs1] += q_cano[vs1] / q_cano[vs2];
       i_val[idx_vs1] += q1 / q2;
       idx_vs2++;

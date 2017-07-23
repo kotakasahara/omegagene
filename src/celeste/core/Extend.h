@@ -276,7 +276,7 @@ class ExtendedVcMD : public Extended {
     std::vector< std::vector<std::string> > grp_names;
     std::map< std::vector<int>, real > q_cano;
     std::map< std::vector<int>, real > q_raw;
-    real default_q_raw;
+    real default_q_cano;
     
     std::vector<int> cur_vs;
     
@@ -294,7 +294,8 @@ class ExtendedVcMD : public Extended {
     int alloc_crd_centers();
     int free_crd_centers();
 
-    void set_default_q_raw(real in_qr) { default_q_raw = in_qr; };
+    //void set_default_q_raw(real in_qr) { default_q_raw = in_qr; };
+    int set_default_q_cano();
     void set_reactcrd_type(int in_type) { reactcrd_type = in_type; };
     void set_trans_interval(int in_trans_interval);
     void set_temperature(real in_tmp);

@@ -138,10 +138,12 @@ class VcMDParamsReader(kkkit.FileI):
             #print n_vs
             #print cur_ranges
 
-        for i in range(n_states):
+        for i in range(n_states+1):
             terms = self.readline_comment().strip().split()
             if re.match("end", terms[0], re.IGNORECASE):
                 break
+            # elif re.match("default", terms[0], re.IGNORECASE):
+            # default_q = float(terms[1])
             crd = tuple([int(x) for x in terms[:dim]])
             assert(not crd in params)
             param = [float(x) for x in terms[dim:]]

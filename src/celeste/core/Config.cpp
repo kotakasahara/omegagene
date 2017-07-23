@@ -309,8 +309,8 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
 	  fn_o_vcmd_qraw = *++itr;
 	}else if (*itr == "--begin-count-q-raw") {
 	  begin_count_qraw = atoi((*++itr).c_str());
-	}else if (*itr == "--default-q-raw") {
-	  extend_default_q_raw = atof((*++itr).c_str());
+	  //}else if (*itr == "--default-q-raw") {
+	  //extend_default_q_raw = atof((*++itr).c_str());
         } else {
             stringstream ss;
             error_exit(ss.str(), "1A00001");
