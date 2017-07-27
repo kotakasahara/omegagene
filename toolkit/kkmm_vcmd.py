@@ -35,29 +35,66 @@ class VcMDConf():
     def read_init(self, fn):
         self.init_vs, self.seed = VcMDInitReader(fn).read(self.dim)
     def add_params(self, conf):
+        key = tuple([ 0 for x in range(self.dim)])
         for vs, param in conf.params.items():
-            for i, p in enumerate(conf.params[vs]):
-                self.params[vs][i] += p
+            if vs == key: continue
+            if not vs in self.params:
+                self.params[vs]  = []
+                for i, p in enumerate(conf.params[vs]):
+                    self.params[vs].append(p)
+            else:
+                for i, p in enumerate(conf.params[vs]):
+                    self.params[vs][i] += p
         return
     def multiply_params(self, conf):
+        key = tuple([ 0 for x in range(self.dim)])
+        #print "test"
+        #print self.params[key]
         for vs, param in conf.params.items():
+            if vs == key: continue
+            if not vs in self.params:
+                self.params[vs] = self.params[key]
+                #print vs
             for i, p in enumerate(conf.params[vs]):
-                self.params[vs][i] *= p
+                if self.params[vs][i] > 0:
+                    if p > 0:
+                        self.params[vs][i] *= p
+                    else:
+                        self.params[vs][i] *= self.params[vs][i]
+            #print self.params[vs]
+        for i, p in enumerate(self.params[key]):
+            self.params[key][i] *= p
         return
     def normalize_params(self):
         p_sum = np.zeros(len(self.params.values()[0]), dtype=np.float)
+        key = tuple([ 0 for x in range(self.dim)])
+        if key in self.params:
+            p_sum -= self.params[key][0]
         for vs, param in self.params.items():
             p_sum += np.array(param)
         for vs, param in self.params.items():
             for i, q in enumerate(param):
                 self.params[vs][i] /= p_sum[i]
+            if self.params[vs][0] == 0:
+                self.params.pop(vs)
         return
     def add_const(self, const):
         for vs, param in self.params.items():
             for i, p in enumerate(param):
                 self.params[vs][i] += const
         return
-        
+    def set_default_param(self):
+        key = tuple([ 0 for x in range(self.dim)])
+        min_param = 1e10
+        for k, v in self.params.items():
+            if v[0] < min_param and v[0] > 0:
+                min_param = v[0]
+        if min_param == 1e10:
+            min_param = 1
+        self.params[key] = []
+        self.params[key].append(min_param)
+        print min_param
+        return
 
 class VcMDInitReader(kkkit.FileI):
     def __init__(self, fn):
