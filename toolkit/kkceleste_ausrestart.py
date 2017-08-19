@@ -4,6 +4,7 @@ import kkkit
 import numpy
 ##DEBUG = True
 DEBUG = False
+import sys
 import struct as st
 
 Min_dist_proximity = 5
@@ -12,7 +13,8 @@ class CelesteAUSRestart(object):
 
     def __init__(self):
         self. AUS_TYPE = {"dummy":0, "type1":1, "type2":2,
-                          "dist-mass-centers":3
+                          "dist-mass-centers":3,
+                          "dist-min":4
                           }
         self.header = ""
         self.aus_type_str = "dummy"
@@ -24,7 +26,8 @@ class CelesteAUSRestart(object):
         return
     def set_aus_type(self, in_type):
         if not in_type in self.AUS_TYPE:
-            print "Error : Invalid aus_type = " + in_type
+            msg =  "Error : Invalid aus_type = " + in_type
+            sys.stderr.write(msg)
             sys.exit(1)
         self.aus_type_str = in_type
         self.aus_type = self.AUS_TYPE[self.aus_type_str]

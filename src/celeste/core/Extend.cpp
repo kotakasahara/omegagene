@@ -570,8 +570,18 @@ void ExtendedVcMD::set_q_cano(std::map< std::vector<int>, real > in_q){
   }
 }
 int ExtendedVcMD::set_struct_parameters(real *crd, PBC *pbc) {
-  //cout << "dbg 0303 set_struct_parameters" << endl;
-  // center of mass for each groups
+  //cout << "set_struct_parameters " << reactcrd_type << endl;
+
+  if(reactcrd_type == AUSTYPE_MASSCENTER){
+    set_struct_parameters_mass_center(crd, pbc);
+  }else if(reactcrd_type == AUSTYPE_MIN){
+    set_struct_parameters_mass_center(crd, pbc);
+    set_struct_parameters_min(crd, pbc);    
+  }
+}
+int ExtendedVcMD::set_struct_parameters_mass_center(real *crd, PBC *pbc) {
+      //cout << "dbg 0303 set_struct_parameters" << endl;
+      // center of mass for each groups
   set_crd_centers(crd, pbc);
   ///cout << "dbg 0303 set_crd_centers (finished)" << endl;
   //  real dist = 0.0;
@@ -594,9 +604,44 @@ int ExtendedVcMD::set_struct_parameters(real *crd, PBC *pbc) {
   //cout << "dbg 0303 set_struct_parameters (finished)" << endl;  
   return 0;
 }
+int ExtendedVcMD::set_struct_parameters_min(real *crd, PBC *pbc) {
+
+  int  i_pair = 0;
+  for(const auto itr_dim : enhance_group_pairs){
+    int i_grp1 = itr_dim[0];
+    int i_grp2 = itr_dim[1];
+    int grp_id1 = enhance_groups[i_grp1];
+    int grp_id2 = enhance_groups[i_grp2];
+    real min_dist = 1e10;
+
+    for (int i_atm1 = 0; i_atm1 < n_atoms_in_groups[grp_id1]; i_atm1++) {
+      int aid1 = atom_groups[grp_id1][i_atm1];
+      int aid1_3 = atom_groups[grp_id1][i_atm1]*3;
+      real crd1[3] = {crd[aid1_3], crd[aid1_3+1], crd[aid1_3+2]};
+      for (int i_atm2 = 0; i_atm2 < n_atoms_in_groups[grp_id2]; i_atm2++) {
+	int aid2 = atom_groups[grp_id2][i_atm2];
+	int aid2_3 = atom_groups[grp_id2][i_atm2]*3;
+	real crd2[3] = {crd[aid2_3], crd[aid2_3+1], crd[aid2_3+2]};
+	real d_crd[3];
+	pbc->diff_crd_minim_image(d_crd, crd1, crd2);
+	real dist = sqrt(d_crd[0]*d_crd[0]+d_crd[1]*d_crd[1]+d_crd[2]*d_crd[2]);
+	if(dist <= min_dist) min_dist=dist;
+      }
+    }
+
+    lambda[i_pair] = min_dist;
+    cout << "lambda " << i_pair << " " << lambda[i_pair] << endl;
+    i_pair++;
+    //// unit_vec has been set in the set_struct_parameters_mass_center ////
+  }
+
+  return 0;
+}
 
 real ExtendedVcMD::set_crd_centers(real *crd, PBC *pbc) {
   for (int i_grp = 0; i_grp < n_enhance_groups; i_grp++) {
+    // crd_centers[ grp id in the enhance groups ]
+
     int grp_id = enhance_groups[i_grp];
     int aid0   = atom_groups[grp_id][0];
     int aid0_3 = aid0 * 3;
@@ -780,7 +825,7 @@ int ExtendedVcMD::trial_transition(){  // source ... vs_id of current state
     int idx_vs2=0;
     for ( const auto vs2 : vs_next ) {
       real q2 = q_cano[vs2];
-      if(q2==0) q2 = default_q_cano;
+      if(q2 == 0) q2 = default_q_cano;
       //i_val[idx_vs1] += q_cano[vs1] / q_cano[vs2];
       i_val[idx_vs1] += q1 / q2;
       idx_vs2++;

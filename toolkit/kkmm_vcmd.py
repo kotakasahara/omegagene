@@ -164,7 +164,7 @@ class VcMDParamsReader(kkkit.FileI):
             group_names.append([])
             for tm in terms[1:]:
                 group_names[-1].append(tm)
-            n_states *= n_vs
+            #n_states *= n_vs
             cur_ranges = [(0,0)]
             for j in range(n_vs):
                 terms = self.readline_comment().strip().split()
@@ -174,10 +174,10 @@ class VcMDParamsReader(kkkit.FileI):
             #print group_names[-1]
             #print n_vs
             #print cur_ranges
-
-        for i in range(n_states+1):
+        #print "n_states : " + str(n_states)
+        while 1:
             terms = self.readline_comment().strip().split()
-            if re.match("end", terms[0], re.IGNORECASE):
+            if not terms or re.match("end", terms[0], re.IGNORECASE):
                 break
             # elif re.match("default", terms[0], re.IGNORECASE):
             # default_q = float(terms[1])
