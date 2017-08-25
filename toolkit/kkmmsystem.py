@@ -179,4 +179,4 @@ class MmSystem(object):
         line += "  Ele      : %4.15e\n"%self.pote_ele
         line += "Kinetic    : %4.15e\n"%self.kinetic
         return line
-
+        

@@ -12,6 +12,10 @@ class PBC(object):
         self.origin = numpy.array([0.0, 0.0, 0.0])
         self.set_center(numpy.array([0.0, 0.0, 0.0]))
     def diff_crd_minim_image(self, crd1, crd2):
+        """
+        calculate deviation between the two coordinates
+        crd1 and crd2 must be numpy.array 
+        """
         d = (crd1 - crd2) 
         d = d - self.L * numpy.array([int(x) for x in d * self.L_inv])
         return d
