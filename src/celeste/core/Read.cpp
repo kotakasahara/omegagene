@@ -27,7 +27,6 @@ int Read::close() {
 vector<int> Read::load_integers() {
     vector<int> intvec;
     open();
-    int    tmp;
     string buf;
     while (getline(ifs, buf)) { intvec.push_back(atoi(buf.c_str())); }
     close();
@@ -167,21 +166,19 @@ int Read::load_ls_header(MmSystem &mmsys) {
     }
 
     return 0;
-};
+}
 
 int Read::load_ls_box(MmSystem &mmsys) {
-    // BOX
-    int size_box;
-    // read_bin_values(&size_box, 1);
-    double pbc_val[12];
-    cout << "load_ls_box : ";
-    for (int i = 0; i < 12; i++) {
-        read_bin_values(&pbc_val[i], 1);
-        mmsys.pbc_val[i] = (real)pbc_val[i];
+  // read_bin_values(&size_box, 1);
+  double pbc_val[12];
+  cout << "load_ls_box : ";
+  for (int i = 0; i < 12; i++) {
+    read_bin_values(&pbc_val[i], 1);
+    mmsys.pbc_val[i] = (real)pbc_val[i];
         cout << pbc_val[i] << " ";
-    }
-    mmsys.pbc.set_pbc(mmsys.pbc_val);
-    return 0;
+  }
+  mmsys.pbc.set_pbc(mmsys.pbc_val);
+  return 0;
 }
 
 int Read::load_ls_crd(MmSystem &mmsys) {
@@ -442,9 +439,6 @@ int Read::load_ls_constraint(ConstraintObject *cst) {
     int n_const_3;
     int n_const_4;
 
-    int   atom[4];
-    float dist[6];
-
     read_bin_values(&n_const_2, 1);
     read_bin_values(&n_const_3, 1);
     read_bin_values(&n_const_4, 1);
@@ -556,7 +550,6 @@ int Read::load_ls_atom_groups(MmSystem &mmsys) {
         char name[MAX_LEN_NAME];
         read_bin_values(&len_name, 1);
         ifs.read(name, len_name);
-        int n_atoms;
         read_bin_values(&n_atoms_in_group[i], 1);
         mmsys.atom_group_names.push_back(string(name));
         cout << "read atom groups : " << i << " " << n_atoms_in_group[i] << " " << name << " "
@@ -647,7 +640,6 @@ int Read::load_ls_group_coord(MmSystem &mmsys) {
 				      mmsys.atom_groups, 
 				      n_groups, enhance_groups);
       
-      double buf_dbl;
       for (int i = 0; i < n_groups; i++) {
 	for (int j = 0; j < mmsys.n_atoms_in_groups[enhance_groups[i]]; j++) {
 	  read_bin_values(&(mmsys.vmcmd->get_crd_groups()[i][j][0]), 1);
@@ -656,12 +648,10 @@ int Read::load_ls_group_coord(MmSystem &mmsys) {
 	}
       }
     }else if(mmsys.extended_mode == EXTENDED_VCMD){
-      //mmsys.vcmd->set_default_q_raw(default_q_raw);
       mmsys.vcmd->set_reactcrd_type(aus_type);
       mmsys.vcmd->set_enhance_groups(mmsys.n_atoms_in_groups,
 				     mmsys.atom_groups, 
 				     n_groups, enhance_groups);
-      double buf_dbl;
       for (int i = 0; i < n_groups; i++) {
 	for (int j = 0; j < mmsys.n_atoms_in_groups[enhance_groups[i]]; j++) {
 	  read_bin_values(&(mmsys.vcmd->get_crd_groups()[i][j][0]), 1);

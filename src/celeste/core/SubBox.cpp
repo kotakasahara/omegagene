@@ -915,8 +915,8 @@ int SubBox::calc_energy_pairwise() {
 
         int c1             = cellpairs[cp].cell_id1;
         int c2             = cellpairs[cp].cell_id2;
-        int n_atoms_c1     = nsgrid.get_n_atoms_in_cell(c1);
-        int n_atoms_c2     = nsgrid.get_n_atoms_in_cell(c2);
+        //int n_atoms_c1     = nsgrid.get_n_atoms_in_cell(c1);
+        //int n_atoms_c2     = nsgrid.get_n_atoms_in_cell(c2);
         int atoms_index_c1 = nsgrid.get_idx_cell_head_atom(c1);
         int atoms_index_c2 = nsgrid.get_idx_cell_head_atom(c2);
         int a2             = 0;
@@ -1366,15 +1366,10 @@ int SubBox::set_velocity_from_crd() {
     for (int atomid_b = 0, atomid_b3 = 0; atomid_b < all_n_atoms[rank]; atomid_b++, atomid_b3 += 3) {
         real norm1 = 0.0;
         real norm2 = 0.0;
-        real d_crd[3];
-        // real crd1[3] = {crd[atomid_b3], crd[atomid_b3+1], crd[atomid_b3+2]};
-        // real crd2[3] = {crd_prev[atomid_b3], crd_prev[atomid_b3+1], crd_prev[atomid_b3+2]};
-        // pbc->diff_crd_minim_image(d_crd,crd1,crd2);
 
         for (int d = 0; d < 3; d++) {
             norm1 += vel_next[atomid_b3 + d] * vel_next[atomid_b3 + d];
             vel_next[atomid_b3 + d] = (crd[atomid_b3 + d] - crd_prev[atomid_b3 + d]) * time_step_inv;
-            // vel_next[atomid_b3+d] = d_crd[d] * ts_inv;
             norm2 += vel_next[atomid_b3 + d] * vel_next[atomid_b3 + d];
         }
         real diff = fabs(norm1 - norm2) * mass[atomid_b];

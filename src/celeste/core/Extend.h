@@ -12,47 +12,47 @@
 #include <cmath>
 
 class Extended : public CelesteObject {
-  private:
-  protected:
-    int write_lambda_interval;
-
-  public:
-    Extended();
-    ~Extended();
-    void set_lambda_interval(int in_lambda_interval);
+ private:
+ protected:
+  int write_lambda_interval;
+  
+ public:
+  Extended();
+  ~Extended();
+  void set_lambda_interval(int in_lambda_interval);
 };
 
 
 class VirtualState : public CelesteObject {
-  private:
-  protected:
-    real  lambda_range[2];
-    real  trans_prob[2];
-    int   poly_order;
-    real *poly_params;
-    real  alpha[2];
-
-  public:
-    VirtualState();
-    ~VirtualState();
-    int set_order(int in_order);
-    int get_order() { return poly_order; };
-    int set_poly_param(int ord, real param);
-    real get_poly_param(int ord) { return poly_params[ord]; };
-    int set_params(real in_lambda_low, real in_lambda_high, real in_prob_low, real in_prob_high);
-    real get_lambda_low() { return lambda_range[0]; };
-    real get_lambda_high() { return lambda_range[1]; };
-    int set_alpha(real in_alhpa_low, real in_alpha_high);
-    bool is_in_range(real lambda);
-    real get_trans_prob(int up_down) { return trans_prob[up_down]; }
+ private:
+ protected:
+  real  lambda_range[2];
+  real  trans_prob[2];
+  int   poly_order;
+  real *poly_params;
+  real  alpha[2];
+  
+ public:
+  VirtualState();
+  ~VirtualState();
+  int set_order(int in_order);
+  int get_order() { return poly_order; };
+  int set_poly_param(int ord, real param);
+  real get_poly_param(int ord) { return poly_params[ord]; };
+  int set_params(real in_lambda_low, real in_lambda_high, real in_prob_low, real in_prob_high);
+  real get_lambda_low() { return lambda_range[0]; };
+  real get_lambda_high() { return lambda_range[1]; };
+  int set_alpha(real in_alhpa_low, real in_alpha_high);
+  bool is_in_range(real lambda);
+  real get_trans_prob(int up_down) { return trans_prob[up_down]; }
 };
 
 class ExtendedVMcMD : public Extended {
-  private:
-  protected:
-    int n_steps;
-
-    int  n_vstates;
+ private:
+ protected:
+  unsigned long n_steps;
+  
+  int  n_vstates;
     int  trans_interval;
     real temperature;
     real const_k;
@@ -219,22 +219,22 @@ class ExtendedVAUS : public ExtendedVMcMD {
 };
 
 class ExtendedVcMD : public Extended {
-  private:
-  protected:
-    int  n_steps;
-    int  random_seed;
-    int  trans_interval;
-    bool          flg_vs_transition;
-    real temperature;
-    real const_k;
-
+ private:
+ protected:
+  unsigned long  n_steps;
+  int  random_seed;
+  int  trans_interval;
+  bool          flg_vs_transition;
+  real temperature;
+  real const_k;
+  
     WriteTTPVMcMDLog writer_vslog;
     WriteTableLog *writer_lambda;
     //WriteVcMDParam writer_qcano;
     WriteVcMDParam writer_qraw;
     WriteTableLogAscii writer_start;
 
-    int begin_count_q_raw;
+    unsigned long begin_count_q_raw;
 
     int reactcrd_type;
     real_pw *mass;

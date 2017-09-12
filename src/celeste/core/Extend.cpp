@@ -406,12 +406,12 @@ int ExtendedVAUS::scale_force(real lambda, real_fc *work, int n_atoms) {
     if (param <= vstates[cur_vs].get_lambda_low()) {
         if (param <= vstates[cur_vs].get_lambda_low() - sigma)
             recovery = recov_coef * (param - (vstates[cur_vs].get_lambda_low() - sigma));
-	cout << "recov- " << param << endl;
+	//cout << "recov- " << param << endl;
         param        = vstates[cur_vs].get_lambda_low();
     } else if (param >= vstates[cur_vs].get_lambda_high()) {
         if (param >= vstates[cur_vs].get_lambda_high() + sigma)
             recovery = recov_coef * (param - (vstates[cur_vs].get_lambda_high() + sigma));
-	cout << "recov+ " << param << endl;
+	//cout << "recov+ " << param << endl;
         param        = vstates[cur_vs].get_lambda_high();
     }
     // cout << " param " << param << endl;
@@ -466,11 +466,11 @@ int ExtendedVAUS::scale_force(real lambda, real_fc *work, int n_atoms) {
                     work[atom_id3 + d] += direction * bias[d] * (real)mass[atom_groups[grp_id][i_at]];
                 }
 
-                  cout << "biased: " << work[atom_id3+0] << " " << work[atom_id3+1] << " "
-                  << work[atom_id3+2] << endl;
-                  cout << "bias:   " << direction * bias[0] * (real)mass[atom_groups[grp_id][i_at]] << " "
-                  << direction * bias[1] * (real)mass[atom_groups[grp_id][i_at]] << " "
-                  << direction * bias[2] * (real)mass[atom_groups[grp_id][i_at]] <<endl;
+		//cout << "biased: " << work[atom_id3+0] << " " << work[atom_id3+1] << " "
+		//<< work[atom_id3+2] << endl;
+		//cout << "bias:   " << direction * bias[0] * (real)mass[atom_groups[grp_id][i_at]] << " "
+		//<< direction * bias[1] * (real)mass[atom_groups[grp_id][i_at]] << " "
+		//<< direction * bias[2] * (real)mass[atom_groups[grp_id][i_at]] <<endl;
 
             }
             direction *= -1.0;
@@ -509,7 +509,7 @@ int ExtendedVcMD::set_default_q_cano(){
   if(q_cano.find(key) == q_cano.end()){
     real min_q_cano = 1e10;
     for(auto i_q : q_cano){
-      if (i_q.second < min_q_cano)
+      if (i_q.second > 0 && i_q.second < min_q_cano)
 	min_q_cano = i_q.second;
     }
     if (min_q_cano == 1e10) min_q_cano=1;
@@ -578,6 +578,7 @@ int ExtendedVcMD::set_struct_parameters(real *crd, PBC *pbc) {
     set_struct_parameters_mass_center(crd, pbc);
     set_struct_parameters_min(crd, pbc);    
   }
+  return 0;
 }
 int ExtendedVcMD::set_struct_parameters_mass_center(real *crd, PBC *pbc) {
       //cout << "dbg 0303 set_struct_parameters" << endl;
@@ -615,11 +616,11 @@ int ExtendedVcMD::set_struct_parameters_min(real *crd, PBC *pbc) {
     real min_dist = 1e10;
 
     for (int i_atm1 = 0; i_atm1 < n_atoms_in_groups[grp_id1]; i_atm1++) {
-      int aid1 = atom_groups[grp_id1][i_atm1];
+      //int aid1 = atom_groups[grp_id1][i_atm1];
       int aid1_3 = atom_groups[grp_id1][i_atm1]*3;
       real crd1[3] = {crd[aid1_3], crd[aid1_3+1], crd[aid1_3+2]};
       for (int i_atm2 = 0; i_atm2 < n_atoms_in_groups[grp_id2]; i_atm2++) {
-	int aid2 = atom_groups[grp_id2][i_atm2];
+	//int aid2 = atom_groups[grp_id2][i_atm2];
 	int aid2_3 = atom_groups[grp_id2][i_atm2]*3;
 	real crd2[3] = {crd[aid2_3], crd[aid2_3+1], crd[aid2_3+2]};
 	real d_crd[3];
@@ -644,7 +645,7 @@ real ExtendedVcMD::set_crd_centers(real *crd, PBC *pbc) {
 
     int grp_id = enhance_groups[i_grp];
     int aid0   = atom_groups[grp_id][0];
-    int aid0_3 = aid0 * 3;
+    // int aid0_3 = aid0 * 3;
     // cout << "dbg1130 grp " << i_grp << " " << grp_id << " " << n_atoms_in_groups[grp_id] << endl;
     // real crd0[3] = {crd[aid0_3], crd[aid0_3 + 1], crd[aid0_3 + 2]};
     for (int d = 0; d < 3; d++) { crd_centers[i_grp][d] = 0.0; }
@@ -714,10 +715,12 @@ int ExtendedVcMD::set_vs_next(){
   // vs_next_crd[dimension] = ID of the overlapping virtual states
   for(int d=0; d<n_dim; d++){
     vs_next_crd[d].push_back(cur_vs[d]);
+    int vc_size = vc_range_min[d].size();
     if ( cur_vs[d] > 0 ){
+
       if (lambda[d] < vc_range_max[d][cur_vs[d]-1]){
 	vs_next_crd[d].push_back(cur_vs[d]-1);
-      }else if(cur_vs[d] < vc_range_min[d].size()-1 && lambda[d] >= vc_range_min[d][cur_vs[d]+1] ){
+      }else if(cur_vs[d] < vc_size-1 && lambda[d] >= vc_range_min[d][cur_vs[d]+1] ){
 	vs_next_crd[d].push_back(cur_vs[d]+1);
       }
     }else if(vc_range_min[d].size() > 1 && lambda[d] >= vc_range_min[d][cur_vs[d]+1]){
@@ -820,6 +823,7 @@ int ExtendedVcMD::trial_transition(){  // source ... vs_id of current state
     //cout << " " << v;
     //}
     //cout << " , q_cano: " << q_cano[vs1] << endl;;
+    //cout << " , q_cano: " << q_cano[vs1] << endl;;
     real q1 = q_cano[vs1];
     if(q1==0) q1 = default_q_cano;
     int idx_vs2=0;
@@ -844,8 +848,13 @@ int ExtendedVcMD::trial_transition(){  // source ... vs_id of current state
     if ( rnd < i_acc ) break;
     idx++;
   }
-  
   cur_vs = vs_next[idx];
+
+  //  cout << "dbg 0909 cur_vs: ";
+  //  for (int i = 0; i < n_dim; i++)
+  //cout << cur_vs[i] << " " ;
+  //cout <<endl;
+
   return idx;
 }
 
@@ -948,7 +957,7 @@ int ExtendedVcMD::print_info() {
   std::cout << "V-McMD parameters" << endl;
   for (int d = 0; d < n_dim; d++){
     std::cout << "  Dimension : " << d+1 << endl;
-    for (int i = 0; i < vc_range_min[d].size(); i++) {
+    for (unsigned int i = 0; i < vc_range_min[d].size(); i++) {
       std::cout << "    Virtual state: " << i+1 << " ... ";
       std::cout << vc_range_min[d][i] << " - ";
       std::cout << vc_range_max[d][i] << endl;

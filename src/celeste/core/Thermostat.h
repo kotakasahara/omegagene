@@ -19,7 +19,7 @@ class ThermostatObject : public CelesteObject {
 
   public:
     ThermostatObject();
-    ~ThermostatObject();
+    virtual ~ThermostatObject();
     int set_time_step(real in_time_step);
     int set_temperature_coeff(int in_d_free);
     virtual int set_constant(int n_atoms, real_pw *mass, real *vel, real *force);

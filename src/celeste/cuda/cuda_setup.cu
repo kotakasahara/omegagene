@@ -5,7 +5,7 @@ __device__ __inline__ double shfl_xor(double value, int const lane, int const wa
                             __shfl_xor(__double2loint(value), lane, warpsize));
 }
 
-__device__ double atomicAdd(double *address, double val) {
+__device__ double atomicAdd2(double *address, double val) {
     unsigned long long int *address_as_ull = (unsigned long long int *)address;
     unsigned long long int  old            = *address_as_ull, assumed;
     do {
@@ -561,9 +561,9 @@ __global__ void kernel_pairwise_ljzd(const real4 *d_crd_chg,
 
         if (laneIdx % 8 == 0) { // && (w1 != 0.0 || w2 != 0.0 || w3 != 0.0)){
             const int tmp_index = (((global_threadIdx / WARPSIZE) % N_MULTI_WORK) * D_N_ATOM_ARRAY + a2) * 3;
-            atomicAdd(&(d_work[tmp_index + 0]), -w1);
-            atomicAdd(&(d_work[tmp_index + 1]), -w2);
-            atomicAdd(&(d_work[tmp_index + 2]), -w3);
+            atomicAdd2(&(d_work[tmp_index + 0]), -w1);
+            atomicAdd2(&(d_work[tmp_index + 1]), -w2);
+            atomicAdd2(&(d_work[tmp_index + 2]), -w3);
         }
     }
     for (int i = 16; i >= 8; i /= 2) {
@@ -573,9 +573,9 @@ __global__ void kernel_pairwise_ljzd(const real4 *d_crd_chg,
     }
     if (laneIdx < 8) {
         const int tmp_index = ((ene_index_offset * D_N_ATOM_ARRAY) + a1) * 3;
-        atomicAdd(&(d_work[tmp_index + 0]), work_c1[0]);
-        atomicAdd(&(d_work[tmp_index + 1]), work_c1[1]);
-        atomicAdd(&(d_work[tmp_index + 2]), work_c1[2]);
+        atomicAdd2(&(d_work[tmp_index + 0]), work_c1[0]);
+        atomicAdd2(&(d_work[tmp_index + 1]), work_c1[1]);
+        atomicAdd2(&(d_work[tmp_index + 2]), work_c1[2]);
     }
     for (int i = 16; i >= 1; i /= 2) {
         ene_vdw += shfl_xor(ene_vdw, i, 32);
@@ -583,8 +583,8 @@ __global__ void kernel_pairwise_ljzd(const real4 *d_crd_chg,
     }
     if (laneIdx == 0) {
         const int tmp_index = ((global_threadIdx / 32) % N_MULTI_WORK) * 2;
-        atomicAdd(&(d_energy[tmp_index + 0]), ene_vdw);
-        atomicAdd(&(d_energy[tmp_index + 1]), ene_ele);
+        atomicAdd2(&(d_energy[tmp_index + 0]), ene_vdw);
+        atomicAdd2(&(d_energy[tmp_index + 1]), ene_ele);
     }
 }
 

@@ -80,7 +80,7 @@ class MmSystem : public CelesteObject {
 
     std::string launchset_version;
 
-    real pbc_val[9];
+    real pbc_val[12];
     PBC  pbc;
 
     real      leapfrog_coef;

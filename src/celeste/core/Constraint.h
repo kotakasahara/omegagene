@@ -28,7 +28,7 @@ class ConstraintObject : public CelesteObject {
 
   public:
     ConstraintObject();
-    ~ConstraintObject();
+    virtual ~ConstraintObject();
     int alloc_constraint();
     int free_constraint();
     int set_parameters(int in_max_loops, real_cst in_tolerance, real in_time_step);

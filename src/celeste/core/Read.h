@@ -88,7 +88,7 @@ inline double reverse_endian(double value) {
     unsigned char v[8];
     unsigned char v2[8];
     memcpy(&v, &value, sizeof(v));
-    for (int i = 0; i < sizeof(v); i++) { memcpy(&v2[7 - i], &v[i], sizeof(v[i])); }
+    for (unsigned int i = 0; i < sizeof(v); i++) { memcpy(&v2[7 - i], &v[i], sizeof(v[i])); }
     // v = ((v&0x00FF00FF00FF00FF) << 8 | (v & 0xFF00FF00FF00FF00) >> 8);
     // v = ((v & 0x0000FFFF0000FFFF) << 16 | (v & 0xFFFF0000FFFF0000) >> 16);
     // v = ((v & 0x00000000FFFFFFFF) << 32 | (v & 0xFFFFFFFF00000000) >> 32);

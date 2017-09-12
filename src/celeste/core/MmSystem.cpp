@@ -404,7 +404,6 @@ void show_int(int x) {
 bool MmSystem::search_nb15off(int atomid1, int atomid2) {
     // if the atompair (atomid1, atomid2) is
     // in the list of nb15off, the function returns false
-    bool flg1 = false;
     // int aid_diff = atomid2 - atomid1;
     // int bit_idx = atomid1;
     // if(aid_diff < 0){
@@ -511,7 +510,7 @@ int MmSystem::set_nb15off(int atomid1, int atomid2) {
 int MmSystem::write_data() {
     cout << "launchset_version: " << launchset_version << endl;
     cout << "pbc:";
-    for (int i = 0; i < 9; i++) { cout << " " << pbc_val[i]; }
+    for (int i = 0; i < 12; i++) { cout << " " << pbc_val[i]; }
     cout << endl;
     cout << "n_lj_types: " << n_lj_types << endl;
     cout << "n_lj_type_pairs: " << n_lj_type_pairs << endl;
@@ -717,8 +716,7 @@ int MmSystem::set_excess_pairs() {
 
 real_fc MmSystem::set_potential_e() {
     potential_e = pote_bond + pote_angle + pote_torsion + pote_impro + pote_14vdw + pote_14ele + pote_vdw + pote_ele
-                  + pote_dist_rest;
-    +pote_pos_rest;
+                  + pote_dist_rest + pote_pos_rest;
     return potential_e;
 }
 

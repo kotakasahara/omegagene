@@ -4,6 +4,7 @@ import sys
 import kkkit
 import re
 import numpy as np
+import copy
 
 class VcMDConf():
     def __init__(self):
@@ -29,9 +30,9 @@ class VcMDConf():
         for k,v in self.params.items():
             s += v[param_od]
         return s;
-    def read_params(self, fn):
+    def read_params(self, fn, chk4gen=True):
         self.interval, self.dim, self.group_names, \
-            self.lambda_ranges, self.params = VcMDParamsReader(fn).read()
+            self.lambda_ranges, self.params = VcMDParamsReader(fn).read(chk4gen)
     def read_init(self, fn):
         self.init_vs, self.seed = VcMDInitReader(fn).read(self.dim)
     def add_params(self, conf):
@@ -95,6 +96,26 @@ class VcMDConf():
         self.params[key].append(min_param)
         print min_param
         return
+    def symmetrize(self):
+        vs_param01 = {}
+        vs_num = {}
+        vs_vs = {}
+        for key, val in self.params.items():
+            uvs = list(copy.deepcopy(key))
+            uvs.sort()
+            uvs = tuple(uvs)
+            if not uvs in vs_num:
+                vs_num[uvs] = 0
+                vs_param01[uvs] = 0.0
+                vs_vs[uvs] = []
+            vs_num[uvs] += 1
+            vs_param01[uvs] += val[0]
+            vs_vs[uvs].append(key)
+        for uvs, vss in vs_vs.items():
+            sym_param01 = vs_param01[uvs]/float(vs_num[uvs])
+            for i_vs in vss:
+                self.params[i_vs][0] = sym_param01
+        return
 
 class VcMDInitReader(kkkit.FileI):
     def __init__(self, fn):
@@ -103,10 +124,13 @@ class VcMDInitReader(kkkit.FileI):
     def read(self, in_dim):
         self.open()
         init_vs = [0]
+        ## The fist line:  The number of dimension
         dim = int(self.readline_comment().strip())
+        ## The initial VS for each dimension, in each line
         for i in range(dim):
             tmp = int(self.readline_comment().strip())
             init_vs.append(tmp)
+        # Random Seed
         seed = int(self.readline_comment().strip())
         if not dim == in_dim:
             sys.stderr.write("Inconsistency in the definition of dimensions.\n")
@@ -146,28 +170,40 @@ class VcMDParamsWriter(kkkit.FileO):
 class VcMDParamsReader(kkkit.FileI):
     def __init__(self, fn):
         super(VcMDParamsReader, self).__init__(fn)
-    def read(self):
+    def read(self, chk4gen=True):
         self.open()
         params = {}
 
+        # The first line: VS transition interval (step)
         interval = int(self.readline_comment().strip().split()[0])
+        # The second line: the number of dimensions
         dim = int(self.readline_comment().strip().split()[0])
         lambda_ranges = [(0.0, 0.0)]
         n_states = 1
         group_names = [[""]]
-        #print "dbg kkmm_vcmd : dim " + str(dim) 
 
+        # Definitions of VS ranges in each dimension
         for i in range(dim):
             cur_dim = i+1
+            # [The number of VS] [Group name] [Group name]
             terms = self.readline_comment().strip().split()
             n_vs = int(terms[0])
             group_names.append([])
             for tm in terms[1:]:
                 group_names[-1].append(tm)
-            #n_states *= n_vs
             cur_ranges = [(0,0)]
             for j in range(n_vs):
+                # [Min lambda] [Max lambda] 
                 terms = self.readline_comment().strip().split()
+                assert(len(terms) == 2)
+                try:
+                    lmin = float(terms[0])
+                    lmax = float(terms[1])
+                except:
+                    sys.stderr.write("Format error in the VS definition.\n")
+                    sys.stderr.write("\t".join(terms))
+                    sys.stderr.write("The minimum and maximum values of lambda in each VS should be specified in float values.\n")
+                    sys.exit(1)
                 cur_ranges.append((float(terms[0]), float(terms[1])))
             lambda_ranges.append(cur_ranges)
             #print "dim " + str(cur_dim)
@@ -184,6 +220,19 @@ class VcMDParamsReader(kkkit.FileI):
             crd = tuple([int(x) for x in terms[:dim]])
             assert(not crd in params)
             param = [float(x) for x in terms[dim:]]
+            try:
+                assert(len(param) < 2)
+            except:
+                sys.stderr.write("WARNING: In the current version, only one parameter for each VS is allowed. The parameters except for the first are ignored.\n")
+                sys.stderr.write("\t".join(terms)+"\n")
+
+            if chk4gen:
+                try:
+                    assert(0 in crd or param[0] > 0)
+                except:
+                    sys.stderr.write("WARNING: The parameter shoud be larger than zero.\n")
+                    sys.stderr.write("\t".join(terms)+"\n")
+
             params[crd] = param
 
         return interval, dim, group_names, lambda_ranges, params
