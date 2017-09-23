@@ -38,7 +38,7 @@ class DistRestraintObject : public CelesteObject {
 
   public:
     DistRestraintObject();
-    virtual ~DistRestraintObject();
+    ~DistRestraintObject();
     void set_weight(real in_w) { weight = in_w; };
     real                 get_weight() { return weight; };
     int                  get_n_drunits() { return n_drunits; };

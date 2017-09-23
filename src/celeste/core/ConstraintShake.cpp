@@ -192,7 +192,7 @@ int ConstraintShake::shake_quad(real *in_crd, real *in_crd_prev, real_pw *in_mas
 
             pbc->diff_crd_minim_image(d_prev[i_pair], crd_prev[Pairs_idx[i_pair][0]], crd_prev[Pairs_idx[i_pair][1]]);
         }
-        real_cst coef[6];
+        real_cst coef[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
         real_cst coef_post[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
         // 1-3 convergence loop

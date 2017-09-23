@@ -330,8 +330,8 @@ ExtendedVAUS::~ExtendedVAUS() {
 real ExtendedVAUS::set_crd_centers(real *crd, PBC *pbc) {
     for (int i_grp = 0; i_grp < n_enhance_groups; i_grp++) {
       int grp_id = enhance_groups[i_grp];
-      int aid0   = atom_groups[grp_id][0];
-      int aid0_3 = aid0 * 3;
+      //int aid0   = atom_groups[grp_id][0];
+      //int aid0_3 = aid0 * 3;
         // cout << "dbg1130 grp " << i_grp << " " << grp_id << " " << n_atoms_in_groups[grp_id] << endl;
         // real crd0[3] = {crd[aid0_3], crd[aid0_3 + 1], crd[aid0_3 + 2]};
       for (int d = 0; d < 3; d++) { crd_centers[i_grp][d] = 0.0; }
@@ -644,7 +644,7 @@ real ExtendedVcMD::set_crd_centers(real *crd, PBC *pbc) {
     // crd_centers[ grp id in the enhance groups ]
 
     int grp_id = enhance_groups[i_grp];
-    int aid0   = atom_groups[grp_id][0];
+    //int aid0   = atom_groups[grp_id][0];
     // int aid0_3 = aid0 * 3;
     // cout << "dbg1130 grp " << i_grp << " " << grp_id << " " << n_atoms_in_groups[grp_id] << endl;
     // real crd0[3] = {crd[aid0_3], crd[aid0_3 + 1], crd[aid0_3 + 2]};

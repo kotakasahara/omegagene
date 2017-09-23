@@ -10,7 +10,7 @@ class ElectrostaticObject : public CelesteObject {
     // MmSystem* mmsys;
   public:
     ElectrostaticObject();
-    virtual ~ElectrostaticObject();
+    ~ElectrostaticObject();
 
     virtual int set_config_parameters(const Config *in_cfg);
     virtual int initial_preprocess();

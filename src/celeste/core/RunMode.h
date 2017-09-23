@@ -33,7 +33,7 @@ class RunMode : public CelesteObject {
     MmSystem mmsys;
 
     RunMode();
-    virtual ~RunMode();
+    ~RunMode();
     virtual int initial_preprocess();
     virtual int terminal_process();
     virtual int set_config_parameters(Config *in_cfg);

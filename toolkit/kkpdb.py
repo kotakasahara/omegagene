@@ -23,6 +23,25 @@ class PDBWriter(kkkit.FileO):
                 )
             txt += '  P 1           1           '
             self.f.write(txt+'\n')            
+        if model.model_id > 0:
+            txt = "MODEL "+str(model.model_id)
+            self.f.write(txt+'\n')            
+        self.write_crd(model, flg_presto)
+        if model.model_id > 0:
+            txt = "ENDMDL"+str(model.model_id)
+            self.f.write(txt+'\n')            
+        self.close()
+        return
+    def add_model(self, model, flg_presto=False):
+        if model.model_id > 0:
+            txt = "MODEL "+str(model.model_id)
+            self.f.write(txt+'\n')            
+        self.write_crd(model, flg_presto)
+        if model.model_id > 0:
+            txt = "ENDMDL"+str(model.model_id)
+            self.f.write(txt+'\n')            
+        return
+    def write_crd(self, model, flg_presto):
         for atom in model.atoms:
             atom_name = atom.atom_name
             if len(atom_name) < 4: atom_name = " " + atom_name
@@ -58,7 +77,7 @@ class PDBWriter(kkkit.FileO):
             txt += "%4s"%atom.seg_id #72:76
             txt += "%2s"%atom.elem #76:78
             self.f.write(txt+'\n')
-        self.close()
+
         return
 
 class PDBReader(kkkit.FileI):

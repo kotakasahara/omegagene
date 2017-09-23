@@ -374,7 +374,7 @@ int DynamicsMode::gather_energies() {
     mmsys.pote_14ele   = subbox.get_pote_14ele();
     mmsys.pote_vdw     = subbox.get_pote_vdw();
     mmsys.pote_ele     = subbox.get_pote_ele();
-    real tmp           = mmsys.pote_ele;
+    //real tmp           = mmsys.pote_ele;
     mmsys.pote_ele += mmsys.energy_self_sum;
     // cout << "tmp ele: " << tmp << " " << mmsys.energy_self_sum << " " << mmsys.pote_ele << endl;
 

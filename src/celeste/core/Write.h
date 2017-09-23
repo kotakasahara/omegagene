@@ -19,6 +19,7 @@ class Write : public CelesteObject {
     std::ofstream ofs;
     Write();
     Write(std::string inFn);
+    ~Write();
     void set_fn(std::string in_fn) { filename = in_fn; };
     std::string             getFn() { return filename; };
     bool                    is_open() { return op; };
@@ -43,7 +44,7 @@ class WriteTableLog : public Write {
 
   public:
     WriteTableLog();
-    ~WriteTableLog();
+    virtual ~WriteTableLog();
     inline void set_ncolumns(int in_n_cols) { n_cols = in_n_cols; };
     virtual int                  write_header();
     virtual int write_row(int *values);

@@ -30,6 +30,18 @@ def opt_parse():
     print "----------------------------"
     return opts, args
 
+def parse_unit(self, term):
+    at = re.compile("^(\d+)$")
+    at_range = re.compile("^(\d+)\-(\d+)$")
+    m1 = at.match(term)
+    m2 = at_range.match(term)
+    val = []
+    if m1:
+        val = [int(m1.group())]
+    elif m2:
+        val = [x for x in range(int(m2.group(1)), int(m2.group(2))+1)]
+    return val
+
 def read_fnlist(fn):
     f = open(fn)
     fnlist = []

@@ -26,7 +26,7 @@ struct Config : public CelesteObject {
 
     real_pw     cutoff = 12.0;
     real_pw     cutoff_buf;
-    int         n_steps             = 1;
+    unsigned long    n_steps             = 1;
     real        time_step           = 0.0005;
     int         electrostatic       = ELCTRST_ZERODIPOLE;
     real        ele_alpha           = 0.0;

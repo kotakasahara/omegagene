@@ -23,12 +23,12 @@ vector<string> Config::extract_args_from_file(const string &filepath) {
 
     cout << "-----------------------------------\nReading from configuration file:  " << filepath << "\n";
     while (ifs && getline(ifs, buf)) {
-        int pos1 = buf.find_first_of("#;");
-        if (pos1 != string::npos) { buf = buf.substr(0, pos1); }
-        if (buf.size() == 0) continue;
-        cout << buf << endl;
-        stringstream ss(buf);
-        while (ss >> buf) { args.push_back(buf); }
+      unsigned int pos1 = buf.find_first_of("#;");
+      if (pos1 != string::npos) { buf = buf.substr(0, pos1); }
+      if (buf.size() == 0) continue;
+      cout << buf << endl;
+      stringstream ss(buf);
+      while (ss >> buf) { args.push_back(buf); }
     }
     cout << "-----------------------------------" << endl;
     return args;

@@ -15,7 +15,6 @@ class VcMDConf():
         # group_names[dim] = [name, name]
         # self.group_names[0] is must be empty ("")
 
-        # lambda_ranges[dim] = (group A, group B)
         self.lambda_ranges = []
         # lambda_ranges[dim][vsid] = (min, max)
         self.params = {}
@@ -48,14 +47,25 @@ class VcMDConf():
                     self.params[vs][i] += p
         return
     def multiply_params(self, conf):
-        key = tuple([ 0 for x in range(self.dim)])
+        key_def = tuple([ 0 for x in range(self.dim)])
         #print "test"
         #print self.params[key]
+
+        # add default value for VSs in conf
+        for vs, param in self.params.items():
+            if vs == key_def: continue
+            if not vs in conf.params:
+                conf.params[vs] = conf.params[key_def]
+        conf.normalize_params()
+        #for vs, param in conf.params.items():
+        #    if vs == key_def: continue
+        #    if not vs in self.params:
+        #        self.params[vs] = self.params[key_def]
+        #self.normalize_params()
+
         for vs, param in conf.params.items():
-            if vs == key: continue
-            if not vs in self.params:
-                self.params[vs] = self.params[key]
-                #print vs
+            if not vs in self.params: continue
+            if vs == key_def: continue
             for i, p in enumerate(conf.params[vs]):
                 if self.params[vs][i] > 0:
                     if p > 0:
@@ -63,15 +73,12 @@ class VcMDConf():
                     else:
                         self.params[vs][i] *= self.params[vs][i]
             #print self.params[vs]
-        for i, p in enumerate(self.params[key]):
-            self.params[key][i] *= p
         return
     def normalize_params(self):
         p_sum = np.zeros(len(self.params.values()[0]), dtype=np.float)
-        key = tuple([ 0 for x in range(self.dim)])
-        if key in self.params:
-            p_sum -= self.params[key][0]
+        key_def = tuple([ 0 for x in range(self.dim)])
         for vs, param in self.params.items():
+            if vs is key_def: continue
             p_sum += np.array(param)
         for vs, param in self.params.items():
             for i, q in enumerate(param):
@@ -85,16 +92,17 @@ class VcMDConf():
                 self.params[vs][i] += const
         return
     def set_default_param(self):
-        key = tuple([ 0 for x in range(self.dim)])
+        key_def = tuple([ 0 for x in range(self.dim)])
         min_param = 1e10
         for k, v in self.params.items():
+            if k == key_def: continue
             if v[0] < min_param and v[0] > 0:
                 min_param = v[0]
         if min_param == 1e10:
             min_param = 1
-        self.params[key] = []
-        self.params[key].append(min_param)
-        print min_param
+        self.params[key_def] = []
+        self.params[key_def].append(min_param)
+        # print min_param
         return
     def symmetrize(self):
         vs_param01 = {}
@@ -115,6 +123,18 @@ class VcMDConf():
             sym_param01 = vs_param01[uvs]/float(vs_num[uvs])
             for i_vs in vss:
                 self.params[i_vs][0] = sym_param01
+        return
+    def statistics(self):
+        buf = []
+        key_def = tuple([ 0 for x in range(self.dim)])
+        for k, v in self.params.items():
+            if k == key_def: continue
+            buf.append(v[0])
+        param = np.array(buf)
+        print "min: " + str(param.min())
+        print "max: " + str(param.max())
+        print "mean: " + str(param.mean())
+        print "sd: " + str(param.std())
         return
 
 class VcMDInitReader(kkkit.FileI):

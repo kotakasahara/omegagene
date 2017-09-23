@@ -9,6 +9,8 @@ Write::Write(string inFn) : CelesteObject() {
 Write::Write() : CelesteObject() {
     op = false;
 }
+Write::~Write(){
+}
 int Write::open() {
     ofs.open(filename.c_str());
     if (!ofs) {

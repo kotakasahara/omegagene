@@ -424,18 +424,18 @@ int MiniCell::reorder_atominfo_for_columns() {
 }
 
 int MiniCell::set_dummy_atoms() {
-    int valid_atomid_g = -1;
+  //int valid_atomid_g = -1;
     for (int i_col = 0; i_col < n_columns; i_col++) {
         for (int i_atom = 0; i_atom < n_atoms_col[i_col]; i_atom++) {
             int atomid_g = idx_xy_head_atom[i_col] + i_atom;
             if (idx_atom_cell_xy[atomid_g] >= 0) {
-                valid_atomid_g = atomid_g;
+	      //valid_atomid_g = atomid_g;
             } else {
-                idx_atom_cell_xy[atomid_g] = i_col;
-                // crd[atomid_g*3]   = crd[valid_atomid_g*3];
-                // crd[atomid_g*3+1] = crd[valid_atomid_g*3+1];
-                // crd[atomid_g*3+2] = crd[valid_atomid_g*3+2];
-                atomids[atomid_g] = -1;
+	      idx_atom_cell_xy[atomid_g] = i_col;
+	      // crd[atomid_g*3]   = crd[valid_atomid_g*3];
+	      // crd[atomid_g*3+1] = crd[valid_atomid_g*3+1];
+	      // crd[atomid_g*3+2] = crd[valid_atomid_g*3+2];
+	      atomids[atomid_g] = -1;
             }
         }
     }
@@ -549,7 +549,7 @@ int MiniCell::quick_sort_in_columns(const int l, const int r) {
         real_pw v = crd[r * 3 + 2];
         int     i = l - 1;
         int     j = r + 1;
-        int     t;
+        //int     t;
         // cout << "qs " << l << " - " << r << " v: " << v <<endl;
         for (;;) {
             while (crd[(++i) * 3 + 2] < v)
@@ -828,7 +828,7 @@ int MiniCell::enumerate_cell_pairs() {
         cell1[0]       = cell_crd[cell1_id][0];
         cell1[1]       = cell_crd[cell1_id][1];
         cell1[2]       = cell_crd[cell1_id][2];
-        int column1_id = get_column_id_from_crd(cell1[0], cell1[1]);
+        //int column1_id = get_column_id_from_crd(cell1[0], cell1[1]);
 
         idx_head_cell_pairs[cell1_id] = n_cell_pairs;
         // cout << "dbg idx_head["<< cell1_id<< "] ("<<cell1[0]<<","<<cell1[1]
@@ -881,7 +881,7 @@ int MiniCell::enumerate_cell_pairs() {
                     dx[1] = 0.0;
                 dx[1]     = dx[1] * dx[1];
                 ////  --val
-                int column2_id = cell2[0] + cell2[1] * n_cells_xyz[0];
+                //int column2_id = cell2[0] + cell2[1] * n_cells_xyz[0];
                 tmp_column_pairs++;
 
                 // 1. i1 ... image = -1
@@ -910,7 +910,7 @@ int MiniCell::enumerate_cell_pairs() {
                     last_uni_z[1]  = tmp_last;
                 }
 
-                int tmp_img = -2;
+                //int tmp_img = -2;
                 for (int i_img = 0; i_img < 3; i_img++) {
                     image[2] = i_img - 1;
                     if (first_uni_z[i_img] < 0) continue;

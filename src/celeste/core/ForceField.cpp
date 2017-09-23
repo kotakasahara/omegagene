@@ -213,8 +213,8 @@ int ForceField::calc_torsion(real &      ene,
     // cout << phimod << " " << div << endl;
     real_bp sinp    = sin(phi);
     int     nrot    = (int)param_symmetry;
-    real_bp sinp_sq = sinp * sinp;
-    real_bp cosp_sq = cosp * cosp;
+    //real_bp sinp_sq = sinp * sinp;
+    //real_bp cosp_sq = cosp * cosp;
 
     real_bp sin_fphs = sin(param_phase);
     real_bp cos_fphs = cos(param_phase);
