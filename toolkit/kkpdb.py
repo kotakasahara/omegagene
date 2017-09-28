@@ -7,7 +7,7 @@ import re
 class PDBWriter(kkkit.FileO):
     def __init__(self, fn):
         super(PDBWriter, self).__init__(fn)
-    def write_model(self, model, flg_presto=False):
+    def write_model(self, model, flg_presto=False, ignore=set()):
         self.open()
         if model.title != "":
             txt = "TITLE " + model.title
@@ -28,21 +28,22 @@ class PDBWriter(kkkit.FileO):
             self.f.write(txt+'\n')            
         self.write_crd(model, flg_presto)
         if model.model_id > 0:
-            txt = "ENDMDL"+str(model.model_id)
+            txt = "ENDMDL" # +str(model.model_id)
             self.f.write(txt+'\n')            
         self.close()
         return
-    def add_model(self, model, flg_presto=False):
+    def add_model(self, model, flg_presto=False, ignore=set()):
         if model.model_id > 0:
             txt = "MODEL "+str(model.model_id)
             self.f.write(txt+'\n')            
-        self.write_crd(model, flg_presto)
+        self.write_crd(model, flg_presto, ignore)
         if model.model_id > 0:
-            txt = "ENDMDL"+str(model.model_id)
+            txt = "ENDMDL" #+str(model.model_id)
             self.f.write(txt+'\n')            
         return
-    def write_crd(self, model, flg_presto):
-        for atom in model.atoms:
+    def write_crd(self, model, flg_presto, ignore=set()):
+        for atid, atom in enumerate(model.atoms):
+            if atid in ignore: continue
             atom_name = atom.atom_name
             if len(atom_name) < 4: atom_name = " " + atom_name
             assert(len(atom.chain_id)==1)

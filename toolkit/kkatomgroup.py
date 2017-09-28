@@ -18,12 +18,18 @@ class AtomGroupsReader(kkkit.FileI):
             val = [int(m1.group())]
         elif m2:
             val = [x for x in range(int(m2.group(1)), int(m2.group(2))+1)]
+        else:
+            msg = "[ " + term + " ]"
+            kkkit.error_msg("011_002",msg)
         return val
     def read_groups(self):
         self.open()
         for orig_line in self.f:
             line = kkkit.eliminate_comment(orig_line).strip()
-            terms = line.split()
+            line2 = line.replace(","," ")
+            
+            terms = line2.split()
+
             if len(line) == 0: continue
             g_name = terms[0]
             grp = set()

@@ -10,9 +10,18 @@ import kkmmconfig
 def option_parser():
     p = OptionParser()
     
-    p.add_option('--cfg', dest='fn_config',
-                 type="append",
-                 help="Omegagene configuration files")
+    p.add_option('--i-cod', dest='fn_cod',
+                 help="Omegagene coordinate file")
+    p.add_option('--i-lmb', dest='fn_lmb',
+                 help="Omegagene lambda file")
+    p.add_option('--i-vs', dest='fn_vs',
+                 help="Omegagene vs file")
+    p.add_option('--interval-vs', dest='itv_vs',
+                 help="VS transition interval")
+    p.add_option('--interval-lmb', dest='itv_lmb',
+                 help="Lambda output interval")
+    p.add_option('--interval-cod', dest='itv_cod',
+                 help="Coordinate output interval")
 
     opts, args = p.parse_args()
     print "----------------------------"

@@ -159,7 +159,6 @@ int DynamicsMode::main_stream() {
     mmsys.cur_step = 0;
     // while(mmsys.cur_step <= cfg->n_steps){
     for (mmsys.cur_step = 0; mmsys.cur_step < cfg->n_steps; mmsys.cur_step++) {
-
         sub_output();
         calc_in_each_step();
 
@@ -169,6 +168,7 @@ int DynamicsMode::main_stream() {
         }
         mmsys.cur_time += cfg->time_step;
     }
+    sub_output();
     output_restart();
     cout << "== The last step ==" << endl;
     calc_in_each_step();

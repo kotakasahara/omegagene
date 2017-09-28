@@ -253,6 +253,7 @@ def convert_presto_pdb(fn_in, fn_out, fn_pdb, rm_atom_ids=set(),
     read_frame = 1
     cur_model = 1
     while frame_crd:
+        if read_frame%10==0: print read_frame
         w_time = frame_crd.time
         w_frame = frame_crd.step
         if time_step > 0:
@@ -261,11 +262,11 @@ def convert_presto_pdb(fn_in, fn_out, fn_pdb, rm_atom_ids=set(),
         for i, at in enumerate(model.atoms):
             at.crd = numpy.array(frame_crd.crds[i])
         model.model_id = cur_model
-        pdb_writer.add_model(model)
+        pdb_writer.add_model(model, ignore=rm_atom_ids)
         frame_crd = crd_reader.read_next_frame()
         cur_frame += frame_step
         read_frame += 1
-
+        cur_model += 1
     pdb_writer.close()
     crd_reader.close()    
 

@@ -15,6 +15,20 @@ def eliminate_comment(line, comment_char=[";","#"]):
     if comment_index >= 0:
         line = line[0:comment_index]
     return line
+def error_msg(error_code,msg):
+    """
+    error_code:
+    {digit: category}_{digit: code}
+    """
+    code_table = {}
+    code_table["011_001"]="atomgroup, file not found"
+    code_table["011_002"]="atomgroup, syntax error in the definition"
+
+    sys.stderr.write("Error in omega_toolkit: "+error_code+"\n")
+    sys.stderr.write(code_table[error_code]+"\n")
+    sys.stderr.write(msg)
+    sys.exit(1)
+    return
 
 class FileIO(object):
     def __init__(self, fn):
