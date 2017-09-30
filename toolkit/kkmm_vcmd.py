@@ -136,6 +136,14 @@ class VcMDConf():
         print "mean: " + str(param.mean())
         print "sd: " + str(param.std())
         return
+    def is_in_range(self, vs, lmb):
+        assert(len(vs)==self.dim and len(lmb)==self.dim)
+        flg = True
+        for d in range(self.dim):
+            if lmb[d] < self.lambda_ranges[d+1][vs[d]][0] or \
+               lmb[d] >= self.lambda_ranges[d+1][vs[d]][1]:
+                flg=False; break
+        return flg
 
 class VcMDInitReader(kkkit.FileI):
     def __init__(self, fn):

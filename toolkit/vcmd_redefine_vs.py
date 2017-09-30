@@ -7,12 +7,24 @@ import numpy as np
 import re
 import kkmm_vcmd
 import copy
+import kkmmconfig
+# from collections import defaultdict
+
 def opt_parse():
     p = OptionParser()
     p.add_option('--i-new-vs', dest='fn_new_vs',
                  help="q_cano file")
     p.add_option('-o', dest='fn_out',
                  help="filename for output")    
+    p.add_option('--cfg', dest='fn_config',
+                 default="md.inp",
+                 help="config file")    
+    p.add_option('--lambda-log', dest='fn_lambda',
+                 default="lambda.out",
+                 help="lambda log file")    
+    p.add_option('--vs-log', dest='fn_vslog',
+                 default="ttp_vcmd.out",
+                 help="vcmd log file")    
     p.add_option('--o-cano', dest='fn_o_canonical',
                  help="filename for output")    
     p.add_option('-b','--bin-width', dest='bin_width',
@@ -29,17 +41,22 @@ def opt_parse():
     return opts, args
 
 class VcMDData(object):
-    def __init__(self, bin_width):
+    def __init__(self, bin_width, fn_config, fn_lambda, fn_vslog):
         self.bin_width = bin_width
-        # self.distrib[(vs1,vs2...)] = prob
+
+        # self.distrib[bin_id][(vs1,vs2...)] = prob
         self.distrib = {}
+        # self.distrib[bin_id] = prob
+        self.distrib_nrm = {}
+        
         self.sum_prob = 0.0
         self.dim = 0
 
         self.path_cal = "."
-        self.fn_lambda = "lambda.out"
-        self.fn_vslog = "ttp_vcmd.out"
-        self.fn_qcano = "vcmd_next.inp"
+        self.fn_lambda = fn_lambda
+        self.fn_vslog = fn_vslog
+        self.fn_config = fn_config
+        # self.fn_qcano = "vcmd_next.inp"
         self.stages = []
         self.series = []
 
@@ -75,10 +92,17 @@ class VcMDData(object):
         self.stages = self.parse_unit(stages_str)
         self.series = self.parse_unit(series_str)
         for st in self.stages:
-            fn_qcano = os.path.join(self.path_cal, str(st-1), self.fn_qcano)
+            #fn_qcano = os.path.join(self.path_cal, str(st-1), self.fn_qcano)
+            
+            fn_cfg = os.path.join(self.path_cal, str(st), "n"+str(self.series[0]), self.fn_config)
+            cfgr = kkmmconfig.ConfigReader(fn_cfg)
+            cfgr.debug=False
+            cfg = cfgr.read_config()
+            fn_qcano = os.path.join(self.path_cal, str(st), "n"+str(self.series[0]), cfg.get_val("fn-i-vcmd-inp"))
+
             if not os.path.exists(fn_qcano):
                 sys.stderr.write("File not found; qcano for the stage "+str(st)+"\n")
-                sys.stderr.write(fn_qcano)
+                sys.stderr.write(fn_qcano+"\n")
                 continue
             self.files_qcano[st] = fn_qcano
             self.files_lambda[st] = {}
@@ -95,36 +119,50 @@ class VcMDData(object):
                     sys.stderr.write("File not found; \n")
                     sys.stderr.write(fn_vslog+"\n")
                     continue
-                self.files_lambda[st][se] = fn_lambda
+                self.files_lambda[st][se] = fn_lambda 
                 self.files_vslog[st][se] = fn_vslog
         #print self.files_lambda
         return
         
-    def read_trj(self, fn_trj):
+    def read_trj(self, fn_trj, dtype="float"):
         trj = []
         f = open(fn_trj)
         for line in f:
-            term = [float(x) for x in line.strip().split()]
+            buf = line.strip().split()            
+            term = None
+            if dtype=="float":
+                term = [float(x) for x in buf]
+            elif dtype=="int":
+                term = [int(x) for x in buf]
             trj.append(term)
         f.close()
         return trj
     def add_distrib(self, vcconf, trj_lambda, trj_vslog):
-        for i, vs_l in enumerate(trj_vslog):
-            vs = tuple(vs_l)
-            
-            bin_id = tuple([int(x/self.bin_width) for x in trj_lambda[i]])
+        #for i, vs_l in enumerate(trj_vslog):
+        for i, lmb in enumerate(trj_lambda):
+            vs = tuple(trj_vslog[i])
+            if not vcconf.is_in_range(vs, lmb): continue
+            bin_id = tuple([int(x/self.bin_width) for x in lmb])
 
             if not bin_id in self.distrib:
-                self.distrib[bin_id] = 0.0
+                self.distrib[bin_id] = {}
+                self.distrib_nrm[bin_id] = 0.0
+            if not vs in self.distrib[bin_id]:
+                self.distrib[bin_id][vs] = 0.0
                 
-            self.distrib[bin_id] += vcconf.params[vs][0]
-            self.sum_prob +=  vcconf.params[vs][0]
-            
+            self.distrib[bin_id][vs] += vcconf.params[vs][0]
+            ## self.sum_prob +=  vcconf.params[vs][0]
         return
     def normalize_distrib(self):
-        for bin_id, val in self.distrib.items():
-            self.distrib[bin_id] = val/self.sum_prob
+        self.sum_prob = 0
+        for bin_id, vs_val in self.distrib.items():
+            for vs, val in vs_val.items():
+                self.distrib_nrm[bin_id] += val / float(len(vs_val.keys()))
+                self.sum_prob += val / float(len(vs_val.keys()))
+        for bin_id, val in self.distrib_nrm.items():        
+            self.distrib_nrm[bin_id] = val / self.sum_prob
         return
+
     def calc_canonical(self):
         self.distrib = {}
         self.sum_prob = 0.0
@@ -141,14 +179,22 @@ class VcMDData(object):
             for se, fn_lambda in self.files_lambda[st].items():
                 print "Stage:"+str(st) + " - Series:" + str(se)
                 fn_vslog = self.files_vslog[st][se]
-                trj_lambda = self.read_trj(fn_lambda)
-                trj_vslog = self.read_trj(fn_vslog)
+                trj_lambda = self.read_trj(fn_lambda, "float")
+                trj_vslog = self.read_trj(fn_vslog, "int")
+                #try:
+                #    assert(len(trj_vslog)==len(trj_lambda))
+                #except:
+                #    sys.stderr.write("Data sizes of vslog and lambda were inconsistent.\n")
+                #    sys.stderr.write("Stage: " + str(st) + " Series: " + str(se)+"\n")
+                #    sys.exit(1)
+
                 self.add_distrib(vcconf, trj_lambda, trj_vslog)
         self.normalize_distrib()
         return
     def write_canonical(self, fn_cano):
         f = open(fn_cano, "w")
-        for bin_id, val in self.distrib.items():
+        #sorted(d.items(), key=lambda x:x[1])
+        for bin_id, val in sorted(self.distrib_nrm.items(), key=lambda x:x[0]):
             lmb = [ str((x+0.5)*self.bin_width) for x in bin_id ]
             line = " ".join(lmb)+" "+str(val)+"\n"
             f.write(line)
@@ -179,19 +225,21 @@ class VcMDData(object):
         all_vs = self.enum_vs(vs, [], [])
         return all_vs
     def set_qcano_to_vs(self, vcnew):
-        for bin_id, val in self.distrib.items():
+        for bin_id, val in self.distrib_nrm.items():
             vs = self.find_vs(bin_id, vcnew)
             for i_vs in vs:
                 if not tuple(i_vs) in vcnew.params:
                     vcnew.params[i_vs] = [0.0]
-                vcnew.params[i_vs][0] += self.distrib[bin_id]/float(len(vs))
+                vcnew.params[i_vs][0] += self.distrib_nrm[bin_id]/float(len(vs))
 
         vcnew.normalize_params()
         return vcnew
+
 def _main():
     opts, args = opt_parse()
 
-    vcdat = VcMDData(opts.bin_width)
+    vcdat = VcMDData(opts.bin_width, opts.fn_config,
+                     opts.fn_lambda, opts.fn_vslog)
     vcdat.set_trajectory_files(opts.stages, opts.series)
 
     vcdat.calc_canonical()

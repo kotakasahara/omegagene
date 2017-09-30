@@ -101,9 +101,10 @@ class ConfigReader(kkkit.FileI):
     ARRAY_INT = "array_int"
     ARRAY_FLOAT = "array_float"
 
-    DEBUG = True
     def __init__(self, fn):
         super(ConfigReader, self).__init__(fn)
+        self.debug = True
+    
     def is_float_type(self, in_t):
         if in_t in (ConfigReader.FLOAT,
                     ConfigReader.ARRAY_FLOAT):
@@ -134,7 +135,7 @@ class ConfigReader(kkkit.FileI):
                 continue
             key = terms[0][2:]
             vals = terms[1:]
-            if ConfigReader.DEBUG: print key + " : " + ", ".join(vals)
+            if self.debug: print key + " : " + ", ".join(vals)
             vals_conv = []
             if not key in config.type_def:
                 sys.stderr.write("Invalid key : " + key + "\n")
