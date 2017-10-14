@@ -34,6 +34,9 @@ def opt_parse():
                  help="numbers separated with 'i,j'. The range can be specified by 'i-j'")
     p.add_option('--series', dest='series',
                  help="numbers separated with 'i,j'. The range can be specified by 'i-j'")
+    p.add_option('--rho-entire', dest='rho_entire',
+                 action="store_true",
+                 help="")
     opts, args = p.parse_args()
     print "----------------------------"
     p.print_help()
@@ -137,7 +140,7 @@ class VcMDData(object):
             trj.append(term)
         f.close()
         return trj
-    def add_distrib(self, vcconf, trj_lambda, trj_vslog):
+    def add_distrib(self, vcconf, trj_lambda, trj_vslog, unweighted=False):
         #for i, vs_l in enumerate(trj_vslog):
         for i, lmb in enumerate(trj_lambda):
             vs = tuple(trj_vslog[i])
@@ -149,8 +152,9 @@ class VcMDData(object):
                 self.distrib_nrm[bin_id] = 0.0
             if not vs in self.distrib[bin_id]:
                 self.distrib[bin_id][vs] = 0.0
-                
-            self.distrib[bin_id][vs] += vcconf.params[vs][0]
+            w = 1
+            if not unweighted: w = vcconf.params[vs][0]
+            self.distrib[bin_id][vs] += w
             ## self.sum_prob +=  vcconf.params[vs][0]
         return
     def normalize_distrib(self):
@@ -163,7 +167,7 @@ class VcMDData(object):
             self.distrib_nrm[bin_id] = val / self.sum_prob
         return
 
-    def calc_canonical(self):
+    def calc_canonical(self, unweigthed=False):
         self.distrib = {}
         self.sum_prob = 0.0
         for st, fn_qcano in self.files_qcano.items():
@@ -188,9 +192,11 @@ class VcMDData(object):
                 #    sys.stderr.write("Stage: " + str(st) + " Series: " + str(se)+"\n")
                 #    sys.exit(1)
 
-                self.add_distrib(vcconf, trj_lambda, trj_vslog)
+                self.add_distrib(vcconf, trj_lambda, trj_vslog,
+                                 unweigthed)
         self.normalize_distrib()
         return
+
     def write_canonical(self, fn_cano):
         f = open(fn_cano, "w")
         #sorted(d.items(), key=lambda x:x[1])
@@ -242,8 +248,11 @@ def _main():
                      opts.fn_lambda, opts.fn_vslog)
     vcdat.set_trajectory_files(opts.stages, opts.series)
 
-    vcdat.calc_canonical()
-    
+    if opts.rho_entire:
+        vcdat.calc_canonical(True)
+    else:
+        vcdat.calc_canonical(False)    
+
     if opts.fn_o_canonical:
         vcdat.write_canonical(opts.fn_o_canonical)
     if opts.fn_out:
@@ -251,6 +260,7 @@ def _main():
         vcnew.read_params(opts.fn_new_vs)
         vcnew = vcdat.set_qcano_to_vs(vcnew)
         kkmm_vcmd.VcMDParamsWriter(opts.fn_out).write(vcnew)
+
     return
 
 if __name__ == "__main__":

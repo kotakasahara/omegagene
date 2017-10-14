@@ -81,6 +81,7 @@ class VcMDConf():
             if vs is key_def: continue
             p_sum += np.array(param)
         for vs, param in self.params.items():
+            if vs is key_def: continue
             for i, q in enumerate(param):
                 self.params[vs][i] /= p_sum[i]
             if self.params[vs][0] == 0:
@@ -93,6 +94,7 @@ class VcMDConf():
         return
     def set_default_param(self):
         key_def = tuple([ 0 for x in range(self.dim)])
+        if key_def in self.params: return
         min_param = 1e10
         for k, v in self.params.items():
             if k == key_def: continue
