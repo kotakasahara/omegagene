@@ -6,7 +6,7 @@ MmSystem::MmSystem() : CelesteObject() {
     cur_time                  = 0.0;
     leapfrog_coef             = 1.0;
     max_n_nb15off             = MAX_N_NB15OFF;
-    out_group                 = 0;
+    //out_group                 = 0;
     ctime_per_step            = 0;
     ctime_cuda_htod_atomids   = 0;
     ctime_cuda_reset_work_ene = 0;
@@ -605,31 +605,32 @@ int MmSystem::print_com_cancel_groups() {
 }
 
 int MmSystem::set_out_group(Config *cfg) {
-    if (cfg->group_o_crd_name == "")
-        out_group = 0;
-    else {
-        out_group = get_atom_group_id_from_name(cfg->group_o_crd_name);
-        if (out_group < 0) {
-            stringstream ss;
-            ss << "Invalid atom group (--group-o-coord) : " << cfg->group_o_crd_name << endl;
-            error_exit(ss.str(), "1A00002");
-        }
+  for ( auto itr = cfg->group_o_crd_name.begin();
+	itr != cfg->group_o_crd_name.end(); itr++){
+    int tmp_out_group = get_atom_group_id_from_name(*itr);
+    if (tmp_out_group < 0) {
+      stringstream ss;
+      ss << "Invalid atom group (--group-o-coord) : " << *itr << endl;
+      error_exit(ss.str(), "1A00002");
     }
-
-    return 0;
+    out_group.push_back(tmp_out_group);
+  }
+  return 0;
 }
 
 int MmSystem::print_out_group() {
+  for ( auto itr = out_group.begin();
+	itr != out_group.end(); itr++){
     cout << "Trajectory output group: " << endl;
     // if (out_group == -1){
     // cout << "--group-o-coord is not specified." << endl;
     // cout << "Output trajectory for ALL ATOMS." << endl;
     //}else{
-    cout << "Group " << out_group << endl;
-    cout << atom_group_names[out_group] << " : ";
-    cout << n_atoms_in_groups[out_group] << " atoms." << endl;
-    //}
-    return 0;
+    cout << "Group " << *itr << endl;
+    cout << atom_group_names[*itr] << " : ";
+    cout << n_atoms_in_groups[*itr] << " atoms." << endl;
+  }
+  return 0;
 }
 /*int MmSystem::set_enhance_groups(Config* cfg){
   n_enhance_groups = 0;

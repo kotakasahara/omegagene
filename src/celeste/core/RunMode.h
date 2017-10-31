@@ -1,10 +1,10 @@
 #ifndef __RUN_MODE_H__
 #define __RUN_MODE_H__
 
+#include <vector>
 #include "CelesteObject.h"
 #include "Config.h"
 #include "MmSystem.h"
-
 #include "WriteTrr.h"
 
 class RunMode : public CelesteObject {
@@ -21,12 +21,12 @@ class RunMode : public CelesteObject {
     int print_intvl_energy;
     int print_intvl_energyflow;
 
-    std::string fn_o_crd;
+    std::vector<std::string> fn_o_crd;
     std::string fn_o_log;
     std::string fn_o_energy;
     std::string fn_o_energyflow;
 
-    WriteTrr *   writer_trr;
+    std::vector<WriteTrr *>   writer_trr;
     WriteRestart writer_restart;
 
   public:

@@ -136,7 +136,7 @@ class MmSystem : public CelesteObject {
     int com_cancel_groups[MAX_N_COM_GROUPS];
     int n_enhance_groups;
     int enhance_groups[MAX_N_COM_GROUPS];
-    int out_group;
+    std::vector<int> out_group;
 
     DistRestraintObject *dist_restraint;
     PosRestraintObject * pos_restraint;
@@ -231,7 +231,7 @@ class MmSystem : public CelesteObject {
     int print_enhance_groups();
     int set_out_group(Config *cfg);
     int print_out_group();
-    int get_out_group() { return out_group; };
+    //int get_out_group() { return out_group; };
 
     // calc
 

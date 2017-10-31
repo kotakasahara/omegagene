@@ -8,21 +8,31 @@ RunMode::~RunMode() {
 }
 
 int RunMode::initial_preprocess() {
+  int i=0;
+  /*for ( auto itr = cfg->fn_o_crd.begin();
+	itr != cfg->fn_o_crd.end(); itr++){
     if (cfg->format_o_crd == CRDOUT_GROMACS) {
-        writer_trr = new WriteTrrGromacs();
+      writer_trr.push_back(WriteTrrGromacs());
     } else if (cfg->format_o_crd == CRDOUT_PRESTO) {
-        writer_trr = new WriteTrrPresto();
+      writer_trr.push_back(WriteTrrPresto());
     }
-    writer_trr->set_fn(cfg->fn_o_crd);
-    writer_trr->open();
-
-    return 0;
+    writer_trr[i]->set_fn(*itr);
+    writer_trr[i]->open();
+    ++i;
+    }*/
+  return 0;
 }
 int RunMode::terminal_process() {
-    writer_trr->close();
-    delete writer_trr;
-    delete mmsys.dist_restraint;
-    return 0;
+  int i=0;
+  /*
+  for ( auto itr = cfg->fn_o_crd.begin();
+	itr != cfg->fn_o_crd.end(); itr++){
+    writer_trr[i]->close();
+    //delete writer_trr[i];
+  }
+  delete mmsys.dist_restraint;
+  */
+  return 0;
 }
 
 int RunMode::set_config_parameters(Config *in_cfg) {

@@ -11,16 +11,16 @@
 #define real2 float2
 #define real_fc3 double3
 
-#ifdef THREADS128
-#define PW_THREADS 128
-#elif THREADS256
-#define PW_THREADS 256
-#elif THREADS512
-#define PW_THREADS 512
-#else
-#define PW_THREADS 128
-#endif
-
+//#ifdef THREADS128
+//#define PW_THREADS 128
+//#elif THREADS256
+//#define PW_THREADS 256
+//#elif THREADS512
+//#define PW_THREADS 512
+//#else
+//#define PW_THREADS 128
+//#endif
+#define PW_THREADS 1024
 #define PW_THREADS_DIAG PW_THREADS
 #define REORDER_THREADS 512
 #define CP_PER_THREAD 8

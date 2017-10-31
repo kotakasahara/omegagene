@@ -702,18 +702,18 @@ extern "C" int cuda_memcpy_dtoh_work(real_fc *&h_work, real_fc *&h_energy, int n
     // printf("! cuda_memcpy_dtoh_work\n");
     int blocks = (n_atom_array + REORDER_THREADS - 1) / REORDER_THREADS;
     // printf("kernel_set_work_orig\n");
-
-    cudaStream_t stream_reduction1;
-    cudaStream_t stream_reduction2;
-    cudaStreamCreate(&stream_reduction1);
-    cudaStreamCreate(&stream_reduction2);
-    kernel_set_work_orig<<<blocks, REORDER_THREADS, 0, stream_reduction1>>>(d_work, d_atomids);
-    kernel_reduction_energy<<<1, REORDER_THREADS, 0, stream_reduction2>>>(d_energy);
-    cudaStreamSynchronize(stream_reduction1);
-    cudaStreamSynchronize(stream_reduction2);
-    cudaStreamDestroy(stream_reduction1);
-    cudaStreamDestroy(stream_reduction2);
-
+    if(N_MULTI_WORK > 1) {
+      cudaStream_t stream_reduction1;
+      cudaStream_t stream_reduction2;
+      cudaStreamCreate(&stream_reduction1);
+      cudaStreamCreate(&stream_reduction2);
+      kernel_set_work_orig<<<blocks, REORDER_THREADS, 0, stream_reduction1>>>(d_work, d_atomids);
+      kernel_reduction_energy<<<1, REORDER_THREADS, 0, stream_reduction2>>>(d_energy);
+      cudaStreamSynchronize(stream_reduction1);
+      cudaStreamSynchronize(stream_reduction2);
+      cudaStreamDestroy(stream_reduction1);
+      cudaStreamDestroy(stream_reduction2);
+    }
     HANDLE_ERROR(cudaMemcpy(h_work, d_work, sizeof(real_fc) * n_atom_array * 3, cudaMemcpyDeviceToHost));
     HANDLE_ERROR(cudaMemcpy(h_energy, d_energy, sizeof(real_fc) * 2, cudaMemcpyDeviceToHost));
 

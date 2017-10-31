@@ -42,7 +42,7 @@ struct Config : public CelesteObject {
 
     std::array<int, 3> box_div = {{1, 1, 1}};
 
-    int print_intvl_crd = 10000;
+    std::vector<int> print_intvl_crd;
     int print_intvl_vel = 0;
     int print_intvl_log;
     int print_intvl_force = 0;
@@ -51,8 +51,8 @@ struct Config : public CelesteObject {
     int print_intvl_extended_lambda;
 
     std::string fn_o_restart     = "md_o.restart";
-    std::string fn_o_crd         = "md_o.cod";
-    std::string group_o_crd_name = "";
+    std::vector<std::string> fn_o_crd;
+    std::vector<std::string> group_o_crd_name;
     std::string fn_o_log         = "md_o.log";
     std::string fn_o_energy      = "md_o.erg";
     std::string fn_o_vmcmd_log;

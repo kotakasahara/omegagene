@@ -200,7 +200,7 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
             nsgrid_update_intvl = atoi((*++itr).c_str());
 
         } else if (*itr == "--print-interval-coord") {
-            print_intvl_crd = atoi((*++itr).c_str());
+	  print_intvl_crd.push_back(atoi((*++itr).c_str()));
 
         } else if (*itr == "--print-interval-velo") {
             print_intvl_vel = atoi((*++itr).c_str());
@@ -222,9 +222,10 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
         } else if (*itr == "--fn-o-restart") {
             fn_o_restart = *++itr;
         } else if (*itr == "--fn-o-coord") {
-            fn_o_crd = *++itr;
-        } else if (*itr == "--group-o-coord") {
-            group_o_crd_name = ((*++itr).c_str());
+	  fn_o_crd.push_back(*++itr);
+	} else if (*itr == "--group-o-coord") {
+	  //group_o_crd_name = ((*++itr).c_str());
+	  group_o_crd_name.push_back(*++itr);
         } else if (*itr == "--format-o-coord") {
             itr++;
             if (*itr == "gromacs") {

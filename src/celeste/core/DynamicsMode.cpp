@@ -29,137 +29,144 @@ int DynamicsMode::set_config_parameters(Config *in_cfg) {
     return 0;
 }
 int DynamicsMode::initial_preprocess() {
-    /*
-      Preprocess. Setting up several constant parameters;
-    */
-    // if (DBG >= 1)
-    cout << "DBG1: DynamicsMode::initial_preprocess()" << endl;
-
-    time_step      = cfg->time_step;
-    time_step_half = cfg->time_step * 0.5;
-
-    mmsys.ff_setup(cfg);
-
+  /*
+    Preprocess. Setting up several constant parameters;
+  */
+  // if (DBG >= 1)
+  cout << "DBG1: DynamicsMode::initial_preprocess()" << endl;
+  
+  time_step      = cfg->time_step;
+  time_step_half = cfg->time_step * 0.5;
+  
+  mmsys.ff_setup(cfg);
+  int i=0;
+  for ( auto itr = cfg->fn_o_crd.begin();
+	itr != cfg->fn_o_crd.end(); itr++){
     if (cfg->format_o_crd == CRDOUT_GROMACS) {
-        writer_trr = new WriteTrrGromacs();
+      writer_trr.push_back(new WriteTrrGromacs());
     } else if (cfg->format_o_crd == CRDOUT_PRESTO) {
-        writer_trr = new WriteTrrPresto();
+      writer_trr.push_back(new WriteTrrPresto());
     }
-
-    if (cfg->fn_o_crd != "") {
-        writer_trr->set_fn(cfg->fn_o_crd);
-        writer_trr->open();
-    }
-    if (cfg->constraint_type != CONST_NONE) {
-        int n_shake_dist =
-            mmsys.constraint.get_n_pair() + 3 * mmsys.constraint.get_n_trio() + 6 * mmsys.constraint.get_n_quad();
-        mmsys.d_free -= n_shake_dist;
-    }
-
-    temperature_coeff = 1.0 / (GAS_CONST * (real)mmsys.d_free) * JOULE_CAL * 1e3 * 2.0;
-    // enecal->initial_preprocess();
-    // set atom coordinates into PBC
-    mmsys.revise_crd_inbox();
-    mmsys.set_atom_group_info(cfg);
-    cout << "subbox_setup() " << cfg->box_div[0] << " " << cfg->box_div[1] << " " << cfg->box_div[2] << endl;
-    // grid
-    subbox_setup();
-    // cout << "nsgrid_setup" << endl;
-    // subbox.nsgrid_set(nsgrid_cutoff);
-
-    // Random
-    if (cfg->random_seed < 0) {
-        random_device rnd;
-        mmsys.set_random(rnd());
-    } else {
-        mmsys.set_random(cfg->random_seed);
-    }
-    if (cfg->extended_ensemble == EXTENDED_VMCMD ||
-	cfg->extended_ensemble == EXTENDED_VAUS ) {
-      cout << "V_McMD: " << endl;
-      cout << "  VS log output ... " << cfg->fn_o_vmcmd_log << endl;
-      cout << "  Lambda output ... " << cfg->fn_o_extended_lambda << endl;
-      mmsys.vmcmd->set_files(cfg->fn_o_vmcmd_log, cfg->fn_o_extended_lambda, cfg->format_o_extended_lambda);
-      mmsys.vmcmd->set_lambda_interval(cfg->print_intvl_extended_lambda);
-      mmsys.vmcmd->print_info();
-      
-      mmsys.vmcmd->set_params(&mmsys.random_mt, cfg->enhance_sigma, cfg->enhance_recov_coef,
-			      cfg->n_steps); //, cfg->aus_type);
-
-      // for(int i_grp=0; i_grp < mmsys.n_groups; i_grp++){
-      // cout << "dbg1130 massDM " << i_grp << " " << mmsys.mass_inv_groups[i_grp]<<endl;
-      //}
-      mmsys.vmcmd->set_mass(subbox.get_mass(), mmsys.mass_groups, mmsys.mass_inv_groups);
-
-    }else if(cfg->extended_ensemble == EXTENDED_VCMD){
-      cout << "VcMD: " << endl;
-      cout << "  VS log output ... " << cfg->fn_o_vmcmd_log << endl;
-      cout << "  Lambda output ... " << cfg->fn_o_extended_lambda << endl;
-      mmsys.vcmd->set_files(cfg->fn_o_vmcmd_log, cfg->fn_o_extended_lambda, cfg->format_o_extended_lambda,
-			    cfg->fn_o_vcmd_qraw, cfg->fn_o_vcmd_start);
-      mmsys.vcmd->set_lambda_interval(cfg->print_intvl_extended_lambda);
-      mmsys.vcmd->print_info();
-      cout << "print_info" << endl;
-      mmsys.vcmd->set_params(&mmsys.random_mt, cfg->enhance_sigma, cfg->enhance_recov_coef,
-			     cfg->n_steps, cfg->begin_count_qraw); //, cfg->aus_type);
-      mmsys.vcmd->set_temperature(cfg->temperature);
-
-      mmsys.vcmd->set_default_q_cano();
-
-      // for(int i_grp=0; i_grp < mmsys.n_groups; i_grp++){
-      // cout << "dbg1130 massDM " << i_grp << " " << mmsys.mass_inv_groups[i_grp]<<endl;
-      //}
-      cout << "set_mass"<< endl;
-      mmsys.vcmd->set_mass(subbox.get_mass(), mmsys.mass_groups, mmsys.mass_inv_groups);
-      cout << "vcmd"<<endl;
-    }      
-
-    // cout << "DBG MmSystem.n_bonds: " << mmsys.n_bonds << endl;
-
-    //subbox.copy_vel(mmsys.vel_just);
-    subbox.copy_vel_next(mmsys.vel_just);
-    subbox.set_com_motion(mmsys.n_com_cancel_groups, mmsys.com_cancel_groups, mmsys.n_atoms_in_groups,
-                          mmsys.atom_groups, mmsys.mass_inv_groups);
-
-    mmsys.print_com_cancel_groups();
-    // mmsys.print_enhance_groups();
-    mmsys.print_out_group();
-
-    // subbox.set_com_motion(cfg->n_com_cancel_groups,
-    // cfg->com_cancel_groups,
-    // mmsys.n_atoms_in_groups,
-    // mmsys.atom_groups,
-    // mmsys.mass_inv_groups);
-
-    cal_kinetic_energy((const real **)mmsys.vel_just);
-    cout << "Initial kinetic energy : " << mmsys.kinetic_e << endl;
-    cout << "Initial temperature : " << mmsys.temperature << endl;
-    cout << "Degree of freedom : " << mmsys.d_free << endl;
-
-    // for velocity-Verlet
-    calc_energy_force();
+    writer_trr[i]->set_fn(*itr);
+    writer_trr[i]->open();
+    ++i;
+  }
+  if (cfg->constraint_type != CONST_NONE) {
+    int n_shake_dist =
+      mmsys.constraint.get_n_pair() + 3 * mmsys.constraint.get_n_trio() + 6 * mmsys.constraint.get_n_quad();
+    mmsys.d_free -= n_shake_dist;
+  }
+  
+  temperature_coeff = 1.0 / (GAS_CONST * (real)mmsys.d_free) * JOULE_CAL * 1e3 * 2.0;
+  // enecal->initial_preprocess();
+  // set atom coordinates into PBC
+  mmsys.revise_crd_inbox();
+  mmsys.set_atom_group_info(cfg);
+  cout << "subbox_setup() " << cfg->box_div[0] << " " << cfg->box_div[1] << " " << cfg->box_div[2] << endl;
+  // grid
+  subbox_setup();
+  // cout << "nsgrid_setup" << endl;
+  // subbox.nsgrid_set(nsgrid_cutoff);
+  
+  // Random
+  if (cfg->random_seed < 0) {
+    random_device rnd;
+    mmsys.set_random(rnd());
+  } else {
+    mmsys.set_random(cfg->random_seed);
+  }
+  if (cfg->extended_ensemble == EXTENDED_VMCMD ||
+      cfg->extended_ensemble == EXTENDED_VAUS ) {
+    cout << "V_McMD: " << endl;
+    cout << "  VS log output ... " << cfg->fn_o_vmcmd_log << endl;
+    cout << "  Lambda output ... " << cfg->fn_o_extended_lambda << endl;
+    mmsys.vmcmd->set_files(cfg->fn_o_vmcmd_log, cfg->fn_o_extended_lambda, cfg->format_o_extended_lambda);
+    mmsys.vmcmd->set_lambda_interval(cfg->print_intvl_extended_lambda);
+    mmsys.vmcmd->print_info();
     
-    return 0;
+    mmsys.vmcmd->set_params(&mmsys.random_mt, cfg->enhance_sigma, cfg->enhance_recov_coef,
+			    cfg->n_steps); //, cfg->aus_type);
+    
+    // for(int i_grp=0; i_grp < mmsys.n_groups; i_grp++){
+    // cout << "dbg1130 massDM " << i_grp << " " << mmsys.mass_inv_groups[i_grp]<<endl;
+    //}
+    mmsys.vmcmd->set_mass(subbox.get_mass(), mmsys.mass_groups, mmsys.mass_inv_groups);
+    
+  }else if(cfg->extended_ensemble == EXTENDED_VCMD){
+    cout << "VcMD: " << endl;
+    cout << "  VS log output ... " << cfg->fn_o_vmcmd_log << endl;
+    cout << "  Lambda output ... " << cfg->fn_o_extended_lambda << endl;
+    mmsys.vcmd->set_files(cfg->fn_o_vmcmd_log, cfg->fn_o_extended_lambda, cfg->format_o_extended_lambda,
+			  cfg->fn_o_vcmd_qraw, cfg->fn_o_vcmd_start);
+    mmsys.vcmd->set_lambda_interval(cfg->print_intvl_extended_lambda);
+    mmsys.vcmd->print_info();
+    cout << "print_info" << endl;
+    mmsys.vcmd->set_params(&mmsys.random_mt, cfg->enhance_sigma, cfg->enhance_recov_coef,
+			   cfg->n_steps, cfg->begin_count_qraw); //, cfg->aus_type);
+    mmsys.vcmd->set_temperature(cfg->temperature);
+    
+    mmsys.vcmd->set_default_q_cano();
+    
+    // for(int i_grp=0; i_grp < mmsys.n_groups; i_grp++){
+    // cout << "dbg1130 massDM " << i_grp << " " << mmsys.mass_inv_groups[i_grp]<<endl;
+    //}
+    cout << "set_mass"<< endl;
+    mmsys.vcmd->set_mass(subbox.get_mass(), mmsys.mass_groups, mmsys.mass_inv_groups);
+    cout << "vcmd"<<endl;
+  }      
+  
+  // cout << "DBG MmSystem.n_bonds: " << mmsys.n_bonds << endl;
+  
+  //subbox.copy_vel(mmsys.vel_just);
+  subbox.copy_vel_next(mmsys.vel_just);
+  subbox.set_com_motion(mmsys.n_com_cancel_groups, mmsys.com_cancel_groups, mmsys.n_atoms_in_groups,
+			mmsys.atom_groups, mmsys.mass_inv_groups);
+  
+  mmsys.print_com_cancel_groups();
+  // mmsys.print_enhance_groups();
+  mmsys.print_out_group();
+  
+  // subbox.set_com_motion(cfg->n_com_cancel_groups,
+  // cfg->com_cancel_groups,
+  // mmsys.n_atoms_in_groups,
+  // mmsys.atom_groups,
+  // mmsys.mass_inv_groups);
+  
+  cal_kinetic_energy((const real **)mmsys.vel_just);
+  cout << "Initial kinetic energy : " << mmsys.kinetic_e << endl;
+  cout << "Initial temperature : " << mmsys.temperature << endl;
+  cout << "Degree of freedom : " << mmsys.d_free << endl;
+  
+  // for velocity-Verlet
+  calc_energy_force();
+  
+  return 0;
 }
 
 int DynamicsMode::terminal_process() {
-    cout << "DynamicsMode::terminal_process()" << endl;
-    writer_trr->close();
-    if (cfg->extended_ensemble == EXTENDED_VMCMD ||
-	cfg->extended_ensemble == EXTENDED_VAUS ) {
-      mmsys.vmcmd->close_files();
-    }else if(cfg->extended_ensemble == EXTENDED_VCMD){
+  cout << "DynamicsMode::terminal_process()" << endl;
+  int i=0;
+  for ( auto itr = writer_trr.begin();
+	itr != writer_trr.end(); itr++){
+    (*itr)->close();
+    delete writer_trr[i];
+  }
+  
+  if (cfg->extended_ensemble == EXTENDED_VMCMD ||
+      cfg->extended_ensemble == EXTENDED_VAUS ) {
+    mmsys.vmcmd->close_files();
+  }else if(cfg->extended_ensemble == EXTENDED_VCMD){
       
-      mmsys.vcmd->close_files();
-    }
-    return 0;
+    mmsys.vcmd->close_files();
+  }
+  return 0;
 }
 
 int DynamicsMode::main_stream() {
-    mmsys.cur_step = 0;
-    // while(mmsys.cur_step <= cfg->n_steps){
-    for (mmsys.cur_step = 0; mmsys.cur_step < cfg->n_steps; mmsys.cur_step++) {
-        sub_output();
+  mmsys.cur_step = 0;
+  // while(mmsys.cur_step <= cfg->n_steps){
+  for (mmsys.cur_step = 0; mmsys.cur_step < cfg->n_steps; mmsys.cur_step++) {
+    sub_output();
         calc_in_each_step();
 
         if ((cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0
@@ -223,26 +230,37 @@ int DynamicsMode::apply_pos_restraint() {
 }
 
 int DynamicsMode::sub_output() {
-    // Output
-    // cout << "cur_step: " << mmsys.cur_step << " ";
-    // cout << mmsys.cur_step % cfg->print_intvl_crd << endl;
-
-    bool out_crd = cfg->print_intvl_crd > 0 && mmsys.cur_step != 0 && (mmsys.cur_step) % cfg->print_intvl_crd == 0;
-    bool out_vel = cfg->print_intvl_vel > 0 && mmsys.cur_step != 0 && (mmsys.cur_step) % cfg->print_intvl_vel == 0;
-    bool out_force =
-        cfg->print_intvl_force > 0 && mmsys.cur_step != 0 && (mmsys.cur_step) % cfg->print_intvl_force == 0;
-    if (out_crd) subbox.copy_crd_prev(mmsys.crd);
-    if (out_vel) subbox.copy_vel(mmsys.vel_just);
-    if (out_crd || out_vel || out_force) {
-        real total_e = mmsys.set_potential_e() + mmsys.kinetic_e;
-
-        writer_trr->write_trr(mmsys.n_atoms, (int)mmsys.cur_step, mmsys.cur_time, mmsys.pbc.L[0], mmsys.pbc.L[1],
-                              mmsys.pbc.L[2], mmsys.crd, mmsys.vel_just, mmsys.force,
-                              (float)mmsys.ctime_per_step / (float)CLOCKS_PER_SEC, total_e, mmsys.kinetic_e,
-                              mmsys.temperature, mmsys.potential_e, mmsys.pote_vdw, true, out_crd, out_vel, out_force,
-                              mmsys.n_atoms_in_groups[mmsys.out_group], mmsys.atom_groups[mmsys.out_group]);
+  // Output
+  // cout << "cur_step: " << mmsys.cur_step << " ";
+  // cout << mmsys.cur_step % cfg->print_intvl_crd << endl;
+  
+  //bool out_vel = cfg->print_intvl_vel > 0 && mmsys.cur_step != 0 && (mmsys.cur_step) % cfg->print_intvl_vel == 0;
+  //bool out_force =
+  //cfg->print_intvl_force > 0 && mmsys.cur_step != 0 && (mmsys.cur_step) % cfg->print_intvl_force == 0;
+  //if (out_vel) subbox.copy_vel(mmsys.vel_just);
+  //if (out_crd || out_vel || out_force) {
+  real total_e = mmsys.set_potential_e() + mmsys.kinetic_e;
+  bool cp=false;
+  int i_itr=-1;
+  for ( auto itr = cfg->print_intvl_crd.begin();
+	itr != cfg->print_intvl_crd.end(); itr++){
+    i_itr++;
+    if ((*itr) < 0 || mmsys.cur_step == 0 || (mmsys.cur_step) % (*itr) != 0)
+      continue;
+    
+    if (!cp){
+      subbox.copy_crd_prev(mmsys.crd);
+      cp = true;
     }
-    return 0;
+    writer_trr[i_itr]->write_trr(mmsys.n_atoms, (int)mmsys.cur_step, mmsys.cur_time, mmsys.pbc.L[0], mmsys.pbc.L[1],
+				 mmsys.pbc.L[2], mmsys.crd, mmsys.vel_just, mmsys.force,
+				 (float)mmsys.ctime_per_step / (float)CLOCKS_PER_SEC, total_e, mmsys.kinetic_e,
+				 mmsys.temperature, mmsys.potential_e, mmsys.pote_vdw, true, true, false, false,
+				 //mmsys.temperature, mmsys.potential_e, mmsys.pote_vdw, true, out_crd, out_vel, out_force,
+				 mmsys.n_atoms_in_groups[mmsys.out_group[i_itr]],
+				 mmsys.atom_groups[mmsys.out_group[i_itr]]);
+  }
+  return 0;
 }
 
 int DynamicsMode::sub_output_log() {
