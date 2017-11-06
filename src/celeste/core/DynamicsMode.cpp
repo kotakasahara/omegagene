@@ -150,6 +150,7 @@ int DynamicsMode::terminal_process() {
 	itr != writer_trr.end(); itr++){
     (*itr)->close();
     delete writer_trr[i];
+    i++;
   }
   
   if (cfg->extended_ensemble == EXTENDED_VMCMD ||
