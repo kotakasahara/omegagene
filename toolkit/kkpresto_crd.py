@@ -56,16 +56,32 @@ class PrestoCrdWriter(kkkit.FileBO):
         self.f.write(struct.pack("@f", hyd)) #hyd
         self.f.write(struct.pack("@f", rmsd)) #rmsd
         self.f.write(struct.pack("@i", 44))
-        n_atoms = len(in_crd)
+        n_atoms = len(in_crd) - len(ignore)
         self.f.write(struct.pack("@i", n_atoms*3*4))
         if not bin:
             for i, x in enumerate(in_crd):
-                self.f.write(struct.pack("@fff", x[0], x[1], x[2]))
+                if not i in ignore:
+                    self.f.write(struct.pack("@fff", x[0], x[1], x[2]))
         else:
             for i, x in enumerate(in_crd):
-                self.f.write(x[0]+ x[1]+ x[2])
+                if not i in ignore:
+                    self.f.write(x[0]+ x[1]+ x[2])
         self.f.write(struct.pack("@i", n_atoms*3*4))
         return 
+    def write_frame_with_frame(self, frame, bin):
+        self.write_frame(frame.crds,
+                         frame.step, frame.time,
+                         bin, bin_rev=False,
+                         ignore=set(),
+                         cpu_time=frame.cpu_time,
+                         total_e=frame.e_total,
+                         kinetic_e=frame.e_kine,
+                         temperature=frame.temperature,
+                         rmsf=frame.rmsf,
+                         vdw=frame.vdw15,
+                         hyd=frame.hyd15)
+        return
+
 
 class PrestoCrdReader(kkkit.FileBI):
     def __init__(self,fn):

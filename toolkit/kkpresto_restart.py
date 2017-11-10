@@ -102,7 +102,3 @@ class PrestoRestartWriter(kkkit.FileBO):
         self.f.write(struct.pack("@i",rest.n_vel*3*8))
 
         self.f.close()
-
-
-
-        
