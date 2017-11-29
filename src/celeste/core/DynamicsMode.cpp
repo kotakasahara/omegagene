@@ -80,8 +80,9 @@ int DynamicsMode::initial_preprocess() {
     cout << "V_McMD: " << endl;
     cout << "  VS log output ... " << cfg->fn_o_vmcmd_log << endl;
     cout << "  Lambda output ... " << cfg->fn_o_extended_lambda << endl;
-    mmsys.vmcmd->set_files(cfg->fn_o_vmcmd_log, cfg->fn_o_extended_lambda, cfg->format_o_extended_lambda);
+    mmsys.vmcmd->set_files(cfg->fn_o_vmcmd_log, cfg->fn_o_extended_lambda, cfg->format_o_extended_lambda, cfg->fn_o_group_com);
     mmsys.vmcmd->set_lambda_interval(cfg->print_intvl_extended_lambda);
+    mmsys.vmcmd->set_com_interval(cfg->print_intvl_group_com);
     mmsys.vmcmd->print_info();
     
     mmsys.vmcmd->set_params(&mmsys.random_mt, cfg->enhance_sigma, cfg->enhance_recov_coef,
@@ -139,6 +140,7 @@ int DynamicsMode::initial_preprocess() {
   
   // for velocity-Verlet
   calc_energy_force();
+  cout << "test_dynamicsmode" << endl;
   
   return 0;
 }

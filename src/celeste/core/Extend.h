@@ -15,11 +15,12 @@ class Extended : public CelesteObject {
  private:
  protected:
   int write_lambda_interval;
-  
+  int write_com_interval;
  public:
   Extended();
   ~Extended();
   void set_lambda_interval(int in_lambda_interval);
+  void set_com_interval(int in_com_interval);
 };
 
 
@@ -67,6 +68,7 @@ class ExtendedVMcMD : public Extended {
     WriteTTPVMcMDLog writer_vslog;
 
     WriteTableLog *writer_lambda;
+    WriteTableLog *writer_com;
 
     real_pw *mass;
     real_pw  mass_sum;
@@ -122,10 +124,12 @@ class ExtendedVMcMD : public Extended {
     int set_current_vstate(real lambda);
     virtual int scale_force(real lambda, real_fc *work, int n_atoms);
     // files
-    virtual int set_files(std::string fn_vslog, std::string fn_lambda, int format_lambda);
+    int set_files(std::string fn_vslog, std::string fn_lambda, int format_lambda,
+		  std::string fn_com);
     int close_files();
     int write_vslog(int cur_steps);
     int write_lambda(real lambda);
+    int write_com();
 
     void enable_vs_transition() { flg_vs_transition = true; }
     int set_vs_order(int vs_id, int ord);

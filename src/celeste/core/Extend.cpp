@@ -13,6 +13,9 @@ Extended::~Extended() {}
 void Extended::set_lambda_interval(int in_lambda_interval) {
     write_lambda_interval = in_lambda_interval;
 }
+void Extended::set_com_interval(int in_com_interval) {
+    write_com_interval = in_com_interval;
+}
 
 VirtualState::VirtualState() : CelesteObject() {
     poly_order = 0;
@@ -126,6 +129,11 @@ int ExtendedVMcMD::apply_bias(unsigned long cur_step, real in_lambda, real_fc *w
     scale_force(in_lambda, work, n_atoms_box);
     //cout << " test 1 3 " << endl;
     if (cur_step > 0 && cur_step % write_lambda_interval == 0 && cur_step <= n_steps) { write_lambda(in_lambda); }
+    //cout << "dbg write_com_interval " << write_com_interval << endl;
+    if (write_com_interval > 0 && cur_step > 0 &&
+      cur_step % write_com_interval == 0 &&
+      cur_step <= n_steps) { write_com(); }
+  
     return 0;
 }
 int ExtendedVMcMD::set_current_vstate(real lambda) {
@@ -188,7 +196,9 @@ int ExtendedVMcMD::scale_force(real lambda, real_fc *work, int n_atoms) {
     return 0;
 }
 
-int ExtendedVMcMD::set_files(string fn_vslog, string fn_lambda, int format_lambda) {
+int ExtendedVMcMD::set_files(string fn_vslog, string fn_lambda, int format_lambda,
+			     string fn_com) {
+  //cout << "set_files" << endl;
     writer_vslog.set_fn(fn_vslog);
     writer_vslog.open();
     if (format_lambda == LAMBDAOUT_BIN) {
@@ -202,12 +212,31 @@ int ExtendedVMcMD::set_files(string fn_vslog, string fn_lambda, int format_lambd
     writer_lambda->open();
     writer_lambda->set_ncolumns(1);
     writer_lambda->write_header();
+
+    if (format_lambda == LAMBDAOUT_BIN) {
+      writer_com = new WriteTableLogBinary();
+    } else if (format_lambda == LAMBDAOUT_ASC) {
+      writer_com = new WriteTableLogAscii();
+    } else {
+      writer_com = new WriteTableLog();
+    }
+    //cout << "test1" << endl;
+    if(write_com_interval>0){
+      //cout << "test2" << endl;
+      writer_com->set_fn(fn_com);
+      writer_com->open();
+      writer_com->set_ncolumns(6);
+      writer_com->write_header();
+    }
+    //cout << "test3" << endl;
     // write_vslog(0);
     return 0;
 }
 int ExtendedVMcMD::close_files() {
     writer_vslog.close();
     writer_lambda->close();
+    if(writer_com->is_open())
+      writer_com->close();
     return 0;
 }
 int ExtendedVMcMD::write_vslog(int cur_steps) {
@@ -217,6 +246,16 @@ int ExtendedVMcMD::write_vslog(int cur_steps) {
 int ExtendedVMcMD::write_lambda(real lambda) {
     writer_lambda->write_row(&lambda);
     return 0;
+}
+int ExtendedVMcMD::write_com() {
+  real val[6] = {crd_centers[0][0],
+		 crd_centers[0][1],
+		 crd_centers[0][2],
+		 crd_centers[1][0],
+		 crd_centers[1][1],
+		 crd_centers[1][2]};
+  writer_com->write_row(val);
+  return 0;
 }
 int ExtendedVMcMD::set_vs_order(int vs_id, int ord) {
     return vstates[vs_id].set_order(ord);
@@ -706,6 +745,7 @@ int ExtendedVcMD::apply_bias(unsigned long cur_step,
   //cout << "dbg 0303 apply_bias 20" << endl;
   if (cur_step > 0 && cur_step % write_lambda_interval == 0 &&
       cur_step <= n_steps) { write_lambda(); }
+  
   //cout << "dbg 0303 apply_bias (finished)" << endl;
   return 0;
 }

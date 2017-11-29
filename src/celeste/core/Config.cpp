@@ -312,10 +312,16 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
 	  begin_count_qraw = atoi((*++itr).c_str());
 	  //}else if (*itr == "--default-q-raw") {
 	  //extend_default_q_raw = atof((*++itr).c_str());
+        } else if (*itr == "--print-interval-group-com") {
+	  print_intvl_group_com = atoi((*++itr).c_str());
+        } else if (*itr == "--fn-o-group-com") {
+	  fn_o_group_com = *++itr;
+
         } else {
             stringstream ss;
             error_exit(ss.str(), "1A00001");
         }
+
     }
 
     if (temperature_init < 0) temperature_init = temperature;

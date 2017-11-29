@@ -81,6 +81,10 @@ struct Config : public CelesteObject {
     real        enhance_sigma         = 0.2;
     real        enhance_recov_coef    = 50;
     std::string fn_o_aus_restart      = "aus_restart_out.dat";
+
+    int print_intvl_group_com = -1;
+    std::string fn_o_group_com = "group_com.dat";
+
     // int  aus_type = AUSTYPE_MASSCENTER;
 
     Config() = default;
