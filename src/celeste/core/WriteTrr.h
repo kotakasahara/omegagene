@@ -8,7 +8,7 @@ class WriteTrr : public Write {
   private:
   public:
     WriteTrr();
-    ~WriteTrr();
+    virtual ~WriteTrr();
     virtual int write_trr(int       n_atoms,
                           int       cur_step,
                           real      cur_time,

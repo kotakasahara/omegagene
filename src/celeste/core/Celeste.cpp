@@ -76,12 +76,12 @@ int Celeste::dynamics_mode() {
 
     // dynamics->mmsys.writeData();
     dynamics->terminal_process();
-    //cout << "dbg20160625 a";
+    cout << "dbg20160625 a";
 #if defined(F_MPI)
     MPI_Finalize();
 #endif
-    //cout << "dbg20160625 b";
+    cout << "dbg20160625 b";
     delete dynamics;
-    //cout << "terminate Celeste";
+    cout << "terminate Celeste";
     return 0;
 }

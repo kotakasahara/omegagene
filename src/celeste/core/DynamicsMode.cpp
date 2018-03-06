@@ -159,9 +159,9 @@ int DynamicsMode::terminal_process() {
       cfg->extended_ensemble == EXTENDED_VAUS ) {
     mmsys.vmcmd->close_files();
   }else if(cfg->extended_ensemble == EXTENDED_VCMD){
-      
     mmsys.vcmd->close_files();
   }
+  cout << "term" << endl;
   return 0;
 }
 
@@ -170,10 +170,10 @@ int DynamicsMode::main_stream() {
   // while(mmsys.cur_step <= cfg->n_steps){
   for (mmsys.cur_step = 0; mmsys.cur_step < cfg->n_steps; mmsys.cur_step++) {
     sub_output();
-        calc_in_each_step();
-
-        if ((cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0
-            || mmsys.cur_step == cfg->n_steps - 1) {
+    calc_in_each_step();
+    
+    if ((cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0
+	|| mmsys.cur_step == cfg->n_steps - 1) {
             sub_output_log();
         }
         mmsys.cur_time += cfg->time_step;
@@ -234,8 +234,7 @@ int DynamicsMode::apply_pos_restraint() {
 
 int DynamicsMode::sub_output() {
   // Output
-  // cout << "cur_step: " << mmsys.cur_step << " ";
-  // cout << mmsys.cur_step % cfg->print_intvl_crd << endl;
+  //cout << mmsys.cur_step % cfg->print_intvl_crd << endl;
   
   //bool out_vel = cfg->print_intvl_vel > 0 && mmsys.cur_step != 0 && (mmsys.cur_step) % cfg->print_intvl_vel == 0;
   //bool out_force =
@@ -255,13 +254,18 @@ int DynamicsMode::sub_output() {
       subbox.copy_crd_prev(mmsys.crd);
       cp = true;
     }
-    writer_trr[i_itr]->write_trr(mmsys.n_atoms, (int)mmsys.cur_step, mmsys.cur_time, mmsys.pbc.L[0], mmsys.pbc.L[1],
-				 mmsys.pbc.L[2], mmsys.crd, mmsys.vel_just, mmsys.force,
-				 (float)mmsys.ctime_per_step / (float)CLOCKS_PER_SEC, total_e, mmsys.kinetic_e,
-				 mmsys.temperature, mmsys.potential_e, mmsys.pote_vdw, true, true, false, false,
-				 //mmsys.temperature, mmsys.potential_e, mmsys.pote_vdw, true, out_crd, out_vel, out_force,
-				 mmsys.n_atoms_in_groups[mmsys.out_group[i_itr]],
-				 mmsys.atom_groups[mmsys.out_group[i_itr]]);
+      writer_trr[i_itr]->write_trr(mmsys.n_atoms,
+				   (int)mmsys.cur_step,
+				   mmsys.cur_time,
+				   mmsys.pbc.L[0], mmsys.pbc.L[1], mmsys.pbc.L[2],
+				   mmsys.crd, mmsys.vel_just, mmsys.force,
+				   (float)mmsys.ctime_per_step / (float)CLOCKS_PER_SEC,
+				   total_e, mmsys.kinetic_e,
+				   mmsys.temperature,
+				   mmsys.potential_e,
+				   mmsys.pote_vdw, true, true, false, false,
+				   mmsys.n_atoms_in_groups[mmsys.out_group[i_itr]],
+				   mmsys.atom_groups[mmsys.out_group[i_itr]]);
   }
   return 0;
 }
@@ -431,8 +435,9 @@ int DynamicsModePresto::calc_in_each_step() {
     mmsys.ctime_cuda_htod_atomids += endTimeHtod - startTimeHtod;
 #endif
     const clock_t startTimeEne = clock();
+    //cout <<"calc_energy()" <<endl;
      subbox.calc_energy();
-    // cout << "gather_energies()"<<endl;
+     //cout << "gather_energies()"<<endl;
     gather_energies();
 
     if (cfg->dist_restraint_type != DISTREST_NONE || cfg->pos_restraint_type != POSREST_NONE) {

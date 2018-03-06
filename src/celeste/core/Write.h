@@ -19,7 +19,7 @@ class Write : public CelesteObject {
     std::ofstream ofs;
     Write();
     Write(std::string inFn);
-    ~Write();
+    virtual ~Write();
     void set_fn(std::string in_fn) { filename = in_fn; };
     std::string             getFn() { return filename; };
     bool                    is_open() { return op; };
