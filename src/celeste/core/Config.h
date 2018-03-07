@@ -85,6 +85,10 @@ struct Config : public CelesteObject {
     int print_intvl_group_com = -1;
     std::string fn_o_group_com = "group_com.dat";
 
+    real        dh_dielectric = 0.0;
+    real        dh_ionic_strength = 0.0;
+    real        dh_temperature = 0.0;
+
     // int  aus_type = AUSTYPE_MASSCENTER;
 
     Config() = default;

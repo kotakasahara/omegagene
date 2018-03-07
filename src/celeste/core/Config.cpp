@@ -123,6 +123,8 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
                 electrostatic = ELCTRST_ZEROOCTUPOLE;
             } else if (*itr == "zero-hexadecapole") {
                 electrostatic = ELCTRST_ZEROHEXADECAPOLE;
+            } else if (*itr == "debye-huckel") {
+                electrostatic = ELCTRST_DEBYE_HUCKEL;
             } else {
                 electrostatic = ELCTRST_DUMMY;
             }
@@ -316,7 +318,12 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
 	  print_intvl_group_com = atoi((*++itr).c_str());
         } else if (*itr == "--fn-o-group-com") {
 	  fn_o_group_com = *++itr;
-
+        } else if (*itr == "--debye-huckel-dielectric") {
+	  dh_dielectric = atof((*++itr).c_str());
+        } else if (*itr == "--debye-huckel-ionic-strength") {
+	  dh_ionic_strength = atof((*++itr).c_str());
+        } else if (*itr == "--debye-huckel-temperature") {
+	  dh_temperature = atof((*++itr).c_str());
         } else {
             stringstream ss;
             error_exit(ss.str(), "1A00001");

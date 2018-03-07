@@ -7,7 +7,10 @@ ZeroMultipoleSum::ZeroMultipoleSum(const int           in_zms_mode,
                                    const real          in_alpha,
                                    const real          in_cutoff,
                                    const ZmsCalc       in_func,
-                                   const ZmsCalcExcess in_func_excess)
+                                   const ZmsCalcExcess in_func_excess,
+				   const real          in_dielectric,
+				   const real          in_ionic_strength,
+				   const real          in_temperature)
     // int (ZeroMultipoleSum::*func_excess)(real&, real&, const real&, const real&, const real&, const real&, const
     // real&, const real&))
     : zms_mode(in_zms_mode),
@@ -15,51 +18,13 @@ ZeroMultipoleSum::ZeroMultipoleSum(const int           in_zms_mode,
       cutoff(in_cutoff),
       func_calc_zms(in_func),
       func_calc_zms_excess(in_func_excess),
+      dielectric_inv(1.0/in_dielectric),
+      ionic_strength(in_ionic_strength),
+      temperature(in_temperature),
+      debye_length_inv(1.0/(sqrt(PERMITTIVITY*in_dielectric*BOLTZMAN*in_temperature/(2*AVOGADRO*ELEM_CHARGE*ELEM_CHARGE*in_ionic_strength))*1e10)),
       ElectrostaticObject() {
-    if (DBG >= 1) cout << "DBG1: ZeroMultipoleSum::ZeroMultipoleSum()" << endl;
-    cout << "cutoff : " << cutoff << endl;
-    // cutoff = in_cutoff;
-    /*
-    if (ewald_alpha < EPS){
-      switch(zms_mode){
-      case ELCTRST_ZERODIPOLE:
-        func_calc_zms = &ZeroMultipoleSum::calc_zero02pole_alpha0;
-        func_calc_zms_excess = &ZeroMultipoleSum::calc_zero02pole_excess_alpha0;
-        break;
-      case ELCTRST_ZEROQUADRUPOLE:
-        func_calc_zms = &ZeroMultipoleSum::calc_zero04pole_alpha0;
-        func_calc_zms_excess = &ZeroMultipoleSum::calc_zero04pole_excess_alpha0;
-        break;
-      case ELCTRST_ZEROOCTUPOLE:
-        func_calc_zms = &ZeroMultipoleSum::calc_zero08pole_alpha0;
-        func_calc_zms_excess = &ZeroMultipoleSum::calc_zero08pole_excess_alpha0;
-        break;
-      case ELCTRST_ZEROHEXADECAPOLE:
-        func_calc_zms = &ZeroMultipoleSum::calc_zero16pole_alpha0;
-        func_calc_zms_excess = &ZeroMultipoleSum::calc_zero16pole_excess_alpha0;
-        break;
-      }
-    }else{
-      switch(zms_mode){
-      case ELCTRST_ZERODIPOLE:
-        func_calc_zms = &ZeroMultipoleSum::calc_zero02pole;
-        func_calc_zms_excess = &ZeroMultipoleSum::calc_zero02pole_excess;
-        break;
-      case ELCTRST_ZEROQUADRUPOLE:
-        func_calc_zms = &ZeroMultipoleSum::calc_zero04pole;
-        func_calc_zms_excess = &ZeroMultipoleSum::calc_zero04pole_excess;
-        break;
-      case ELCTRST_ZEROOCTUPOLE:
-        func_calc_zms = &ZeroMultipoleSum::calc_zero08pole;
-        func_calc_zms_excess = &ZeroMultipoleSum::calc_zero08pole_excess;
-        break;
-      case ELCTRST_ZEROHEXADECAPOLE:
-        func_calc_zms = &ZeroMultipoleSum::calc_zero16pole;
-        func_calc_zms_excess = &ZeroMultipoleSum::calc_zero16pole_excess;
-        break;
-      }
-    }
-    */
+  if (DBG >= 1) cout << "DBG1: ZeroMultipoleSum::ZeroMultipoleSum()" << endl;
+  cout << "cutoff : " << cutoff << endl;
 }
 
 int ZeroMultipoleSum::set_config_parameters(const Config *cfg) {
@@ -472,4 +437,29 @@ int ZeroMultipoleSum::calc_zero16pole(real_pw &      ene_ele,
     grad_coeff = -cc * (r12_3_inv * errorfc + piewald * exp(-tmp * tmp) * r12_2_inv + zhcoeff22 + zhcoeff44 * r12_2
                         + zhcoeff66 * r12_4 + zhcoeff88 * r12_6);
     return 0;
+}
+int ZeroMultipoleSum::calc_debye_huckel(real_pw &      ene_ele,
+				     real_pw &      grad_coeff,
+				     const real_pw &r12,
+				     const real_pw &r12_2,
+				     const real_pw &r12_inv,
+				     const real_pw &r12_2_inv,
+				     const real_pw &r12_3_inv,
+				     const real_pw &cc) {
+  real_pw r12_ld = -r12*debye_length_inv;
+  ene_ele = cc*dielectric_inv*exp(r12_ld);
+  grad_coeff = -exp(r12_ld)*cc*(r12_2_inv + r12_inv * debye_length_inv);
+  return 0;
+}
+int ZeroMultipoleSum::calc_null(real &      ene_ele,
+				real &      grad_coeff,
+				const real &r12,
+				const real &r12_2,
+				const real &r12_inv,
+				const real &r12_2_inv,
+				const real &r12_3_inv,
+				const real &cc) {
+  ene_ele    = 0.0;
+  grad_coeff = 0.0;
+  return 0;
 }

@@ -16,6 +16,12 @@ class ZeroMultipoleSum : public ElectrostaticObject {
 
     const real_pw cutoff;
     const real_pw ewald_alpha;
+    const real_pw dielectric_inv;      // for Debye-Huckel
+    const real_pw ionic_strength;  // for Debye-Huckel
+    const real_pw temperature;
+    //const real_pw dh_const; // AVOGADRO/(1000*JOULE_CAL*4*pi*permittivity*dielectric)
+    const real_pw debye_length_inv;
+
     real_pw       bcoeff;
     real_pw       fcoeff;
     real_pw       scoeff;
@@ -85,7 +91,10 @@ class ZeroMultipoleSum : public ElectrostaticObject {
                      const real          in_alpha,
                      const real          in_cutoff,
                      const ZmsCalc       in_func,
-                     const ZmsCalcExcess in_func_excess);
+                     const ZmsCalcExcess in_func_excess,
+		     const real          in_dielectric,
+		     const real          in_ionic_strength,
+		     const real          in_temperature);
     // int (* const func)(real_pw&, real_pw&, const real_pw&, const real_pw&, const real_pw&, const real_pw&, const
     // real_pw&, const real_pw&),
     // int (* const func_excess)(real&, real&, const real&, const real&, const real&, const real&, const real&, const
@@ -243,6 +252,22 @@ class ZeroMultipoleSum : public ElectrostaticObject {
                         const real_pw &r12_2_inv,
                         const real_pw &r12_3_inv,
                         const real_pw &cc);
+    int calc_debye_huckel(real_pw &      ene_ele,
+			  real_pw &      grad_coeff,
+			  const real_pw &r12,
+			  const real_pw &r12_2,
+			  const real_pw &r12_inv,
+			  const real_pw &r12_2_inv,
+			  const real_pw &r12_3_inv,
+			  const real_pw &cc);
+    int calc_null(real &      ene_ele,
+		  real &      grad_coeff,
+		  const real &r12,
+		  const real &r12_2,
+		  const real &r12_inv,
+		  const real &r12_2_inv,
+		  const real &r12_3_inv,
+		  const real &cc);
 };
 
 #endif

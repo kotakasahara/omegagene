@@ -83,4 +83,5 @@ class ForceField : public ForceFieldObject {
                         real &    energy_self_sum);
 };
 
+
 #endif

@@ -436,7 +436,7 @@ int DynamicsModePresto::calc_in_each_step() {
 #endif
     const clock_t startTimeEne = clock();
     //cout <<"calc_energy()" <<endl;
-     subbox.calc_energy();
+    subbox.calc_energy();
      //cout << "gather_energies()"<<endl;
     gather_energies();
 
@@ -649,14 +649,6 @@ int DynamicsMode::calc_energy_force() {
         if (cfg->dist_restraint_type != DISTREST_NONE) apply_dist_restraint();
         if (cfg->pos_restraint_type != POSREST_NONE) apply_pos_restraint();
     }
-    const clock_t endTimeEne = clock();
-    mmsys.ctime_calc_energy += endTimeEne - startTimeEne;
-
-    if (cfg->extended_ensemble == EXTENDED_VMCMD) {
-      subbox.extended_apply_bias(mmsys.cur_step, mmsys.set_potential_e());
-    } else if (cfg->extended_ensemble == EXTENDED_VAUS) {
-      subbox.extended_apply_bias_struct_param(mmsys.cur_step);
-    }
     return 0;
 }
 int DynamicsModeVelocityVerlet::calc_in_each_step() {
@@ -674,6 +666,7 @@ int DynamicsModeVelocityVerlet::calc_in_each_step() {
 
     //}
     // cout << "update_coordinates"<<endl;
+    
     subbox.cpy_crd_prev();
     subbox.update_coordinates_vv(cfg->time_step);
     subbox.cpy_work_prev();
