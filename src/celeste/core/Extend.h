@@ -18,7 +18,7 @@ class Extended : public CelesteObject {
   int write_com_interval;
  public:
   Extended();
-  ~Extended();
+  virtual ~Extended();
   void set_lambda_interval(int in_lambda_interval);
   void set_com_interval(int in_com_interval);
 };

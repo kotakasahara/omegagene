@@ -374,7 +374,7 @@ real_pw ForceField::calc_pairwise(real_pw &ene_vdw,
 
     //printf("dbgpair %10e %10e %15e\n", r12, cc, CHARGE_COEFF);
     //if (ene_ele >1){
-    cout << "dbg 01 2 :"  << r12 << " "  << ene_ele << " " << charge1 << " "<<charge2<<endl;
+    //cout << "dbg 01 2 :"  << r12 << " "  << ene_ele << " " << charge1 << " "<<charge2<<endl;
     //}
 
     for (int d = 0; d < 3; d++) work_ele[d] = work_coef_ele * d12[d];

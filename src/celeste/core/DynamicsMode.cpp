@@ -2,7 +2,9 @@
 
 DynamicsMode::DynamicsMode() : RunMode() {}
 
-DynamicsMode::~DynamicsMode() {}
+DynamicsMode::~DynamicsMode() {
+    if (DBG >= 1) cout << "DBG1 DynamicsMode::~DynamicsMode()" << endl;
+}
 
 int DynamicsMode::test(Config *in_cfg) {
     cfg = in_cfg;
@@ -21,10 +23,13 @@ int DynamicsMode::set_config_parameters(Config *in_cfg) {
     mmsys.extended_mode = cfg->extended_ensemble;
     if (cfg->extended_ensemble == EXTENDED_VMCMD) {
       mmsys.vmcmd = new ExtendedVMcMD();
+      cout << "vmcmd new" << endl;
     } else if (cfg->extended_ensemble == EXTENDED_VAUS) {
       mmsys.vmcmd = new ExtendedVAUS();
+      cout << "vaus new" << endl;
     } else if (cfg->extended_ensemble == EXTENDED_VCMD) {
       mmsys.vcmd = new ExtendedVcMD();
+      cout << "vcmd new" << endl;
     }
     return 0;
 }
@@ -44,8 +49,10 @@ int DynamicsMode::initial_preprocess() {
 	itr != cfg->fn_o_crd.end(); itr++){
     if (cfg->format_o_crd == CRDOUT_GROMACS) {
       writer_trr.push_back(new WriteTrrGromacs());
+      cout << "writer trr new " << i << endl;
     } else if (cfg->format_o_crd == CRDOUT_PRESTO) {
       writer_trr.push_back(new WriteTrrPresto());
+      cout << "writer presto new " << i << endl;
     }
     writer_trr[i]->set_fn(*itr);
     writer_trr[i]->open();
@@ -147,20 +154,25 @@ int DynamicsMode::initial_preprocess() {
 
 int DynamicsMode::terminal_process() {
   cout << "DynamicsMode::terminal_process()" << endl;
+
   int i=0;
   for ( auto itr = writer_trr.begin();
 	itr != writer_trr.end(); itr++){
     (*itr)->close();
     delete writer_trr[i];
+    cout << "delete writer_trr " << i << endl;
     i++;
   }
   
   if (cfg->extended_ensemble == EXTENDED_VMCMD ||
       cfg->extended_ensemble == EXTENDED_VAUS ) {
     mmsys.vmcmd->close_files();
+    delete mmsys.vmcmd;
   }else if(cfg->extended_ensemble == EXTENDED_VCMD){
     mmsys.vcmd->close_files();
+    delete mmsys.vcmd;
   }
+
   cout << "term" << endl;
   return 0;
 }
@@ -410,7 +422,9 @@ int DynamicsMode::gather_energies() {
 
 DynamicsModePresto::DynamicsModePresto() : DynamicsMode() {}
 
-DynamicsModePresto::~DynamicsModePresto() {}
+DynamicsModePresto::~DynamicsModePresto() {
+  if (DBG >= 1) cout << "DBG1 DynamicsModePresto::~DynamicsModePresto()" << endl;  
+}
 
 int DynamicsModePresto::calc_in_each_step() {
 

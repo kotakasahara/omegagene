@@ -40,7 +40,7 @@ class DynamicsMode : public RunMode {
     // super: MmSystem mmsys;
     // super: EnergyCalcObject* enecal;
     DynamicsMode();
-    ~DynamicsMode();
+    virtual ~DynamicsMode();
     int test(Config *in_cfg);
     int set_config_parameters(Config *in_cfg);
     int         initial_preprocess();
