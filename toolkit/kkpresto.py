@@ -373,15 +373,15 @@ class TPLMol():
         text += get_text_torsions(header)
         text += get_text_impropers(header)
         return text
-    def get_text_atoms_tpl(self): # for .tpl file
+    def get_text_atoms_tpl(self, header="PRE"): # for .tpl file
         if len(self.atoms) == 0: return ""
-        text = "TPL> ATOMS\n"
+        text = header+"> ATOMS\n"
         text += self.mol_name + "\n"
         for atom in self.atoms:
             text_atom = "%-8s %-5s %2d %-5s%8d %9.4f %9.4f %9.4f %2d %2d %2d -> ;  %d\n"\
                 %(atom.atom_name, atom.atom_type, atom.interaction_type,\
                       atom.res_name, atom.res_id, atom.mass, atom.radius,\
-                      natom.charge, len(atom.atoms_1_2), len(atom.atoms_1_3),\
+                      atom.charge, len(atom.atoms_1_2), len(atom.atoms_1_3),\
                       len(atom.atoms_1_4), atom.atom_id)
             for a12 in atom.atoms_1_2:
                 text_atom += "%7d"%a12
@@ -394,6 +394,7 @@ class TPLMol():
                 %(atom.z_pos_1_2, atom.z_pos_1_3, atom.z_pos_1_4,\
                       atom.z_basis, atom.z_dist, atom.z_ang, atom.z_phase)
             text += text_atom
+        return text
     def get_text_atoms(self, header="PRE"): # for DB file
         if len(self.atoms) == 0: return ""
         text = header+"> ATOMS\n"
@@ -439,9 +440,9 @@ class TPLMol():
             text += text_bond
         text += "\n"
         return text
-    def get_text_angles_tpl(self):
+    def get_text_angles_tpl(self, header="PRE"):
         if len(self.angles) == 0: return ""
-        text = "TPL> ANGLES\n"
+        text = header+"> ANGLES\n"
         text += self.mol_name + "\n"
         for i, ang in enumerate(self.angles):
             text_angle = "%10d%10d%10d %14.7f %14.7f ;  %d\n"\
@@ -459,9 +460,9 @@ class TPLMol():
             text += text_angle
         text += "\n"
         return text
-    def get_text_torsions_tpl(self):
+    def get_text_torsions_tpl(self, header="TPL"):
         if len(self.torsions) == 0: return ""
-        text = "TPL>TORSIONS\n"
+        text = header+"> TORSIONS\n"
         text += self.mol_name + "\n"
         for i, trs in enumerate(self.torsions):
             text_trs = "%8d%8d%8d%8d %9.4f %4d %4d %9.4f %4d ; %d\n"\
@@ -483,7 +484,7 @@ class TPLMol():
             text += text_trs
         text += "\n"
         return text
-    def get_text_impropers(self, header="PRE"): 
+    def get_text_impropers_tpl(self, header="PRE"): 
         if len(self.impropers) == 0: return ""
         text = header + "> IMPROPER-TORSIONS\n"
         text += self.mol_name + "\n"
@@ -527,6 +528,7 @@ class TPL(object):
         self.nonbonds = {}
         self.functions = {}
         self.nb_pair = {}
+        self.nb_pair_hps = {}
         self.atom_id_12 = {}
         self.atom_id_13 = {}
         self.atom_id_14 = {}
@@ -573,7 +575,7 @@ class TPL(object):
     def add_function(self, function_id, n_params, name):
         self.functions[function_id] = (n_params, name)
     def add_nonbond(self, atom, params):
-        assert(len(params) == 6)
+        assert(len(params) >= 6)
         self.nonbonds[atom] = tuple(params)
     def set_nonbond_pair(self):
         self.nb_pair = {}
@@ -581,6 +583,9 @@ class TPL(object):
             for j,param_j in self.nonbonds.items():
                 if i<j: break
                 pair = (j,i)
+                #param_x[2] ... sigma
+                #param_x[3] ... epsiron
+
                 p3_ave = np.sqrt((param_i[3]*param_j[3]))
                 p2_ij6 = (param_i[2]+param_j[2])**6                
                 p2_ij12 = p2_ij6 * p2_ij6
@@ -588,6 +593,13 @@ class TPL(object):
                 param2 = p3_ave * p2_ij12
                 self.nb_pair[pair] = (param1, param2)
                 self.nb_pair[(pair[1], pair[0])] = (param1, param2)
+
+                ## for HPS potential
+                cutoff = np.power(2.0, 1.0/6.0) * (param_i[3] + param_j[3]) * 0.5
+                lmb = (param_i[6] + param_j[6]) * 0.5
+                self.nb_pair_hps[(pair[1], pair[0])] = (cutoff, lmb)
+                self.nb_pair_hps[(pair[1], pair[0])] = (cutoff, lmb)
+
 #                print "nb_pair: " + str(pair[0]) + " : " + str(pair[1])
 #                print str(param1) + ", " + str(param2)
     def set_scale_14(self):
@@ -748,7 +760,12 @@ class TPL(object):
         #01234567890123456789012345678901234567890123456789012345678901234567890123456789
         #    1    0   1      1.9080000      0.0860000      0.8333333      0.5000000
         for atom_type, param in self.nonbonds.items():
-            text += "%5d%5d%4d%15.7f%15.7f%15.7f%15.7f\n"%(atom_type, param[0],param[1], param[2], param[3], param[4], param[5])
+            text += "%5d%5d%4d%15.7f%15.7f%15.7f%15.7f"%(atom_type, param[0],param[1], param[2], param[3], param[4], param[5])
+            if len(param)>=7:
+                text += " %8.5f"%(param[6])
+                if len(param)>=8:
+                    text += " ; " + param[7]
+            text += "\n"
         return text
     def reduce_nonbond_parameters(self):
         """
@@ -992,6 +1009,11 @@ class TPLReader(PrestoAsciiReader):
                 ## FYVWME: params[3] ... energy in kcal/mol
                 ## FY14SE: params[4] ... energy for 1-4 vdw
                 ## FY14SV: params[5] ... energy for 1-4 electrostatic
+
+                ## HPS potential
+                if len(terms) >= 7:
+                    params.append(float(terms[7]))
+
                 tpl.add_nonbond(atom, params)
             line = self.readline()
         self.close()

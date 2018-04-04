@@ -89,6 +89,9 @@ struct Config : public CelesteObject {
     real        dh_ionic_strength = 0.0;
     real        dh_temperature = 0.0;
 
+    int         nonbond       = NONBOND_LJ;
+    int         hps_epsiron   = 0.0;
+
     // int  aus_type = AUSTYPE_MASSCENTER;
 
     Config() = default;

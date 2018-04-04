@@ -93,8 +93,11 @@ int MmSystem::alloc_atom_vars() {
 int MmSystem::alloc_lj_params() {
     lj_6term  = new real_pw[n_lj_types * n_lj_types];
     lj_12term = new real_pw[n_lj_types * n_lj_types];
+    lj_hps_cutoff = new real_pw[n_lj_types * n_lj_types];
+    lj_hps_lambda = new real_pw[n_lj_types * n_lj_types];
     return 0;
 }
+
 int MmSystem::alloc_bonds() {
     bond_epsiron      = new real[n_bonds];
     bond_r0           = new real[n_bonds];
@@ -306,6 +309,13 @@ int MmSystem::set_lj_pair_param(int type1, int type2, real_pw param6, real_pw pa
     lj_12term[type1 * n_lj_types + type2] = param12;
     lj_12term[type2 * n_lj_types + type1] = param12;
     return 0;
+}
+int MmSystem::set_lj_pair_hps_param(int type1, int type2, real_pw cutoff, real_pw lambda) {
+  lj_hps_cutoff[type1 * n_lj_types + type2] = cutoff;
+  lj_hps_cutoff[type2 * n_lj_types + type1] = cutoff;
+  lj_hps_lambda[type1 * n_lj_types + type2] = lambda;
+  lj_hps_lambda[type2 * n_lj_types + type1] = lambda;
+  return 0;
 }
 
 int MmSystem::set_bond_param(int bond_id, int atomid1, int atomid2, real eps, real r0) {

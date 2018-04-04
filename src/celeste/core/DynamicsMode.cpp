@@ -350,7 +350,8 @@ int DynamicsMode::subbox_setup() {
     // cout << "subbox.set_parameters" << endl;
     subbox.set_parameters(mmsys.n_atoms, &(mmsys.pbc), cfg, cfg->nsgrid_cutoff, cfg->box_div[0], cfg->box_div[1],
                           cfg->box_div[2]);
-    subbox.set_lj_param(mmsys.n_lj_types, mmsys.lj_6term, mmsys.lj_12term);
+    subbox.set_lj_param(mmsys.n_lj_types, mmsys.lj_6term, mmsys.lj_12term,
+			mmsys.lj_hps_cutoff, mmsys.lj_hps_lambda);
     // subbox.set_max_n_atoms_region();
     // cout << "alloc_variables" << endl;
     subbox.alloc_variables();

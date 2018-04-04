@@ -32,6 +32,7 @@ vector<int> Read::load_integers() {
     close();
     return intvec;
 }
+
 vector<string> Read::load_strings() {
     vector<string> strvec;
     open();
@@ -309,6 +310,19 @@ int Read::load_ls_tpl(MmSystem &mmsys) {
         mmsys.set_lj_pair_param(type1 - 1, type2 - 1, (real_pw)lj6, (real_pw)lj12);
     }
 
+    //nbpair hps
+    int size_lj_hps;
+    read_bin_values(&size_lj_hps, 1);
+    for (int i = 0; i < mmsys.n_lj_type_pairs; i++) {
+        int    type1, type2;
+        double cutoff, lambda;
+        read_bin_values(&type1, 1);
+        read_bin_values(&type2, 1);
+        read_bin_values(&cutoff, 1);
+        read_bin_values(&lambda, 1);
+        mmsys.set_lj_pair_hps_param(type1 - 1, type2 - 1, (real_pw)cutoff, (real_pw)lambda);
+    }
+    
     // bond
     int size_bond;
     read_bin_values(&size_bond, 1);

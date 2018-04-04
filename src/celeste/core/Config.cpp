@@ -112,7 +112,6 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
 
         } else if (*itr == "--time-step") {
             time_step = atof((*++itr).c_str());
-
         } else if (*itr == "--electrostatic") {
             itr++;
             if (*itr == "zero-dipole") {
@@ -324,6 +323,15 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
 	  dh_ionic_strength = atof((*++itr).c_str());
         } else if (*itr == "--debye-huckel-temperature") {
 	  dh_temperature = atof((*++itr).c_str());
+        } else if (*itr == "--nonbond") {
+            itr++;
+            if (*itr == "lennard-jones") {
+	      nonbond = NONBOND_LJ;
+            } else if (*itr == "hydrophobicity-scale-lj") {
+	      nonbond = NONBOND_HPS;
+	    }
+        } else if (*itr == "--hydrophobicity-scale-epsiron") {
+	  hps_epsiron = atof((*++itr).c_str());
         } else {
             stringstream ss;
             error_exit(ss.str(), "1A00001");

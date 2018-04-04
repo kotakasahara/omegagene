@@ -11,7 +11,12 @@ MAGIC=66261
 #VERSION = "v.0.36.c" ## version_info
 #VERSION = "v.0.36.f" ## version_info
 
-VERSION_LIST = ["v.0.34.b", "v.0.36.c", "v.0.36.f", "v.0.39.a", "v.0.39.h"]
+VERSION_LIST = ["v.0.34.b",  # 0 
+                "v.0.36.c",  # 1  
+                "v.0.36.f",  # 2
+                "v.0.39.a",  # 3
+                "v.0.39.h",  # 4
+                "v.0.40.c"]  # 5
 #VERSION_ID = 0
 #VERSION = VERSION_LIST[VERSION_ID]
 
@@ -403,6 +408,16 @@ class MDInputGen(object):
             buf_nbpair += st.pack("@dd", params[0], params[1])
         ## parameters for 6-powered term, 12-powered term
 
+        buf_nbpair_hps = ""
+        if self.version_id >= 5:
+            #buf_nbpair_hps += st.pack("@i", len(nb_types))
+            #buf_nbpair_hps += st.pack("@i", len(tpl.nb_pair.keys()))
+            for type_pair, params in tpl.nb_pair_hps.items():
+                buf_nbpair_hps += st.pack("@ii", type_pair[0], type_pair[1]) ## atom_type1, 2
+                ## param[0] ... cutoff
+                ## param[1] ... lambda
+                buf_nbpair_hps += st.pack("@dd", params[0], params[1])
+
         buf_12 = ""
         buf_12 += st.pack("@i", len(tpl.atom_id_12))
         print "# bonds : "+ str(len(tpl.atom_id_12))
@@ -434,6 +449,7 @@ class MDInputGen(object):
 
         buf_14nb = ""
         buf_14nb += st.pack("@i", len(tpl.atom_id_14nb))
+        buf_lmb = ""
         for params in tpl.atom_id_14nb:
             atom_id1 = params[0][0]
             atom_id2 = params[0][1]
@@ -454,6 +470,10 @@ class MDInputGen(object):
 
         buf += st.pack("@i", len(buf_nbpair))
         buf += buf_nbpair
+        # nbpari_hps
+        if self.version_id >= 5:
+            buf += st.pack("@i", len(buf_nbpair_hps))
+            buf += buf_nbpair_hps
 
         buf += st.pack("@i", len(buf_12))
         buf += buf_12
@@ -467,6 +487,7 @@ class MDInputGen(object):
         buf += buf_14nb
         buf += st.pack("@i", len(buf_non15))
         buf += buf_non15
+
         return buf
 
     def dump_mmconfig(cfg):

@@ -57,6 +57,11 @@ class CelesteObject {
         ELCTRST_DEBYE_HUCKEL     = 5,
         ELCTRST_DUMMY
     };
+    enum {
+      NONBOND_LJ = 0,
+      NONBOND_HPS = 1,
+      NONBOND_DYMMY
+    };
     enum { THMSTT_NONE = 0, THMSTT_SCALING, THMSTT_HOOVER_EVANS, THMSTT_DUMMY };
     enum { CONST_NONE = 0, CONST_SHAKE, CONST_SHAKE_SETTLE, CONST_DUMMY };
     enum { COM_NONE = 0, COM_CANCEL };

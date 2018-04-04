@@ -31,6 +31,8 @@ class MmSystem : public CelesteObject {
     int      n_lj_type_pairs;
     real_pw *lj_6term;
     real_pw *lj_12term;
+    real_pw *lj_hps_cutoff;
+    real_pw *lj_hps_lambda;
     // bonds
     int   n_bonds;
     int **bond_atomid_pairs;
@@ -189,6 +191,7 @@ class MmSystem : public CelesteObject {
     // int free_pcluster_vars();
     // parameter setter
     int set_lj_pair_param(int type1, int type2, real_pw param6, real_pw param12);
+    int set_lj_pair_hps_param(int type1, int type2, real_pw cutoff, real_pw lambda);
     int set_bond_param(int bond_id, int atomid1, int atomid2, real eps, real r0);
     int set_angle_param(int angle_id, int atomid1, int atomid2, int atomid3, real eps, real theta0);
     int set_torsion_param(int  torsion_id,

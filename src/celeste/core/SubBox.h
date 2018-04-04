@@ -133,6 +133,8 @@ class SubBox : public CelesteObject {
     int      n_lj_types;
     real_pw *lj_6term;
     real_pw *lj_12term;
+    real_pw *hps_cutoff;
+    real_pw *hps_lambda;
 
     real_fc pote_vdw;
     real_fc pote_ele;
@@ -226,7 +228,8 @@ class SubBox : public CelesteObject {
                             real *in_nb14_coeff_ele);
     int set_ele_excess(int **in_excess_pairs);
     int set_nb15off(int *in_nb15off);
-    int set_lj_param(const int in_n_lj_types, real_pw *in_lj_6term, real_pw *in_lj_12term);
+    int set_lj_param(const int in_n_lj_types, real_pw *in_lj_6term, real_pw *in_lj_12term,
+		     real_pw *in_hps_cutoff, real_pw *in_hps_lambda);
     int  calc_energy();
     int  calc_energy_pairwise();
     int  calc_energy_pairwise_wo_neighborsearch();
