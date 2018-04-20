@@ -419,9 +419,9 @@ class TPLMol():
             text += text_atom
         text += "\n"
         return text
-    def get_text_bonds_tpl(self):
+    def get_text_bonds_tpl(self, header="PRE"):
         if len(self.bonds) == 0: return ""
-        text = "TPL> BONDS\n"
+        text = header+"> BONDS\n"
         text += self.mol_name + "\n"
         for i, bnd in enumerate(self.bonds):
             text_bond = "%10d%10d %14.7f %14.7f ;  %d\n"\
@@ -597,7 +597,7 @@ class TPL(object):
                 ## for HPS potential
                 cutoff = np.power(2.0, 1.0/6.0) * (param_i[3] + param_j[3]) * 0.5
                 lmb = (param_i[6] + param_j[6]) * 0.5
-                self.nb_pair_hps[(pair[1], pair[0])] = (cutoff, lmb)
+                self.nb_pair_hps[pair] = (cutoff, lmb)
                 self.nb_pair_hps[(pair[1], pair[0])] = (cutoff, lmb)
 
 #                print "nb_pair: " + str(pair[0]) + " : " + str(pair[1])

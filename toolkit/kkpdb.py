@@ -41,7 +41,7 @@ class PDBWriter(kkkit.FileO):
             txt = "ENDMDL" #+str(model.model_id)
             self.f.write(txt+'\n')            
         return
-    def write_crd(self, model, flg_presto, ignore=set()):
+    def write_crd(self, model, flg_presto=False, ignore=set()):
         for atid, atom in enumerate(model.atoms):
             if atid in ignore: continue
             atom_name = atom.atom_name
@@ -56,7 +56,7 @@ class PDBWriter(kkkit.FileO):
                 txt += "%5d"%atom.atom_id #6:11
             else:
                 txt += "  "
-                aid = atom.atom_id
+                aid = atom.atom_id_pdb
                 if atom.atom_id > 99999:
                     aid = atom.atom_id%100000
                 txt += "%5d"%aid #6:11
