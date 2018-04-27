@@ -15,7 +15,7 @@ AVOGADRO_CONST = 6.0221413e+23 ## mol^-1
 
 JOULE_CALORIE = 4.184
 
-DEBUG = True
+##DEBUG = True
 ##DEBUG = False
 
 ### Treatment of units
@@ -109,7 +109,7 @@ def extract_rigid_units_from_atom_ids(target_atom_ids, rigid_units):
             t_rigid_units.append(unit)
     return t_rigid_units
 
-def make_rigid_units(model, tpl, shkr):
+def make_rigid_units(model, tpl, shkr, dbg=True):
     #make shk.shake_sys[] dictionary
     # (mol_id, atom_id_inmol) => shake object
     shk_dict = {}
@@ -125,7 +125,7 @@ def make_rigid_units(model, tpl, shkr):
     mol_atom_id = 0
     atom_id_head = 0
     processed_atom_id = set()
-    if DEBUG:
+    if dbg:
         print "######### make_rigid_units () #############"
         print "number of atoms: " + str(len(model.atoms))
     tmp_one_atom_units = []
@@ -179,7 +179,7 @@ def make_rigid_units(model, tpl, shkr):
         if not tmp_unit.atom_ids[0] in processed_atom_id:
             processed_atom_id.add(tmp_unit.atom_ids[0])
             rigid_units.append(tmp_unit)                    
-    if DEBUG:
+    if dbg:
         print "Number of rigid units: " + str(len(rigid_units))
 
     return rigid_units, atom_id_mass
@@ -214,7 +214,7 @@ def mb_dist_3d(temprature, mass):
     vz = numpy.sqrt(const * numpy.log(rand5))*numpy.cos(2*numpy.pi*rand6)
     return numpy.array([vx,vy,vz])
 
-def generate_velocities_random(rigid_units, temperature):
+def generate_velocities_random(rigid_units, temperature, dbg=True):
     ## unit_vel[] = [numpy.array(x,y,z)]
     unit_vel = []
     sum_vel = numpy.array([0.0,0.0,0.0])
@@ -223,14 +223,16 @@ def generate_velocities_random(rigid_units, temperature):
     sum_kinetic = 0.0
 
     for unit in rigid_units:
+        #if unit.total_mass == 0: continue
         vel_tmp = mb_dist_3d(temperature, unit.total_mass)
         unit_vel.append(vel_tmp)
         sum_mass += unit.total_mass
         sum_vel_mass += unit.total_mass * vel_tmp
-        if DEBUG:
+        if dbg:
             sum_kinetic += (vel_tmp[0]**2 + vel_tmp[1]**2 + vel_tmp[2]**2) * unit.total_mass 
             sum_vel += vel_tmp
-    if DEBUG:
+
+    if dbg:
         freedom = cal_freedom_of_rigid_units(rigid_units)
         print "###### Generate Random Velocities ######"
         print "Total velocity"
@@ -250,7 +252,7 @@ def generate_velocities_random(rigid_units, temperature):
             vel += trans
         #vel -= sum_vel / float(len(rigid_units))
         
-    if DEBUG:
+    if dbg:
         print "###### Remove Translation Momentum ######"
         freedom = cal_freedom_of_rigid_units(rigid_units)
         sum_vel = numpy.array([0.0,0.0,0.0])
@@ -294,8 +296,8 @@ def set_atomid_all(tpl):
     return atomids
 
 def assign_unit_velocities_to_atoms(rigid_units, unit_vel, atom_vel,
-                                    temperature):
-    if DEBUG:
+                                    temperature, dbg=True):
+    if dbg:
         print "##### assign_unit_velocities_to_atoms ####"
     mol_atom_ids = set()
     for i, unit in enumerate(rigid_units):
@@ -321,7 +323,7 @@ def assign_unit_velocities_to_atoms(rigid_units, unit_vel, atom_vel,
 
     freedom = cal_freedom_of_rigid_units(rigid_units)
 
-    if DEBUG:
+    if dbg:
         print "Total moment"
         print str(sum_moment) + ' <= ' + str(sum_moment_shk) 
         print "Total kinetic momentum"
@@ -364,10 +366,10 @@ def cal_temperature(target_atom_ids, atom_vel, atom_id_mass, freedom):
 #        atom_vel[atom_id] *= ratio
 #    return atom_vel
 
-def check_total_trans_moment(target_atom_ids, atom_vel, atom_id_mass, rigid_units):
+def check_total_trans_moment(target_atom_ids, atom_vel, atom_id_mass, rigid_units, dbg=True):
     freedom = cal_freedom_of_rigid_units(rigid_units)
     gen_temperature = cal_temperature(target_atom_ids, atom_vel, atom_id_mass, freedom)
-    if DEBUG:
+    if dbg:
         print "TEMPERATURE:" + str(gen_temperature)
     tv = numpy.array([0.0, 0.0, 0.0])
     tm = numpy.array([0.0, 0.0, 0.0])
@@ -380,14 +382,15 @@ def check_total_trans_moment(target_atom_ids, atom_vel, atom_id_mass, rigid_unit
 def genevelo_target_atoms(target_atom_ids, rigid_units,
                           atom_vel,
                           temperature,
-                          atom_id_mass):
-    unit_vel = generate_velocities_random(rigid_units, temperature)
+                          atom_id_mass,
+                          dbg=True):
+    unit_vel = generate_velocities_random(rigid_units, temperature, dbg)
     ##total_moment = cal_total_moment(rigid_units, unit_vel)
     ##unit_vel = remove_total_moment(unit_vel, total_moment)
     atom_vel = assign_unit_velocities_to_atoms(rigid_units, unit_vel, atom_vel,
-                                               temperature)
+                                               temperature, dbg)
 
-    if DEBUG:
+    if dbg:
         print "ASSIGN ATOMS"
         check_total_trans_moment(target_atom_ids, atom_vel, atom_id_mass, rigid_units)
 
@@ -401,14 +404,15 @@ def genevelo_target_atoms(target_atom_ids, rigid_units,
 
 def generate_velocities(model, tpl, shkr,
                         temperature,
-                        mol):
+                        mol, dbg=False):
     atom_vel = []
     for i in range(len(model.atoms)):
         atom_vel.append(numpy.array([0.0, 0.0, 0.0]))
 
-    rigid_units, atom_id_mass = make_rigid_units(model, tpl, shkr)
+    rigid_units, atom_id_mass = make_rigid_units(model, tpl, shkr, dbg)
     average_unit_mass = average_mass_of_rigid_units(rigid_units)
-    print "Average mass of rigid units: " + str(average_unit_mass)
+    if dbg:
+        print "Average mass of rigid units: " + str(average_unit_mass)
         
     if mol:
         mol_names = []
@@ -418,20 +422,25 @@ def generate_velocities(model, tpl, shkr,
         #            tpl_mol.mol_name != "CIM":
             mol_names.append([tpl_mol.mol_name])
         #mol_names.append(["WAT","CIP","CIM"])
-        print mol_names
+        if dbg:
+            print mol_names
         for mol_name in mol_names:
-            print "################################"
-            print "### " + " ".join(mol_name)
-            print "################################"
+            if dbg:
+                print "################################"
+                print "### " + " ".join(mol_name)
+                print "################################"
             target_atom_ids = set_atomid_list_from_mol(mol_name, model, tpl)
-            print "N_atoms: " + str(len(target_atom_ids))
+            if dbg:
+                print "N_atoms: " + str(len(target_atom_ids))
             t_rigid_units = extract_rigid_units_from_atom_ids(target_atom_ids, rigid_units)
             #print target_atom_ids
-            print "DEBUG : " + str(len(t_rigid_units))
+            if dbg:
+                print "DEBUG : " + str(len(t_rigid_units))
             atom_vel = genevelo_target_atoms(target_atom_ids,
                                              t_rigid_units, atom_vel,
                                              temperature,
-                                             atom_id_mass)
+                                             atom_id_mass,
+                                             dbg)
     else:
         target_atom_ids = set(range(0, len(model.atoms)))
         t_rigid_units = extract_rigid_units_from_atom_ids(target_atom_ids, rigid_units)
@@ -439,7 +448,7 @@ def generate_velocities(model, tpl, shkr,
         atom_vel = genevelo_target_atoms(target_atom_ids,
                                          t_rigid_units, atom_vel,
                                          temperature,
-                                         atom_id_mass)
+                                         atom_id_mass, dbg)
         
     return atom_vel
 

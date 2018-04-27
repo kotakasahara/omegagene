@@ -596,7 +596,9 @@ class TPL(object):
 
                 ## for HPS potential
                 cutoff = np.power(2.0, 1.0/6.0) * (param_i[3] + param_j[3]) * 0.5
-                lmb = (param_i[6] + param_j[6]) * 0.5
+                lmb = 0.0
+                if len(param_i) >= 8 and len(param_j) >= 8:
+                    lmb = (param_i[6] + param_j[6]) * 0.5
                 self.nb_pair_hps[pair] = (cutoff, lmb)
                 self.nb_pair_hps[(pair[1], pair[0])] = (cutoff, lmb)
 
@@ -832,6 +834,12 @@ class TPL(object):
 
         return 
 
+    def get_tplatom_from_atom_id(self, atomid):
+        for  mol in self.mols:
+            if atomid >= mol.head_atom_id and atomid < mol.head_atom_id + len(mol.atoms)*mol.mol_num:
+                atid_in_mol = (atomid - mol.head_atom_id) % len(mol.atoms)
+                return mol.atoms[atid_in_mol]
+        return -1
 
 class PrestoAsciiReader(kkkit.FileI):
     def __init__(self, fn):
@@ -1011,7 +1019,7 @@ class TPLReader(PrestoAsciiReader):
                 ## FY14SV: params[5] ... energy for 1-4 electrostatic
 
                 ## HPS potential
-                if len(terms) >= 7:
+                if len(terms) >= 8:
                     params.append(float(terms[7]))
 
                 tpl.add_nonbond(atom, params)

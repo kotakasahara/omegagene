@@ -2,6 +2,7 @@
 
 from optparse import OptionParser
 import sys
+import os
 import numpy as np
 
 import kkmmsystem
@@ -63,6 +64,7 @@ class VcManager(object):
         print "read_tpl"
         self.tpl = kkpresto.TPLReader(self.config.get_val("fn-i-tpl")).read_tpl()
         self.tpl.enumerate_12_13_14()
+        self.tpl.convert_units_to_si()        
         print "read initial pdb"
         self.structure = kkpdb.PDBReader(self.config.get_val("fn-i-initial-pdb")).read_model()
         self.system = kkmmsystem.MmSystem(self.structure,
@@ -129,12 +131,34 @@ class VcManager(object):
         return tuple(vs_cand)
     def cal_lambda(self, frame):
         if self.aus_restart.aus_type == self.aus_restart.AUS_TYPE["dist-mass-centers"]:
-            sys.stderr.write("The current ver of this program is only of --aus-type dist-min")
-            sys.exit(1)
-            pass
+            lmb = self.cal_lambda_dist_mass_centers(frame)
         elif self.aus_restart.aus_type == self.aus_restart.AUS_TYPE["dist-min"]:
             lmb = self.cal_lambda_dist_min(frame)
         return lmb
+    def cal_lambda_dist_mass_centers(self, frame):
+        lmb = []
+        def cal_center(grp_id):
+            grp_mass = 0.0
+            cent = np.zeros(3)
+            for at1 in self.atom_groups[grp_id]:
+                atid = at1-1
+                mass = self.tpl.get_tplatom_from_atom_id(atid).mass
+                grp_mass += mass
+                cent += mass * frame.crds[atid]
+            cent /= grp_mass
+            return cent
+
+        for grp_pair in self.extended_vcmd.group_names[1:]:
+            grp_id1 = self.atom_group_names.index(grp_pair[0])
+            grp_id2 = self.atom_group_names.index(grp_pair[1])
+            cent1 = cal_center(grp_id1)
+            cent2 = cal_center(grp_id2)
+            dx = self.system.pbc.diff_crd_minim_image(cent1, cent2)
+            dist = np.sqrt(np.sum(dx*dx))
+            lmb.append(dist)
+            
+        return np.array(lmb)
+
     def cal_lambda_dist_min(self, frame):
         lmb = []
         for grp_pair in self.extended_vcmd.group_names[1:]:
@@ -187,12 +211,13 @@ class VcManager(object):
         return
     def pick_init_frames(self, init_type, n_cal):
         init_frames = []
+        dict_frames = {}
         if init_type=="least":
             vs_frm_srt = sorted(self.vs_frm.items(), key=lambda x:len(x[1]))
             prob = {}
             prob_acc = 0
             for vs, frms in vs_frm_srt:
-                prob_acc +=  1/len(frms)
+                prob_acc +=  1/float(len(frms))
                 prob[vs] = prob_acc
             for vs, frms in vs_frm_srt:
                 prob[vs] /= prob_acc
@@ -202,7 +227,14 @@ class VcManager(object):
                     if rnd <= prob[vs]:
                         tmp = frms[np.random.randint(len(frms))]
                         buf = (tmp[0], tmp[1], vs)
+                        ## buf [ file-id in self.fn_crd_list, 
+                        ##       frame-id,
+                        ##       vs ]
                         init_frames.append(buf)
+                        if not tuple(vs) in dict_frames:
+                            dict_frames[tuple(vs)] = 0
+                        dict_frames[tuple(vs)] += 1
+                        break
         elif init_type=="random":
             vs_frm_srt = sorted(self.vs_frm.items(), key=lambda x:len(x[1]))
             for i in range(n_cal):
@@ -211,9 +243,17 @@ class VcManager(object):
                 tmp = frms[np.random.randint(len(frms))]
                 buf = (tmp[0], tmp[1], vs)
                 init_frames.append(buf)
-                
+                if not tuple(vs) in dict_frames:
+                    dict_frames[tuple(vs)] = 0
+                dict_frames[tuple(vs)] += 1
+                break
+
         if init_type!="none":
             pass
+
+        print "picked frames:"
+        for vs, crdfrm in dict_frames.items():
+            print ",".join([str(x) for x in vs]) + " : " + str(crdfrm)
         return init_frames
     def prepare_initials(self, init_type, pref_cal, pref_file, n_cal, temperature):
         init_frames = self.pick_init_frames(init_type, n_cal)
@@ -223,30 +263,41 @@ class VcManager(object):
             except: pass
             #self.gen_pdb_frm(fn_pdb, crdfrmvs[0], crdfrmvs[1])
             fn_restart = os.path.join(cal_dir, pref_file+".restart")
-
+            print self.fn_crd_list[crdfrmvs[0]]+" "+str(crdfrmvs[1])+" " + ",".join([str(x) for x in crdfrmvs[2]])
             self.gen_restart_frm(fn_restart, crdfrmvs[0], crdfrmvs[1],
                                  temperature)
             fn_startvirt = os.path.join(cal_dir, "start.virt")
-            self.gen_startvirt_frm(fn_startvirt, vs)
+            self.gen_startvirt_frm(fn_startvirt, crdfrmvs[2])
         return
     #def gen_pdb_frm(self, fn, crd, frm):
     #return 
-    def gen_restart_frm(self, fn, crd, frm, temperature):
+    def gen_restart_frm(self, fn, i_codfile, i_frm, temperature):
         rest = kkpresto_restart.PrestoRestart()        
         rest.n_atoms = len(self.structure.atoms)
-        rest.crd = crd
-        self.tpl.convert_units_to_si()
-        rest.n_vel = res.n_atoms
+        reader = kkpresto_crd.PrestoCrdReader(self.fn_crd_list[i_codfile])
+        # print self.fn_crd_list[i_codfile] + " - "  + str(i_frm)
+        
+        reader.read_information()
+        reader.open()
+        frame = reader.read_next_frame()
+        for i_frame in range(1, i_frm):
+            #print i_frame
+            frame = reader.read_next_frame()
+        reader.close()
+        rest.crd = frame.crds
+        #self.tpl.convert_units_to_si()
+        rest.n_vel = rest.n_atoms
         rest.vel = genvelo.generate_velocities(self.structure,
                                                self.tpl, self.shkr,
-                                               temperature, True)
+                                               temperature, True,
+                                               False)
         rest.vel = genvelo.convert_velocity_si_to_ang_fs(rest.vel)
         kkpresto_restart.PrestoRestartWriter(fn).write_restart(rest)
         return 
     def gen_startvirt_frm(self, fn, vs):
         fo = open(fn, "w")
         fo.write(str(len(vs))+"\n")
-        fo.write([ str(x) + "\n" for x in vs ])
+        fo.write("".join([ str(x) + "\n" for x in vs ]))
         fo.write(str(np.random.randint(MAX_RANDINT))+"\n")
         fo.close()
         return 
