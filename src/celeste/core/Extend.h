@@ -279,7 +279,8 @@ class ExtendedVcMD : public Extended {
     std::vector< std::vector<int> > grp_ids;
     std::vector< std::vector<std::string> > grp_names;
     std::map< std::vector<int>, real > q_cano;
-    std::map< std::vector<int>, real > q_raw;
+    std::map< std::vector<int>, real  > q_raw;
+    int q_raw_sum;
     real default_q_cano;
     
     std::vector<int> cur_vs;
@@ -290,7 +291,7 @@ class ExtendedVcMD : public Extended {
     // vs_next[0,1,2,3] = [x1,y1],[x1,y2],[x2,y1],[x2,y2]
     // the list of destination state for virtual state transition trials
     
-    
+    int drift;
  public:
     ExtendedVcMD();
     ~ExtendedVcMD();
@@ -319,7 +320,7 @@ class ExtendedVcMD : public Extended {
     }
     int set_params(celeste::random::Random *in_mt, real in_sigma,
 		   real in_recov_coef, int in_n_steps,
-		   int in_begin_count_q_raw);
+		   int in_begin_count_q_raw, int in_drift);
     real set_crd_centers(real *crd, PBC *pbc);
     bool is_in_range();
     int apply_bias(unsigned long cur_step,

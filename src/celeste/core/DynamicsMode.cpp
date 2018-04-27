@@ -110,7 +110,7 @@ int DynamicsMode::initial_preprocess() {
     mmsys.vcmd->print_info();
     cout << "print_info" << endl;
     mmsys.vcmd->set_params(&mmsys.random_mt, cfg->enhance_sigma, cfg->enhance_recov_coef,
-			   cfg->n_steps, cfg->begin_count_qraw); //, cfg->aus_type);
+			   cfg->n_steps, cfg->begin_count_qraw, cfg->vcmd_drift); //, cfg->aus_type);
     mmsys.vcmd->set_temperature(cfg->temperature);
     
     mmsys.vcmd->set_default_q_cano();

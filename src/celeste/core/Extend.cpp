@@ -534,6 +534,7 @@ int ExtendedVAUS::scale_force(real lambda, real_fc *work, int n_atoms) {
 
 ExtendedVcMD::ExtendedVcMD() : Extended() {
     flg_vs_transition = true;
+    q_raw_sum = 0;
 }
 
 ExtendedVcMD::~ExtendedVcMD() {
@@ -569,7 +570,8 @@ void ExtendedVcMD::set_temperature(real in_tmp) {
 }
 int ExtendedVcMD::set_params(random::Random *in_mt, real in_sigma,
 			     real in_recov_coef, int in_n_steps,
-			     int in_begin_count_q_raw) {
+			     int in_begin_count_q_raw,
+			     int in_drift) {
   lambda.resize(n_dim);
   random_mt = in_mt;
   sigma     = in_sigma;
@@ -579,6 +581,7 @@ int ExtendedVcMD::set_params(random::Random *in_mt, real in_sigma,
   n_steps    = in_n_steps;
   // aus_type = in_aus_type;
   begin_count_q_raw = in_begin_count_q_raw;
+  drift = in_drift;
   return 0;
 }
 void ExtendedVcMD::set_n_dim(int in_n_dim){
@@ -731,22 +734,21 @@ bool ExtendedVcMD::is_in_range(){
 
 int ExtendedVcMD::apply_bias(unsigned long cur_step,
 			     real_fc *work, int n_atoms_box) {
-  //cout << "dbg 0303 apply_bias " << cur_step << " / " << n_steps << " " << trans_interval<<endl;
+  
   if (cur_step > 0 && cur_step % trans_interval == 0) {
     //if ((cur_step+1) % trans_interval == 0) {
     if (cur_step <= n_steps && cur_step >= begin_count_q_raw){
       if(is_in_range()) q_raw[cur_vs] += trans_interval;
+      q_raw_sum += trans_interval;
       write_vslog(cur_step);
     }
+
     if (flg_vs_transition) trial_transition();
   }
-  //cout << "dbg 0303 apply_bias 10" << endl;
   scale_force(work, n_atoms_box);
-  //cout << "dbg 0303 apply_bias 20" << endl;
   if (cur_step > 0 && cur_step % write_lambda_interval == 0 &&
       cur_step <= n_steps) { write_lambda(); }
   
-  //cout << "dbg 0303 apply_bias (finished)" << endl;
   return 0;
 }
 int ExtendedVcMD::set_vs_next(){
@@ -856,7 +858,10 @@ int ExtendedVcMD::trial_transition(){  // source ... vs_id of current state
   
   std::vector<real> i_val;
   i_val.resize(vs_next.size());
+  std::vector<real> i_val_d;
+  i_val_d.resize(vs_next.size());
   int idx_vs1=0;
+  real sum_i_val = 0.0;
   for ( const auto vs1 : vs_next ) {
     //std::cout << "dbg 0304a";
     //for(const auto v : vs1){
@@ -866,21 +871,34 @@ int ExtendedVcMD::trial_transition(){  // source ... vs_id of current state
     //cout << " , q_cano: " << q_cano[vs1] << endl;;
     real q1 = q_cano[vs1];
     if(q1==0) q1 = default_q_cano;
+    real q1d = 1.0;
+    if(drift == 1)
+      q1d = ((float)q_raw[vs1]+1) / ((float)q_raw_sum+1);
+
     int idx_vs2=0;
     for ( const auto vs2 : vs_next ) {
       real q2 = q_cano[vs2];
       if(q2 == 0) q2 = default_q_cano;
+      real q2d = 1.0;
+      if(drift == 1)
+	q2d = ((float)q_raw[vs2]+1) / ((float)q_raw_sum+1);
       //i_val[idx_vs1] += q_cano[vs1] / q_cano[vs2];
-      i_val[idx_vs1] += q1 / q2;
+      i_val[idx_vs1] += q1/q2;
+      i_val_d[idx_vs1] += q1d/q2d;
+
       idx_vs2++;
     }
     //std::cout << "dbg 0304b i_val1 : "  << i_val[idx_vs1] << endl;
     i_val[idx_vs1] = 1.0 / i_val[idx_vs1];
-    //std::cout << "dbg 0304c i_val2 : " << i_val[idx_vs1] << endl;
+    if(drift == 1)
+      i_val[idx_vs1] *= 1.0 / i_val_d[idx_vs1];
+    sum_i_val += i_val[idx_vs1];
+    //std::cout << "dbg 0304c i_val_d : " << idx_vs1 << " " << i_val_d[idx_vs1] << endl;
+    //std::cout << "dbg 0304c i_val2  : " << idx_vs1 << " " << i_val[idx_vs1] << endl;
     idx_vs1++;
   }
   
-  real rnd = (*random_mt)();
+  real rnd = (*random_mt)() * sum_i_val;
   real i_acc = 0.0;
   int idx = 0;
   for ( const auto val : i_val ){
@@ -890,8 +908,8 @@ int ExtendedVcMD::trial_transition(){  // source ... vs_id of current state
   }
   cur_vs = vs_next[idx];
 
-  //  cout << "dbg 0909 cur_vs: ";
-  //  for (int i = 0; i < n_dim; i++)
+  //cout << "dbg 0909 cur_vs: ";
+  //for (int i = 0; i < n_dim; i++)
   //cout << cur_vs[i] << " " ;
   //cout <<endl;
 
