@@ -738,10 +738,12 @@ int ExtendedVcMD::apply_bias(unsigned long cur_step,
   if (cur_step > 0 && cur_step % trans_interval == 0) {
     //if ((cur_step+1) % trans_interval == 0) {
     if (cur_step <= n_steps && cur_step >= begin_count_q_raw){
-      if(is_in_range()) q_raw[cur_vs] += trans_interval;
-      q_raw_sum += trans_interval;
-      write_vslog(cur_step);
+      if(is_in_range()){
+	q_raw[cur_vs] += trans_interval;
+	q_raw_sum += trans_interval;
+      }
     }
+    write_vslog(cur_step);
 
     if (flg_vs_transition) trial_transition();
   }
@@ -803,13 +805,13 @@ int ExtendedVcMD::trial_transition(){  // source ... vs_id of current state
   // return ...
   //cout << "dbg 0304 trial [1]" << endl;
   bool flg = true;
-  for(int d=0; d<n_dim; d++){
+  for(int d = 0; d < n_dim; d++){
     //cout << "dbg 0304 trial d[" << d << "] " << lambda[d]
     //<< " cur_vs: " <<cur_vs[d] 
     //<<" "<<vc_range_min[d][cur_vs[d]]<<" ~ "
     //<<vc_range_max[d][cur_vs[d]]<< endl;
-    if(lambda[d] >= vc_range_max[d][cur_vs[d]])     { flg = false; break; }
-    else if(lambda[d] < vc_range_min[d][cur_vs[d]]) { flg = false; break; }
+    if(lambda[d] >= vc_range_max[d][cur_vs[d]] and drift == 0)     { flg = false; break; }
+    else if(lambda[d] < vc_range_min[d][cur_vs[d]] and drift == 0) { flg = false; break; }
   }
   if (!flg) { return 0; }
   //cout << "dbg 0304 trial [2]" << endl;
@@ -872,7 +874,7 @@ int ExtendedVcMD::trial_transition(){  // source ... vs_id of current state
     real q1 = q_cano[vs1];
     if(q1==0) q1 = default_q_cano;
     real q1d = 1.0;
-    if(drift == 1)
+    if(drift >= 1)
       q1d = ((float)q_raw[vs1]+1) / ((float)q_raw_sum+1);
 
     int idx_vs2=0;
@@ -880,7 +882,7 @@ int ExtendedVcMD::trial_transition(){  // source ... vs_id of current state
       real q2 = q_cano[vs2];
       if(q2 == 0) q2 = default_q_cano;
       real q2d = 1.0;
-      if(drift == 1)
+      if(drift >= 1)
 	q2d = ((float)q_raw[vs2]+1) / ((float)q_raw_sum+1);
       //i_val[idx_vs1] += q_cano[vs1] / q_cano[vs2];
       i_val[idx_vs1] += q1/q2;
@@ -890,7 +892,7 @@ int ExtendedVcMD::trial_transition(){  // source ... vs_id of current state
     }
     //std::cout << "dbg 0304b i_val1 : "  << i_val[idx_vs1] << endl;
     i_val[idx_vs1] = 1.0 / i_val[idx_vs1];
-    if(drift == 1)
+    if(drift >= 1)
       i_val[idx_vs1] *= 1.0 / i_val_d[idx_vs1];
     sum_i_val += i_val[idx_vs1];
     //std::cout << "dbg 0304c i_val_d : " << idx_vs1 << " " << i_val_d[idx_vs1] << endl;

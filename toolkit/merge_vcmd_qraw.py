@@ -59,7 +59,6 @@ def _main():
     if opts.symmetrize:
        vc.symmetrize()
 
-
     vc.add_const(opts.pseudo_count)
     vc.normalize_params()
     vc.set_default_param()
@@ -74,6 +73,8 @@ def _main():
     if opts.symmetrize:       vc_prev.symmetrize()
     vc.multiply_params(vc_prev)
     vc.normalize_params()
+    vc.pop_zero_vs()
+
     vc.set_default_param()
 
     if opts.fn_out:

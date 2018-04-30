@@ -29,8 +29,9 @@ def get_options():
                  # action="append",
                  help="List of coordinate files")
     p.add_option('--o-vs-frm', dest='fn_o_vs_frm',
-                 # action="append",
                  help="Output file name")
+    p.add_option('--i-vs-frm', dest='fn_i_vs_frm',
+                 help="Input file name")
     p.add_option("--init-type", dest="init_type",
                  type="choice",
                  choices = ["least", "random", "none"],
@@ -59,6 +60,9 @@ class VcManager(object):
     def __init__(self, fn_config):
         self.fn_config = fn_config
         self.config = kkmmconfig.ConfigReader(self.fn_config).read_config()        
+        self.prob = {}
+        self.vs_frm = {}
+        self.unmet_neighbor = False
         return
     def load_files(self):
         print "read_tpl"
@@ -176,10 +180,11 @@ class VcManager(object):
                     if dist <= min_dist: min_dist = dist
             lmb.append(min_dist)
         return np.array(lmb)
-    def count_vs_frm(self):
-        self.vs_frm = {}
+    def count_vs_frm(self, processed_crd=set()):
+        #self.vs_frm = {}
         ## vs_frm[(vs1,vs2,...)] = [(i_crd, i_frame), (i_crd, i_frame), ...]
         for i_crd, fn_crd in enumerate(self.fn_crd_list):
+            if i_crd in processed_crd: continue
             print str(i_crd) + " " + fn_crd
             reader = kkpresto_crd.PrestoCrdReader(fn_crd)
             reader.read_information()
@@ -203,28 +208,86 @@ class VcManager(object):
     def print_vs_frm(self, fn_out):
         fo = open(fn_out, "w")
         for vs, frms in self.vs_frm.items():
-            line = " ".join([ str(x) for x in vs] ) 
+            line = ",".join([ str(x) for x in vs] )
             for crd, frame in frms:
-                line += " " + str(crd)+":"+str(frame)
-            fo.write(line)
+                line += " " + str(crd)+":"+str(frame) 
+            fo.write(line+"\n")
         fo.close()
         return
+    def read_vs_frm(self, fn_vsfrm):
+        f = open(fn_vsfrm)
+        processed_crd = set()
+        # self.vs_frm
+        for line in f:
+            terms = line.strip().split()
+            vs = tuple([ int(x) for x in terms[0].split(",") ])
+            print line
+            print terms[0]
+            print "aaa"
+            for crdfrm in terms[1:]:
+                print crdfrm
+                tmp = crdfrm.split(":")
+                crd = int(tmp[0])
+                frm = int(tmp[1])
+                if not vs in self.vs_frm:
+                    self.vs_frm[vs] = []
+                self.vs_frm[vs].append((crd, frm))
+                processed_crd.add(crd)
+        return processed_crd
     def pick_init_frames(self, init_type, n_cal):
         init_frames = []
         dict_frames = {}
         if init_type=="least":
             vs_frm_srt = sorted(self.vs_frm.items(), key=lambda x:len(x[1]))
-            prob = {}
+            self.prob = {}
             prob_acc = 0
+
             for vs, frms in vs_frm_srt:
                 prob_acc +=  1/float(len(frms))
-                prob[vs] = prob_acc
-            for vs, frms in vs_frm_srt:
-                prob[vs] /= prob_acc
-            for i in range(n_cal):
-                rnd = np.random.rand()
+                self.prob[vs] = prob_acc
+
+            vs_frm_new = []
+            prob_acc_new = 0
+            if self.unmet_neighbor:
                 for vs, frms in vs_frm_srt:
-                    if rnd <= prob[vs]:
+                    for i, it_vs in enumerate(vs):
+                        new_vs = list(vs)
+                        new_vs[i] -= 1
+                        if new_vs[i] >= 1 and not tuple(new_vs) in self.prob:
+                            prob_acc_new += 1
+                            self.prob[tuple(new_vs)] = prob_acc_new
+                            vs_frm_new.append((tuple(new_vs),frms))
+                            print "add " + ",".join([str(x) for x in new_vs])
+                        new_vs[i] += 2
+                        if new_vs[i] <= self.extended_vcmd.n_vs[i] and not tuple(new_vs) in self.prob:
+                            prob_acc_new += 1
+                            self.prob[tuple(new_vs)] = prob_acc_new
+                            vs_frm_new.append((tuple(new_vs),frms))
+                            print "add " + ",".join([str(x) for x in new_vs])
+
+            for vs, frms in vs_frm_srt:
+                self.prob[vs] += prob_acc_new
+
+            for vs in self.prob.keys():
+                self.prob[vs] /= ( prob_acc + prob_acc_new)
+                
+            def add_frame(vs, frms):
+                return
+
+            vs_frm_new.extend(vs_frm_srt)
+
+            print "n cand"
+            print len(vs_frm_new)
+            
+            for vs, frms in vs_frm_new:
+                print ",".join([ str(x) for x in vs ]) + " " + str(self.prob[vs])
+
+            cnt = 0
+            while len(init_frames) < n_cal and cnt <= 500:
+                rnd = np.random.rand()
+                flg = False
+                for vs, frms in vs_frm_new:
+                    if rnd <= self.prob[vs]:
                         tmp = frms[np.random.randint(len(frms))]
                         buf = (tmp[0], tmp[1], vs)
                         ## buf [ file-id in self.fn_crd_list, 
@@ -235,6 +298,10 @@ class VcManager(object):
                             dict_frames[tuple(vs)] = 0
                         dict_frames[tuple(vs)] += 1
                         break
+                cnt+=1
+                #if not flg:
+                #print "Sampling is failed."
+
         elif init_type=="random":
             vs_frm_srt = sorted(self.vs_frm.items(), key=lambda x:len(x[1]))
             for i in range(n_cal):
@@ -258,15 +325,16 @@ class VcManager(object):
     def prepare_initials(self, init_type, pref_cal, pref_file, n_cal, temperature):
         init_frames = self.pick_init_frames(init_type, n_cal)
         for i, crdfrmvs in enumerate(init_frames):
-            cal_dir = pref_cal + str(i)
+            cal_dir = pref_cal + str(i+1)
             try:    os.mkdir(cal_dir)
             except: pass
             #self.gen_pdb_frm(fn_pdb, crdfrmvs[0], crdfrmvs[1])
-            fn_restart = os.path.join(cal_dir, pref_file+".restart")
+            fn_restart = os.path.join(cal_dir, pref_file+"_0.restart")
             print self.fn_crd_list[crdfrmvs[0]]+" "+str(crdfrmvs[1])+" " + ",".join([str(x) for x in crdfrmvs[2]])
             self.gen_restart_frm(fn_restart, crdfrmvs[0], crdfrmvs[1],
                                  temperature)
             fn_startvirt = os.path.join(cal_dir, "start.virt")
+            
             self.gen_startvirt_frm(fn_startvirt, crdfrmvs[2])
         return
     #def gen_pdb_frm(self, fn, crd, frm):
@@ -307,7 +375,10 @@ def _main():
     manager = VcManager(opts.fn_config)
     manager.load_files()
     manager.set_crd_files(opts.fn_crd_list)
-    manager.count_vs_frm()
+    processed_crd = set()
+    if opts.fn_i_vs_frm:
+        processed_crd = manager.read_vs_frm(opts.fn_i_vs_frm)
+    manager.count_vs_frm(processed_crd)
     manager.print_vs_frm(opts.fn_o_vs_frm)
     manager.prepare_initials(opts.init_type, opts.pref_cal,
                              opts.pref_file, opts.n_cal,
