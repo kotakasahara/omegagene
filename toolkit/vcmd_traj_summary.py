@@ -63,6 +63,7 @@ class VcManager(object):
         self.prob = {}
         self.vs_frm = {}
         self.unmet_neighbor = False
+        self.fn_crd_list = []
         return
     def load_files(self):
         print "read_tpl"
@@ -140,6 +141,7 @@ class VcManager(object):
             lmb = self.cal_lambda_dist_min(frame)
         return lmb
     def cal_lambda_dist_mass_centers(self, frame):
+        # print "frame :" + str(len(frame.crds))
         lmb = []
         def cal_center(grp_id):
             grp_mass = 0.0
@@ -183,6 +185,7 @@ class VcManager(object):
     def count_vs_frm(self, processed_crd=set()):
         #self.vs_frm = {}
         ## vs_frm[(vs1,vs2,...)] = [(i_crd, i_frame), (i_crd, i_frame), ...]
+        if  not self.fn_crd_list: return
         for i_crd, fn_crd in enumerate(self.fn_crd_list):
             if i_crd in processed_crd: continue
             print str(i_crd) + " " + fn_crd
@@ -221,11 +224,7 @@ class VcManager(object):
         for line in f:
             terms = line.strip().split()
             vs = tuple([ int(x) for x in terms[0].split(",") ])
-            print line
-            print terms[0]
-            print "aaa"
             for crdfrm in terms[1:]:
-                print crdfrm
                 tmp = crdfrm.split(":")
                 crd = int(tmp[0])
                 frm = int(tmp[1])
@@ -305,15 +304,14 @@ class VcManager(object):
         elif init_type=="random":
             vs_frm_srt = sorted(self.vs_frm.items(), key=lambda x:len(x[1]))
             for i in range(n_cal):
-                rnd = np.random.rand(len(vs_frm_srt))
-                frms = vs_frm_srt[rnd]
-                tmp = frms[np.random.randint(len(frms))]
-                buf = (tmp[0], tmp[1], vs)
+                rnd = np.random.randint(len(vs_frm_srt))
+                vs_frms = vs_frm_srt[rnd]
+                frm = vs_frms[1][np.random.randint(len(vs_frms[1]))]
+                buf = (frm[0], frm[1], vs_frms[0])
                 init_frames.append(buf)
-                if not tuple(vs) in dict_frames:
-                    dict_frames[tuple(vs)] = 0
-                dict_frames[tuple(vs)] += 1
-                break
+                if not tuple(vs_frms[0]) in dict_frames:
+                    dict_frames[tuple(vs_frms[0])] = 0
+                dict_frames[tuple(vs_frms[0])] += 1
 
         if init_type!="none":
             pass
@@ -330,7 +328,8 @@ class VcManager(object):
             except: pass
             #self.gen_pdb_frm(fn_pdb, crdfrmvs[0], crdfrmvs[1])
             fn_restart = os.path.join(cal_dir, pref_file+"_0.restart")
-            print self.fn_crd_list[crdfrmvs[0]]+" "+str(crdfrmvs[1])+" " + ",".join([str(x) for x in crdfrmvs[2]])
+            print crdfrmvs
+            # print self.fn_crd_list[crdfrmvs[0]]+" "+str(crdfrmvs[1])+" " + ",".join([str(x) for x in crdfrmvs[2]])
             self.gen_restart_frm(fn_restart, crdfrmvs[0], crdfrmvs[1],
                                  temperature)
             fn_startvirt = os.path.join(cal_dir, "start.virt")
@@ -349,9 +348,13 @@ class VcManager(object):
         reader.open()
         frame = reader.read_next_frame()
         for i_frame in range(1, i_frm):
-            #print i_frame
+            if frame == []:
+                print "dbg0501 frame error"
+                print self.fn_crd_list[i_codfile]
+                print i_frame
             frame = reader.read_next_frame()
         reader.close()
+            
         rest.crd = frame.crds
         #self.tpl.convert_units_to_si()
         rest.n_vel = rest.n_atoms
@@ -374,7 +377,8 @@ def _main():
     opts, args = get_options()
     manager = VcManager(opts.fn_config)
     manager.load_files()
-    manager.set_crd_files(opts.fn_crd_list)
+    if opts.fn_crd_list:
+        manager.set_crd_files(opts.fn_crd_list)
     processed_crd = set()
     if opts.fn_i_vs_frm:
         processed_crd = manager.read_vs_frm(opts.fn_i_vs_frm)

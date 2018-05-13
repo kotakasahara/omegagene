@@ -47,6 +47,12 @@ class VcMDConf():
                 for i, p in enumerate(conf.params[vs]):
                     self.params[vs][i] += p
         return
+    def scale_params(self, factor):
+        key_def = tuple([ 0 for x in range(self.dim)])
+        for vs, param in self.params.items():
+            if vs == key_def: continue
+            self.params[vs][0] *= factor
+        return
     def multiply_params(self, conf):
         key_def = tuple([ 0 for x in range(self.dim)])
         #print "test"

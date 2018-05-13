@@ -18,6 +18,8 @@ def opt_parse():
                  help="q_raw files")
     p.add_option('--i-qraw-list', dest='fn_qraw_list',
                  help="q_raw files")
+    p.add_option('--i-weight', dest='fn_weight',
+                 help="weight for each trajectory")
     p.add_option('--p-count', dest='pseudo_count',
                  type="int", default = 0,
                  help="pseudo_count")
@@ -39,6 +41,15 @@ def read_fnlist(fn):
     f.close()
     return fnlist
 
+def read_weight(fn):
+    f = open(fn)
+    weights = []
+    for line in f:
+        tmp = line.strip().split()[0]
+        weights.append(float(tmp))
+    f.close()
+    return weights
+
 def _main():
     opts, args = opt_parse()
     vc = kkmm_vcmd.VcMDConf()
@@ -47,13 +58,25 @@ def _main():
         fn_list = opts.fn_qraw
     if opts.fn_qraw_list:
         fn_list.extend(read_fnlist(opts.fn_qraw_list))
-    vc.read_params(fn_list[0], False)
-    print  "%30s : %15.1f"%(fn_list[0], vc.sum_params())
+    
+    trj_weight = []
+    for i in range(len(fn_list)):
+        trj_weight.append(1.0)
+    if opts.fn_weight:
+        trj_weight = read_weight(opts.fn_weight)
 
-    for fn_qraw in fn_list[1:]:
+
+    vc.read_params(fn_list[0], False)
+    tmp = vc.sum_params()
+    vc.scale_params(trj_weight[0])
+    print  "%30s : samples %15.1f (%15.1f) : weight %6.4f"%(fn_list[0], tmp, vc.sum_params(), trj_weight[0])
+
+    for i, fn_qraw in enumerate(fn_list[1:]):
         vc_sub = kkmm_vcmd.VcMDConf()
         vc_sub.read_params(fn_qraw, False)
-        print  "%30s : %15.1f"%(fn_qraw, vc_sub.sum_params())
+        tmp = vc_sub.sum_params()
+        vc_sub.scale_params(trj_weight[i+1])        
+        print  "%30s : samples %15.1f (%15.1f) : weight %6.4f"%(fn_qraw, tmp, vc_sub.sum_params(), trj_weight[i+1])
         vc.add_params(vc_sub)
 
     if opts.symmetrize:

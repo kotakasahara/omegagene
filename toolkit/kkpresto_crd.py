@@ -106,7 +106,7 @@ class PrestoCrdReader(kkkit.FileBI):
         buf_size = struct.unpack("@i",self.f.read(4))[0] ## n_atoms * 3 * 4
         self.n_atoms = buf_size / 12
         self.size_frame = 52 + buf_size + 8 
-        #print self.size_frame
+        # print self.size_frame
         self.close()
         return
     def count_n_frames(self):
@@ -145,7 +145,8 @@ class PrestoCrdReader(kkkit.FileBI):
         
         buf_size = struct.unpack("@i",self.f.read(4))[0] ## n_atoms * 3 * 4
         self.n_atoms = buf_size / 12
-        #print n_atoms
+        
+        #print "dbg 0501 : " + str(self.n_atoms)
         crds = []
         for i in range(0,self.n_atoms):
             #print i*12
