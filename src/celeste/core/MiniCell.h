@@ -30,6 +30,7 @@ class MiniCell : public CelesteObject {
     // n_atoms
     //  the number of atoms in the whole system
     int n_atoms;
+    real density;
 
     int  n_cells;
     int  n_columns;
@@ -256,7 +257,8 @@ class MiniCell : public CelesteObject {
                             const real in_cutoff_pair,
                             const PBC *in_pbc,
                             const int  in_max_n_nb15off,
-                            int *      in_nb15off);
+                            int *      in_nb15off,
+			    const real in_dens);
 
     // real move_crd_in_cell(const int atomid, const int dim, const real val);
     void add_energy(const real_fc in_vdw, const real_fc in_ele) {

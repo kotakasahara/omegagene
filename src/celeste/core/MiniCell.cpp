@@ -214,6 +214,9 @@ int MiniCell::set_grid_xy() {
 
     real_pw min_cell_width_xy =
         pow((real_pw)((real_pw)N_ATOM_CELL / ((real_pw)n_atoms / volume)), (real_pw)(1.0 / 3.0));
+    if (min_cell_width_xy > cutoff_pair_half)
+      min_cell_width_xy = cutoff_pair_half;
+  
     // cout << "min_cell_width_xy : " << min_cell_width_xy << endl;;
     // cout << " ... " << volume << ", "  << (real)n_atoms/volume << ", " << (real)N_ATOM_CELL /
     // ((real)(n_atoms)/pbc->cal_volume()) << endl;
@@ -222,16 +225,24 @@ int MiniCell::set_grid_xy() {
     L_cell_xyz[0]  = exbox_l[0] / (real_pw)n_cells_xyz[0];
     L_cell_xyz[1]  = exbox_l[1] / (real_pw)n_cells_xyz[1];
 
-    n_columns = (n_cells_xyz[0] * n_cells_xyz[1]);
 
+    n_columns = (n_cells_xyz[0] * n_cells_xyz[1]);
+    
     // the maximum number of atoms in each column is estimated as
     //  1.3 times larger than the expected number.
     //  there is no data the factor 1.3 is good or not.
     //  this point should be tested.
     max_n_atoms_column = ceil((real_pw)max_n_atoms_exbox / (real_pw)n_columns * 1.3);
+    // for implicit
+    if ( density > 0 ) 
+      max_n_atoms_column = ceil(exbox_l[2] * L_cell_xyz[0] * L_cell_xyz[1] * density * 1.3);
 
-    // cout << "max_n_atoms_column " << max_n_atoms_column << " max_n_atoms_exbox: " << max_n_atoms_exbox << endl;
+    
+    cout << "max_n_atoms_column " << max_n_atoms_column << " max_n_atoms_exbox: " << max_n_atoms_exbox << endl;
     n_cells_xyz[2] = (max_n_atoms_column - N_ATOM_CELL + 1) / N_ATOM_CELL;
+
+    cout << "n_cell_x : "  << n_cells_xyz[0] << "   n_cell_y : "  << n_cells_xyz[1] 
+	 << "   n_cell_z : "  << n_cells_xyz[2] << endl;
 
     n_neighbors_xyz[0] = ceil(cutoff_pair / L_cell_xyz[0]);
     n_neighbors_xyz[1] = ceil(cutoff_pair / L_cell_xyz[1]);
@@ -302,22 +313,22 @@ int MiniCell::set_atoms_into_grid_xy() {
         // idx_cell_xy_atom[column_id][n_atoms_col[column_id]] = atom_id;
         n_atoms_col[column_id]++;
     }
-
-    // cout << "set_idx_xy_head_atom_from_n_atoms_col()" << endl;
-    set_idx_xy_head();
+    
+    //cout << "set_idx_xy_head_atom_from_n_atoms_col()" << endl;
+     set_idx_xy_head();
 
     set_atomids_from_buf();
 
-    // cout << "reorder_atominfo_for_columns()" << endl;
+    //cout << "reorder_atominfo_for_columns()" << endl;
     reorder_atominfo_for_columns();
 
-    // cout << "set_dummy_atoms()" << endl;
+    ///cout << "set_dummy_atoms()" << endl;
     set_dummy_atoms();
 
-    // cout << "reorder_atominfo_in_columns() " <<endl;
+    //cout << "reorder_atominfo_in_columns() " <<endl;
     reorder_atominfo_in_columns();
     set_atomids_rev();
-    // cout << " // set_atomids_rev"<<endl;
+    //cout << " // set_atomids_rev"<<endl;
     // debug_set_atoms_into_grid();
 
     // TEST
@@ -707,36 +718,36 @@ int MiniCell::set_idx_xy_head() {
     int atom_index    = 0;
     int cur_cell_id   = 0;
     int n_dummies_all = 0;
-    // cout << "set_idx_xy_head_atom_from_n_atoms_col" <<endl;
+    //cout << "set_idx_xy_head_atom_from_n_atoms_col" <<endl;
     for (int column_id = 0; column_id < n_columns; column_id++) {
-        //    cout << "column_id " << column_id << endl;
-        int column_x                = column_id % n_cells_xyz[0];
-        int column_y                = column_id / n_cells_xyz[0];
-        idx_xy_head_cell[column_id] = cur_cell_id;
-        idx_xy_head_atom[column_id] = atom_index;
-        n_cells_z[column_id]        = (n_atoms_col[column_id] + N_ATOM_CELL - 1) / N_ATOM_CELL;
-        n_cells += n_cells_z[column_id];
-        for (int cur_cell_z = 0; cur_cell_z < n_cells_z[column_id]; cur_cell_z++, cur_cell_id++) {
-            // cout << "set " << cur_cell_id << "("<<column_x<<","<<column_y<<","<<cur_cell_z<<")"<<endl;
-            idx_crd_cell[column_x][column_y][cur_cell_z] = cur_cell_id;
-            cell_crd[cur_cell_id][0]                     = column_x;
-            cell_crd[cur_cell_id][1]                     = column_y;
-            cell_crd[cur_cell_id][2]                     = cur_cell_z;
-        }
-        int n_dummies = n_cells_z[column_id] * N_ATOM_CELL - n_atoms_col[column_id];
-        n_dummies_all += n_dummies;
-        // int i;
-
-        // for(i = 0; i < n_dummies; i++){
-        // cout << "dummy " << column_id << "-" << n_atoms_col[column_id] << " " << i <<" " <<
-        // idx_xy_head_atom[column_id] << endl;
-        // int cur_atomid_grid = idx_xy_head_atom[column_id]+n_atoms_col[column_id]+i;
-        // atomids[cur_atomid_grid] = -1;
-        //}
-        // dummy_particles[column_id][i] = atom_index + n_atoms_col[column_id] + i;
-        // atom_index += n_atoms_col[column_id];
-        atom_index += n_cells_z[column_id] * N_ATOM_CELL;
-        // cout << "idx_xy_head_atom["<<column_id<<"] = " << atom_index << " , " << n_atoms_col[column_id]<<endl;
+      //cout << "column_id " << column_id << endl;
+      int column_x                = column_id % n_cells_xyz[0];
+      int column_y                = column_id / n_cells_xyz[0];
+      idx_xy_head_cell[column_id] = cur_cell_id;
+      idx_xy_head_atom[column_id] = atom_index;
+      n_cells_z[column_id]        = (n_atoms_col[column_id] + N_ATOM_CELL - 1) / N_ATOM_CELL;
+      n_cells += n_cells_z[column_id];
+      for (int cur_cell_z = 0; cur_cell_z < n_cells_z[column_id]; cur_cell_z++, cur_cell_id++) {
+	//cout << "set " << cur_cell_id << "("<<column_x<<","<<column_y<<","<<cur_cell_z<<")"<<endl;
+	idx_crd_cell[column_x][column_y][cur_cell_z] = cur_cell_id;
+	cell_crd[cur_cell_id][0]                     = column_x;
+	cell_crd[cur_cell_id][1]                     = column_y;
+	cell_crd[cur_cell_id][2]                     = cur_cell_z;
+      }
+      int n_dummies = n_cells_z[column_id] * N_ATOM_CELL - n_atoms_col[column_id];
+      n_dummies_all += n_dummies;
+      // int i;
+      
+      // for(i = 0; i < n_dummies; i++){
+      // cout << "dummy " << column_id << "-" << n_atoms_col[column_id] << " " << i <<" " <<
+      // idx_xy_head_atom[column_id] << endl;
+      // int cur_atomid_grid = idx_xy_head_atom[column_id]+n_atoms_col[column_id]+i;
+      // atomids[cur_atomid_grid] = -1;
+      //}
+      // dummy_particles[column_id][i] = atom_index + n_atoms_col[column_id] + i;
+      // atom_index += n_atoms_col[column_id];
+      atom_index += n_cells_z[column_id] * N_ATOM_CELL;
+      //cout << "idx_xy_head_atom["<<column_id<<"] = " << atom_index << " , " << n_atoms_col[column_id]<<endl;
     }
     idx_xy_head_cell[n_columns] = n_cells;
     idx_xy_head_atom[n_columns] = atom_index;
@@ -1090,7 +1101,8 @@ int MiniCell::set_grid_parameters(const int  in_n_atoms,
                                   const real in_cutoff_pair,
                                   const PBC *in_pbc,
                                   const int  in_max_n_nb15off,
-                                  int *      in_nb15off) {
+                                  int *      in_nb15off,
+				  const real in_dens) {
     // set member variables
     //  n_atoms
     //  cutoff_pair
@@ -1101,6 +1113,7 @@ int MiniCell::set_grid_parameters(const int  in_n_atoms,
     cutoff_pair2     = cutoff_pair * cutoff_pair;
     pbc              = (PBC *)in_pbc;
     nb15off          = in_nb15off;
+    density          = in_dens;
 
     max_n_nb15off = in_max_n_nb15off;
 
