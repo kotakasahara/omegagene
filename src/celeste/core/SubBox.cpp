@@ -30,7 +30,6 @@ extern "C" int cuda_alloc_set_lj_params(real_pw * h_lj_6term,
                                         const int max_n_nb15off,
                                         const int max_n_atoms,
                                         const int max_n_atom_array);
-
 extern "C" int cuda_free_lj_params();
 
 extern "C" int cuda_memcpy_htod_atomids(int *&h_atomids, int *&h_idx_xy_head_cell);
@@ -58,6 +57,20 @@ extern "C" int cuda_enumerate_cell_pairs(int *&     h_atomids,
                                          const int  n_cells, // const int n_uni,
                                          const int  n_neighbor_col,
                                          const int *idx_atom_cell_xy);
+
+#ifdef F_HPSCUDA
+extern "C" int cuda_hps_constant(real_pw epsiron);
+extern "C" int cuda_alloc_set_hps_params(real_pw * h_hps_cutoff,
+					 real_pw * h_hps_lambda,
+					 int n_lj_types);
+
+extern "C" int cuda_free_hps_params();
+extern "C" int cuda_debye_huckel_constant(real_pw dielect, real_pw temperature,
+					  real_pw ionic_strength);
+
+extern "C" int cuda_pairwise_hps_dh(const bool flg_mod_15mask);
+#endif
+
 #ifdef F_ECP
 extern "C" int cuda_memcpy_htod_cell_pairs(CellPair *&h_cell_pairs, int *&h_idx_head_cell_pairs, int n_cell_pairs);
 
@@ -77,6 +90,9 @@ SubBox::~SubBox() {
 #if defined(F_CUDA)
     cuda_free_atom_info();
     cuda_free_lj_params();
+#if defined(F_HPSCUDA)
+    cuda_free_hps_params();
+#endif
 #endif
     free_variables();
     delete constraint;
@@ -1564,17 +1580,24 @@ int SubBox::gpu_device_setup() {
                          // nsgrid.get_max_n_atom_array(),
                          nsgrid.get_max_n_cells(), nsgrid.get_max_n_cell_pairs(), nsgrid.get_n_columns() + 1);
     //     nsgrid.get_n_uni());
-
+    
     cuda_alloc_set_lj_params(lj_6term, lj_12term, n_lj_types, nb15off, max_n_nb15off, max_n_atoms_exbox,
                              nsgrid.get_max_n_atom_array());
-
+#ifdef F_HPSCUDA
+    cuda_alloc_set_hps_params(hps_cutoff, hps_lambda, n_lj_types);
+#endif
     real_pw tmp_l[3]  = {(real_pw)pbc->L[0], (real_pw)pbc->L[1], (real_pw)pbc->L[2]};
     real_pw tmp_lb[3] = {(real_pw)pbc->lower_bound[0], (real_pw)pbc->lower_bound[1], (real_pw)pbc->lower_bound[2]};
     // cuda_set_pbc((const real_pw*)pbc->L);
     cuda_set_pbc(tmp_l, tmp_lb);
     cuda_set_constant((real_pw)cfg->cutoff, (real_pw)cfg->nsgrid_cutoff, n_lj_types);
     cuda_zerodipole_constant(ff.ele->get_zcore(), ff.ele->get_bcoeff(), ff.ele->get_fcoeff());
-
+#ifdef F_HPSCUDA
+    cuda_hps_constant(cfg->hps_epsiron);
+    cuda_debye_huckel_constant(cfg->dh_dielectric,
+			       cfg->dh_temperature,
+			       cfg->dh_ionic_strength);
+#endif
     return 0;
 }
 
@@ -1592,7 +1615,12 @@ int SubBox::update_device_cell_info() {
 
 int SubBox::calc_energy_pairwise_cuda() {
     nsgrid.init_energy_work();
+#ifndef F_HSPCUDA
     cuda_pairwise_ljzd(flg_mod_15mask);
+#endif
+#ifdef F_HSPCUDA
+    cuda_pairwise_hps_dh(flg_mod_15mask);
+#endif
     flg_mod_15mask = false;
     return 0;
 }

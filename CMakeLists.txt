@@ -25,7 +25,7 @@ INCLUDE(SetBuildInformation)
 INCLUDE(CheckCXXCompiler)
 INCLUDE(CheckCelesteBuildOptions)
 
-IF(CELESTE_GPU OR CELESTE_GPUECP)
+IF(CELESTE_GPU OR CELESTE_GPUECP OR CELESTE_GPUHPS)
     INCLUDE(CheckCUDA)
 ENDIF()
 
@@ -44,5 +44,5 @@ INCLUDE_DIRECTORIES(src)
 ADD_SUBDIRECTORY(src)
 
 # Remove all files not tracked by git
-ADD_CUSTOM_TARGET(gitclean COMMAND git clean -d -f -x)
-MESSAGE("\n${Magenta}    To clean out all files not tracked by git,\n    simply run 'make gitclean' from the build's\n    ROOT directory.${ColourReset}\n")
+# ADD_CUSTOM_TARGET(gitclean COMMAND git clean -d -f -x)
+# MESSAGE("\n${Magenta}    To clean out all files not tracked by git,\n    simply run 'make gitclean' from the build's\n    ROOT directory.${ColourReset}\n")

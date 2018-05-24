@@ -336,13 +336,10 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
 	  hps_epsiron = atof((*++itr).c_str());
         } else if (*itr == "--expected-num-density") {
 	  expected_num_density = atof((*++itr).c_str());
-	 
         } else {
-            stringstream ss;
-            error_exit(ss.str(), "1A00001");
+	  stringstream ss;
+	  error_exit(ss.str(), "1A00001");
         }
-
     }
-
     if (temperature_init < 0) temperature_init = temperature;
 }

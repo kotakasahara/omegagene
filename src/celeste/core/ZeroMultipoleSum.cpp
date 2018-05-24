@@ -23,8 +23,8 @@ ZeroMultipoleSum::ZeroMultipoleSum(const int           in_zms_mode,
       temperature(in_temperature),
       debye_length_inv(1.0/(sqrt(PERMITTIVITY*in_dielectric*BOLTZMAN*in_temperature/(2*AVOGADRO*ELEM_CHARGE*ELEM_CHARGE*in_ionic_strength))*1e10)),
       ElectrostaticObject() {
-  if (DBG >= 1) cout << "DBG1: ZeroMultipoleSum::ZeroMultipoleSum()" << endl;
-  cout << "cutoff : " << cutoff << endl;
+  //if (DBG >= 1) cout << "DBG1: ZeroMultipoleSum::ZeroMultipoleSum()" << endl;
+  //cout << "cutoff : " << cutoff << endl;
 }
 
 int ZeroMultipoleSum::set_config_parameters(const Config *cfg) {

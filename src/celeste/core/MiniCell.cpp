@@ -249,9 +249,21 @@ int MiniCell::set_grid_xy() {
 
     max_n_cells = n_cells_xyz[0] * n_cells_xyz[1] * n_cells_xyz[2];
 
+    int tmp_max1 = (n_atoms / N_ATOM_CELL) + n_cells_xyz[0] * n_cells_xyz[1] * 2;
+    cout << "max_n_cells : " << max_n_cells << " " << tmp_max1 << endl;
+    if (max_n_cells > tmp_max1){
+      max_n_cells = tmp_max1;
+    }
+
     max_n_cell_pairs =
         ((n_neighbors_xyz[0] * 2 + 1) * (n_neighbors_xyz[1] * 2 + 1) * (n_neighbors_xyz[0] + n_neighbors_xyz[1] + 2))
         * 0.5 * max_n_cells * COEF_MAX_N_CELL_PAIRS;
+    int tmp_max2 = (n_atoms / N_ATOM_CELL) * (n_atoms / N_ATOM_CELL) / 2;
+    cout << " max_n_cell_pairs : " << max_n_cell_pairs << " " << tmp_max2 << endl;
+    if (max_n_cell_pairs > tmp_max2){
+      max_n_cell_pairs = tmp_max2;
+    }
+
     // max_n_cell_pairs = max_n_cells * max_n_cells;
     // cout << "max_n_cell_pairs : " << max_n_cell_pairs << endl;
 

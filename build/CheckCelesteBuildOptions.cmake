@@ -6,6 +6,7 @@ ENDMACRO(SET_BUILD_FLAGS)
 
 SET_BUILD_FLAGS(CELESTE_WO_NS           "Without neighbor-search\; all pairs of atoms are evaluated"                    0)
 SET_BUILD_FLAGS(CELESTE_GPU             "Neighbor-search and pairwise calculation are done on GPU"                      0)
+SET_BUILD_FLAGS(CELESTE_GPUHPS          "Coarse-grain model calculation are done on GPU"                                0)
 SET_BUILD_FLAGS(CELESTE_GPUECP          "Neighbor-search is done on CPU, pairwise potential calculation is done on GPU" 0)
 SET_BUILD_FLAGS(CELESTE_USE_OPENMP      "Build with OpenMP flags"                                                       0)
 SET_BUILD_FLAGS(CELESTE_USE_MPI         "Build with MPI flags"                                                          0)

@@ -69,6 +69,8 @@ __constant__ real_pw D_ZCORE;
 __constant__ real_pw D_BCOEFF;
 __constant__ real_pw D_FCOEFF;
 
+
+
 // x,y,z: Cartesian coordinate,
 // w: charge
 real4 *  d_crd_chg;
@@ -139,5 +141,21 @@ int max_n_nb15off;
 // float *d_test_buf;
 
 // test
+
+real_pw *d_hps_cutoff;
+real_pw *d_hps_lambda;
+__constant__ real_pw D_HPS_EPS;
+
+__constant__ real_pw D_DEBYE_LEN_INV;
+__constant__ real_pw D_DIELECT_INV;
+
+real_pw debye_length_inv;
+real_pw dielect_inv;
+real_pw r12_ld;
+
+#define PERMITTIVITY 1.380658e-23
+#define BOLTZMAN 1.380658e-23
+#define AVOGADRO 6.0221413e23
+#define ELEM_CHARGE 1.60217657e-19
 
 #endif
