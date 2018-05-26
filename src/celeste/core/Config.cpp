@@ -334,6 +334,7 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
 	    }
         } else if (*itr == "--hydrophobicity-scale-epsiron") {
 	  hps_epsiron = atof((*++itr).c_str());
+	  cout << "  HPS EPS " << hps_epsiron << endl;
         } else if (*itr == "--expected-num-density") {
 	  expected_num_density = atof((*++itr).c_str());
         } else {

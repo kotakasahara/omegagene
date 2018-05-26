@@ -595,9 +595,9 @@ class TPL(object):
                 self.nb_pair[(pair[1], pair[0])] = (param1, param2)
 
                 ## for HPS potential
-                cutoff = np.power(2.0, 1.0/6.0) * (param_i[3] + param_j[3]) * 0.5
+                cutoff = np.power(2.0, 1.0/6.0) * (param_i[2] + param_j[2]) * 0.5
                 lmb = 0.0
-                if len(param_i) >= 8 and len(param_j) >= 8:
+                if len(param_i) >= 7 and len(param_j) >= 7:
                     lmb = (param_i[6] + param_j[6]) * 0.5
                 self.nb_pair_hps[pair] = (cutoff, lmb)
                 self.nb_pair_hps[(pair[1], pair[0])] = (cutoff, lmb)

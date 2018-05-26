@@ -10,7 +10,7 @@ class ForceField : public ForceFieldObject {
   protected:
     //  MmSystem* mmsys;
     real gmul[11];
-
+    
   public:
     ZeroMultipoleSum *ele;
     ForceField();
@@ -63,8 +63,12 @@ class ForceField : public ForceFieldObject {
                           real_pw *crd2,
                           real_pw &param_6term,
                           real_pw &param_12term,
+			  real_pw &param_hps_cutoff,
+			  real_pw &param_hps_lambda,
                           real_pw &charge1,
-                          real_pw &charge2);
+                          real_pw &charge2,
+			  int type_lj,
+			  real_pw hps_epsiron);
     int calc_zms_excess(real_pw &ene, real_pw work[], real_pw *crd1, real_pw *crd2, real_pw &charge1, real_pw &charge2);
 
     int cal_self_energy(const int &  n_atoms,

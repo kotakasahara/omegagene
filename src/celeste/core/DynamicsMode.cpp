@@ -183,7 +183,6 @@ int DynamicsMode::main_stream() {
   for (mmsys.cur_step = 0; mmsys.cur_step < cfg->n_steps; mmsys.cur_step++) {
     sub_output();
     calc_in_each_step();
-    
     if ((cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0
 	|| mmsys.cur_step == cfg->n_steps - 1) {
             sub_output_log();

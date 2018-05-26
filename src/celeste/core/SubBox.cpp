@@ -872,7 +872,9 @@ int SubBox::calc_energy() {
 #elif defined(F_CUDA)
     calc_energy_pairwise_cuda();
 #else
+    //cout << "dbg0524 ENE1 " << nsgrid.get_energy()[0] << " "  << nsgrid.get_energy()[1] << endl;
     calc_energy_pairwise();
+    //cout << "dbg0524 ENE2 " << nsgrid.get_energy()[0] << " "  << nsgrid.get_energy()[1] << endl;
 #endif
     const clock_t end_time_pair = clock();
     ctime_calc_energy_pair += end_time_pair - start_time_pair;
@@ -894,8 +896,10 @@ int SubBox::calc_energy() {
 #endif
 #if !defined(F_WO_NS)
     add_work_from_minicell();
-    pote_vdw += nsgrid.get_energy()[0];
-    pote_ele += nsgrid.get_energy()[1];
+    pote_vdw = nsgrid.get_energy()[0];
+    pote_ele = nsgrid.get_energy()[1];
+    //pote_vdw += nsgrid.get_energy()[0];
+    //pote_ele += nsgrid.get_energy()[1];
 #endif
 
     // for ( int i = 0; i < n_atoms_box*3; i++){
@@ -951,6 +955,7 @@ int SubBox::calc_energy_pairwise() {
 	int mask_id;
 	int interact_bit;
 	if (check_nb15off(a1, a2, cellpairs[cp].pair_mask, mask_id, interact_bit)) {
+	  //cout << "dbg0524 ENEskip " <<cp << " cid " <<c1 << " "<<c2 <<" ainc " << a1 << " " << a2 << " aid "<< atomid1 << " " << atomid2 << endl;
 	  // n_pairs_15off++;
 	  continue;
 	}
@@ -966,24 +971,19 @@ int SubBox::calc_energy_pairwise() {
 	// real_pw r12 = sqrt(pow(crd2[0]-crd1[0],2)+pow(crd2[1]-crd1[1],2)+pow(crd2[2]-crd1[2],2));
 	// sum_dist += r12;
 	// if(sum_dist > 100000) sum_dist -= 100000;
-	
-	real_pw r12 = ff.calc_pairwise(tmp_ene_vdw, tmp_ene_ele, tmp_work, crd1, crd2, param_6term,
-				       param_12term, charge[atomid1], charge[atomid2]);
-	if (r12 > cfg->nsgrid_cutoff) { cellpairs[cp].pair_mask[mask_id] &= ~interact_bit; }
-	
+	real_pw parm_hps_cutoff = 0.0;
+	real_pw parm_hps_lambda = 0.0;
 	if (cfg->nonbond == NONBOND_HPS){
-	  real_pw parm_hps_cutoff = hps_cutoff[atom_type[atomid1] * n_lj_types + atom_type[atomid2]];
-	  real_pw parm_hps_lambda = hps_lambda[atom_type[atomid1] * n_lj_types + atom_type[atomid2]];
-	  if (r12 < parm_hps_cutoff){
-	    tmp_ene_vdw *= parm_hps_lambda;
-	    tmp_work[0] *= parm_hps_lambda;
-	    tmp_work[1] *= parm_hps_lambda;
-	    tmp_work[2] *= parm_hps_lambda;
-	  }else{
-	    tmp_ene_vdw += (1-parm_hps_lambda) * cfg->hps_epsiron;
-	  }
+	  parm_hps_cutoff = hps_cutoff[atom_type[atomid1] * n_lj_types + atom_type[atomid2]];
+	  parm_hps_lambda = hps_lambda[atom_type[atomid1] * n_lj_types + atom_type[atomid2]];      
 	}
-
+	real_pw r12 = ff.calc_pairwise(tmp_ene_vdw, tmp_ene_ele, tmp_work, crd1, crd2, param_6term, param_12term,
+				       parm_hps_cutoff, parm_hps_lambda,
+				       charge[atomid1], charge[atomid2],
+				       cfg->nonbond, 
+				       cfg->hps_epsiron);
+	if (r12 > cfg->nsgrid_cutoff) { cellpairs[cp].pair_mask[mask_id] &= ~interact_bit; }
+	//cout << "dbg0524 ENEpair " <<cp << " cid " <<c1 << " "<<c2 <<" ainc " << a1 << " " << a2 << " aid "<< atomid1 << " " << atomid2 << "  " << tmp_ene_vdw << endl;
 	nsgrid.add_energy(tmp_ene_vdw, tmp_ene_ele);
 	/*
 	  if(isnan(tmp_ene_vdw)){
@@ -1092,21 +1092,18 @@ int SubBox::calc_energy_pairwise_wo_neighborsearch() {
       // real_pw r12 = sqrt(pow(crd2[0]-crd1[0],2)+pow(crd2[1]-crd1[1],2)+pow(crd2[2]-crd1[2],2));
       // sum_dist += r12;
       // if(sum_dist > 100000) sum_dist -= 100000;
-      
-      real_pw r12 = ff.calc_pairwise(tmp_ene_vdw, tmp_ene_ele, tmp_work, crd1, crd2, param_6term, param_12term,
-				     charge[atomid1], charge[atomid2]);
+      real_pw parm_hps_cutoff = 0.0;
+      real_pw parm_hps_lambda = 0.0;
       if (cfg->nonbond == NONBOND_HPS){
-	real_pw parm_hps_cutoff = hps_cutoff[atom_type[atomid1] * n_lj_types + atom_type[atomid2]];
-	real_pw parm_hps_lambda = hps_lambda[atom_type[atomid1] * n_lj_types + atom_type[atomid2]];
-	if (r12 < parm_hps_cutoff){
-	  tmp_ene_vdw *= parm_hps_lambda;
-	  tmp_work[0] *= parm_hps_lambda;
-	  tmp_work[1] *= parm_hps_lambda;
-	  tmp_work[2] *= parm_hps_lambda;
-	}else{
-	  tmp_ene_vdw += (1-parm_hps_lambda) * cfg->hps_epsiron;
-	}
+	parm_hps_cutoff = hps_cutoff[atom_type[atomid1] * n_lj_types + atom_type[atomid2]];
+	parm_hps_lambda = hps_lambda[atom_type[atomid1] * n_lj_types + atom_type[atomid2]];      
       }
+      real_pw r12 = ff.calc_pairwise(tmp_ene_vdw, tmp_ene_ele, tmp_work, crd1, crd2, param_6term, param_12term,
+				     parm_hps_cutoff, parm_hps_lambda,
+				     charge[atomid1], charge[atomid2],
+				     cfg->nonbond, 
+				     cfg->hps_epsiron);
+      //cout << "dbg0524 ENEpair " << atomid1 << " " << atomid2 << "  " << tmp_ene_vdw << endl;
       pote_vdw += tmp_ene_vdw;
       pote_ele += tmp_ene_ele;
       work[atomid1_3] += tmp_work[0];
@@ -1379,10 +1376,10 @@ int SubBox::set_velocity_from_crd() {
         }
         real diff = fabs(norm1 - norm2) * mass[atomid_b];
         if (diff > 0.01)
-            cout << "diff " << atomid_b << " " << diff << "(" << crd[atomid_b3] << ", " << crd[atomid_b3 + 1] << ", "
-                 << crd[atomid_b3 + 2] << ") "
-                 << "(" << crd_prev[atomid_b3] << ", " << crd_prev[atomid_b3 + 1] << ", " << crd_prev[atomid_b3 + 2]
-                 << ") " << endl;
+	  cout << "diff " << atomid_b << " " << diff << "(" << crd[atomid_b3] << ", " << crd[atomid_b3 + 1] << ", "
+	       << crd[atomid_b3 + 2] << ") "
+	       << "(" << crd_prev[atomid_b3] << ", " << crd_prev[atomid_b3 + 1] << ", " << crd_prev[atomid_b3 + 2]
+	       << ") " << endl;
     }
     return 0;
 }

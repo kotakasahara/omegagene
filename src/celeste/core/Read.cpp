@@ -321,6 +321,7 @@ int Read::load_ls_tpl(MmSystem &mmsys) {
         read_bin_values(&cutoff, 1);
         read_bin_values(&lambda, 1);
         mmsys.set_lj_pair_hps_param(type1 - 1, type2 - 1, (real_pw)cutoff, (real_pw)lambda);
+	//cout << "readHPS " << type1 << "-" << type2 << " " << cutoff <<" " <<lambda<<endl; 
     }
     
     // bond

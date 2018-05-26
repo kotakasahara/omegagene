@@ -331,8 +331,12 @@ real_pw ForceField::calc_pairwise(real_pw &ene_vdw,
                                   real_pw *crd2,
                                   real_pw &param_6term,
                                   real_pw &param_12term,
+				  real_pw &param_hps_cutoff,
+				  real_pw &param_hps_lambda,
                                   real_pw &charge1,
-                                  real_pw &charge2) {
+                                  real_pw &charge2,
+				  int type_lj,
+				  real_pw hps_epsiron) {
 
     real_pw d12[3] = {0.0, 0.0, 0.0};
 
@@ -344,8 +348,8 @@ real_pw ForceField::calc_pairwise(real_pw &ene_vdw,
 
     real_pw r12 = sqrt(r12_2);
     //  cout << "r12 : " << r12 << endl;
-    ene_vdw             = 0.0;
-    ene_ele             = 0.0;
+    //ene_vdw             = 0.0;
+    //ene_ele             = 0.0;
     real_pw work_vdw[3] = {0.0, 0.0, 0.0};
     real_pw work_ele[3] = {0.0, 0.0, 0.0};
     // if( r12 < 0.1)
@@ -358,8 +362,22 @@ real_pw ForceField::calc_pairwise(real_pw &ene_vdw,
     real_pw r12_12_inv = r12_6_inv * r12_6_inv;
     real_pw term6      = param_6term * r12_6_inv;
     real_pw term12     = param_12term * r12_12_inv;
+
     ene_vdw            = -term6 + term12;
     real_pw work_coef  = r12_2_inv * (-12.0 * term12 + 6.0 * term6);
+    if (type_lj == NONBOND_HPS){
+      if (r12 < param_hps_cutoff){
+	//cout << "HPS " << ene_vdw << ", " <<  work_coef ;
+	ene_vdw *= param_hps_lambda;
+	work_coef *= param_hps_lambda;
+	//cout << " => " << ene_vdw << ", " <<  work_coef << endl;
+      }else{
+	//cout << "HPS " << ene_vdw << ", " <<  work_coef << " " << param_hps_lambda << " " << hps_epsiron;
+	ene_vdw += (1-param_hps_lambda) * hps_epsiron;
+	//cout << " => " << ene_vdw << ", " <<  work_coef << endl;
+      }
+    }
+
     for (int d = 0; d < 3; d++) work_vdw[d] = work_coef * d12[d];
     // cout << "dbg vdw " << r12 << " " << param_6term << " " << param_12term <<  " " << work_vdw[0] << " "  <<
     // work_vdw[1] << " " <<
@@ -367,9 +385,11 @@ real_pw ForceField::calc_pairwise(real_pw &ene_vdw,
     real_pw cc = charge1 * charge2 * CHARGE_COEFF;
 
     real_pw work_coef_ele;
-    // cout << "dbg0204: cc " << cc << " " <<  charge1 << " " << charge2 << " " << r12_2 << " " << r12_inv << endl;
-    // printf("dbgcrd %12.8e %12.8e %12.8e %12.8e %12.8e %12.8e\n",
-    // crd1[0],crd1[1],crd1[2],crd2[0],crd2[1],crd2[2]);
+
+    //cout << "dbg0204: cc " << cc << " " <<  charge1 << " " << charge2 << " " << r12_2 << " " << r12_inv << endl;
+    //printf("dbgcrd %12.8e %12.8e %12.8e %12.8e %12.8e %12.8e\n",
+    //crd1[0],crd1[1],crd1[2],crd2[0],crd2[1],crd2[2]);
+
     (ele->*(ele->func_calc_zms))(ene_ele, work_coef_ele, r12, r12_2, r12_inv, r12_2_inv, r12_3_inv, cc);
 
     //printf("dbgpair %10e %10e %15e\n", r12, cc, CHARGE_COEFF);
