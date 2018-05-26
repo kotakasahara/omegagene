@@ -58,7 +58,6 @@ extern "C" int cuda_enumerate_cell_pairs(int *&     h_atomids,
                                          const int  n_neighbor_col,
                                          const int *idx_atom_cell_xy);
 
-#ifdef F_HPSCUDA
 extern "C" int cuda_hps_constant(real_pw epsiron);
 extern "C" int cuda_alloc_set_hps_params(real_pw * h_hps_cutoff,
 					 real_pw * h_hps_lambda,
@@ -69,7 +68,6 @@ extern "C" int cuda_debye_huckel_constant(real_pw dielect, real_pw temperature,
 					  real_pw ionic_strength);
 
 extern "C" int cuda_pairwise_hps_dh(const bool flg_mod_15mask);
-#endif
 
 #ifdef F_ECP
 extern "C" int cuda_memcpy_htod_cell_pairs(CellPair *&h_cell_pairs, int *&h_idx_head_cell_pairs, int n_cell_pairs);
@@ -1612,10 +1610,10 @@ int SubBox::update_device_cell_info() {
 
 int SubBox::calc_energy_pairwise_cuda() {
     nsgrid.init_energy_work();
-#ifndef F_HSPCUDA
+#ifndef F_HPSCUDA
     cuda_pairwise_ljzd(flg_mod_15mask);
 #endif
-#ifdef F_HSPCUDA
+#ifdef F_HPSCUDA
     cuda_pairwise_hps_dh(flg_mod_15mask);
 #endif
     flg_mod_15mask = false;

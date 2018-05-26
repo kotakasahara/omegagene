@@ -430,7 +430,6 @@ __device__ real_pw cal_pair(real_pw &    w1,
     w3 = (work_coef)*d12[2];
 
     ene_ele = cc * (r12_inv - D_ZCORE + D_BCOEFF * r12_2);
-
     ene_vdw = (-term6 + term12);
 
     return r12;
@@ -1028,19 +1027,19 @@ extern "C" int cuda_memcpy_htod_cell_pairs(CellPair *&h_cell_pairs, int *&h_idx_
 }
 
 
-extern "C" int cuda_alloc_set_hps_params(real_pw * h_hps_cutoff,
-					 real_pw * h_hps_lambda,
+extern "C" int cuda_alloc_set_hps_params(real_pw* h_hps_cutoff,
+					 real_pw* h_hps_lambda,
 					 int       n_lj_types){
     // printf("threads : %d\n", PW_THREADS);
   printf("cuda_alloc_set_hps_params\n");
-  const unsigned int size_lj_matrix = sizeof(real_pw) * n_lj_types * n_lj_types;
+    const unsigned int size_lj_matrix = sizeof(real_pw) * n_lj_types * n_lj_types;
   // cudaMalloc
   HANDLE_ERROR(cudaMalloc((void **)&d_hps_cutoff, size_lj_matrix));
   HANDLE_ERROR(cudaMalloc((void **)&d_hps_lambda, size_lj_matrix));
   
   HANDLE_ERROR(cudaMemcpy(d_hps_cutoff, h_hps_cutoff, size_lj_matrix, cudaMemcpyHostToDevice));
   HANDLE_ERROR(cudaMemcpy(d_hps_lambda, h_hps_lambda, size_lj_matrix, cudaMemcpyHostToDevice));
-  
+  //printf("cudadbg %d\n", d_hps_lambda[0]);
   return 0;
 }
 extern "C" int cuda_free_hps_params() {
@@ -1053,6 +1052,7 @@ extern "C" int cuda_free_hps_params() {
 }
 
 extern "C" int cuda_hps_constant(real_pw hps_eps){
+  printf("set_cuda_hps_constant\n");
   HANDLE_ERROR(cudaMemcpyToSymbol(D_HPS_EPS, &hps_eps, sizeof(real_pw)));      
   return 0;
 }
@@ -1098,18 +1098,16 @@ __device__ real_pw cal_pair_hps_dh(real_pw &    w1,
     
     if (r12 >= D_CUTOFF) { return r12; }
 
-    if(r12 <  hps_cutoff){
-      ene_vdw *= hps_lambda;
-      w1 *= hps_lambda;
-      w2 *= hps_lambda;
-      w3 *= hps_lambda;
-    }else{
-      ene_vdw += (1-hps_lambda) * D_HPS_EPS;
-    }
-
     ene_ele = cc * D_DIELECT_INV * r12_ld_exp;
     ene_vdw = (-term6 + term12);
     work_coef -= r12_ld_exp*cc*(r12_2_inv + r12_inv * D_DEBYE_LEN_INV);
+
+    if(r12 <  hps_cutoff){
+      ene_vdw *= hps_lambda;
+      work_coef *= hps_lambda;
+    }else{
+      ene_vdw += (1-hps_lambda) * D_HPS_EPS;
+    }
 
     w1 = (work_coef)*d12[0];
     w2 = (work_coef)*d12[1];
@@ -1283,3 +1281,4 @@ extern "C" int cuda_pairwise_hps_dh(const bool flg_mod_15mask) {
 
     return 0;
 }
+

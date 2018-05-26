@@ -24,6 +24,9 @@ def get_options():
                  help="Group name to be output")
     p.add_option('--i-restart', dest='fn_restart',
                  help="Input restart file")
+    p.add_option('--last-overwrite', dest='last_overwrite',
+                 action="store_true",
+                 help="Overwriting the last frame")
     opts, args = p.parse_args()
     print "----------------------------"
     p.print_help()
@@ -49,13 +52,16 @@ def _main():
 
     crd_reader = kkcrd.PrestoCrdReader(opts.fn_i_cod)    
     crd_reader.open()
-    read_frame = 0
+    read_frame = 1
+    frame_crd_prev = crd_reader.read_next_frame(bin=True)
     frame_crd = crd_reader.read_next_frame(bin=True)
     while frame_crd:
-        crd_writer.write_frame_with_frame(frame_crd, bin=True)
+        crd_writer.write_frame_with_frame(frame_crd_prev, bin=True)
+        frame_crd_prev = frame_crd
         frame_crd = crd_reader.read_next_frame(bin=True)
         read_frame += 1
-        
+    if not opts.last_overwrite:
+        crd_writer.write_frame_with_frame(frame_crd_prev, bin=True)        
     crd_reader.close()    
 
     rst_reader = kkrst.PrestoRestartReader(opts.fn_restart)
@@ -63,7 +69,7 @@ def _main():
 
     for i in range(rst.n_atoms):
         if not i in grps[grp_id]:
-            ignore_atoms.add(i)
+            ignore_atoms.add(i-1)
 
     crd_writer.write_frame(rst.crd,
                            rst.n_loop, rst.time,
