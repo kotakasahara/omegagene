@@ -1578,9 +1578,6 @@ int SubBox::gpu_device_setup() {
     
     cuda_alloc_set_lj_params(lj_6term, lj_12term, n_lj_types, nb15off, max_n_nb15off, max_n_atoms_exbox,
                              nsgrid.get_max_n_atom_array());
-#ifdef F_HPSCUDA
-    cuda_alloc_set_hps_params(hps_cutoff, hps_lambda, n_lj_types);
-#endif
     real_pw tmp_l[3]  = {(real_pw)pbc->L[0], (real_pw)pbc->L[1], (real_pw)pbc->L[2]};
     real_pw tmp_lb[3] = {(real_pw)pbc->lower_bound[0], (real_pw)pbc->lower_bound[1], (real_pw)pbc->lower_bound[2]};
     // cuda_set_pbc((const real_pw*)pbc->L);
@@ -1588,7 +1585,9 @@ int SubBox::gpu_device_setup() {
     cuda_set_constant((real_pw)cfg->cutoff, (real_pw)cfg->nsgrid_cutoff, n_lj_types);
     cuda_zerodipole_constant(ff.ele->get_zcore(), ff.ele->get_bcoeff(), ff.ele->get_fcoeff());
 #ifdef F_HPSCUDA
+    cuda_alloc_set_hps_params(hps_cutoff, hps_lambda, n_lj_types);
     cuda_hps_constant(cfg->hps_epsiron);
+    //cout << "cuda_debye_huckel_constant (SubBox)" << endl;
     cuda_debye_huckel_constant(cfg->dh_dielectric,
 			       cfg->dh_temperature,
 			       cfg->dh_ionic_strength);

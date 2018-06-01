@@ -6,13 +6,13 @@ __device__ __inline__ double shfl_xor(double value, int const lane, int const wa
 }
 
 __device__ double atomicAdd2(double *address, double val) {
-    unsigned long long int *address_as_ull = (unsigned long long int *)address;
-    unsigned long long int  old            = *address_as_ull, assumed;
-    do {
-        assumed = old;
-        old     = atomicCAS(address_as_ull, assumed, __double_as_longlong(val + __longlong_as_double(assumed)));
-    } while (assumed != old);
-    return __longlong_as_double(old);
+  unsigned long long int *address_as_ull = (unsigned long long int *)address;
+  unsigned long long int  old            = *address_as_ull, assumed;
+  do {
+    assumed = old;
+    old     = atomicCAS(address_as_ull, assumed, __double_as_longlong(val + __longlong_as_double(assumed)));
+  } while (assumed != old);
+  return __longlong_as_double(old);
 }
 
 extern "C" int cuda_alloc_atom_info(int in_max_n_atoms_exbox,
@@ -20,60 +20,60 @@ extern "C" int cuda_alloc_atom_info(int in_max_n_atoms_exbox,
                                     int in_max_n_cells,
                                     int in_max_n_cell_pairs,
                                     int in_n_columns) {
-    printf("cuda_alloc_atom_info\n");
-    max_n_atoms_exbox = in_max_n_atoms_exbox;
-    // max_n_atom_array = in_max_n_atom_array;
-    max_n_cell_pairs = in_max_n_cell_pairs;
-    max_n_cells      = in_max_n_cells;
-    HANDLE_ERROR(cudaMalloc((void **)&d_crd_chg, max_n_atom_array * sizeof(real4)));
-    HANDLE_ERROR(cudaMalloc((void **)&d_cell_z, max_n_cells * sizeof(real2)));
-    HANDLE_ERROR(cudaMalloc((void **)&d_crd, max_n_atom_array * 3 * sizeof(real_pw)));
-    HANDLE_ERROR(cudaMalloc((void **)&d_charge_orig, max_n_atoms_exbox * sizeof(real_pw)));
-    HANDLE_ERROR(cudaMalloc((void **)&d_atomtype, max_n_atom_array * sizeof(int)));
-    HANDLE_ERROR(cudaMalloc((void **)&d_atomids, max_n_atom_array * sizeof(int)));
-    HANDLE_ERROR(cudaMalloc((void **)&d_atomids_rev, max_n_atoms_exbox * sizeof(int)));
-    HANDLE_ERROR(cudaMalloc((void **)&d_atomtype_orig, max_n_atoms_exbox * sizeof(int)));
-    HANDLE_ERROR(cudaMalloc((void **)&d_cell_pairs, max_n_cell_pairs * sizeof(CellPair)));
-    HANDLE_ERROR(cudaMalloc((void **)&d_cell_pairs_buf, max_n_cell_pairs * sizeof(CellPair)));
-    HANDLE_ERROR(cudaMalloc((void **)&d_idx_head_cell_pairs, (in_max_n_cells + 1) * sizeof(int)));
-    HANDLE_ERROR(cudaMalloc((void **)&d_idx_cell_column, (in_max_n_cells) * sizeof(int)));
-    HANDLE_ERROR(cudaHostAlloc((void **)&h_idx_cell_column, in_max_n_cells * sizeof(int), cudaHostAllocDefault));
-    // HANDLE_ERROR( cudaMalloc((void**)&d_cell_pair_removed,
-    //(in_max_n_cells+1) * sizeof(int)) );
-    HANDLE_ERROR(cudaMalloc((void **)&d_n_cell_pairs, (max_n_cells) * sizeof(int)));
-    // HANDLE_ERROR( cudaMalloc((void**)&d_grid_atom_index,
-    //(max_n_ + 1) * sizeof(int)) );
-    HANDLE_ERROR(cudaMalloc((void **)&d_energy, N_MULTI_WORK * 2 * sizeof(real_fc)));
-    HANDLE_ERROR(cudaMalloc((void **)&d_work, N_MULTI_WORK * max_n_atom_array * 3 * sizeof(real_fc)));
-    HANDLE_ERROR(cudaMalloc((void **)&d_idx_xy_head_cell, in_n_columns * sizeof(int)));
-    HANDLE_ERROR(cudaMemcpyToSymbol(D_MAX_N_CELL_PAIRS, &in_max_n_cell_pairs, sizeof(int)));
-
-    return 0;
+  printf("cuda_alloc_atom_info\n");
+  max_n_atoms_exbox = in_max_n_atoms_exbox;
+  // max_n_atom_array = in_max_n_atom_array;
+  max_n_cell_pairs = in_max_n_cell_pairs;
+  max_n_cells      = in_max_n_cells;
+  HANDLE_ERROR(cudaMalloc((void **)&d_crd_chg, max_n_atom_array * sizeof(real4)));
+  HANDLE_ERROR(cudaMalloc((void **)&d_cell_z, max_n_cells * sizeof(real2)));
+  HANDLE_ERROR(cudaMalloc((void **)&d_crd, max_n_atom_array * 3 * sizeof(real_pw)));
+  HANDLE_ERROR(cudaMalloc((void **)&d_charge_orig, max_n_atoms_exbox * sizeof(real_pw)));
+  HANDLE_ERROR(cudaMalloc((void **)&d_atomtype, max_n_atom_array * sizeof(int)));
+  HANDLE_ERROR(cudaMalloc((void **)&d_atomids, max_n_atom_array * sizeof(int)));
+  HANDLE_ERROR(cudaMalloc((void **)&d_atomids_rev, max_n_atoms_exbox * sizeof(int)));
+  HANDLE_ERROR(cudaMalloc((void **)&d_atomtype_orig, max_n_atoms_exbox * sizeof(int)));
+  HANDLE_ERROR(cudaMalloc((void **)&d_cell_pairs, max_n_cell_pairs * sizeof(CellPair)));
+  HANDLE_ERROR(cudaMalloc((void **)&d_cell_pairs_buf, max_n_cell_pairs * sizeof(CellPair)));
+  HANDLE_ERROR(cudaMalloc((void **)&d_idx_head_cell_pairs, (in_max_n_cells + 1) * sizeof(int)));
+  HANDLE_ERROR(cudaMalloc((void **)&d_idx_cell_column, (in_max_n_cells) * sizeof(int)));
+  HANDLE_ERROR(cudaHostAlloc((void **)&h_idx_cell_column, in_max_n_cells * sizeof(int), cudaHostAllocDefault));
+  // HANDLE_ERROR( cudaMalloc((void**)&d_cell_pair_removed,
+  //(in_max_n_cells+1) * sizeof(int)) );
+  HANDLE_ERROR(cudaMalloc((void **)&d_n_cell_pairs, (max_n_cells) * sizeof(int)));
+  // HANDLE_ERROR( cudaMalloc((void**)&d_grid_atom_index,
+  //(max_n_ + 1) * sizeof(int)) );
+  HANDLE_ERROR(cudaMalloc((void **)&d_energy, N_MULTI_WORK * 2 * sizeof(real_fc)));
+  HANDLE_ERROR(cudaMalloc((void **)&d_work, N_MULTI_WORK * max_n_atom_array * 3 * sizeof(real_fc)));
+  HANDLE_ERROR(cudaMalloc((void **)&d_idx_xy_head_cell, in_n_columns * sizeof(int)));
+  HANDLE_ERROR(cudaMemcpyToSymbol(D_MAX_N_CELL_PAIRS, &in_max_n_cell_pairs, sizeof(int)));
+  
+  return 0;
 }
 
 extern "C" int cuda_free_atom_info() {
-    // printf("cuda_free_device_atom_info\n");
-    HANDLE_ERROR(cudaFree(d_crd_chg));
-    HANDLE_ERROR(cudaFree(d_cell_z));
-    HANDLE_ERROR(cudaFree(d_crd));
-    HANDLE_ERROR(cudaFree(d_atomids));
-    HANDLE_ERROR(cudaFree(d_atomids_rev));
-    HANDLE_ERROR(cudaFree(d_charge_orig));
-    HANDLE_ERROR(cudaFree(d_atomtype));
-    HANDLE_ERROR(cudaFree(d_atomtype_orig));
-    HANDLE_ERROR(cudaFree(d_cell_pairs));
-    HANDLE_ERROR(cudaFree(d_cell_pairs_buf));
-    HANDLE_ERROR(cudaFree(d_idx_head_cell_pairs));
-    HANDLE_ERROR(cudaFree(d_idx_cell_column));
-    HANDLE_ERROR(cudaFreeHost(h_idx_cell_column));
-    // HANDLE_ERROR( cudaFree(d_cell_pair_removed) );
-    HANDLE_ERROR(cudaFree(d_n_cell_pairs));
-    HANDLE_ERROR(cudaFree(d_energy));
-    HANDLE_ERROR(cudaFree(d_work));
-    HANDLE_ERROR(cudaFree(d_idx_xy_head_cell));
-    // HANDLE_ERROR( cudaFree(d_uni2cell_z));
-    // HANDLE_ERROR( cudaFree(d_work_orig) );
-    return 0;
+  // printf("cuda_free_device_atom_info\n");
+  HANDLE_ERROR(cudaFree(d_crd_chg));
+  HANDLE_ERROR(cudaFree(d_cell_z));
+  HANDLE_ERROR(cudaFree(d_crd));
+  HANDLE_ERROR(cudaFree(d_atomids));
+  HANDLE_ERROR(cudaFree(d_atomids_rev));
+  HANDLE_ERROR(cudaFree(d_charge_orig));
+  HANDLE_ERROR(cudaFree(d_atomtype));
+  HANDLE_ERROR(cudaFree(d_atomtype_orig));
+  HANDLE_ERROR(cudaFree(d_cell_pairs));
+  HANDLE_ERROR(cudaFree(d_cell_pairs_buf));
+  HANDLE_ERROR(cudaFree(d_idx_head_cell_pairs));
+  HANDLE_ERROR(cudaFree(d_idx_cell_column));
+  HANDLE_ERROR(cudaFreeHost(h_idx_cell_column));
+  // HANDLE_ERROR( cudaFree(d_cell_pair_removed) );
+  HANDLE_ERROR(cudaFree(d_n_cell_pairs));
+  HANDLE_ERROR(cudaFree(d_energy));
+  HANDLE_ERROR(cudaFree(d_work));
+  HANDLE_ERROR(cudaFree(d_idx_xy_head_cell));
+  // HANDLE_ERROR( cudaFree(d_uni2cell_z));
+  // HANDLE_ERROR( cudaFree(d_work_orig) );
+  return 0;
 }
 
 extern "C" int cuda_memcpy_htod_atomids(int *&h_atomids, int *&h_idx_xy_head_cell) {
@@ -412,6 +412,9 @@ __device__ real_pw cal_pair(real_pw &    w1,
     const real_pw d12[3]     = {crd_chg1.x - crd_chg2.x, crd_chg1.y - crd_chg2.y, crd_chg1.z - crd_chg2.z};
     const real_pw r12_2      = d12[0] * d12[0] + d12[1] * d12[1] + d12[2] * d12[2];
     const real_pw r12        = sqrt(r12_2);
+
+    if (r12 >= D_CUTOFF) { return r12; }
+
     const real_pw r12_inv    = 1.0 / r12;
     const real_pw r12_2_inv  = r12_inv * r12_inv;
     const real_pw r12_3_inv  = r12_inv * r12_2_inv;
@@ -422,8 +425,6 @@ __device__ real_pw cal_pair(real_pw &    w1,
     real_pw       work_coef  = r12_2_inv * (-12.0 * term12 + 6.0 * term6);
     const real_pw cc         = crd_chg1.w * crd_chg2.w * D_CHARGE_COEFF;
     work_coef -= cc * (r12_3_inv - D_FCOEFF);
-
-    if (r12 >= D_CUTOFF) { return r12; }
 
     w1 = (work_coef)*d12[0];
     w2 = (work_coef)*d12[1];
@@ -714,7 +715,7 @@ extern "C" int cuda_memcpy_dtoh_work(real_fc *&h_work, real_fc *&h_energy, int n
     }
     HANDLE_ERROR(cudaMemcpy(h_work, d_work, sizeof(real_fc) * n_atom_array * 3, cudaMemcpyDeviceToHost));
     HANDLE_ERROR(cudaMemcpy(h_energy, d_energy, sizeof(real_fc) * 2, cudaMemcpyDeviceToHost));
-
+    //printf("cuda ene %f %f\n",h_energy[0], h_energy[1]);
     return 0;
 }
 int cuda_reset_work_ene() {
@@ -1032,7 +1033,7 @@ extern "C" int cuda_alloc_set_hps_params(real_pw* h_hps_cutoff,
 					 int       n_lj_types){
     // printf("threads : %d\n", PW_THREADS);
   printf("cuda_alloc_set_hps_params\n");
-    const unsigned int size_lj_matrix = sizeof(real_pw) * n_lj_types * n_lj_types;
+  const unsigned int size_lj_matrix = sizeof(real_pw) * n_lj_types * n_lj_types;
   // cudaMalloc
   HANDLE_ERROR(cudaMalloc((void **)&d_hps_cutoff, size_lj_matrix));
   HANDLE_ERROR(cudaMalloc((void **)&d_hps_lambda, size_lj_matrix));
@@ -1058,10 +1059,14 @@ extern "C" int cuda_hps_constant(real_pw hps_eps){
 }
 extern "C" int cuda_debye_huckel_constant(real_pw in_dielect, real_pw in_temperature,
 					  real_pw in_ionic_strength){
+  printf("cuda_debye_huckel_constant (cuda)\n");
   debye_length_inv = (1.0/(sqrt(PERMITTIVITY*in_dielect*BOLTZMAN*in_temperature/(2*AVOGADRO*ELEM_CHARGE*ELEM_CHARGE*in_ionic_strength))*1e10));
   dielect_inv = 1.0 / in_dielect;
   HANDLE_ERROR(cudaMemcpyToSymbol(D_DEBYE_LEN_INV, &debye_length_inv, sizeof(real_pw)));      
+  printf("cuda debye_len_inv : %f\n", debye_length_inv);
   HANDLE_ERROR(cudaMemcpyToSymbol(D_DIELECT_INV, &dielect_inv, sizeof(real_pw)));      
+  printf("cuda dielect_inv : %f\n", dielect_inv);
+
   return 0;
 }
 
@@ -1082,6 +1087,9 @@ __device__ real_pw cal_pair_hps_dh(real_pw &    w1,
     const real_pw d12[3]     = {crd_chg1.x - crd_chg2.x, crd_chg1.y - crd_chg2.y, crd_chg1.z - crd_chg2.z};
     const real_pw r12_2      = d12[0] * d12[0] + d12[1] * d12[1] + d12[2] * d12[2];
     const real_pw r12        = sqrt(r12_2);
+
+    if (r12 >= D_CUTOFF) { return r12; }
+
     const real_pw r12_inv    = 1.0 / r12;
     const real_pw r12_2_inv  = r12_inv * r12_inv;
     const real_pw r12_3_inv  = r12_inv * r12_2_inv;
@@ -1093,14 +1101,8 @@ __device__ real_pw cal_pair_hps_dh(real_pw &    w1,
     const real_pw term6      = d_lj_6term[pairtype] * r12_6_inv;
     const real_pw term12     = d_lj_12term[pairtype] * r12_12_inv;
     real_pw       work_coef  = r12_2_inv * (-12.0 * term12 + 6.0 * term6);
-    const real_pw cc         = crd_chg1.w * crd_chg2.w * D_CHARGE_COEFF;
-    const real_pw r12_ld_exp = exp(-r12 * D_DEBYE_LEN_INV);
-    
-    if (r12 >= D_CUTOFF) { return r12; }
 
-    ene_ele = cc * D_DIELECT_INV * r12_ld_exp;
     ene_vdw = (-term6 + term12);
-    work_coef -= r12_ld_exp*cc*(r12_2_inv + r12_inv * D_DEBYE_LEN_INV);
 
     if(r12 <  hps_cutoff){
       ene_vdw *= hps_lambda;
@@ -1108,6 +1110,12 @@ __device__ real_pw cal_pair_hps_dh(real_pw &    w1,
     }else{
       ene_vdw += (1-hps_lambda) * D_HPS_EPS;
     }
+
+    const real_pw cc         = crd_chg1.w * crd_chg2.w * D_CHARGE_COEFF;
+    const real_pw r12_ld_exp = exp(-r12 * D_DEBYE_LEN_INV);
+
+    ene_ele = cc * D_DIELECT_INV * r12_ld_exp;
+    work_coef -= r12_ld_exp*cc*(r12_2_inv + r12_inv * D_DEBYE_LEN_INV);
 
     w1 = (work_coef)*d12[0];
     w2 = (work_coef)*d12[1];
@@ -1270,7 +1278,6 @@ __global__ void kernel_pairwise_hps_dh(const real4 *d_crd_chg,
 extern "C" int cuda_pairwise_hps_dh(const bool flg_mod_15mask) {
     HANDLE_ERROR(cudaMemset(d_energy, 0.0, sizeof(real_fc) * 2 * N_MULTI_WORK));
     HANDLE_ERROR(cudaMemset(d_work, 0.0, sizeof(real_fc) * max_n_atom_array * 3 * N_MULTI_WORK));
-
     cudaStreamCreate(&stream_pair_home);
     const int blocks = (n_cells + PW_THREADS / 32 - 1) / (PW_THREADS / 32);
     kernel_pairwise_hps_dh<<<blocks, PW_THREADS, 0, stream_pair_home>>>(d_crd_chg, d_cell_pairs, d_idx_head_cell_pairs,
@@ -1278,6 +1285,7 @@ extern "C" int cuda_pairwise_hps_dh(const bool flg_mod_15mask) {
 									d_hps_cutoff, d_hps_lambda,
 									d_energy,
 									d_work);
+    
 
     return 0;
 }

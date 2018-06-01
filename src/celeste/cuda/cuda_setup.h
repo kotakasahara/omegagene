@@ -153,7 +153,7 @@ real_pw debye_length_inv;
 real_pw dielect_inv;
 real_pw r12_ld;
 
-#define PERMITTIVITY 1.380658e-23
+#define PERMITTIVITY 8.85418782e-12
 #define BOLTZMAN 1.380658e-23
 #define AVOGADRO 6.0221413e23
 #define ELEM_CHARGE 1.60217657e-19
