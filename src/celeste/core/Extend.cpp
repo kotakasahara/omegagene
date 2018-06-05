@@ -810,8 +810,8 @@ int ExtendedVcMD::trial_transition(){  // source ... vs_id of current state
     //<< " cur_vs: " <<cur_vs[d] 
     //<<" "<<vc_range_min[d][cur_vs[d]]<<" ~ "
     //<<vc_range_max[d][cur_vs[d]]<< endl;
-    if(lambda[d] >= vc_range_max[d][cur_vs[d]] and drift == 0)     { flg = false; break; }
-    else if(lambda[d] < vc_range_min[d][cur_vs[d]] and drift == 0) { flg = false; break; }
+    if     (lambda[d] >= vc_range_max[d][cur_vs[d]] and drift == 0) { flg = false; break; }
+    else if(lambda[d] <  vc_range_min[d][cur_vs[d]] and drift == 0) { flg = false; break; }
   }
   if (!flg) { return 0; }
   //cout << "dbg 0304 trial [2]" << endl;
@@ -874,16 +874,14 @@ int ExtendedVcMD::trial_transition(){  // source ... vs_id of current state
     real q1 = q_cano[vs1];
     if(q1==0) q1 = default_q_cano;
     real q1d = 1.0;
-    if(drift >= 1)
-      q1d = ((float)q_raw[vs1]+1) / ((float)q_raw_sum+1);
+    if(drift >= 1) q1d = ((float)q_raw[vs1]+1) / ((float)q_raw_sum+1);
 
     int idx_vs2=0;
     for ( const auto vs2 : vs_next ) {
       real q2 = q_cano[vs2];
       if(q2 == 0) q2 = default_q_cano;
       real q2d = 1.0;
-      if(drift >= 1)
-	q2d = ((float)q_raw[vs2]+1) / ((float)q_raw_sum+1);
+      if(drift >= 1) q2d = ((float)q_raw[vs2]+1) / ((float)q_raw_sum+1);
       //i_val[idx_vs1] += q_cano[vs1] / q_cano[vs2];
       i_val[idx_vs1] += q1/q2;
       i_val_d[idx_vs1] += q1d/q2d;
@@ -892,9 +890,17 @@ int ExtendedVcMD::trial_transition(){  // source ... vs_id of current state
     }
     //std::cout << "dbg 0304b i_val1 : "  << i_val[idx_vs1] << endl;
     i_val[idx_vs1] = 1.0 / i_val[idx_vs1];
-    if(drift >= 1)
-      i_val[idx_vs1] *= 1.0 / i_val_d[idx_vs1];
+    if(drift >= 1) i_val[idx_vs1] *= 1.0 / i_val_d[idx_vs1];
     sum_i_val += i_val[idx_vs1];
+
+    if(i_val[idx_vs1] < 0){
+      std::cout << "!! (Dbg0605) Transition probability is negative." << endl;
+      std::cout << "q1 : " << q1 << endl;
+      for ( const auto vs2 : vs_next ) {
+	std::cout << "q2 : " << q_cano[vs2] << endl;
+      }
+      exit(1);
+    }
     //std::cout << "dbg 0304c i_val_d : " << idx_vs1 << " " << i_val_d[idx_vs1] << endl;
     //std::cout << "dbg 0304c i_val2  : " << idx_vs1 << " " << i_val[idx_vs1] << endl;
     idx_vs1++;
