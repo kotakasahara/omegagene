@@ -877,21 +877,39 @@ int ExtendedVcMD::trial_transition(){  // source ... vs_id of current state
     if(drift >= 1) q1d = ((float)q_raw[vs1]+1) / ((float)q_raw_sum+1);
 
     int idx_vs2=0;
+    real sum_q2 = 0.0;
+    real sum_q2d = 0.0;
+    //    cout << "dbg 0606a q1 " << q1 << endl ;
     for ( const auto vs2 : vs_next ) {
       real q2 = q_cano[vs2];
       if(q2 == 0) q2 = default_q_cano;
       real q2d = 1.0;
       if(drift >= 1) q2d = ((float)q_raw[vs2]+1) / ((float)q_raw_sum+1);
       //i_val[idx_vs1] += q_cano[vs1] / q_cano[vs2];
-      i_val[idx_vs1] += q1/q2;
-      i_val_d[idx_vs1] += q1d/q2d;
+
+      //0606
+      //i_val[idx_vs1] += q1/q2;
+      //i_val_d[idx_vs1] += q1d/q2d;
+      sum_q2 += q2;
+      sum_q2d += q2d;
 
       idx_vs2++;
+
+      //cout << " " << q2;
+
     }
+    //cout << endl;
     //std::cout << "dbg 0304b i_val1 : "  << i_val[idx_vs1] << endl;
-    i_val[idx_vs1] = 1.0 / i_val[idx_vs1];
-    if(drift >= 1) i_val[idx_vs1] *= 1.0 / i_val_d[idx_vs1];
-    sum_i_val += i_val[idx_vs1];
+    
+    //0606
+    //i_val[idx_vs1] = 1.0 / i_val[idx_vs1];
+    //cout << "dbg 0606 " << i_val[idx_vs1] ; 
+    //if(drift >= 1) i_val[idx_vs1] *= 1.0 / i_val_d[idx_vs1];
+    i_val[idx_vs1] = - log(q1) + log(sum_q2);
+    //cout << " " << exp(i_val[idx_vs1]) << endl; 
+    if(drift >= 1) i_val[idx_vs1] += - log(q1d) + log(sum_q2d); 
+
+    sum_i_val += exp(i_val[idx_vs1]);
 
     if(i_val[idx_vs1] < 0){
       std::cout << "!! (Dbg0605) Transition probability is negative." << endl;
