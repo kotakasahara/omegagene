@@ -2,6 +2,7 @@
 
 from optparse import OptionParser
 import sys
+import copy
 import kkmm_vcmd
 
 def opt_parse():
@@ -12,6 +13,8 @@ def opt_parse():
     p.add_option('-o', dest='fn_out',
                  help="filename for output")
     p.add_option('--o-qraw', dest='fn_out_qraw',
+                 help="filename for output")
+    p.add_option('--o-qraw-cnt', dest='fn_out_qraw_cnt',
                  help="filename for output")
     p.add_option('--i-qraw', dest='fn_qraw',
                  action="append",
@@ -82,14 +85,19 @@ def _main():
     if opts.symmetrize:
        vc.symmetrize()
 
+    if opts.fn_out_qraw_cnt:
+        kkmm_vcmd.VcMDParamsWriter(opts.fn_out_qraw_cnt).write(vc)
+    if opts.fn_out_qraw:
+        vc_tmp = copy.deepcopy(vc)
+        vc_tmp.normalize_params()
+        kkmm_vcmd.VcMDParamsWriter(opts.fn_out_qraw).write(vc_tmp)
+
     vc.add_const(opts.pseudo_count)
     vc.normalize_params()
     vc.set_default_param()
 
     vc.statistics()
 
-    if opts.fn_out_qraw:
-        kkmm_vcmd.VcMDParamsWriter(opts.fn_out_qraw).write(vc)
 
     vc_prev = kkmm_vcmd.VcMDConf()
     vc_prev.read_params(opts.fn_qcano, False)
