@@ -448,8 +448,8 @@ int ZeroMultipoleSum::calc_debye_huckel(real_pw &      ene_ele,
 				     const real_pw &r12_3_inv,
 				     const real_pw &cc) {
   real_pw r12_ld_exp = exp(-r12*debye_length_inv);
-  ene_ele = cc*dielectric_inv*r12_ld_exp;
-  grad_coeff = -r12_ld_exp*cc*(r12_2_inv + r12_inv * debye_length_inv);
+  ene_ele = cc * r12_inv * dielectric_inv  * r12_ld_exp;
+  grad_coeff = - ene_ele * (r12_inv + debye_length_inv);
   return 0;
 }
 int ZeroMultipoleSum::calc_null(real &      ene_ele,

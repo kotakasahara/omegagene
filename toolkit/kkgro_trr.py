@@ -227,31 +227,31 @@ class GroTrrWriter(kkkit.FileBO):
         ##   reversing bit strings
         ##   that means changing the endian
         
-        box = None
-        crd = None
-        vel = None
-        force = None
-        if not bin and in_box != None:
+        box = []
+        crd = []
+        vel = []
+        force = []
+        if not bin and in_box != []:
             box = np.array(in_box) * scale_length
-        if not bin and in_crd != None:
+        if not bin and in_crd != []:
             crd = np.array(in_crd) * scale_length
-        if not bin and in_vel != None:
+        if not bin and in_vel != []:
             vel = np.array(in_vel) * scale_length
 
         box_size = 0
-        if box != None:
+        if box != []:
             box_size = 9 * prec # 4byte * 9dim
         x_size = 0
-        if crd != None:
+        if crd != []:
             x_size = (len(crd) - len(ignore)) * 3 * prec # 4byte * 3dim
 
         
         
         v_size = 0
-        if vel != None:
+        if vel != []:
             v_size = (len(vel) - len(ignore)) * 3 * prec# 4byte * 3dim
         f_size = 0
-        if force != None:
+        if force != []:
             f_size = (len(force) - len(ignore)) * 3 * prec  # 4byte * 3dim
 
         prec_esc = "f"

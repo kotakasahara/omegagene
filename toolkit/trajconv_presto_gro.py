@@ -21,12 +21,12 @@ def get_options():
     p.add_option('--remove-res', dest='rm_res',
                  action="append",
                  help="resname to be removed")
-    p.add_option('-i', dest='fn_in',
-                 help="file name for the input trajectory file")
+    p.add_option('-i', '--i-crd', dest='fn_in',
+                 help="file name for the input trajectory file; the same as --cod")
+    p.add_option('-o', dest='fn_out',
+                 help="file name for the input trajectory file; the same as --cod")
     p.add_option('--i-vel', dest='fn_vel',
                  help="file name for a presto velocities")
-    p.add_option('-o', dest='fn_out',
-                 help="file name for the output trajectory file")
     p.add_option('--lx', dest='cell_x',
                  type = "float",
                  help="fixed cell length of x axis")
@@ -79,7 +79,7 @@ def _main():
     opts, args = get_options()
     print "trajconv_presto_gro"
     ## set box information
-    box = None
+    box = []
     print opts.conv_mode
     if opts.cell_x and opts.cell_y and opts.cell_z:
         box = numpy.array([opts.cell_x, opts.cell_y, opts.cell_z])
@@ -87,7 +87,7 @@ def _main():
     fn_pdb = opts.fn_pdb
     
     ## if mdconf file is input, read it
-    mdconf = None
+    mdconf = []
     if opts.fn_mdconf:
         mdconf = kkmdconf.MDConfReader(opts.fn_mdconf).read_conf()
         if not fn_pdb: fn_pdb = mdconf.psy_init_structure
@@ -95,7 +95,7 @@ def _main():
     ## a list of atom ids which will be removed
     rm_atom_ids = set()
     if fn_pdb and opts.rm_res:
-        struct = None
+        struct = []
         struct = kkpdb.PDBReader(fn_pdb).read_model()
         rm_atom_ids = set(struct.get_atom_index_by_res_name(opts.rm_res))
         print "Ignoring atoms: " + str(len(rm_atom_ids))
@@ -112,8 +112,8 @@ def _main():
         elif mdconf:
             cur_frame = opts.ow_frame_begin
             #print mdconf.psy_traj_crd
-            for i, fn_crd in enumerate(mdconf.psy_traj_crd):
-                fn_vel = None
+            for i, fn_cod in enumerate(mdconf.psy_traj_crd):
+                fn_vel = []
                 if len(mdconf.psy_traj_vel) != 0:
                     fn_vel = mdconf.psy_traj_vel[i]
                 m = re.compile("(\d+)\.").search(fn_crd)
@@ -127,7 +127,7 @@ def _main():
                     print fn_crd + ", " + fn_vel + " : " + fn_trr
                 else:
                     print fn_crd + " : " + fn_trr
-                read_frame = convert(fn_trr, fn_crd, fn_vel,
+                read_frame = convert(fn_in, fn_out, fn_vel,
                                      box=box, center=center_crd,
                                      rm_atom_ids=rm_atom_ids,
                                      frame_begin=cur_frame,
@@ -151,7 +151,7 @@ def _main():
                            frame_step=opts.ow_frame_step)  
         
             
-def convert(fn_trr, fn_crd, fn_vel=None, box=None, center=None, rm_atom_ids=set(),
+def convert(fn_crd, fn_trr, fn_vel=None, box=None, center=None, rm_atom_ids=set(),
             frame_begin=-1, time_step=-1.0, frame_step=-1):    
     cur_frame = frame_begin
     ## box : numpy.array([float, float, float])
@@ -167,7 +167,7 @@ def convert(fn_trr, fn_crd, fn_vel=None, box=None, center=None, rm_atom_ids=set(
     read_frame = 1
     while frame_crd:
         #print frame_crd.step
-        frame_vel_crds = None
+        frame_vel_crds = []
         if fn_vel:
             frame_vel_crds = vel_reader.read_next_frame().crds
             #frame_vel_crds = scale_crds(frame_vel_crds)
@@ -180,13 +180,13 @@ def convert(fn_trr, fn_crd, fn_vel=None, box=None, center=None, rm_atom_ids=set(
             w_frame = cur_frame
             w_time = cur_frame * time_step
         #print "time: " + str(w_time) + " frame:" + str(w_frame)
-        if box != None:
+        if box != []:
             frame_crd.crds = frame_crd.crds - center + box/2
         #frame_crd
         trr_writer.write_frame(box,
                                frame_crd.crds,
                                frame_vel_crds,
-                               None,
+                               [],
                                w_frame, w_time,
                                bin = False,
                                prec = kkgro_trr.GroTrrWriter.PREC_SINGLE,

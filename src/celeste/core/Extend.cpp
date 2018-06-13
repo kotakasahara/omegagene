@@ -804,16 +804,17 @@ int ExtendedVcMD::trial_transition(){  // source ... vs_id of current state
   
   // return ...
   //cout << "dbg 0304 trial [1]" << endl;
-  bool flg = true;
-  for(int d = 0; d < n_dim; d++){
+  //  bool flg = true;
+  
+  //for(int d = 0; d < n_dim; d++){
     //cout << "dbg 0304 trial d[" << d << "] " << lambda[d]
     //<< " cur_vs: " <<cur_vs[d] 
     //<<" "<<vc_range_min[d][cur_vs[d]]<<" ~ "
     //<<vc_range_max[d][cur_vs[d]]<< endl;
-    if     (lambda[d] >= vc_range_max[d][cur_vs[d]] and drift == 0) { flg = false; break; }
-    else if(lambda[d] <  vc_range_min[d][cur_vs[d]] and drift == 0) { flg = false; break; }
-  }
-  if (!flg) { return 0; }
+  //if     (lambda[d] >= vc_range_max[d][cur_vs[d]] and drift == 0) { flg = false; break; }
+  //else if(lambda[d] <  vc_range_min[d][cur_vs[d]] and drift == 0) { flg = false; break; }
+  //}
+  if (!is_in_range() and drift==0) { return 0; }
   //cout << "dbg 0304 trial [2]" << endl;
   /*
   std::vector< std::vector<int> > vs_next;
