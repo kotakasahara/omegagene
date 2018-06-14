@@ -1114,8 +1114,8 @@ __device__ real_pw cal_pair_hps_dh(real_pw &    w1,
     const real_pw cc         = crd_chg1.w * crd_chg2.w * D_CHARGE_COEFF;
     const real_pw r12_ld_exp = exp(-r12 * D_DEBYE_LEN_INV);
 
-    ene_ele = cc * D_DIELECT_INV * r12_ld_exp;
-    work_coef -= r12_ld_exp*cc*(r12_2_inv + r12_inv * D_DEBYE_LEN_INV);
+    ene_ele = cc * r12_inv * D_DIELECT_INV * r12_ld_exp;
+    work_coef -= ene_ele * (r12_inv + D_DEBYE_LEN_INV);
 
     w1 = (work_coef)*d12[0];
     w2 = (work_coef)*d12[1];

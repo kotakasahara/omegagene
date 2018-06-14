@@ -3,6 +3,7 @@
 from optparse import OptionParser
 import sys
 import os
+import copy
 import numpy as np
 
 import kkmmsystem
@@ -28,6 +29,9 @@ def get_options():
     p.add_option('--crd-list', dest='fn_crd_list',
                  # action="append",
                  help="List of coordinate files")
+    p.add_option('--caldir-list', dest='fn_caldir_list',
+                 # action="append",
+                 help="List of calculation directories")
     p.add_option('--o-vs-frm', dest='fn_o_vs_frm',
                  help="Output file name")
     p.add_option('--i-vs-frm', dest='fn_i_vs_frm',
@@ -49,6 +53,16 @@ def get_options():
     p.add_option('--pref-file', dest='pref_file',
                  default="md",
                  help="prefix for the calculation files")
+    p.add_option('--fn-ausrest', dest='fn_ausrest',
+                 default="aus_restart_out.dat",
+                 help="Filename for the aus restart file")
+    p.add_option('--fn-cod', dest='fn_cod',
+                 default="md.cod",
+                 help="Filename for the aus restart file")
+    p.add_option('--fn-ausrest', dest='fn_ausrest',
+                 default="aus_restart_out.dat",
+                 help="Filename for the aus restart file")
+
 
     opts, args = p.parse_args()
     print "----------------------------"
@@ -112,6 +126,12 @@ class VcManager(object):
     def set_crd_files(self, fn_crd_list):
         self.fn_crd_list = self.read_list(fn_crd_list)
         return 
+    def set_crd_files(self, fn_caldir_list, fn_cod):
+        self.caldir_list = self.read_list(fn_crd_list)
+        self.fn_crd_list = []
+        for caldir in self.caldir_list:
+            self.fn_crd_list.append(os.path.join(caldir,fn_cod))
+        return
     def get_vs_candidates(self, lmb):
         vs_cand = []
         for dim_tmp, val_lmb in enumerate(lmb):
@@ -207,6 +227,35 @@ class VcManager(object):
                 frame = reader.read_next_frame()
                 i_frame += 1
             reader.close()
+        return
+    def count_vs_frm_last_snapshot(self, processed_crd=set()):
+        #self.vs_frm = {}
+        ## vs_frm[(vs1,vs2,...)] = [(i_crd, i_frame), (i_crd, i_frame), ...]
+        if  not self.fn_crd_list: return
+        for i_crd, fn_crd in enumerate(self.fn_crd_list):
+            if i_crd in processed_crd: continue
+            print str(i_crd) + " " + fn_crd
+            reader = kkpresto_crd.PrestoCrdReader(fn_crd)
+            reader.read_information()
+            reader.open()
+            i_frame = 0
+            frame_prev
+            frame = reader.read_next_frame()
+            while frame:
+                frame_prev = copy.deepcopy(frame)
+                frame = reader.read_next_frame()
+                i_frame += 1
+            reader.close()
+            frame = frame_prev    
+            lmb = self.cal_lambda(frame)
+            # print "lambda " + " ".join([str(x) for x in lmb])
+            vs = self.get_vs_candidates(lmb)
+            # print vs
+            if vs:
+                if not vs in self.vs_frm:
+                    self.vs_frm[vs] = []
+                self.vs_frm[vs].append((i_crd, i_frame))
+                #---------------------------------
         return
     def print_vs_frm(self, fn_out):
         fo = open(fn_out, "w")
@@ -320,7 +369,8 @@ class VcManager(object):
         for vs, crdfrm in dict_frames.items():
             print ",".join([str(x) for x in vs]) + " : " + str(crdfrm)
         return init_frames
-    def prepare_initials(self, init_type, pref_cal, pref_file, n_cal, temperature):
+    def prepare_initials(self, init_type, pref_cal, pref_file, n_cal, temperature,
+                         fn_aus_rest):
         init_frames = self.pick_init_frames(init_type, n_cal)
         for i, crdfrmvs in enumerate(init_frames):
             cal_dir = pref_cal + str(i+1)
@@ -333,8 +383,12 @@ class VcManager(object):
             self.gen_restart_frm(fn_restart, crdfrmvs[0], crdfrmvs[1],
                                  temperature)
             fn_startvirt = os.path.join(cal_dir, "start.virt")
-            
+
             self.gen_startvirt_frm(fn_startvirt, crdfrmvs[2])
+
+            if fn_ausrest != "":
+                shutil.copyfile(os.path.join(self.caldir_list[crdfrmv[0]], fn_ausrest), os.path.join(cal_dir), fn_ausrest))
+            
         return
     #def gen_pdb_frm(self, fn, crd, frm):
     #return 
@@ -377,16 +431,25 @@ def _main():
     opts, args = get_options()
     manager = VcManager(opts.fn_config)
     manager.load_files()
+
+    fn_aus_rest = ""
     if opts.fn_crd_list:
         manager.set_crd_files(opts.fn_crd_list)
+    elif opts.fn_caldir_list:
+        manager.set_crd_files_from_dirlist(opts.fn_caldir_list, opts.fn_cod)
+        fn_aus_rest = opts.fn_ausrest
     processed_crd = set()
     if opts.fn_i_vs_frm:
         processed_crd = manager.read_vs_frm(opts.fn_i_vs_frm)
+
     manager.count_vs_frm(processed_crd)
     manager.print_vs_frm(opts.fn_o_vs_frm)
+
+
     manager.prepare_initials(opts.init_type, opts.pref_cal,
                              opts.pref_file, opts.n_cal,
-                             opts.temperature)
+                             opts.temperature, fn_ausrest)
+
     return
 
 if __name__ == "__main__":
