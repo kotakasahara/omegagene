@@ -1104,7 +1104,7 @@ __device__ real_pw cal_pair_hps_dh(real_pw &    w1,
 
     ene_vdw = (-term6 + term12);
 
-    if(r12 <  hps_cutoff){
+    if(r12 >  hps_cutoff){
       ene_vdw *= hps_lambda;
       work_coef *= hps_lambda;
     }else{
