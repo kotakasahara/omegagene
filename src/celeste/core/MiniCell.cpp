@@ -248,10 +248,10 @@ int MiniCell::set_grid_xy() {
     n_neighbors_xyz[1] = ceil(cutoff_pair / L_cell_xyz[1]);
 
     max_n_cells = n_cells_xyz[0] * n_cells_xyz[1] * n_cells_xyz[2];
-
+    
     int tmp_max1 = (n_atoms / N_ATOM_CELL) + n_cells_xyz[0] * n_cells_xyz[1];
     cout << "max_n_cells : " << max_n_cells << " " << tmp_max1 << endl;
-    if (max_n_cells > tmp_max1){
+    if ( density > 0 && max_n_cells > tmp_max1){
       max_n_cells = tmp_max1;
     }
 
@@ -1112,8 +1112,8 @@ int MiniCell::add_cell_pair(const int cell_id1, const int cell_id2, const int im
   //cout <<"DUPLICATION OF CELL PAIR!!!: " << cell_id1 << " " << cell_id2 << endl;
   //}
    if (n_cell_pairs >= max_n_cell_pairs) {
-     //cout << "n_cell_pairs >= max_n_cell_pairs " << n_cell_pairs << " /  " << max_n_cell_pairs << endl;
-        exit(0);
+     cout << "n_cell_pairs >= max_n_cell_pairs " << n_cell_pairs << " /  " << max_n_cell_pairs << endl;
+     exit(0);
     }
     cell_pairs[n_cell_pairs].cell_id1 = cell_id1;
     cell_pairs[n_cell_pairs].cell_id2 = cell_id2;

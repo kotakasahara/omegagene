@@ -366,9 +366,9 @@ real_pw ForceField::calc_pairwise(real_pw &ene_vdw,
     ene_vdw            = -term6 + term12;
 
 
-    cout << "dbg 0615 " << endl;
-    cout << "hps_cutoff " << param_hps_cutoff << " lmd " <<param_hps_lambda << " eps " << hps_epsiron << endl;
-    cout << "param_6 " << param_6term << " param_12 " << param_12term << endl;
+    //cout << "dbg 0615 " << endl;
+    //cout << "hps_cutoff " << param_hps_cutoff << " lmd " <<param_hps_lambda << " eps " << hps_epsiron << endl;
+    //cout << "param_6 " << param_6term << " param_12 " << param_12term << endl;
 
     real_pw work_coef  = r12_2_inv * (-12.0 * term12 + 6.0 * term6);
     if (type_lj == NONBOND_HPS){
