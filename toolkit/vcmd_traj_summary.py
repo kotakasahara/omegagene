@@ -59,10 +59,9 @@ def get_options():
     p.add_option('--fn-cod', dest='fn_cod',
                  default="md.cod",
                  help="Filename for the aus restart file")
-    p.add_option('--fn-ausrest', dest='fn_ausrest',
-                 default="aus_restart_out.dat",
-                 help="Filename for the aus restart file")
-
+    p.add_option('--flg-restart', dest='flg_restart',
+                 action="store_true",
+                 help="Read from restart file")
 
     opts, args = p.parse_args()
     print "----------------------------"
@@ -101,9 +100,8 @@ class VcManager(object):
         print self.config.get_val("fn-i-atom-groups")
         print atom_groups_reader.fn
         self.atom_groups, self.atom_group_names = atom_groups_reader.read_groups()
-
-
         return
+
     def read_extended_vcmd(self):
         self.extended_vcmd = None
         if self.config.get_val("fn-i-vcmd-inp"):
@@ -126,8 +124,8 @@ class VcManager(object):
     def set_crd_files(self, fn_crd_list):
         self.fn_crd_list = self.read_list(fn_crd_list)
         return 
-    def set_crd_files(self, fn_caldir_list, fn_cod):
-        self.caldir_list = self.read_list(fn_crd_list)
+    def set_crd_files_from_dirlist(self, fn_caldir_list, fn_cod):
+        self.caldir_list = self.read_list(fn_caldir_list)
         self.fn_crd_list = []
         for caldir in self.caldir_list:
             self.fn_crd_list.append(os.path.join(caldir,fn_cod))
@@ -141,7 +139,6 @@ class VcManager(object):
                 vsid = vsid_tmp + 1
                 if val_lmb > rg[0] and val_lmb <= rg[1]:
                     vs_cand_dim.append(vsid)
-
             if len(vs_cand_dim) == 0:
                 return []
             elif len(vs_cand_dim) == 1:
@@ -154,13 +151,13 @@ class VcManager(object):
                 else:
                     vs_cand.append(vs_cand_dim[1])
         return tuple(vs_cand)
-    def cal_lambda(self, frame):
+    def cal_lambda(self, framecrd):
         if self.aus_restart.aus_type == self.aus_restart.AUS_TYPE["dist-mass-centers"]:
-            lmb = self.cal_lambda_dist_mass_centers(frame)
+            lmb = self.cal_lambda_dist_mass_centers(framecrd)
         elif self.aus_restart.aus_type == self.aus_restart.AUS_TYPE["dist-min"]:
-            lmb = self.cal_lambda_dist_min(frame)
+            lmb = self.cal_lambda_dist_min(framecrd)
         return lmb
-    def cal_lambda_dist_mass_centers(self, frame):
+    def cal_lambda_dist_mass_centers(self, framecrd):
         # print "frame :" + str(len(frame.crds))
         lmb = []
         def cal_center(grp_id):
@@ -170,7 +167,7 @@ class VcManager(object):
                 atid = at1-1
                 mass = self.tpl.get_tplatom_from_atom_id(atid).mass
                 grp_mass += mass
-                cent += mass * frame.crds[atid]
+                cent += mass * framecrd[atid]
             cent /= grp_mass
             return cent
 
@@ -185,7 +182,7 @@ class VcManager(object):
             
         return np.array(lmb)
 
-    def cal_lambda_dist_min(self, frame):
+    def cal_lambda_dist_min(self, framecrd):
         lmb = []
         for grp_pair in self.extended_vcmd.group_names[1:]:
             grp_id1 = self.atom_group_names.index(grp_pair[0])
@@ -193,40 +190,61 @@ class VcManager(object):
             min_dist = 1e10
             for at1 in self.atom_groups[grp_id1]:
                 atid1 = at1-1
-                crd1 = frame.crds[atid1]
+                crd1 = framecrd[atid1]
                 for at2 in self.atom_groups[grp_id2]:
                     atid2 = at2-1
-                    crd2 = frame.crds[atid2]
+                    crd2 = framecrd[atid2]
                     dx = self.system.pbc.diff_crd_minim_image(crd1, crd2)
                     dist = np.sqrt(np.sum(dx*dx))
                     if dist <= min_dist: min_dist = dist
             lmb.append(min_dist)
         return np.array(lmb)
-    def count_vs_frm(self, processed_crd=set()):
+    def count_vs_frm(self, processed_crd=set(), flg_restart=False):
         #self.vs_frm = {}
-        ## vs_frm[(vs1,vs2,...)] = [(i_crd, i_frame), (i_crd, i_frame), ...]
+        ## vs_frm[(vs1,vs2,...)] = 
+        #    [ (i_crd, i_frame, e_pot, lambda1, lambda2, ..),
+        #      (i_crd, i_frame, e_pot, lambda1, lambda2, ...), ... ]
         if  not self.fn_crd_list: return
         for i_crd, fn_crd in enumerate(self.fn_crd_list):
             if i_crd in processed_crd: continue
             print str(i_crd) + " " + fn_crd
-            reader = kkpresto_crd.PrestoCrdReader(fn_crd)
-            reader.read_information()
-            reader.open()
-            i_frame = 0
-            frame = reader.read_next_frame()
-            while frame:
-                lmb = self.cal_lambda(frame)
-                # print "lambda " + " ".join([str(x) for x in lmb])
+
+            if not flg_restart:
+                reader = kkpresto_crd.PrestoCrdReader(fn_crd)
+                reader.read_information()
+                reader.open()
+                i_frame = 0
+                frame = reader.read_next_frame()
+                while frame:
+                    lmb = self.cal_lambda(frame.crds)
+                    #print "lambda " + " ".join([str(x) for x in lmb])
+                    vs = self.get_vs_candidates(lmb)
+                    #print vs
+                    if vs:
+                        if not vs in self.vs_frm:
+                            self.vs_frm[vs] = []
+                        tmp_frm = [i_crd, i_frame, frame.e_pot]
+                        tmp_frm.extend(lmb)
+                        self.vs_frm[vs].append(tmp_frm)
+                        #---------------------------------
+                    frame = reader.read_next_frame()
+                    i_frame += 1
+                reader.close()
+            else:
+                reader = kkpresto_restart.PrestoRestartReader(fn_crd)
+                rest = reader.read_restart()
+                lmb = self.cal_lambda(rest.crd)
+                #print "lambda " + " ".join([str(x) for x in lmb])
                 vs = self.get_vs_candidates(lmb)
-                # print vs
+                #print vs
+                
                 if vs:
                     if not vs in self.vs_frm:
                         self.vs_frm[vs] = []
-                    self.vs_frm[vs].append((i_crd, i_frame))
-                #---------------------------------
-                frame = reader.read_next_frame()
-                i_frame += 1
-            reader.close()
+                    tmp_frm = [i_crd, 0, rest.e_pot]
+                    tmp_frm.extend(lmb)
+                    self.vs_frm[vs].append(tmp_frm)
+                    #print tmp_frm
         return
     def count_vs_frm_last_snapshot(self, processed_crd=set()):
         #self.vs_frm = {}
@@ -248,22 +266,30 @@ class VcManager(object):
             reader.close()
             frame = frame_prev    
             lmb = self.cal_lambda(frame)
-            # print "lambda " + " ".join([str(x) for x in lmb])
+            #print "lambda " + " ".join([str(x) for x in lmb])
             vs = self.get_vs_candidates(lmb)
-            # print vs
+            #print vs
             if vs:
                 if not vs in self.vs_frm:
                     self.vs_frm[vs] = []
-                self.vs_frm[vs].append((i_crd, i_frame))
+                tmp_frm = [i_crd, i_frame, frame.e_pot]
+                tmp_frm.extend(lmb)
+                self.vs_frm[vs].append(tmp_frm)
                 #---------------------------------
         return
     def print_vs_frm(self, fn_out):
         fo = open(fn_out, "w")
         for vs, frms in self.vs_frm.items():
-            line = ",".join([ str(x) for x in vs] )
-            for crd, frame in frms:
-                line += " " + str(crd)+":"+str(frame) 
-            fo.write(line+"\n")
+            #line = ",".join([ str(x) for x in vs] )
+            #for crd, frame,pot in frms:
+            #    line += " " + str(crd)+":"+str(frame) + ":" + str(pot) 
+            vs = "\t".join([ str(x) for x in vs] )
+            for frm in frms:
+                print frm
+                line = str(frm[0])+"\t"+str(frm[1]) + "\t" + str(frm[2]) + "\t"
+                line += "\t".join([str(i) for i in frm[3:]])
+                line += "\t" + vs
+                fo.write(line+"\n")
         fo.close()
         return
     def read_vs_frm(self, fn_vsfrm):
@@ -272,15 +298,28 @@ class VcManager(object):
         # self.vs_frm
         for line in f:
             terms = line.strip().split()
-            vs = tuple([ int(x) for x in terms[0].split(",") ])
-            for crdfrm in terms[1:]:
-                tmp = crdfrm.split(":")
-                crd = int(tmp[0])
-                frm = int(tmp[1])
-                if not vs in self.vs_frm:
-                    self.vs_frm[vs] = []
-                self.vs_frm[vs].append((crd, frm))
-                processed_crd.add(crd)
+            #vs = tuple([ int(x) for x in terms[0].split(",") ])
+            #for crdfrm in terms[1:]:
+            #    tmp = crdfrm.split(":")
+            #    crd = int(tmp[0])
+            #    frm = int(tmp[1])
+            #    pot = int(tmp[2])
+            #    if not vs in self.vs_frm:
+            #        self.vs_frm[vs] = []
+            #    self.vs_frm[vs].append((crd, frm, pot))
+            #vs = tuple([ int(x) for x in terms[:-3] ])
+            crd = int(terms[0])
+            frm = int(terms[1])
+            pot = float(terms[2])
+            tmp = [float(x) for x in terms[3:]]
+            n_dim = len(tmp)/2
+            lmb = tmp[:n_dim]
+            vs = tuple(tmp[n_dim:])
+            #vs = self.get_vs_candidates(lmb)
+            if not vs in self.vs_frm:
+                self.vs_frm[vs] = []
+            self.vs_frm[vs].append((crd, frm, pot))
+            processed_crd.add(crd)
         return processed_crd
     def pick_init_frames(self, init_type, n_cal):
         init_frames = []
@@ -319,9 +358,6 @@ class VcManager(object):
             for vs in self.prob.keys():
                 self.prob[vs] /= ( prob_acc + prob_acc_new)
                 
-            def add_frame(vs, frms):
-                return
-
             vs_frm_new.extend(vs_frm_srt)
 
             print "n cand"
@@ -370,7 +406,7 @@ class VcManager(object):
             print ",".join([str(x) for x in vs]) + " : " + str(crdfrm)
         return init_frames
     def prepare_initials(self, init_type, pref_cal, pref_file, n_cal, temperature,
-                         fn_aus_rest):
+                         fn_aus_rest, flg_restart=False):
         init_frames = self.pick_init_frames(init_type, n_cal)
         for i, crdfrmvs in enumerate(init_frames):
             cal_dir = pref_cal + str(i+1)
@@ -381,36 +417,39 @@ class VcManager(object):
             print crdfrmvs
             # print self.fn_crd_list[crdfrmvs[0]]+" "+str(crdfrmvs[1])+" " + ",".join([str(x) for x in crdfrmvs[2]])
             self.gen_restart_frm(fn_restart, crdfrmvs[0], crdfrmvs[1],
-                                 temperature)
+                                 temperature, flg_restart)
             fn_startvirt = os.path.join(cal_dir, "start.virt")
 
             self.gen_startvirt_frm(fn_startvirt, crdfrmvs[2])
 
-            if fn_ausrest != "":
-                shutil.copyfile(os.path.join(self.caldir_list[crdfrmv[0]], fn_ausrest), os.path.join(cal_dir), fn_ausrest))
+            if flg_restart:
+                shutil.copyfile(os.path.join(self.caldir_list[crdfrmv[0]], fn_aus_rest), os.path.join(cal_dir, fn_aus_rest))
             
         return
     #def gen_pdb_frm(self, fn, crd, frm):
     #return 
-    def gen_restart_frm(self, fn, i_codfile, i_frm, temperature):
+    def gen_restart_frm(self, fn, i_codfile, i_frm, temperature, flg_restart=False):
         rest = kkpresto_restart.PrestoRestart()        
         rest.n_atoms = len(self.structure.atoms)
-        reader = kkpresto_crd.PrestoCrdReader(self.fn_crd_list[i_codfile])
-        # print self.fn_crd_list[i_codfile] + " - "  + str(i_frm)
-        
-        reader.read_information()
-        reader.open()
-        frame = reader.read_next_frame()
-        for i_frame in range(1, i_frm):
-            if frame == []:
-                print "dbg0501 frame error"
-                print self.fn_crd_list[i_codfile]
-                print i_frame
+
+        if not flg_restart:
+            reader = kkpresto_crd.PrestoCrdReader(self.fn_crd_list[i_codfile])
+            # print self.fn_crd_list[i_codfile] + " - "  + str(i_frm)
+            reader.read_information()
+            reader.open()
             frame = reader.read_next_frame()
-        reader.close()
-            
-        rest.crd = frame.crds
-        #self.tpl.convert_units_to_si()
+            for i_frame in range(1, i_frm):
+                if frame == []:
+                    print "dbg0501 frame error"
+                    print self.fn_crd_list[i_codfile]
+                    print i_frame
+                frame = reader.read_next_frame()
+            reader.close()
+            rest.crd = frame.crds
+        else:
+            reader = kkpresto_restart.PrestoRestartReader(self.fn_crd_list[i_codfile])
+            rest = reader.read_restart()
+            #self.tpl.convert_units_to_si()
         rest.n_vel = rest.n_atoms
         rest.vel = genvelo.generate_velocities(self.structure,
                                                self.tpl, self.shkr,
@@ -442,13 +481,14 @@ def _main():
     if opts.fn_i_vs_frm:
         processed_crd = manager.read_vs_frm(opts.fn_i_vs_frm)
 
-    manager.count_vs_frm(processed_crd)
+    manager.count_vs_frm(processed_crd, opts.flg_restart)
     manager.print_vs_frm(opts.fn_o_vs_frm)
 
 
     manager.prepare_initials(opts.init_type, opts.pref_cal,
                              opts.pref_file, opts.n_cal,
-                             opts.temperature, fn_ausrest)
+                             opts.temperature, opts.fn_ausrest,
+                             opts.flg_restart)
 
     return
 

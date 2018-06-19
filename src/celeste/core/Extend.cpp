@@ -735,14 +735,12 @@ bool ExtendedVcMD::is_in_range(){
 int ExtendedVcMD::apply_bias(unsigned long cur_step,
 			     real_fc *work, int n_atoms_box) {
   
+  if(is_in_range() || drift > 0){
+    q_raw[cur_vs] += 1;
+    q_raw_sum += 1;
+  }
   if (cur_step > 0 && cur_step % trans_interval == 0) {
     //if ((cur_step+1) % trans_interval == 0) {
-    if (cur_step <= n_steps && cur_step >= begin_count_q_raw){
-      if(is_in_range() || drift > 0){
-	q_raw[cur_vs] += trans_interval;
-	q_raw_sum += trans_interval;
-      }
-    }
     write_vslog(cur_step);
 
     if (flg_vs_transition) trial_transition();
