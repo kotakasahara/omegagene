@@ -89,4 +89,17 @@ class DynamicsModeVelocityVerlet : public DynamicsMode {
     virtual int calc_in_each_step();
     virtual int apply_constraint();
 };
+
+class DynamicsModeLangevin : public DynamicsMode {
+  private:
+  protected:
+  public:
+    DynamicsModeLangevin();
+    ~DynamicsModeLangevin();
+    virtual int calc_in_each_step();
+    virtual int apply_constraint();
+};
+
+
+
 #endif

@@ -76,6 +76,8 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
                 integrator_type = INTGRTR_LEAPFROG_PRESTO;
             } else if (*itr == "velocity-verlet") {
                 integrator_type = INTGRTR_VELOCITY_VERLET;
+            } else if (*itr == "langevin") {
+	      integrator_type = INTGRTR_LANGEVIN;
             } else {
                 integrator_type = INTGRTR_DUMMY;
             }
@@ -337,6 +339,10 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
 	  cout << "  HPS EPS " << hps_epsiron << endl;
         } else if (*itr == "--expected-num-density") {
 	  expected_num_density = atof((*++itr).c_str());
+        } else if (*itr == "--langevin-gamma") {
+	  langevin_gamma = atof((*++itr).c_str());
+	  langevin_gamma /= 1000;
+	  // convert the unit from ps^-1 to fs^-1
         } else {
 	  stringstream ss;
 	  error_exit(ss.str(), "1A00001");

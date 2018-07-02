@@ -10,7 +10,7 @@ namespace celeste {
             int          _seed = 0;
             std::mt19937 generator;
             // std::uniform_real_distribution<double> dist;
-
+	    
           public:
             Random(int seed);
             Random() = default;
@@ -19,6 +19,7 @@ namespace celeste {
             double operator()();
             double operator()(double high);
             double operator()(double low, double high);
+	    double normal(double mu, double sigma);
         };
     }
 }

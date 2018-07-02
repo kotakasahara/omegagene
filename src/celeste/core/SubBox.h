@@ -11,67 +11,76 @@
 #include "PBC.h"
 #include "Thermostat.h"
 #include <ctime>
+#include <random>
+#include "celeste/random/Random.h"
 
 #define COEF_MAX_N_ATOMS_BOX 1.2
 
 class SubBox : public CelesteObject {
-  private:
-    // only for rank=0
-    int     n_atoms;
-    int     n_boxes;
-    int     n_boxes_xyz[3];
-    real    box_l[3];
-    real    exbox_l[3];
-    real    box_lower[3];
-    real    box_upper[3];
-    real    exbox_lower[3];
-    real    exbox_upper[3];
-    real    cutoff_pair;
-    real    cutoff_pair_half;
-    PBC *   pbc;
-    Config *cfg;
-    int     box_crd[3];
-
-    real time_step;
-    real time_step_inv;
-    real time_step_inv_sq;
-    real temperature_coef;
-
-    ForceField ff;
-
-    // the maximum number of atoms in 27 region (-1 ~ +1)
-    int max_n_atoms_box;
-    // the maximum number of atoms in 125 regions (-2 ~ +2)
-    int max_n_atoms_exbox;
-
-    // int **region_atoms;
-    // int *n_region_atoms;
-    // int max_n_atoms_region[27];
-
-    // INFO for each box
-
-    // crd, force, atomids in each box
-    // crd[max_n_atoms_box*3]
-    int      rank;
-    real *   crd;
-    real *   crd_prev;
-    real *   vel;
-    real *   vel_next;
-    real *   vel_just;
-    real_fc *work;
-    real_fc *work_prev;
-    real_pw *charge;
-    real_pw *mass;
-    real_pw *mass_inv;
-    int *    atom_type;
-
+ private:
+  // only for rank=0
+  int     n_atoms;
+  int     n_boxes;
+  int     n_boxes_xyz[3];
+  real    box_l[3];
+  real    exbox_l[3];
+  real    box_lower[3];
+  real    box_upper[3];
+  real    exbox_lower[3];
+  real    exbox_upper[3];
+  real    cutoff_pair;
+  real    cutoff_pair_half;
+  PBC *   pbc;
+  Config *cfg;
+  int     box_crd[3];
+  
+  real time_step;
+  real time_step_inv;
+  real time_step_inv_sq;
+  real temperature_coef;
+  
+  ForceField ff;
+  
+  // the maximum number of atoms in 27 region (-1 ~ +1)
+  int max_n_atoms_box;
+  // the maximum number of atoms in 125 regions (-2 ~ +2)
+  int max_n_atoms_exbox;
+  
+  // int **region_atoms;
+  // int *n_region_atoms;
+  // int max_n_atoms_region[27];
+  
+  // INFO for each box
+  
+  // crd, force, atomids in each box
+  // crd[max_n_atoms_box*3]
+  int      rank;
+  real *   crd;
+  real *   crd_prev;
+  real *   vel;
+  real *   vel_next;
+  real *   vel_just;
+  real_fc *work;
+  real_fc *work_prev;
+  real_pw *charge;
+  real_pw *mass;
+  real_pw *mass_inv;
+  int *    atom_type;
+  
+  //params for Langevin
+  celeste::random::Random *random_mt;
+  real_pw *langevin_d;
+  real_pw *langevin_q;
+  real_pw *langevin_sigma;
+  real_pw langevin_gamma;
+    
     // buffer for thermostat with shake
-    real *buf_crd;
-    //
-
-    int *atomids;
-    // atomids_rev[atomid] = -1: it is not in the box
-    int *atomids_rev;
+  real *buf_crd;
+  //
+  
+  int *atomids;
+  // atomids_rev[atomid] = -1: it is not in the box
+  int *atomids_rev;
     int  n_atoms_box;
     int  n_atoms_exbox;
 
@@ -337,6 +346,12 @@ class SubBox : public CelesteObject {
     int update_velocities_vv(const real time_step);
     int update_coordinates_vv(const real time_step);
 
+    // langevin
+    int set_params_langevin(celeste::random::Random *in_mt,
+			    const real in_gamma,
+			    const real time_step,
+			    const real temperature);
+    int update_velocities_langevin(const real time_step);    
 };
 
 #endif

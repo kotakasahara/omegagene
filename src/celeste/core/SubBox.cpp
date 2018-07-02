@@ -147,6 +147,10 @@ int SubBox::alloc_variables() {
 
     if (rank == 0) rank0_alloc_variables();
 
+    langevin_d = new real_pw[max_n_atoms_exbox];
+    langevin_q = new real_pw[max_n_atoms_exbox];
+    langevin_sigma = new real_pw[max_n_atoms_exbox];
+
     return 0;
 }
 int SubBox::alloc_variables_for_bonds(int in_n_bonds) {
@@ -327,6 +331,10 @@ int SubBox::free_variables() {
     // delete[] bp_nb14;
 
     if (rank == 0) rank0_free_variables();
+
+    delete[] langevin_d;
+    delete[] langevin_q;
+    delete[] langevin_sigma;
 
     return 0;
 }
@@ -1464,6 +1472,7 @@ int SubBox::update_coordinates(const real time_step, real *p_crd, real *p_vel) {
             real diff          = p_vel[atomid_b3 + d] * time_step;
             crd[atomid_b3 + d] = p_crd[atomid_b3 + d] + diff;
             //#ifndef F_WO_NS
+
             //      nsgrid.move_atom(atomid_b, d, diff);
             //#endif
         }
@@ -1861,3 +1870,39 @@ int SubBox::update_coordinates_vv(const real time_step){
     return 0;
 }
 
+int SubBox::update_velocities_langevin(const real time_step){
+  for (int atomid_b = 0, atomid_b3 = 0; atomid_b < all_n_atoms[rank]; atomid_b++, atomid_b3 += 3) {
+    //std::normal_distribution<> dist(0, 1);
+    for (int d = 0; d < 3; d++) {
+      real_pw zeta = random_mt->normal(0.0, 1.0);
+      //cout << "zeta: " << zeta <<  " " << langevin_d[atomid_b] * vel[atomid_b3+d] << " "
+      //<< langevin_q[atomid_b] * (-FORCE_VEL*work[atomid_b3+d]) << " " 
+      //<< langevin_sigma[atomid_b]*zeta << endl;
+      vel_next[atomid_b3 + d] = langevin_d[atomid_b] * vel[atomid_b3+d] 
+	+ langevin_q[atomid_b] * (-FORCE_VEL*work[atomid_b3+d]) ;
+       + langevin_sigma[atomid_b] * zeta;
+    }
+  }
+  return 0;
+}
+int SubBox::set_params_langevin(celeste::random::Random *in_mt,
+				const real in_gamma,
+				const real time_step,
+				const real temperature){
+  random_mt = in_mt;
+  langevin_gamma = in_gamma;
+  //langevin_d
+  for (int atomid_b = 0; atomid_b < all_n_atoms[rank]; atomid_b++) {
+    langevin_d[atomid_b] = exp(-langevin_gamma * mass_inv[atomid_b] * time_step);
+    langevin_q[atomid_b]_ = 1.0/langevin_gamma*(1-langevin_d[atomid_b]);
+    langevin_sigma[atomid_b] = mass_inv[atomid_b] * 1e+3* 
+      sqrt(mass[atomid_b] * 1e-3 *
+	   GAS_CONST * temperature *
+	   (1 - exp(-2*langevin_gamma*mass_inv[atomid_b] * time_step) ) ) * 1e-5;
+    
+  }
+  
+  //langevin_q
+  //langevin_sigma
+  return 0;
+}

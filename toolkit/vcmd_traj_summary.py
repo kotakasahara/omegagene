@@ -4,6 +4,7 @@ from optparse import OptionParser
 import sys
 import os
 import copy
+import shutil
 import numpy as np
 
 import kkmmsystem
@@ -419,11 +420,10 @@ class VcManager(object):
             self.gen_restart_frm(fn_restart, crdfrmvs[0], crdfrmvs[1],
                                  temperature, flg_restart)
             fn_startvirt = os.path.join(cal_dir, "start.virt")
-
             self.gen_startvirt_frm(fn_startvirt, crdfrmvs[2])
 
             if flg_restart:
-                shutil.copyfile(os.path.join(self.caldir_list[crdfrmv[0]], fn_aus_rest), os.path.join(cal_dir, fn_aus_rest))
+                shutil.copyfile(os.path.join(self.caldir_list[crdfrmvs[0]], fn_aus_rest), os.path.join(cal_dir, fn_aus_rest))
             
         return
     #def gen_pdb_frm(self, fn, crd, frm):
@@ -461,7 +461,7 @@ class VcManager(object):
     def gen_startvirt_frm(self, fn, vs):
         fo = open(fn, "w")
         fo.write(str(len(vs))+"\n")
-        fo.write("".join([ str(x) + "\n" for x in vs ]))
+        fo.write("".join([ str(int(x)) + "\n" for x in vs ]))
         fo.write(str(np.random.randint(MAX_RANDINT))+"\n")
         fo.close()
         return 

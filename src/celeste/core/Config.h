@@ -96,6 +96,8 @@ struct Config : public CelesteObject {
     real        expected_num_density = -1.0;
     // int  aus_type = AUSTYPE_MASSCENTER;
 
+    real        langevin_gamma = 0.0;
+
     Config() = default;
     Config(std::vector<std::string> &&arg);
     Config(const std::string &filepath) : Config(extract_args_from_file(filepath)) {}

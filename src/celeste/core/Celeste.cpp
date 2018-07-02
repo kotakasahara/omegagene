@@ -56,7 +56,8 @@ int Celeste::dynamics_mode() {
         dynamics = new DynamicsModeVelocityVerlet();
     } else if (config.integrator_type == INTGRTR_ZHANG) {
         dynamics = new DynamicsModeZhang();
-    } else {
+    } else if (config.integrator_type == INTGRTR_LANGEVIN) {
+        dynamics = new DynamicsModeLangevin();    } else {
         cerr << "Unknown Integrator" << endl;
         std::exit(-1);
     }

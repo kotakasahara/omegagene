@@ -36,3 +36,8 @@ double randlib::Random::operator()(double low, double high) {
     // return dist(generator) * (high - low) + low;
     return operator()() * (high - low) + low;
 }
+
+double randlib::Random::normal(double mu, double sigma){
+  std::normal_distribution<> dist(mu, sigma); 
+  return dist(generator);
+}
