@@ -1569,7 +1569,9 @@ int SubBox::init_thermostat(const int in_thermostat_type, const real in_temperat
     thermostat->set_temperature(in_temperature_init);
     thermostat->set_temperature_coeff(d_free);
 
-    thermostat->set_time_step(cfg->time_step);
+    real tau = cfg->berendsen_tau;
+    if (cfg->time_step < tau) tau = cfg->time_step;
+    thermostat->set_time_step(cfg->time_step, tau);
     thermostat->set_constant(n_atoms_box, mass_inv, vel_next, work);
     return 0;
 }
@@ -1865,22 +1867,41 @@ int SubBox::update_coordinates_vv(const real time_step){
     for (int atomid_b = 0, atomid_b3 = 0; atomid_b < all_n_atoms[rank]; atomid_b++, atomid_b3 += 3) {
         for (int d = 0; d < 3; d++) {
 	  crd[atomid_b3+d] += time_step * vel_next[atomid_b3+d] + dt_sq * (-FORCE_VEL * work[atomid_b3+d] * mass_inv[atomid_b]);
+
         }
     }
     return 0;
 }
 
-int SubBox::update_velocities_langevin(const real time_step){
+int SubBox::update_velocities_langevin_first(const real dt_half, const real gamma, const real temperature){
+//int SubBox::update_velocities_langevin(const real time_step){
   for (int atomid_b = 0, atomid_b3 = 0; atomid_b < all_n_atoms[rank]; atomid_b++, atomid_b3 += 3) {
-    //std::normal_distribution<> dist(0, 1);
     for (int d = 0; d < 3; d++) {
-      real_pw zeta = random_mt->normal(0.0, 1.0);
-      //cout << "zeta: " << zeta <<  " " << langevin_d[atomid_b] * vel[atomid_b3+d] << " "
-      //<< langevin_q[atomid_b] * (-FORCE_VEL*work[atomid_b3+d]) << " " 
-      //<< langevin_sigma[atomid_b]*zeta << endl;
-      vel_next[atomid_b3 + d] = langevin_d[atomid_b] * vel[atomid_b3+d] 
-	+ langevin_q[atomid_b] * (-FORCE_VEL*work[atomid_b3+d]) ;
-       + langevin_sigma[atomid_b] * zeta;
+      real zeta = random_mt->normal(0.0, 1.0);
+      real det_f = -FORCE_VEL*work[atomid_b3+d];
+      real  stc_f = zeta * sqrt(GAS_CONST*temperature*gamma*mass[atomid_b]/dt_half * 1e-7);
+
+      vel_next[atomid_b3+d] = (1.0-gamma*dt_half) * vel[atomid_b3+d] + 
+	dt_half * mass_inv[atomid_b] * (det_f + stc_f);
+
+      //vel_next[atomid_b3+d] = dt_half*mass_inv[atomid_b]*stc_f;      
+    }
+  }
+  return 0;
+}
+
+int SubBox::update_velocities_langevin_second(const real dt_half, const real gamma, const real temperature){
+  for (int atomid_b = 0, atomid_b3 = 0; atomid_b < all_n_atoms[rank]; atomid_b++, atomid_b3 += 3) {
+    for (int d = 0; d < 3; d++) {
+      real zeta = random_mt->normal(0.0, 1.0);
+      real det_f = -FORCE_VEL*work[atomid_b3+d];
+      real stc_f = zeta * sqrt(GAS_CONST*temperature*gamma*mass[atomid_b]/dt_half * 1e-7);
+
+      vel_next[atomid_b3+d] = 1.0/(1.0-gamma*dt_half) * (vel[atomid_b3+d] + 
+							dt_half * mass_inv[atomid_b] * (det_f + stc_f) );
+
+      //vel_next[atomid_b3+d] = dt_half*mass_inv[atomid_b]*stc_f;
+      
     }
   }
   return 0;
@@ -1894,7 +1915,7 @@ int SubBox::set_params_langevin(celeste::random::Random *in_mt,
   //langevin_d
   for (int atomid_b = 0; atomid_b < all_n_atoms[rank]; atomid_b++) {
     langevin_d[atomid_b] = exp(-langevin_gamma * mass_inv[atomid_b] * time_step);
-    langevin_q[atomid_b]_ = 1.0/langevin_gamma*(1-langevin_d[atomid_b]);
+    langevin_q[atomid_b] = 1.0/langevin_gamma*(1-langevin_d[atomid_b]);
     langevin_sigma[atomid_b] = mass_inv[atomid_b] * 1e+3* 
       sqrt(mass[atomid_b] * 1e-3 *
 	   GAS_CONST * temperature *

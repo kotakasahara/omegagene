@@ -749,15 +749,8 @@ DynamicsModeLangevin::~DynamicsModeLangevin() {
 int DynamicsModeLangevin::calc_in_each_step() {
 
     const clock_t startTimeStep  = clock();
-    const clock_t startTimeReset = clock();
-
     mmsys.reset_energy();
 
-    const clock_t endTimeReset = clock();
-    mmsys.ctime_cuda_reset_work_ene += endTimeReset - startTimeReset;
-
-    subbox.update_coordinates_cur(time_step_half);
-    subbox.cpy_vel_prev();
 #ifndef F_WO_NS
     const clock_t startTimeHtod = clock();
     if (mmsys.cur_step % cfg->nsgrid_update_intvl == 0) {
@@ -767,10 +760,8 @@ int DynamicsModeLangevin::calc_in_each_step() {
         subbox.nsgrid_crd_to_gpu();
 #endif
     }
-    const clock_t endTimeHtod = clock();
-    mmsys.ctime_cuda_htod_atomids += endTimeHtod - startTimeHtod;
 #endif
-    const clock_t startTimeEne = clock();
+
     //cout <<"calc_energy()" <<endl;
     subbox.calc_energy();
      //cout << "gather_energies()"<<endl;
@@ -782,8 +773,6 @@ int DynamicsModeLangevin::calc_in_each_step() {
         if (cfg->pos_restraint_type != POSREST_NONE) apply_pos_restraint();
     }
 
-    const clock_t endTimeEne = clock();
-    mmsys.ctime_calc_energy += endTimeEne - startTimeEne;
     if (cfg->extended_ensemble == EXTENDED_VMCMD) {
       subbox.extended_apply_bias(mmsys.cur_step, mmsys.set_potential_e());
     } else if (cfg->extended_ensemble == EXTENDED_VAUS) {
@@ -792,46 +781,44 @@ int DynamicsModeLangevin::calc_in_each_step() {
       subbox.vcmd_apply_bias(mmsys.cur_step);
     }
 
-    const clock_t startTimeVel = clock();
-    // cout << "update_velocities"<<endl;
-    //subbox.cpy_vel_prev();
+    if(mmsys.cur_step > 0){
+      subbox.cpy_vel_prev();
+      subbox.update_velocities_langevin_second(time_step_half, cfg->langevin_gamma, cfg->temperature);
+    }
 
-    subbox.update_velocities_langevin(cfg->time_step);
-    const clock_t endTimeVel = clock();
-    mmsys.ctime_update_velo += endTimeVel - startTimeVel;
+    subbox.copy_vel_next(mmsys.vel_just);
+    cal_kinetic_energy((const real **)mmsys.vel_just);
 
-    const clock_t startTimeCoord = clock();
+    subbox.cpy_vel_prev();
+
+    subbox.update_velocities_langevin_first(time_step_half, cfg->langevin_gamma, cfg->temperature);
 
     subbox.cancel_com_motion();
-
+    // if(mmsys.leapfrog_coef == 1.0){
     if (cfg->thermostat_type == THMSTT_SCALING) {
-      subbox.update_thermostat(mmsys.cur_step);
-      if (cfg->constraint_type == CONST_NONE) {
-	subbox.apply_thermostat();
-      }
+        subbox.update_thermostat(mmsys.cur_step);
+        if (cfg->constraint_type == CONST_NONE) {
+            // mmsys.leapfrog_coef == 1.0){
+            subbox.apply_thermostat();
+        }
     }
+    //if (cfg->thermostat_type == THMSTT_SCALING) {
+    //subbox.update_thermostat(mmsys.cur_step);
+    //if (cfg->constraint_type == CONST_NONE) {
+    //subbox.apply_thermostat();
+    //}
+    //}
     
-    // cout << "update_coordinates"<<endl;
-    subbox.cpy_crd_prev();
-    subbox.update_coordinates_cur(time_step_half);
-
-    if (cfg->constraint_type != CONST_NONE) { apply_constraint(); }
+    //if (cfg->constraint_type != CONST_NONE) { apply_constraint(); }
 // cout << "revise_coordinates"<<endl;
+
+    subbox.cpy_crd_prev();
+    subbox.update_coordinates_cur(time_step);
+
 #ifndef F_WO_NS
     subbox.update_coordinates_nsgrid();
 #endif
     subbox.revise_coordinates_pbc();
-
-    const clock_t endTimeCoord = clock();
-    mmsys.ctime_update_coord += endTimeCoord - startTimeCoord;
-
-    const clock_t startTimeKine = clock();
-    // subbox.velocity_average();
-
-    subbox.copy_vel_next(mmsys.vel_just);
-    cal_kinetic_energy((const real **)mmsys.vel_just);
-    const clock_t endTimeKine = clock();
-    mmsys.ctime_calc_kinetic += endTimeKine - startTimeKine;
 
     const clock_t endTimeStep = clock();
     mmsys.ctime_per_step += endTimeStep - startTimeStep;

@@ -16,11 +16,12 @@ class ThermostatObject : public CelesteObject {
     real time_step;
     real time_step_inv_sq;
     real const_k0_inv;
+    real tau_inv;
 
   public:
     ThermostatObject();
     ~ThermostatObject();
-    int set_time_step(real in_time_step);
+    int set_time_step(real in_time_step, real in_tau);
     int set_temperature_coeff(int in_d_free);
     virtual int set_constant(int n_atoms, real_pw *mass, real *vel, real *force);
     virtual int apply_thermostat(const int n_atoms,

@@ -20,6 +20,7 @@ struct Config : public CelesteObject {
     int  thermostat_type        = THMSTT_NONE;
     real temperature            = 300.0;
     real temperature_init       = -1.0;
+    real berendsen_tau          = 0.0;
     int  heating_steps          = 0;
     real thermo_const_tolerance = 0.000001;
     int  thermo_const_max_loops = 1000;

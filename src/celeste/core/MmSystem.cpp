@@ -233,6 +233,8 @@ int MmSystem::free_atom_vars() {
 int MmSystem::free_lj_params() {
     delete[] lj_6term;
     delete[] lj_12term;
+    delete[] lj_hps_cutoff;
+    delete[] lj_hps_lambda;
     return 0;
 }
 

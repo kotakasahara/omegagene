@@ -351,7 +351,10 @@ class SubBox : public CelesteObject {
 			    const real in_gamma,
 			    const real time_step,
 			    const real temperature);
-    int update_velocities_langevin(const real time_step);    
+    //int update_velocities_langevin(const real time_step);    
+    int update_velocities_langevin_first(const real dt_half, const real gamma, const real temperature);
+    int update_velocities_langevin_second(const real dt_half, const real gamma, const real temperature);
+
 };
 
 #endif

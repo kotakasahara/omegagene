@@ -161,6 +161,10 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
 	    
         } else if (*itr == "--temperature") {
 	  temperature = atof((*++itr).c_str());
+
+        } else if (*itr == "--berendsen-tau") {
+	  berendsen_tau = atof((*++itr).c_str());
+	  berendsen_tau *= 1000;
 	  
         } else if (*itr == "--temperature-init") {
 	  temperature_init = atof((*++itr).c_str());

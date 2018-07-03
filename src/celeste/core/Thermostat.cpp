@@ -4,9 +4,10 @@ using namespace std;
 
 ThermostatObject::ThermostatObject() : CelesteObject() {}
 ThermostatObject::~ThermostatObject() {}
-int ThermostatObject::set_time_step(real in_time_step) {
+int ThermostatObject::set_time_step(real in_time_step, real in_tau) {
     time_step        = in_time_step;
     time_step_inv_sq = 1.0 / (time_step * time_step);
+    tau_inv    = 1.0 / in_tau;
     return 0;
 }
 int ThermostatObject::set_temperature_coeff(int in_d_free) {
@@ -72,7 +73,7 @@ int ThermostatScaling::apply_thermostat(int      n_atoms,
     }
 
     real dt_temperature = kine_pre * temperature_coeff;
-    real scale          = sqrt(temperature / dt_temperature);
+    real scale          = sqrt(1 + time_step*tau_inv*(temperature / dt_temperature - 1));
     for (int i = 0, i_3 = 0; i < n_atoms; i++, i_3 += 3) {
         for (int d = 0; d < 3; d++) {
             real vel_diff     = time_step * -FORCE_VEL * work[i_3 + d] * mass_inv[i];
