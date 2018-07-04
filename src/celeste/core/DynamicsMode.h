@@ -100,6 +100,16 @@ class DynamicsModeLangevin : public DynamicsMode {
     virtual int apply_constraint();
 };
 
+class DynamicsModeLangevinVV : public DynamicsMode {
+  private:
+  protected:
+  public:
+    DynamicsModeLangevinVV();
+    ~DynamicsModeLangevinVV();
+    virtual int calc_in_each_step();
+    virtual int apply_constraint();
+};
+
 
 
 #endif

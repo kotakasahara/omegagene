@@ -387,12 +387,14 @@ int DynamicsMode::subbox_setup() {
 #endif
     // subbox.set_ff(&ff);
 
-    if(cfg->integrator_type == INTGRTR_LANGEVIN) { 
-      subbox.set_params_langevin(&mmsys.random_mt,
-				 cfg->langevin_gamma,
-				 time_step,
-				 cfg->temperature);
+    if(cfg->integrator_type == INTGRTR_LANGEVIN_VV ||
+       cfg->integrator_type == INTGRTR_LANGEVIN) {
+      subbox.set_params_langevin(&mmsys.random_mt, cfg->langevin_gamma);
     }
+      //cfg->langevin_gamma,
+	//time_step,
+	//cfg->temperature);
+    //}
 
     return 0;
 }
@@ -781,17 +783,115 @@ int DynamicsModeLangevin::calc_in_each_step() {
       subbox.vcmd_apply_bias(mmsys.cur_step);
     }
 
-    if(mmsys.cur_step > 0){
+    subbox.cpy_crd_prev2();
+    if (mmsys.cur_step == 0){
       subbox.cpy_vel_prev();
-      subbox.update_velocities_langevin_second(time_step_half, cfg->langevin_gamma, cfg->temperature);
+      //subbox.update_coordinates_from_vel(time_step);
+      subbox.update_coordinates_cur(time_step);
+    }else{
+      subbox.update_coordinates_langevin(time_step_half, cfg->langevin_gamma, cfg->temperature);
+      //subbox.cpy_vel_prev();
+      //subbox.update_velocities(time_step_half, cfg->langevin_gamma, cfg->temperature);
+      subbox.set_velocities_just_langevin(time_step);
+      subbox.copy_vel(mmsys.vel_just);
+      cal_kinetic_energy((const real **)mmsys.vel_just);
+    }
+    //subbox.cancel_com_motion();
+
+    // if(mmsys.leapfrog_coef == 1.0){
+    if (cfg->thermostat_type == THMSTT_SCALING) {
+        subbox.update_thermostat(mmsys.cur_step);
+        if (cfg->constraint_type == CONST_NONE) {
+            // mmsys.leapfrog_coef == 1.0){
+            subbox.apply_thermostat();
+        }
+    }
+    //if (cfg->thermostat_type == THMSTT_SCALING) {
+    //subbox.update_thermostat(mmsys.cur_step);
+    //if (cfg->constraint_type == CONST_NONE) {
+    //subbox.apply_thermostat();
+    //}
+    //}
+    
+    //if (cfg->constraint_type != CONST_NONE) { apply_constraint(); }
+// cout << "revise_coordinates"<<endl;
+
+#ifndef F_WO_NS
+    subbox.update_coordinates_nsgrid();
+#endif
+    subbox.revise_coordinates_pbc();
+
+    const clock_t endTimeStep = clock();
+    mmsys.ctime_per_step += endTimeStep - startTimeStep;
+
+    return 0;
+}
+
+int DynamicsModeLangevin::apply_constraint() {
+
+    // if(mmsys.leapfrog_coeff == 1.0){
+
+    if (cfg->thermostat_type == THMSTT_SCALING) {
+        subbox.apply_thermostat_with_shake(cfg->thermo_const_max_loops, cfg->thermo_const_tolerance);
+        // mmsys.leapfrog_coef = 1.0 ;
+    } else {
+        subbox.apply_constraint();
     }
 
+    //}
+    return 0;
+}
+
+/////////////////
+
+DynamicsModeLangevinVV::DynamicsModeLangevinVV() : DynamicsMode() {}
+
+DynamicsModeLangevinVV::~DynamicsModeLangevinVV() {
+  if (DBG >= 1) cout << "DBG1 DynamicsModeLangevinVV::~DynamicsModeLangevinVV()" << endl;  
+}
+
+int DynamicsModeLangevinVV::calc_in_each_step() {
+
+    const clock_t startTimeStep  = clock();
+    mmsys.reset_energy();
+
+#ifndef F_WO_NS
+    const clock_t startTimeHtod = clock();
+    if (mmsys.cur_step % cfg->nsgrid_update_intvl == 0) {
+        subbox.nsgrid_update();
+    } else {
+#if defined(F_CUDA)
+        subbox.nsgrid_crd_to_gpu();
+#endif
+    }
+#endif
+
+    subbox.calc_energy();
+     //cout << "gather_energies()"<<endl;
+    gather_energies();
+
+    if (cfg->dist_restraint_type != DISTREST_NONE || cfg->pos_restraint_type != POSREST_NONE) {
+        subbox.copy_crd(mmsys.crd);
+        if (cfg->dist_restraint_type != DISTREST_NONE) apply_dist_restraint();
+        if (cfg->pos_restraint_type != POSREST_NONE) apply_pos_restraint();
+    }
+
+    if (cfg->extended_ensemble == EXTENDED_VMCMD) {
+      subbox.extended_apply_bias(mmsys.cur_step, mmsys.set_potential_e());
+    } else if (cfg->extended_ensemble == EXTENDED_VAUS) {
+      subbox.extended_apply_bias_struct_param(mmsys.cur_step);
+    } else if (cfg->extended_ensemble == EXTENDED_VCMD) {
+      subbox.vcmd_apply_bias(mmsys.cur_step);
+    }
+
+    if(mmsys.cur_step > 0){
+      subbox.cpy_vel_prev();
+      subbox.update_velocities_langevin_vv_second(time_step_half, cfg->langevin_gamma, cfg->temperature);
+    }
     subbox.copy_vel_next(mmsys.vel_just);
     cal_kinetic_energy((const real **)mmsys.vel_just);
-
     subbox.cpy_vel_prev();
-
-    subbox.update_velocities_langevin_first(time_step_half, cfg->langevin_gamma, cfg->temperature);
+    subbox.update_velocities_langevin_vv_first(time_step_half, cfg->langevin_gamma, cfg->temperature);
 
     subbox.cancel_com_motion();
     // if(mmsys.leapfrog_coef == 1.0){
@@ -811,7 +911,6 @@ int DynamicsModeLangevin::calc_in_each_step() {
     
     //if (cfg->constraint_type != CONST_NONE) { apply_constraint(); }
 // cout << "revise_coordinates"<<endl;
-
     subbox.cpy_crd_prev();
     subbox.update_coordinates_cur(time_step);
 
@@ -826,7 +925,7 @@ int DynamicsModeLangevin::calc_in_each_step() {
     return 0;
 }
 
-int DynamicsModeLangevin::apply_constraint() {
+int DynamicsModeLangevinVV::apply_constraint() {
 
     // if(mmsys.leapfrog_coeff == 1.0){
 

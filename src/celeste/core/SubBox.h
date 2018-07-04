@@ -57,6 +57,7 @@ class SubBox : public CelesteObject {
   int      rank;
   real *   crd;
   real *   crd_prev;
+  real *   crd_prev2;
   real *   vel;
   real *   vel_next;
   real *   vel_just;
@@ -69,9 +70,9 @@ class SubBox : public CelesteObject {
   
   //params for Langevin
   celeste::random::Random *random_mt;
-  real_pw *langevin_d;
-  real_pw *langevin_q;
-  real_pw *langevin_sigma;
+  //real_pw *langevin_d;
+  //real_pw *langevin_q;
+  //real_pw *langevin_sigma;
   real_pw langevin_gamma;
     
     // buffer for thermostat with shake
@@ -263,6 +264,7 @@ class SubBox : public CelesteObject {
     int   get_n_atoms_box() { return n_atoms_box; };
 
     int cpy_crd_prev();
+    int cpy_crd_prev2();
     int cpy_work_prev();
     int cpy_crd_from_prev();
     int cpy_vel_buf_from_prev();
@@ -345,16 +347,19 @@ class SubBox : public CelesteObject {
     //vv
     int update_velocities_vv(const real time_step);
     int update_coordinates_vv(const real time_step);
-
-    // langevin
+      // langevin
     int set_params_langevin(celeste::random::Random *in_mt,
-			    const real in_gamma,
-			    const real time_step,
-			    const real temperature);
+			    const real in_gamma);
+
+    //int set_params_langevin(celeste::random::Random *in_mt,
+    //const real in_gamma,
+    //const real time_step,
+    //const real temperature);
     //int update_velocities_langevin(const real time_step);    
-    int update_velocities_langevin_first(const real dt_half, const real gamma, const real temperature);
-    int update_velocities_langevin_second(const real dt_half, const real gamma, const real temperature);
-
+    int update_velocities_langevin_vv_first(const real dt_half, const real gamma, const real temperature);
+    int update_velocities_langevin_vv_second(const real dt_half, const real gamma, const real temperature);
+    int set_velocities_just_langevin(const real dt);
+    int update_coordinates_langevin(const real dt_half, const real gamma, const real temperature);
+    int update_coordinates_from_vel(const real dt);
 };
-
 #endif

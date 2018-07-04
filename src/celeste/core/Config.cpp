@@ -78,6 +78,8 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
                 integrator_type = INTGRTR_VELOCITY_VERLET;
             } else if (*itr == "langevin") {
 	      integrator_type = INTGRTR_LANGEVIN;
+            } else if (*itr == "langevin-vv") {
+	      integrator_type = INTGRTR_LANGEVIN_VV;
             } else {
                 integrator_type = INTGRTR_DUMMY;
             }
