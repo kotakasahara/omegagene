@@ -359,7 +359,7 @@ class SubBox : public CelesteObject {
     int update_velocities_langevin_vv_first(const real dt_half, const real gamma, const real temperature);
     int update_velocities_langevin_vv_second(const real dt_half, const real gamma, const real temperature);
     int set_velocities_just_langevin(const real dt);
-    int update_coordinates_langevin(const real dt_half, const real gamma, const real temperature);
+    int update_coordinates_langevin(const real dt_half, const real gamma, const real temperature, const int cur_step);
     int update_coordinates_from_vel(const real dt);
 };
 #endif

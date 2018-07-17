@@ -1961,7 +1961,7 @@ int SubBox::update_coordinates_from_vel(const real dt){
   }
   return 0;
 }
-int SubBox::update_coordinates_langevin(const real dt_half, const real gamma, const real temperature){
+int SubBox::update_coordinates_langevin(const real dt_half, const real gamma, const real temperature, const int cur_step){
   // subbox.cpy_crd_prev();
   for (int atomid_b = 0, atomid_b3 = 0;
        atomid_b < all_n_atoms[rank];
@@ -1970,10 +1970,15 @@ int SubBox::update_coordinates_langevin(const real dt_half, const real gamma, co
       real zeta = random_mt->normal(0.0, 1.0);
       real det_f = -FORCE_VEL*work[atomid_b3+d];
       real  stc_f = zeta * sqrt(GAS_CONST*temperature*gamma*mass[atomid_b]/dt_half * 1e-7);
-
+      //cout << "dbg0717 " << cur_step << " " << atomid_b << " " << d << " "  << det_f << " " << zeta << " " << stc_f << endl;
+      
+      real crd_p1 = crd_prev[atomid_b3+d];
+      real crd_p2 = crd_prev2[atomid_b3+d];
+      crd_p2 += -nearbyint(crd_p1-crd_p2) * pbc->L[d];
+      
       crd[atomid_b3+d] = 1.0/(1.0+gamma*dt_half) * 
-	(2*crd_prev[atomid_b3+d] - crd_prev2[atomid_b3+d] + 
-	 gamma*dt_half*crd_prev2[atomid_b3+d] +
+	(2*crd_p1 - crd_p2 + 
+	 gamma*dt_half*crd_p2 + 
 	 4*dt_half*dt_half* mass_inv[atomid_b] * (det_f + stc_f)
 	 );
     }

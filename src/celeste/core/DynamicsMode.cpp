@@ -789,7 +789,7 @@ int DynamicsModeLangevin::calc_in_each_step() {
       //subbox.update_coordinates_from_vel(time_step);
       subbox.update_coordinates_cur(time_step);
     }else{
-      subbox.update_coordinates_langevin(time_step_half, cfg->langevin_gamma, cfg->temperature);
+      subbox.update_coordinates_langevin(time_step_half, cfg->langevin_gamma, cfg->temperature, mmsys.cur_step);
       //subbox.cpy_vel_prev();
       //subbox.update_velocities(time_step_half, cfg->langevin_gamma, cfg->temperature);
       subbox.set_velocities_just_langevin(time_step);
