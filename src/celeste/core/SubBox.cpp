@@ -1974,7 +1974,7 @@ int SubBox::update_coordinates_langevin(const real dt_half, const real gamma, co
       
       real crd_p1 = crd_prev[atomid_b3+d];
       real crd_p2 = crd_prev2[atomid_b3+d];
-      crd_p2 += -nearbyint(crd_p1-crd_p2) * pbc->L[d];
+      crd_p2 += nearbyint((crd_p1-crd_p2)/pbc->L[d]) * pbc->L[d];
       
       crd[atomid_b3+d] = 1.0/(1.0+gamma*dt_half) * 
 	(2*crd_p1 - crd_p2 + 
