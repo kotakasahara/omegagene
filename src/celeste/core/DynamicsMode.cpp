@@ -183,13 +183,17 @@ int DynamicsMode::main_stream() {
   for (mmsys.cur_step = 0; mmsys.cur_step < cfg->n_steps; mmsys.cur_step++) {
     sub_output();
     calc_in_each_step();
+    if(cfg->print_intvl_restart > 0 && mmsys.cur_step % cfg->print_intvl_restart == 0){
+      cout << "output restart " << mmsys.cur_step << endl;
+      output_restart();
+    }
     if ((cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0
 	|| mmsys.cur_step == cfg->n_steps - 1) {
-            sub_output_log();
-        }
-        mmsys.cur_time += cfg->time_step;
+      sub_output_log();
     }
-    sub_output();
+    mmsys.cur_time += cfg->time_step;
+  }
+  sub_output();
     output_restart();
     cout << "== The last step ==" << endl;
     calc_in_each_step();

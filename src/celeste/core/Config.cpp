@@ -204,10 +204,8 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
 
         // else if (*itr == "--nsgrid-min-width") { nsgrid_min_width= atof((*++itr).c_str()); }
         // else if (*itr == "--nsgrid-max-n-atoms") { nsgrid_max_n_atoms = atof((*++itr).c_str()); }
-
         else if (*itr == "--nsgrid-update-intvl") {
             nsgrid_update_intvl = atoi((*++itr).c_str());
-
         } else if (*itr == "--print-interval-coord") {
 	  print_intvl_crd.push_back(atoi((*++itr).c_str()));
 
@@ -228,6 +226,8 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
 
         } else if (*itr == "--print-interval-extended-lambda") {
             print_intvl_extended_lambda = atoi((*++itr).c_str());
+        } else if (*itr == "--print-interval-restart") {
+	  print_intvl_restart = atoi((*++itr).c_str());
         } else if (*itr == "--fn-o-restart") {
             fn_o_restart = *++itr;
         } else if (*itr == "--fn-o-coord") {

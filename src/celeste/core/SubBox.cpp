@@ -1946,7 +1946,10 @@ int SubBox::set_velocities_just_langevin(const real dt){
   const real dt2inv = 1.0/(2 * dt);
   for (int atomid_b = 0, atomid_b3 = 0; atomid_b < all_n_atoms[rank]; atomid_b++, atomid_b3 += 3) {
     for (int d = 0; d < 3; d++) {
-      vel[atomid_b3+d] = (crd[atomid_b3+d] - crd_prev2[atomid_b3+d]) * dt2inv;
+      real crd_p1 = crd[atomid_b3+d];
+      real crd_p2 = crd_prev2[atomid_b3+d];
+      crd_p2 += nearbyint((crd_p1-crd_p2)/pbc->L[d]) * pbc->L[d];      
+      vel[atomid_b3+d] = (crd_p1 - crd_p2) * dt2inv;
     }
   }  
   return 0;
@@ -1970,12 +1973,23 @@ int SubBox::update_coordinates_langevin(const real dt_half, const real gamma, co
       real zeta = random_mt->normal(0.0, 1.0);
       real det_f = -FORCE_VEL*work[atomid_b3+d];
       real  stc_f = zeta * sqrt(GAS_CONST*temperature*gamma*mass[atomid_b]/dt_half * 1e-7);
-      //cout << "dbg0717 " << cur_step << " " << atomid_b << " " << d << " "  << det_f << " " << zeta << " " << stc_f << endl;
+
       
       real crd_p1 = crd_prev[atomid_b3+d];
       real crd_p2 = crd_prev2[atomid_b3+d];
       crd_p2 += nearbyint((crd_p1-crd_p2)/pbc->L[d]) * pbc->L[d];
-      
+      //if ( abs(stc_f) >= 0.01) {
+      //cout << "dbg0718d " << cur_step << " " << atomid_b << " " << d << " " << crd_p1 << " " << crd_p2 << endl;
+      //}
+      //if ( (crd_p1 - crd_p2) >= pbc->L[d]*0.5) {
+      //cout << "dbg0718a " << cur_step << " " << atomid_b << " " << d << " " << crd_p1 << " " << crd_p2 << endl;
+      //}
+      //if ( (crd_p1 - crd_p2) <= -pbc->L[d]*0.5) {
+      //cout << "dbg0718b " << cur_step << " " << atomid_b << " " << d << " " << crd_p1 << " " << crd_p2 << endl;
+      //}
+      //if(abs(det_f) > 0.1){
+      //cout << "dbg0718c " << cur_step << " " << atomid_b << " " << d << " " << crd_p1 <<" " << crd_p2 << " "  << det_f << " " << zeta << " " << stc_f << endl;
+      //      }
       crd[atomid_b3+d] = 1.0/(1.0+gamma*dt_half) * 
 	(2*crd_p1 - crd_p2 + 
 	 gamma*dt_half*crd_p2 + 

@@ -50,6 +50,7 @@ struct Config : public CelesteObject {
     int print_intvl_energy;
     int print_intvl_energyflow;
     int print_intvl_extended_lambda;
+    int print_intvl_restart = 0;
 
     std::string fn_o_restart     = "md_o.restart";
     std::vector<std::string> fn_o_crd;
