@@ -103,6 +103,9 @@ extern "C" int cuda_memcpy_htod_crd(real_pw *&h_crd) {
 
 extern "C" int cuda_set_pbc(real_pw *l, real_pw *lb) {
     HANDLE_ERROR(cudaMemcpyToSymbol(PBC_L, l, sizeof(real_pw) * 3));
+    real_pw l_inv[3];
+    for(int d=0; d<3; d++) l_inv[d] = 1.0/l[d];
+    HANDLE_ERROR(cudaMemcpyToSymbol(PBC_L_INV, l_inv, sizeof(real_pw) * 3));
     HANDLE_ERROR(cudaMemcpyToSymbol(PBC_LOWER_BOUND, lb, sizeof(real_pw) * 3));
     return 0;
 }
@@ -1084,9 +1087,17 @@ __device__ real_pw cal_pair_hps_dh(real_pw &    w1,
 				   const real_pw *__restrict__ d_lj_12term,
 				   const real_pw *__restrict__ d_hps_cutoff,
 				   const real_pw *__restrict__ d_hps_lambda){
-    const real_pw d12[3]     = {crd_chg1.x - crd_chg2.x, crd_chg1.y - crd_chg2.y, crd_chg1.z - crd_chg2.z};
-    const real_pw r12_2      = d12[0] * d12[0] + d12[1] * d12[1] + d12[2] * d12[2];
-    const real_pw r12        = sqrt(r12_2);
+  //    const real_pw d12[3]     = {crd_chg1.x - crd_chg2.x, crd_chg1.y - crd_chg2.y, crd_chg1.z - crd_chg2.z};
+  //for(int d=0; d < 3; d++){
+  real_pw tmp_d12 = crd_chg1.z - crd_chg2.z;
+  tmp_d12 -= nearbyint(tmp_d12 * PBC_L_INV[2]) * PBC_L[2];
+  const real_pw d12[3] =  {crd_chg1.x - crd_chg2.x,
+			   crd_chg1.y - crd_chg2.y,
+			   tmp_d12};
+    //d12[d] -= static_cast<int>(d12[d] * 1.0/PBC_L[d] + 0.5) * PBC_L[d];
+  //}
+  const real_pw r12_2      = d12[0] * d12[0] + d12[1] * d12[1] + d12[2] * d12[2];
+  const real_pw r12        = sqrt(r12_2);
 
     if (r12 >= D_CUTOFF) { return r12; }
 
@@ -1189,6 +1200,7 @@ __global__ void kernel_pairwise_hps_dh(const real4 *d_crd_chg,
         const int a2 = c2 * N_ATOM_CELL + atom_idx2;
         real4     crd_chg2;
         int       atomtype2;
+
         if (atom_idx1 == 0) {
             crd_chg2  = d_crd_chg[a2];
             atomtype2 = d_atomtype[a2];
@@ -1200,11 +1212,13 @@ __global__ void kernel_pairwise_hps_dh(const real4 *d_crd_chg,
                 crd_chg2.y -= PBC_L[1];
             else if ((cellpair.image & 8) == 8)
                 crd_chg2.y += PBC_L[1];
+	    /*
             if ((cellpair.image & 16) == 16)
                 crd_chg2.z -= PBC_L[2];
             else if ((cellpair.image & 32) == 32)
                 crd_chg2.z += PBC_L[2];
-        }
+	    */
+	}
         int atomid2_top = laneIdx - laneIdx % 8;
         crd_chg2.x      = __shfl(crd_chg2.x, laneIdx - atom_idx1);
         crd_chg2.y      = __shfl(crd_chg2.y, laneIdx - atom_idx1);
@@ -1221,12 +1235,9 @@ __global__ void kernel_pairwise_hps_dh(const real4 *d_crd_chg,
         if (!check_15off64(atom_idx1, atom_idx2, cellpair.pair_mask, mask_id, interact_bit)) {
 
             real_pw r12 = cal_pair_hps_dh(w1, w2, w3, cur_ene_vdw, cur_ene_ele,
-					  // d_crd_chg[a1],
 					  crd_chg1[sharedmem_idx], crd_chg2,
-					  // d_atomtype[a1],
 					  atomtype1[sharedmem_idx], atomtype2, d_lj_6term, d_lj_12term,
 					  d_hps_cutoff, d_hps_lambda);
-            // if(flg_mod_15mask && r12 < D_CUTOFF_PAIRLIST) interact_bit = 0;
             ene_vdw += cur_ene_vdw;
             ene_ele += cur_ene_ele;
 
@@ -1234,13 +1245,6 @@ __global__ void kernel_pairwise_hps_dh(const real4 *d_crd_chg,
             work_c1[1] += w2;
             work_c1[2] += w3;
         }
-        /*if(flg_mod_15mask){
-          for(int i = 32; i >= 1; i/=2){
-          interact_bit |= __shfl_xor(interact_bit, i);
-          }
-          if(laneIdx == 0)
-          d_cell_pairs[cp].pair_mask[mask_id]  |= interact_bit;
-          }*/
         for (int i = 4; i >= 1; i /= 2) {
             w1 += shfl_xor(w1, i, 8);
             w2 += shfl_xor(w2, i, 8);

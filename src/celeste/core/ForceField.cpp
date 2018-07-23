@@ -339,11 +339,11 @@ real_pw ForceField::calc_pairwise(real_pw &ene_vdw,
 				  real_pw hps_epsiron) {
 
     real_pw d12[3] = {0.0, 0.0, 0.0};
-
-    // pbc->diff_crd_minim_image(d12, crd1, crd2);
-
-    for (int d = 0; d < 3; d++) { d12[d] = crd1[d] - crd2[d]; }
-
+#ifdef F_IMPSOLVE
+     pbc->diff_crd_minim_image(d12, crd1, crd2);
+#else    
+     for (int d = 0; d < 3; d++) { d12[d] = crd1[d] - crd2[d]; }
+#endif
     real_pw r12_2 = d12[0] * d12[0] + d12[1] * d12[1] + d12[2] * d12[2];
 
     real_pw r12 = sqrt(r12_2);

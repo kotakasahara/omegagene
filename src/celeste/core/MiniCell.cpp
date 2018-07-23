@@ -1012,6 +1012,17 @@ int MiniCell::enumerate_cell_pairs() {
                 }
 
                 //int tmp_img = -2;
+#ifdef F_IMPSOLV	       
+		int col2id = get_column_id_from_crd(cell2[0], cell2[1]);
+		  
+		for(int i=0;
+		    i < n_cells_z[col2id]; i++){
+		  int cell2_id = idx_xy_head_cell[col2id]+i; 
+		  bool cell2_odd = cell2_id % 2 != 0;
+		  if (check_valid_pair(cell1_id, cell2_id, cell1_odd, cell2_odd))
+		    add_cell_pair(cell1_id, cell2_id, image);
+		}
+#else
                 for (int i_img = 0; i_img < 3; i_img++) {
                     image[2] = i_img - 1;
                     if (first_uni_z[i_img] < 0) continue;
@@ -1081,6 +1092,7 @@ int MiniCell::enumerate_cell_pairs() {
                             add_cell_pair(cell1_id, cell2_id, image);
                     }
                 }
+#endif
             }
         }
     }

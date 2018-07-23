@@ -39,6 +39,7 @@ cudaStream_t stream_pair_home;
 
 __constant__ real_pw D_CHARGE_COEFF;
 __constant__ real_pw PBC_L[3];
+__constant__ real_pw PBC_L_INV[3];
 __constant__ real_pw PBC_LOWER_BOUND[3];
 __constant__ int     D_N_CELL_PAIRS;
 __constant__ int     D_MAX_N_CELL_PAIRS;
