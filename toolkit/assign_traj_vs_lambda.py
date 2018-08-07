@@ -35,10 +35,20 @@ def option_parse():
 
     return opts, args
 
-def cal_prob(cano, vs):
-    prob = []
-    for frame, cur_vs in vs.items():
-        prob.append(cano.params[cur_vs][0])
+def cal_prob(cano, vs, lmb):
+    prob = {}
+    frames = sorted(vs.keys())
+    for frame in frames:
+        #print frame
+        cur_vs = vs[frame]
+        if not frame in lmb:
+            print "Lambda value is missing: " + str(frame)
+            break
+        cur_lmb = lmb[frame]
+        cur_prob = cano.params[cur_vs][0]
+        if not cano.is_in_range(cur_vs, cur_lmb):
+            cur_prob = 0
+        prob[frame] = cur_prob
     return prob
 
 def read_dat(fn, itv_dat, itv_cod, valtype="int"):
@@ -55,7 +65,7 @@ def read_dat(fn, itv_dat, itv_cod, valtype="int"):
             sys.stderr.write("Variable type error.")
             sys.exit(1)
 
-        frame = i * itv_dat
+        frame = (i+1) * itv_dat
         if frame % itv_cod == 0:
             dat[frame] = tuple(buf)
 
@@ -64,10 +74,12 @@ def read_dat(fn, itv_dat, itv_cod, valtype="int"):
 
 def write_dat(fn_out, vs, lmb, prob):
     fo = open(fn_out,"w")
-    for c_vs, c_lmb, c_prob in zip(vs.values(),lmb.values(), prob):
-        line=str(c_prob)+"\t"
-        line+="\t".join([str(x) for x in c_lmb]) + "\t"
-        line+="\t".join([str(x) for x in c_vs]) + "\n"
+    frames = sorted(prob.keys())
+    for frm in frames:
+        #for c_vs, c_lmb, c_prob in zip(vs.values(),lmb.values(), prob):
+        line=str(frm) + "\t" + str(prob[frm])+"\t"
+        line+="\t".join([str(x) for x in lmb[frm]]) + "\t"
+        line+="\t".join([str(x) for x in vs[frm]]) + "\n"
         fo.write(line)
     fo.close()
     return
@@ -80,7 +92,7 @@ def _main():
     
     vs = read_dat(opts.fn_vs, opts.itv_vs, opts.itv_cod, "int")
     lmb = read_dat(opts.fn_lmb, opts.itv_lmb, opts.itv_cod, "float")
-    prob = cal_prob(cano, vs)
+    prob = cal_prob(cano, vs, lmb)
 
     write_dat(opts.fn_out, vs, lmb, prob)
     
