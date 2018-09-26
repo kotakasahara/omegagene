@@ -194,32 +194,41 @@ int DynamicsMode::main_stream() {
     mmsys.cur_time += cfg->time_step;
   }
   sub_output();
-    output_restart();
-    cout << "== The last step ==" << endl;
-    calc_in_each_step();
-    sub_output_log();
-    return 0;
+  output_restart();
+  cout << "== The last step ==" << endl;
+  calc_in_each_step();
+  if (cfg->integrator_type == INTGRTR_LANGEVIN){
+    output_restart();    
+  }
+  sub_output_log();
+  return 0;
 }
+
 int DynamicsMode::output_restart() {
+  if (cfg->integrator_type == INTGRTR_LANGEVIN){
+    subbox.copy_crd_prev(mmsys.crd);
+    //subbox.copy_vel_next(mmsys.vel_just);
+  }else{
     subbox.copy_crd(mmsys.crd);
     subbox.copy_vel_next(mmsys.vel_just);
-    writer_restart.set_fn(cfg->fn_o_restart);
-    writer_restart.write_restart(mmsys.n_atoms, (int)mmsys.cur_step, (double)mmsys.cur_time,
-                                 (double)(mmsys.pote_bond + mmsys.pote_angle + mmsys.pote_torsion + mmsys.pote_impro
-                                          + mmsys.pote_14vdw + mmsys.pote_14ele + mmsys.pote_vdw + mmsys.pote_ele),
-                                 (double)mmsys.kinetic_e, mmsys.crd, mmsys.vel_just);
-
-    if (cfg->extended_ensemble == EXTENDED_VAUS){
-      subbox.extended_write_aus_restart(cfg->fn_o_aus_restart, EXTENDED_VAUS);
-    }else if(cfg->extended_ensemble == EXTENDED_VCMD) { 
-      subbox.extended_write_aus_restart(cfg->fn_o_aus_restart, EXTENDED_VCMD);
-    }
-
-    return 0;
+  }
+  writer_restart.set_fn(cfg->fn_o_restart);
+  writer_restart.write_restart(mmsys.n_atoms, (int)mmsys.cur_step, (double)mmsys.cur_time,
+			       (double)(mmsys.pote_bond + mmsys.pote_angle + mmsys.pote_torsion + mmsys.pote_impro
+					+ mmsys.pote_14vdw + mmsys.pote_14ele + mmsys.pote_vdw + mmsys.pote_ele),
+			       (double)mmsys.kinetic_e, mmsys.crd, mmsys.vel_just);
+  
+  if (cfg->extended_ensemble == EXTENDED_VAUS){
+    subbox.extended_write_aus_restart(cfg->fn_o_aus_restart, EXTENDED_VAUS);
+  }else if(cfg->extended_ensemble == EXTENDED_VCMD) { 
+    subbox.extended_write_aus_restart(cfg->fn_o_aus_restart, EXTENDED_VCMD);
+  }
+  
+  return 0;
 }
 
 int DynamicsMode::calc_in_each_step() {
-    return 0;
+  return 0;
 }
 int DynamicsMode::apply_constraint() {
 
