@@ -173,7 +173,7 @@ int ExtendedVMcMD::scale_force(real lambda, real_fc *work, int n_atoms) {
     // case 1 : under the lower limit
     real param = lambda;
     if (lambda <= vstates[cur_vs].get_lambda_low()) {
-        param = vstates[cur_vs].get_lambda_low();
+      param = vstates[cur_vs].get_lambda_low();
     } else if (lambda >= vstates[cur_vs].get_lambda_high()) {
       param = vstates[cur_vs].get_lambda_high();
     }

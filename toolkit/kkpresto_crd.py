@@ -75,6 +75,7 @@ class PrestoCrdWriter(kkkit.FileBO):
                          ignore=set(),
                          cpu_time=frame.cpu_time,
                          total_e=frame.e_total,
+                         potential_e=frame.e_pot,
                          kinetic_e=frame.e_kine,
                          temperature=frame.temperature,
                          rmsf=frame.rmsf,
