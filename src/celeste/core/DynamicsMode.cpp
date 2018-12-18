@@ -273,31 +273,38 @@ int DynamicsMode::sub_output() {
     i_itr++;
     if ((*itr) < 0 || mmsys.cur_step == 0 || (mmsys.cur_step) % (*itr) != 0)
       continue;
-    
+    //cout << "dbg1218 a" << endl;
     if (!cp){
       subbox.copy_crd_prev(mmsys.crd);
       cp = true;
     }
-      writer_trr[i_itr]->write_trr(mmsys.n_atoms,
-				   (int)mmsys.cur_step,
-				   mmsys.cur_time,
-				   mmsys.pbc.L[0], mmsys.pbc.L[1], mmsys.pbc.L[2],
-				   mmsys.crd, mmsys.vel_just, mmsys.force,
-				   (float)mmsys.ctime_per_step / (float)CLOCKS_PER_SEC,
-				   total_e, mmsys.kinetic_e,
-				   mmsys.temperature,
-				   mmsys.potential_e,
-				   mmsys.pote_vdw, true, true, false, false,
-				   mmsys.n_atoms_in_groups[mmsys.out_group[i_itr]],
-				   mmsys.atom_groups[mmsys.out_group[i_itr]]);
+    int outgrp = 0;
+    if ( mmsys.out_group.size() > i_itr )
+      outgrp = mmsys.out_group[i_itr];
+    cout << "dbg1218 b " <<outgrp << " " << mmsys.out_group.size() << endl;
+    writer_trr[i_itr]->write_trr(mmsys.n_atoms,
+				 (int)mmsys.cur_step,
+				 mmsys.cur_time,
+				 mmsys.pbc.L[0], mmsys.pbc.L[1], mmsys.pbc.L[2],
+				 mmsys.crd, mmsys.vel_just, mmsys.force,
+				 (float)mmsys.ctime_per_step / (float)CLOCKS_PER_SEC,
+				 total_e, mmsys.kinetic_e,
+				 mmsys.temperature,
+				 mmsys.potential_e,
+				 mmsys.pote_vdw, true, true, false, false,
+				 mmsys.n_atoms_in_groups[outgrp],
+				 mmsys.atom_groups[outgrp]);
+				 //mmsys.n_atoms_in_groups[mmsys.out_group[i_itr]],
+				 //mmsys.atom_groups[mmsys.out_group[i_itr]]);
+    //cout << "dbg1218 c" << endl;
   }
   return 0;
 }
 
 int DynamicsMode::sub_output_log() {
-    stringstream ss;
-    string       strbuf;
-    char         buf[1024];
+  stringstream ss;
+  string       strbuf;
+  char         buf[1024];
     sprintf(buf, "Step: %8lu    Time: %10.4f\n", mmsys.cur_step, mmsys.cur_time);
     ss << string(buf);
     real total_e = mmsys.set_potential_e() + mmsys.kinetic_e;
