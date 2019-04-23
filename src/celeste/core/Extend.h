@@ -236,6 +236,7 @@ class ExtendedVcMD : public Extended {
     WriteTableLog *writer_lambda;
     //WriteVcMDParam writer_qcano;
     WriteVcMDParam writer_qraw;
+    WriteVcMDParam writer_qraw_is;
     WriteTableLogAscii writer_start;
 
     unsigned long begin_count_q_raw;
@@ -282,6 +283,16 @@ class ExtendedVcMD : public Extended {
     std::map< std::vector<int>, real  > q_raw;
     int q_raw_sum;
     real default_q_cano;
+
+    std::vector< std::vector<int> >     ndim_bin_vectors;
+    std::map< std::vector<int>, real  > q_raw_is;
+    // population for state intersections
+    // q_raw_is[vs_dim1, vs_dim2, ..., x_dim1, x_dim2, ...] = 
+    //  x_dimn = 0 for lower half of the zone in n-th dim,
+    //  x_dimn = 1 for upper half of the zone in n-th dim,
+    std::vector<int> cur_vs_is;
+    // n_dim dimensional binary vector
+    // Each element indicates lower(0) or upper(1) half of the zone
     
     std::vector<int> cur_vs;
     
@@ -313,6 +324,7 @@ class ExtendedVcMD : public Extended {
     int push_vs_range(std::vector<real> new_min,
 		      std::vector<real> new_max);
     void set_q_cano(std::map< std::vector<int>, real > in_q);
+    int set_ndim_bin_vectors(const std::vector<int> tmp_vs_is);
     void push_grp_ids_name(std::vector<int> in_ids,
 			   std::vector<std::string> in_names){
      grp_ids.push_back(in_ids); 

@@ -120,21 +120,22 @@ int ExtendedVMcMD::get_temperature() {
 }
 
 int ExtendedVMcMD::apply_bias(unsigned long cur_step, real in_lambda, real_fc *work, int n_atoms_box) {
+  
   //cout << "test in_lambda "<< in_lambda<<endl;
-    if (cur_step > 0 && cur_step % trans_interval == 0) {
-        if (flg_vs_transition) set_current_vstate(in_lambda);
-        if (cur_step <= n_steps) { write_vslog(cur_step); }
-    }
-    //cout << " test 1 2 " << endl;
-    scale_force(in_lambda, work, n_atoms_box);
-    //cout << " test 1 3 " << endl;
-    if (cur_step > 0 && cur_step % write_lambda_interval == 0 && cur_step <= n_steps) { write_lambda(in_lambda); }
-    //cout << "dbg write_com_interval " << write_com_interval << endl;
-    if (write_com_interval > 0 && cur_step > 0 &&
+  if (cur_step > 0 && cur_step % trans_interval == 0) {
+    if (flg_vs_transition) set_current_vstate(in_lambda);
+    if (cur_step <= n_steps) { write_vslog(cur_step); }
+  }
+  //cout << " test 1 2 " << endl;
+  scale_force(in_lambda, work, n_atoms_box);
+  //cout << " test 1 3 " << endl;
+  if (cur_step > 0 && cur_step % write_lambda_interval == 0 && cur_step <= n_steps) { write_lambda(in_lambda); }
+  //cout << "dbg write_com_interval " << write_com_interval << endl;
+  if (write_com_interval > 0 && cur_step > 0 &&
       cur_step % write_com_interval == 0 &&
       cur_step <= n_steps) { write_com(); }
   
-    return 0;
+  return 0;
 }
 int ExtendedVMcMD::set_current_vstate(real lambda) {
     int dest_vs;
@@ -606,10 +607,37 @@ int ExtendedVcMD::push_vs_range(std::vector<real> new_min,
   return 0;
 }
 void ExtendedVcMD::set_q_cano(std::map< std::vector<int>, real > in_q){
+  std::vector<int> tmp;
+  set_ndim_bin_vectors(tmp);
+
   q_cano = in_q; 
   for ( const auto itr : q_cano ) {
     q_raw[itr.first] = 0;
+    for( const auto itr2 : ndim_bin_vectors ){
+      std::vector<int> tmp_vsis;
+      copy(itr.first.begin(), itr.first.end(), back_inserter(tmp_vsis));
+      copy(itr2.begin(), itr2.end(), back_inserter(tmp_vsis));
+      q_raw_is[tmp_vsis] = 0;
+    }
   }
+}
+int ExtendedVcMD::set_ndim_bin_vectors(const std::vector<int> tmp_vs_is){
+  // Enumerating all possible n_dim dimensional binary vectors
+  //   and set them into the member variable, ndim_bin_vectors
+
+  int cur_dim = tmp_vs_is.size();
+
+  for(int itr01 = 0; itr01 <= 1; itr01++){
+    std::vector<int> tmp_vs_is_sub;
+    copy(tmp_vs_is.begin(), tmp_vs_is.end(), back_inserter(tmp_vs_is_sub));
+    tmp_vs_is_sub.push_back(itr01);
+    if(cur_dim == n_dim - 1){
+      ndim_bin_vectors.push_back(tmp_vs_is_sub);
+    }else{
+      set_ndim_bin_vectors(tmp_vs_is);
+    }
+  }
+  return 0;
 }
 int ExtendedVcMD::set_struct_parameters(real *crd, PBC *pbc) {
   //cout << "set_struct_parameters " << reactcrd_type << endl;
@@ -737,6 +765,7 @@ int ExtendedVcMD::apply_bias(unsigned long cur_step,
   
   if(is_in_range() || drift > 0){
     q_raw[cur_vs] += 1;
+    q_raw_is[cur_vs_is] += 1;
     q_raw_sum += 1;
   }
   if (cur_step > 0 && cur_step % trans_interval == 0) {
@@ -755,21 +784,38 @@ int ExtendedVcMD::set_vs_next(){
   std::vector< std::vector<int> > vs_next_crd(n_dim);
   // for(int i=0; i<n_dim; i++) vs_next_crd[i]=-1;
   // vs_next_crd[dimension] = ID of the overlapping virtual states
+  cur_vs_is.clear();
+  copy(cur_vs.begin(), cur_vs.end(), back_inserter(cur_vs_is));
+
   for(int d=0; d<n_dim; d++){
     vs_next_crd[d].push_back(cur_vs[d]);
     int vc_size = vc_range_min[d].size();
     if ( cur_vs[d] > 0 ){
-
       if (lambda[d] < vc_range_max[d][cur_vs[d]-1]){
 	vs_next_crd[d].push_back(cur_vs[d]-1);
-      }else if(cur_vs[d] < vc_size-1 && lambda[d] >= vc_range_min[d][cur_vs[d]+1] ){
-	vs_next_crd[d].push_back(cur_vs[d]+1);
+	cur_vs_is.push_back(0);
+      }else{
+	cur_vs_is.push_back(1);
+	if(cur_vs[d] < vc_size-1 && lambda[d] >= vc_range_min[d][cur_vs[d]+1] ){
+	  vs_next_crd[d].push_back(cur_vs[d]+1);
+	}
       }
-    }else if(vc_range_min[d].size() > 1 && lambda[d] >= vc_range_min[d][cur_vs[d]+1]){
-      vs_next_crd[d].push_back(cur_vs[d]+1);
+    }else{
+      if(vc_range_min[d].size() > 1 && lambda[d] >= vc_range_min[d][cur_vs[d]+1]){
+	vs_next_crd[d].push_back(cur_vs[d]+1);
+	cur_vs_is.push_back(1);
+      }
+      cur_vs_is.push_back(0);
     }
     //cout << "dbg 0719 d:" <<d << " " << cur_vs[d] << " - " << *(--vs_next_crd[d].end()) <<endl;
   }
+  // dbg
+  cout << "cur_vs_is : ";
+  for( const auto itr : cur_vs_is ){
+    cout << itr << " ";
+  }
+  cout << endl;
+
   vs_next.clear();
   std::vector<int> tmp_vs_next;
   set_vs_next_sub(tmp_vs_next, vs_next_crd);
@@ -1006,6 +1052,13 @@ int ExtendedVcMD::write_q(){
 		    vc_range_min, vc_range_max,
 		    q_raw);
   writer_qraw.close();
+
+  writer_qraw_is.open();
+  writer_qraw_is.write(trans_interval,
+		       grp_names,
+		       vc_range_min, vc_range_max,
+		       q_raw_is);
+  writer_qraw_is.close();
 
   writer_start.open();
   writer_start.set_ncolumns(1);
