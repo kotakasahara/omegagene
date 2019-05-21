@@ -409,7 +409,7 @@ class Model(object):
                 a_name1 = "O3'"
                 a_name2 = "P"
             elif not self.chains[chain_id].chain_type == kk.CH_PEPTIDE:
-                if DEBUG: print "chain " + chain_id + " has undefined type"
+                if DEBUG: print("chain " + chain_id + " has undefined type")
                 continue
             for res_index1 in self.chains[chain_id].res_indice:
                 res_index2 = res_index1 + 1
@@ -441,7 +441,7 @@ class Model(object):
                 flg_dist = self.atoms[res1a].distTo(self.atoms[res2a]) >= max_dist
                 ##DEBUG
                 if flg_dist:
-                    print "distance : "+ str(res1a) +"-"+str(res2a) + " " + str(res_index1) + "-" + str(res_index2) + "  " + str(self.atoms[res1a].distTo(self.atoms[res2a]))
+                    print("distance : "+ str(res1a) +"-"+str(res2a) + " " + str(res_index1) + "-" + str(res_index2) + "  " + str(self.atoms[res1a].distTo(self.atoms[res2a])))
                 flg_num = self.atoms[res1a].res_id != self.atoms[res2a].res_id - 1
                 if flg_dist or flg_num:
                     disconnect[chain_id][res_index1] = (flg_dist, flg_num)
@@ -452,7 +452,7 @@ class Model(object):
                         line = str(chain_id) + ":" + str(self.residues[res_index].res_id) + "("+str(res_index) + ") is disconnected: "
                         if flgs[0]: line += " distance"
                         if flgs[1]: line += " residue_id"
-                        print line
+                        print(line)
 
         if reassign_chain_id:
             self.reassign_chain_id_to_atoms(disconnect)
@@ -475,7 +475,7 @@ class Model(object):
             term_res_chid[res] = pointer_chain_id
             pointer_chain_id = chr(ord(pointer_chain_id)+1)
 
-        print term_res_chid
+        print(term_res_chid)
         for res_index, residue in self.residues.items():
             new_ch_id = "X"
             for i, cur_res in enumerate(term_res):
@@ -519,7 +519,7 @@ class Model(object):
                     (kk.RESNAMES[res.res_name] == kk.RESNAMES[auth_model.residues[res_num_auth].res_name]):
                 self.residues[res_num].res_id_auth = auth_model.residues[res_num_auth].res_id
                 self.residues[res_num].res_name = auth_model.residues[res_num_auth].res_name
-                print str(res_num) + ":" + res.res_name + " - " + str(res_num_auth) + ":" + auth_model.residues[res_num_auth].res_name + ":" + str(auth_model.residues[res_num_auth].res_id)
+                print(str(res_num) + ":" + res.res_name + " - " + str(res_num_auth) + ":" + auth_model.residues[res_num_auth].res_name + ":" + str(auth_model.residues[res_num_auth].res_id))
                 self.residues[res_num].chain_id = auth_model.residues[res_num_auth].chain_id
                 
         for i, atom in enumerate(self.atoms):
@@ -529,7 +529,7 @@ class Model(object):
         self.reset_chains_from_atom_info()
         return
     def set_water_chain(self, wat_chain_id="X"):
-        print "WATER"
+        print("WATER")
         for i, atom in enumerate(self.atoms):
             if kk.RESNAMES[atom.res_name] == "HOH":
                 self.chains[atom.chain_id].res_indice.remove(atom.res_index)
@@ -539,7 +539,7 @@ class Model(object):
                 self.chains[wat_chain_id].push_res_index(atom.res_index)
                 self.chains[wat_chain_id].push_atom_index(i)
                 atom.chain_id = wat_chain_id
-                print atom.info_txt()
+                print(atom.info_txt())
         return 
     def insert_atoms_res(res_index, atoms):
 

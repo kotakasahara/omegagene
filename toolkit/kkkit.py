@@ -102,5 +102,5 @@ class FileBO(FileIO):
     
     
 def err(msg):
-    print msg
+    print(msg)
     return sys.stderr.write(msg)
