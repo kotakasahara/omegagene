@@ -42,7 +42,7 @@ class TPLAtom(object):
         return
     def diff(atom):
         if self.atom_id != atom.atom_id:
-            print "atom_id: %5d %5d"%(self.atom_id, atom.atom_id)
+            print("atom_id: %5d %5d"%(self.atom_id, atom.atom_id))
 
 class TPLMol():
     def __init__(self, name, num, head_atom_id):
@@ -65,9 +65,9 @@ class TPLMol():
         self.impropers = []
         self.tor14 = {}
     def diff(mol):
-        print "======== MOL ========="
-        print "name:    %8s %8s"%(self.mol_name, mol.mol_name)
-        print "n_atoms: %8d %8d"%(self.mol_num, mol.mol_num)
+        print("======== MOL =========")
+        print("name:    %8s %8s"%(self.mol_name, mol.mol_name))
+        print("n_atoms: %8d %8d"%(self.mol_num, mol.mol_num))
         for i, a1 in enumerate(self.atoms):
             a1.diff(mol.atoms[i])
         return 
@@ -97,8 +97,7 @@ class TPLMol():
             #self.add_bond(pair, params)
             bond = bonds[0]
             if bond[0] == 1:    # function type = 1
-                print "aaaaa"
-                print bond[2]
+                #print bond[2]
                 params = (bond[2] * J_TO_CAL * 0.01 * 0.5,
                           bond[1] * 10.0)
                 self.add_bond(pair, params)
@@ -547,14 +546,14 @@ class TPL(object):
     def diff(self, tpl):
         mol1 = set([mol.mol_name for mol in self.mols])
         mol2 = set([mol.mol_name for mol in tpl.mols])
-        print "======== MOLECULES ========"
-        print "== MATCH"
-        print ", ".join(mol1.union(mol2))
-        print "== Only in Tpl1 "
-        print ", ".join([m for m in mol1 if not m in mol2])
-        print "== Only in Tpl2 "
-        print ", ".join([m for m in mol2 if not m in mol1])
-        print ""
+        print("======== MOLECULES ========")
+        print("== MATCH")
+        print(", ".join(mol1.union(mol2)))
+        print("== Only in Tpl1 ")
+        print(", ".join([m for m in mol1 if not m in mol2]))
+        print("== Only in Tpl2 ")
+        print(", ".join([m for m in mol2 if not m in mol1]))
+        print("")
         for m in mol1.union(mol2):
             self.get_mol_by_name(m).diff(tpl.get_mol_by_name(m))
         return 
@@ -811,7 +810,7 @@ class TPL(object):
 
         new_bonds = []
         #new_non15 = set()
-        print "n pairs : " + str(len(pairs))
+        print("n pairs : " + str(len(pairs)))
         #print pairs
         for idx, at12 in enumerate(self.atom_id_12):
             #print at12[0]
@@ -829,8 +828,8 @@ class TPL(object):
                 #new_non15.add(self.swap(at13[0][0], at13[0][2]))
         self.atom_id_13 = new_angles
         #self.atom_pair_non15 = new_non15
-        print "n_bonds: " + str(n_bonds_orig) + " -> " + str(len(self.atom_id_12))
-        print "n_angles: " + str(n_angles_orig) + " -> " + str(len(self.atom_id_13))
+        print("n_bonds: " + str(n_bonds_orig) + " -> " + str(len(self.atom_id_12)))
+        print("n_angles: " + str(n_angles_orig) + " -> " + str(len(self.atom_id_13)))
 
         return 
 
@@ -894,7 +893,7 @@ class TPLReader(PrestoAsciiReader):
                 if terms[1] == "TITLE":
                     title_line = self.readline()
                     tpl.title = title_line
-                    if DEBUG: print tpl.title
+                    if DEBUG: print(tpl.title)
                 elif terms[1] == "MOLECULES":
                     reading_area = terms[1]
                 elif terms[1] == "ATOMS":
@@ -926,7 +925,7 @@ class TPLReader(PrestoAsciiReader):
                 mol_terms = re.compile("\s+").split(line.strip())
                 mol_name_id[mol_terms[0]] = len(tpl.mols)
                 tpl.add_mol(mol_terms[0], int(mol_terms[1]))
-                if DEBUG: print "New mol:" + mol_terms[0] + ": " + str(mol_terms[1])
+                if DEBUG: print("New mol:" + mol_terms[0] + ": " + str(mol_terms[1]))
             elif reading_area == "ATOMS":
                 #print " ".join(terms)
                 n_1_2_atoms = int(terms[8]) #n_1_2_atoms
@@ -937,7 +936,7 @@ class TPLReader(PrestoAsciiReader):
                     line2 = self.readline().strip()
                     if line2[0] == "<":
                         line2 = line2[1:].strip()
-                        print "ERROR: the number of terms in the ATOM field is not enough"
+                        print("ERROR: the number of terms in the ATOM field is not enough")
                         return
                     terms2 = re.compile("\s+").split(line2)
                     terms.extend(terms2)

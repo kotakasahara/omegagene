@@ -88,15 +88,15 @@ class VcMDConf():
         for vs, param in self.params.items():
             if vs == key_def: continue
             p_sum += np.array(param)
-        print "p_sum"
-        print p_sum
+        print("p_sum")
+        print( p_sum)
         p_sum_t = np.zeros(len(self.params.values()[0]), dtype=np.float)
         for vs, param in self.params.items():
             if vs == key_def: continue
             #for i, q in enumerate(param):
             self.params[vs] /= p_sum
             p_sum_t += param
-        print p_sum_t
+        print(p_sum_t)
         return
     def pop_zero_vs(self):
         key_def = tuple([ 0 for x in range(self.dim)])
@@ -115,7 +115,7 @@ class VcMDConf():
         key_def = tuple([ 0 for x in range(self.dim)])
         #if key_def in self.params: return
         min_param = 1e10
-        print len(self.params.items())
+        print(len(self.params.items()))
         for k, v in self.params.items():
             if k == key_def: continue
             if v[0] < min_param and v[0] > 0:
@@ -153,10 +153,10 @@ class VcMDConf():
             if k == key_def: continue
             buf.append(v[0])
         param = np.array(buf)
-        print "min: " + str(param.min())
-        print "max: " + str(param.max())
-        print "mean: " + str(param.mean())
-        print "sd: " + str(param.std())
+        print("min: " + str(param.min()))
+        print("max: " + str(param.max()))
+        print("mean: " + str(param.mean()))
+        print("sd: " + str(param.std()))
         return
     def is_in_range(self, vs, lmb):
         assert(len(vs)==self.dim and len(lmb)==self.dim)

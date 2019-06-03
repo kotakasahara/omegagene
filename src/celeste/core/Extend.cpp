@@ -170,7 +170,6 @@ int ExtendedVMcMD::trial_transition(int source, int rel_dest, real lambda) {
     return source;
 }
 int ExtendedVMcMD::scale_force(real lambda, real_fc *work, int n_atoms) {
-
     // case 1 : under the lower limit
     real param = lambda;
     if (lambda <= vstates[cur_vs].get_lambda_low()) {
@@ -608,15 +607,22 @@ int ExtendedVcMD::push_vs_range(std::vector<real> new_min,
 }
 void ExtendedVcMD::set_q_cano(std::map< std::vector<int>, real > in_q){
   std::vector<int> tmp;
+  //  cout << "set_ndim_bin_vectors(tmp);"<<endl;
   set_ndim_bin_vectors(tmp);
+  //cout << "//set_ndim_bin_vectors(tmp);"<<endl;
 
   q_cano = in_q; 
   for ( const auto itr : q_cano ) {
+    
     q_raw[itr.first] = 0;
     for( const auto itr2 : ndim_bin_vectors ){
       std::vector<int> tmp_vsis;
       copy(itr.first.begin(), itr.first.end(), back_inserter(tmp_vsis));
       copy(itr2.begin(), itr2.end(), back_inserter(tmp_vsis));
+      //for ( const auto itr3 : tmp_vsis){
+      //cout << itr3  << " " ;
+      //}
+      //cout << endl;
       q_raw_is[tmp_vsis] = 0;
     }
   }
@@ -626,7 +632,7 @@ int ExtendedVcMD::set_ndim_bin_vectors(const std::vector<int> tmp_vs_is){
   //   and set them into the member variable, ndim_bin_vectors
 
   int cur_dim = tmp_vs_is.size();
-
+  //  cout << "dbg0603 " << tmp_vs_is.size() << endl;
   for(int itr01 = 0; itr01 <= 1; itr01++){
     std::vector<int> tmp_vs_is_sub;
     copy(tmp_vs_is.begin(), tmp_vs_is.end(), back_inserter(tmp_vs_is_sub));
@@ -634,7 +640,7 @@ int ExtendedVcMD::set_ndim_bin_vectors(const std::vector<int> tmp_vs_is){
     if(cur_dim == n_dim - 1){
       ndim_bin_vectors.push_back(tmp_vs_is_sub);
     }else{
-      set_ndim_bin_vectors(tmp_vs_is);
+      set_ndim_bin_vectors(tmp_vs_is_sub);
     }
   }
   return 0;
@@ -1018,7 +1024,7 @@ int ExtendedVcMD::scale_force(real_fc *work, int n_atoms) {
 }
 
 int ExtendedVcMD::set_files(string fn_vslog, string fn_lambda, int format_lambda,
-			    string fn_qraw, string fn_start) {
+			    string fn_qraw, string fn_start, string fn_qraw_is) {
     writer_vslog.set_fn(fn_vslog);
     writer_vslog.open();
     if (format_lambda == LAMBDAOUT_BIN) {
@@ -1034,6 +1040,7 @@ int ExtendedVcMD::set_files(string fn_vslog, string fn_lambda, int format_lambda
     writer_lambda->write_header();
     // write_vslog(0);
     writer_qraw.set_fn(fn_qraw);
+    writer_qraw_is.set_fn(fn_qraw_is);
     writer_start.set_fn(fn_start);
     return 0;
 }

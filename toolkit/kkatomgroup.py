@@ -42,6 +42,6 @@ class AtomGroupsReader(kkkit.FileI):
             self.groups.append(sorted(list(grp)))
             self.names.append(g_name)
             #self.groups[terms[0]] = [int(x) for x in terms[1:]]
-            print "Group-ID: " + str(len(self.groups)-1) + " n_atoms: " + str(len(self.groups[-1])) + " " + self.names[-1]
+            print("Group-ID: " + str(len(self.groups)-1) + " n_atoms: " + str(len(self.groups[-1])) + " " + self.names[-1])
         self.close()
         return self.groups, self.names

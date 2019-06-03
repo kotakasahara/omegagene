@@ -619,63 +619,64 @@ int Read::load_ls_pos_restraint(PosRestraintObject *pr) {
 }
 
 int Read::load_ls_group_coord(MmSystem &mmsys) {
-
-    int buf = 0;
+  //cout << "dbg1130 test0 : " << endl;
+  int buf = 0;
+  read_bin_values(&buf, 1);
+  char header[MAX_LEN_NAME];
+  ifs.read(header, buf);
+  //cout << "dbg1130 group_coord : " << string(header) << endl;
+  int aus_type = 0;
+  read_bin_values(&aus_type, 1);
+  //cout << "dbg1130 aus_type: " << aus_type << endl;
+  int n_groups = 0;
+  read_bin_values(&n_groups, 1);
+  //cout << "dbg1130 n_groups: " << n_groups << endl;
+  
+  vector<int> enhance_groups;
+  for (int i = 0; i < n_groups; i++) {
     read_bin_values(&buf, 1);
-    char header[MAX_LEN_NAME];
-    ifs.read(header, buf);
-    // cout << "dbg1130 group_coord : " << string(header) << endl;
-    int aus_type = 0;
-    read_bin_values(&aus_type, 1);
-    // cout << "dbg1130 aus_type: " << aus_type << endl;
-    int n_groups = 0;
-    read_bin_values(&n_groups, 1);
-    // cout << "dbg1130 n_groups: " << n_groups << endl;
-
-    vector<int> enhance_groups;
-    for (int i = 0; i < n_groups; i++) {
-      read_bin_values(&buf, 1);
-      enhance_groups.push_back(buf);
-    }
-    for (int i = 0; i < n_groups; i++) {
-      read_bin_values(&buf, 1);
-      // if(buf != mmsys.n_atoms_in_groups[enhance_groups[i]]){
-      // stringstream ss;
-      // ss << "Information in the V-AUS restart file is inconsistent"<<endl;
-      // ss << "Enhanced group " << i << " (atom group " << enhance_groups[i] << ") " << endl;
-      // ss << mmsys.n_atoms_in_groups[enhance_groups[i]] << " atoms in the group definition." << endl;
-      // ss << buf << " atoms in the V-AUS restart file." << endl;
-      // error_exit(ss.str(), "1A00005");
-      //}
-    }
+    enhance_groups.push_back(buf);
+  }
+  for (int i = 0; i < n_groups; i++) {
+    read_bin_values(&buf, 1);
+    // if(buf != mmsys.n_atoms_in_groups[enhance_groups[i]]){
+    // stringstream ss;
+    // ss << "Information in the V-AUS restart file is inconsistent"<<endl;
+    // ss << "Enhanced group " << i << " (atom group " << enhance_groups[i] << ") " << endl;
+    // ss << mmsys.n_atoms_in_groups[enhance_groups[i]] << " atoms in the group definition." << endl;
+    // ss << buf << " atoms in the V-AUS restart file." << endl;
+    // error_exit(ss.str(), "1A00005");
+    //}
+  }
+  //cout << "dbg1130 test1: " << endl;  
+  if(mmsys.extended_mode == EXTENDED_VAUS){
+    mmsys.vmcmd->set_aus_type(aus_type);
+    mmsys.vmcmd->set_enhance_groups(mmsys.n_atoms_in_groups,
+				    mmsys.atom_groups, 
+				    n_groups, enhance_groups);
     
-    if(mmsys.extended_mode == EXTENDED_VAUS){
-      mmsys.vmcmd->set_aus_type(aus_type);
-      mmsys.vmcmd->set_enhance_groups(mmsys.n_atoms_in_groups,
-				      mmsys.atom_groups, 
-				      n_groups, enhance_groups);
-      
-      for (int i = 0; i < n_groups; i++) {
-	for (int j = 0; j < mmsys.n_atoms_in_groups[enhance_groups[i]]; j++) {
-	  read_bin_values(&(mmsys.vmcmd->get_crd_groups()[i][j][0]), 1);
-	  read_bin_values(&(mmsys.vmcmd->get_crd_groups()[i][j][1]), 1);
-	  read_bin_values(&(mmsys.vmcmd->get_crd_groups()[i][j][2]), 1);
-	}
-      }
-    }else if(mmsys.extended_mode == EXTENDED_VCMD){
-      mmsys.vcmd->set_reactcrd_type(aus_type);
-      mmsys.vcmd->set_enhance_groups(mmsys.n_atoms_in_groups,
-				     mmsys.atom_groups, 
-				     n_groups, enhance_groups);
-      for (int i = 0; i < n_groups; i++) {
-	for (int j = 0; j < mmsys.n_atoms_in_groups[enhance_groups[i]]; j++) {
-	  read_bin_values(&(mmsys.vcmd->get_crd_groups()[i][j][0]), 1);
-	  read_bin_values(&(mmsys.vcmd->get_crd_groups()[i][j][1]), 1);
-	  read_bin_values(&(mmsys.vcmd->get_crd_groups()[i][j][2]), 1);
-	}
+    for (int i = 0; i < n_groups; i++) {
+      for (int j = 0; j < mmsys.n_atoms_in_groups[enhance_groups[i]]; j++) {
+	read_bin_values(&(mmsys.vmcmd->get_crd_groups()[i][j][0]), 1);
+	read_bin_values(&(mmsys.vmcmd->get_crd_groups()[i][j][1]), 1);
+	read_bin_values(&(mmsys.vmcmd->get_crd_groups()[i][j][2]), 1);
       }
     }
-    return 0;
+  }else if(mmsys.extended_mode == EXTENDED_VCMD){
+    mmsys.vcmd->set_reactcrd_type(aus_type);
+    mmsys.vcmd->set_enhance_groups(mmsys.n_atoms_in_groups,
+				   mmsys.atom_groups, 
+				   n_groups, enhance_groups);
+    for (int i = 0; i < n_groups; i++) {
+      for (int j = 0; j < mmsys.n_atoms_in_groups[enhance_groups[i]]; j++) {
+	read_bin_values(&(mmsys.vcmd->get_crd_groups()[i][j][0]), 1);
+	read_bin_values(&(mmsys.vcmd->get_crd_groups()[i][j][1]), 1);
+	read_bin_values(&(mmsys.vcmd->get_crd_groups()[i][j][2]), 1);
+      }
+    }
+  }
+  //cout << "dbg1130 test2: " << n_groups << endl;  
+  return 0;
 }
 
 int Read::load_ls_vcmd(MmSystem &mmsys) {
@@ -750,6 +751,7 @@ int Read::load_ls_vcmd(MmSystem &mmsys) {
   }
   //cout << "dbg 0304 read d" << endl;
   mmsys.vcmd->set_q_cano(q_cano);
+  //cout << "dbg 0304 read e" << endl;
   return 0;
 }
 

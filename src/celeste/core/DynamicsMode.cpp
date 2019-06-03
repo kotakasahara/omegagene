@@ -105,7 +105,7 @@ int DynamicsMode::initial_preprocess() {
     cout << "  VS log output ... " << cfg->fn_o_vmcmd_log << endl;
     cout << "  Lambda output ... " << cfg->fn_o_extended_lambda << endl;
     mmsys.vcmd->set_files(cfg->fn_o_vmcmd_log, cfg->fn_o_extended_lambda, cfg->format_o_extended_lambda,
-			  cfg->fn_o_vcmd_qraw, cfg->fn_o_vcmd_start);
+			  cfg->fn_o_vcmd_qraw, cfg->fn_o_vcmd_start, cfg->fn_o_vcmd_qraw_is);
     mmsys.vcmd->set_lambda_interval(cfg->print_intvl_extended_lambda);
     mmsys.vcmd->print_info();
     cout << "print_info" << endl;

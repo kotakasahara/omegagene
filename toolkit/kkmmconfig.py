@@ -135,7 +135,7 @@ class ConfigReader(kkkit.FileI):
                 continue
             key = terms[0][2:]
             vals = terms[1:]
-            if self.debug: print key + " : " + ", ".join(vals)
+            if self.debug: print(key + " : " + ", ".join(vals))
             vals_conv = []
             if not key in config.type_def:
                 sys.stderr.write("Invalid key : " + key + "\n")

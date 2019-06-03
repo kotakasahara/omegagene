@@ -206,12 +206,71 @@ It should be specified in the system configuration file:
 V-McMD (or V-AUS) setting files (.inp, .vert)
 -----------------------------------------------
 
-These fiels are compatible for myPresto/Psygene files.
+These files are compatible for myPresto/Psygene files.
 
 They should be specified in the system configuration file:
 
 * --fn-i-ttp-v-mcmd-inp      ttp_v_mcmd.inp
 * --fn-i-ttp-v-mcmd-initial  start.vert
+
+ttp_v_mcmd.inp
+~~~~~~~~~~~~~~~~~
+
+This file describes the definition of virtual states and their bias functions.
+::
+
+  ;
+  3                       # The number of virtual states (VSs).
+  100                     # Interval steps for VS transitions.
+  ;
+  -37700.0   -35560.0     # The lower and upper bound of the 1st VS
+  0.0  1.0                # Transition probability for lower and upper VS
+  ;
+  -36630.0   -34490.0     # The 2nd VS.
+  1.0  1.0                # 
+  ;
+  -35560.0   -33420.0     # The 3rd VS.
+  1.0  1.0                # 
+  ;
+  6                       # The bias function of 1st VS is 6-th order polynomial
+  0.539566614289679E+06   # The parameters of the polynomial
+  0.107078199910006E+03
+  0.885349382820406E-02
+  0.390387519416188E-06
+  0.968208493740114E-11
+  0.128058948306820E-15
+  0.705682546575764E-21
+  -0.225508543444448E-01  # The last two values are not used
+  0.237465821192018E-01   # The last two valuse are not used
+  6                       # The 2nd VS.
+  0.153644514042787E+06
+  0.313777316547802E+02
+  0.266888476716589E-02
+  0.121017618153941E-06
+  0.308531417224255E-11
+  0.419329550527650E-16
+  0.237358207968186E-21
+  -0.502410851186141E-01
+  -0.443300654878840E-01
+  6                       # The 2nd VS.
+  -0.607303057237411E+06
+  -0.129555612396211E+03
+  -0.115143655222501E-01
+  -0.545716541236728E-06
+  -0.145465976138503E-10
+  -0.206775621289763E-15
+  -0.122453436139314E-20
+  0.201226906548982E+00
+  -0.190884220501175E-03
+  300                     # Temperature
+
+start_vert.inp
+~~~~~~~~~~~~~~~~~
+
+This file describes the initial virtual state and a random seed.::
+  2         # The initial virtual state
+  94265278  # The random seed
+
 
 V-AUS restart file (.dat)
 -----------------------------------------------

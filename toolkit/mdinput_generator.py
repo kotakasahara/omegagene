@@ -62,21 +62,21 @@ def get_options():
     #             help="version of binary")
 
     opts, args = p.parse_args()
-    print "----------------------------"
+    print("----------------------------")
     p.print_help()
-    print "----------------------------"
+    print("----------------------------")
     return opts,args
 
 def _main():
     opts, args = get_options()
     mdinputgen = MDInputGen(opts.fn_config, opts.fn_out, opts.fn_warning, opts.version)
-    print "Reading input files"
+    print("Reading input files")
     mdinputgen.read_files()
-    print "Writingb the inary"
+    print("Writingb the inary")
     mdinputgen.dump_mdinput()
     mdinputgen.evaluate()
     mdinputgen.write_warnings()
-    print "End"
+    print("End")
     return 
 
 class MDInputGen(object):
@@ -113,15 +113,15 @@ class MDInputGen(object):
             f.close()
         return
     def read_files(self):
-        print "read_config"
+        print("read_config")
         self.config = kkmmconfig.ConfigReader(self.fn_config).read_config()
-        print "read_tpl"
-        print self.config.get_val("fn-i-tpl")
+        print("read_tpl")
+        print(self.config.get_val("fn-i-tpl"))
         self.tpl = prst.TPLReader(self.config.get_val("fn-i-tpl")).read_tpl()
         self.tpl.enumerate_12_13_14()
-        print "read initial pdb"
+        print("read initial pdb")
         self.structure = pdb.PDBReader(self.config.get_val("fn-i-initial-pdb")).read_model()
-        print "prepare system"
+        print( "prepare system")
         self.system = mmsys.MmSystem(self.structure,
                                      self.config.get_val("cell-x"),
                                      self.config.get_val("cell-y"),
@@ -139,9 +139,9 @@ class MDInputGen(object):
                                           self.config.get_val("cell-origin-z")])
             
         self.system.set_atom_info_from_tpl(self.tpl)
-        print "read restart"
+        print("read restart")
         self.restart = prstrst.PrestoRestartReader(self.config.get_val("fn-i-restart")).read_restart()
-        print "set_crd_vel_from_restart"
+        print("set_crd_vel_from_restart")
         self.system.set_crd_vel_from_restart(self.restart)
 
     ## zd self energy
@@ -159,34 +159,34 @@ class MDInputGen(object):
 
         if self.config.get_val("fn-i-atom-groups"):
             atom_groups_reader = atgrp.AtomGroupsReader(self.config.get_val("fn-i-atom-groups"))
-            print self.config.get_val("fn-i-atom-groups")
-            print atom_groups_reader.fn
+            print(self.config.get_val("fn-i-atom-groups"))
+            print(atom_groups_reader.fn)
             self.atom_groups, self.atom_group_names = atom_groups_reader.read_groups()
             #self.atom_groups[0] = ("All", [int(x) for x in range(0, len(self.structure.atoms))])
             #print self.atom_groups
         if self.config.get_val("fn-i-dist-restraint"):
             dist_rest_reader = disres.PrestoDistRestReader(self.config.get_val("fn-i-dist-restraint"))
-            print self.config.get_val("fn-i-dist-restraint")
+            print( self.config.get_val("fn-i-dist-restraint"))
             self.dist_rest = dist_rest_reader.read()
             for d in self.dist_rest:
                 d.set_atom_ids(self.tpl)
         
-        if self.version >= 1:
+        if self.version_id >= 1:
             if self.config.get_val("fn-i-position-restraint"):
                 pos_rest_reader = posres.CelestePosRestReader(self.config.get_val("fn-i-position-restraint"))
-                print self.config.get_val("fn-i-position-restraint")
+                print(self.config.get_val("fn-i-position-restraint"))
                 self.pos_rest = pos_rest_reader.read()
-        if self.version >= 2:
+        if self.version_id >= 2:
             if self.config.get_val("fn-i-aus-restart"):
                 aus_restart_reader = ausrest.CelesteAUSRestartReader(self.config.get_val("fn-i-aus-restart"))
-                print self.config.get_val("fn-i-aus-restart")
+                print(self.config.get_val("fn-i-aus-restart"))
                 self.aus_restart = aus_restart_reader.read_aus_restart(self.atom_groups, self.atom_group_names)
             elif self.config.get_val("aus-type") or self.config.get_val("fn-i-vcmd-inp"):
-                print "Generate AUS restart from the input coordinates"
+                print("Generate AUS restart from the input coordinates")
                 if not self.config.get_val("enhance-group-name"):
-                    print "Options --enhance-group-name is required for AUS simulation"
+                    print("Options --enhance-group-name is required for AUS simulation")
                     sys.exit(1)
-                print self.config.get_val("enhance-group-name")
+                print(self.config.get_val("enhance-group-name"))
                 self.aus_restart = ausrest.CelesteAUSRestart()
                 self.aus_restart.set_aus_type(self.config.get_val("aus-type"))
                 self.aus_restart.generate_aus_restart(self.restart,
@@ -226,15 +226,15 @@ class MDInputGen(object):
             if self.config.get_val("fn-i-ttp-v-mcmd-initial"):
                 self.extended.read_init(self.config.get_val("fn-i-ttp-v-mcmd-initial"))
                 if self.config.get_val("ttp-v-mcmd-initial-vs"):
-                    print "Definition conflicts:"
-                    print "The options \"--fn-i-ttp-v-mcmd-initial\" and \"--ttp-v-mcmd-initial-vs\" are mutually exclusive."
+                    print( "Definition conflicts:")
+                    print("The options \"--fn-i-ttp-v-mcmd-initial\" and \"--ttp-v-mcmd-initial-vs\" are mutually exclusive.")
                     sys.exit(1)
             elif self.config.get_val("ttp-v-mcmd-initial-vs") and \
                     self.config.get_val("ttp-v-mcmd-seed"):
                 self.extended.init_vs = self.config.get_val("ttp-v-mcmd-initial-vs")
                 self.extended.seed = self.config.get_val("ttp-v-mcmd-seed")
             else:
-                print "For mcmd, --ttp-v-mcmd-initial or the two options --ttp-v-mcmd-initial-vs and --ttp-v-mcmd-seed are required."
+                print("For mcmd, --ttp-v-mcmd-initial or the two options --ttp-v-mcmd-initial-vs and --ttp-v-mcmd-seed are required.")
                 sys.exit(1)
         return
 
@@ -248,7 +248,7 @@ class MDInputGen(object):
             for grps in self.extended_vcmd.group_names[1:]:
                 for grp in grps:
                     grp_names.add(grp)
-            print grp_names
+            print(grp_names)
             self.config.set_val("enhance-group-name", grp_names)
         return
 
@@ -314,21 +314,21 @@ class MDInputGen(object):
             f.write(st.pack("@i", len(buf_extended_vcmd)))
         if self.version_id >= 2:
             f.write(st.pack("@i", len(buf_group_coord)))
-        print "size: buf_box          : " + str(len(buf_box))
-        print "size: buf_coordinates  : " + str(len(buf_coordinates))
-        print "size: buf_velocities   : " + str(len(buf_velocities))
-        print "size: buf_topol        : " + str(len(buf_topol))
-        print "size: buf_shake        : " + str(len(buf_shake))
-        print "size: buf_settle       : " + str(len(buf_settle))
-        print "size: buf_extended     : " + str(len(buf_extended))
-        print "size: buf_atom_groups  : " + str(len(buf_atom_groups))
-        print "size: buf_dist_rest    : " + str(len(buf_dist_rest))
+        print("size: buf_box          : " + str(len(buf_box)))
+        print("size: buf_coordinates  : " + str(len(buf_coordinates)))
+        print("size: buf_velocities   : " + str(len(buf_velocities)))
+        print("size: buf_topol        : " + str(len(buf_topol)))
+        print("size: buf_shake        : " + str(len(buf_shake)))
+        print("size: buf_settle       : " + str(len(buf_settle)))
+        print("size: buf_extended     : " + str(len(buf_extended)))
+        print("size: buf_atom_groups  : " + str(len(buf_atom_groups)))
+        print("size: buf_dist_rest    : " + str(len(buf_dist_rest)))
         if self.version_id >= 1:
-            print "size: buf_pos_rest     : " + str(len(buf_pos_rest))
+            print("size: buf_pos_rest     : " + str(len(buf_pos_rest)))
         if self.version_id >= 3:
-            print "size: buf_extended_vcmd: " + str(len(buf_extended_vcmd))
+            print("size: buf_extended_vcmd: " + str(len(buf_extended_vcmd)))
         if self.version_id >= 2:
-            print "size: buf_group_coord  : " + str(len(buf_group_coord))
+            print("size: buf_group_coord  : " + str(len(buf_group_coord)))
 
         f.write(buf_box)
         f.write(buf_coordinates)
@@ -420,7 +420,7 @@ class MDInputGen(object):
 
         buf_12 = ""
         buf_12 += st.pack("@i", len(tpl.atom_id_12))
-        print "# bonds : "+ str(len(tpl.atom_id_12))
+        print("# bonds : "+ str(len(tpl.atom_id_12)))
         for params in tpl.atom_id_12:
             atom_id1 = params[0][0]
             atom_id2 = params[0][1]
@@ -431,7 +431,7 @@ class MDInputGen(object):
 
         buf_13 = ""
         buf_13 += st.pack("@i", len(tpl.atom_id_13))
-        print "# angles : "+ str(len(tpl.atom_id_13))
+        print("# angles : "+ str(len(tpl.atom_id_13)))
         for params in tpl.atom_id_13:
             atom_id1 = params[0][0]
             atom_id2 = params[0][1]
@@ -442,10 +442,10 @@ class MDInputGen(object):
             buf_13 += st.pack("@dd", epsiron, theta0)
 
         buf_14 = self.pack_14(tpl.atom_id_14)
-        print "# torsions : "+ str(len(tpl.atom_id_14))
+        print("# torsions : "+ str(len(tpl.atom_id_14)))
 
         buf_14imp = self.pack_14(tpl.atom_id_14_imp)
-        print "# improper : "+ str(len(tpl.atom_id_14_imp))
+        print("# improper : "+ str(len(tpl.atom_id_14_imp)))
 
         buf_14nb = ""
         buf_14nb += st.pack("@i", len(tpl.atom_id_14nb))
@@ -643,10 +643,10 @@ class MDInputGen(object):
                 buf += st.pack("@i", vscrd_x)
                 tmp += " " + str(vscrd_x)
             buf += st.pack("@d", prm[0])
-            print tmp + " " + str(prm[0])
+            #print(tmp + " " + str(prm[0]))
             
-        print "dbg " + str(st.unpack("@i", buf[0:4]))
-        print "dbg " + str(st.unpack("@i", buf[4:8]))
+        #print "dbg " + str(st.unpack("@i", buf[0:4]))
+        #print "dbg " + str(st.unpack("@i", buf[4:8]))
         return buf
 
     def dump_atom_groups(self, atom_groups, atom_group_names):

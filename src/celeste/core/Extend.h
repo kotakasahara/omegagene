@@ -339,7 +339,7 @@ class ExtendedVcMD : public Extended {
 		   real_fc *work, int n_atoms_box);
     int scale_force(real_fc *work, int n_atoms);
     int set_files(std::string fn_vslog, std::string fn_lambda, int format_lambda,
-		  std::string fn_qcano, std::string fn_qraw);
+		  std::string fn_qraw, std::string fn_start, std::string fn_qraw_is);
     
     std::vector<int> get_init_vs() { return init_vs; };
     void set_init_vs(std::vector<int> in_vs) {
