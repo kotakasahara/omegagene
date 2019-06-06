@@ -151,6 +151,8 @@ int ExtendedVMcMD::set_current_vstate(real lambda) {
     }
     return 0;
 }
+
+
 int ExtendedVMcMD::trial_transition(int source, int rel_dest, real lambda) {
     // source ... vs_id of current state
     // rel_dest ... -1 or 1, down or up
@@ -769,6 +771,27 @@ bool ExtendedVcMD::is_in_range(){
 int ExtendedVcMD::apply_bias(unsigned long cur_step,
 			     real_fc *work, int n_atoms_box) {
   
+  std::vector< std::vector<int> > vs_next_crd(n_dim);
+  for(int d=0; d<n_dim; d++){
+    vs_next_crd[d].push_back(cur_vs[d]);
+    int vc_size = vc_range_min[d].size();
+    if ( cur_vs[d] > 0 ){
+      if (lambda[d] < vc_range_max[d][cur_vs[d]-1]){
+	vs_next_crd[d].push_back(cur_vs[d]-1);
+      }else{
+	if(cur_vs[d] < vc_size-1 && lambda[d] >= vc_range_min[d][cur_vs[d]+1] ){
+	  vs_next_crd[d].push_back(cur_vs[d]+1);
+	}
+      }
+    }else{
+      if(vc_range_min[d].size() > 1 && lambda[d] >= vc_range_min[d][cur_vs[d]+1]){
+	vs_next_crd[d].push_back(cur_vs[d]+1);
+      }
+    }
+    //cout << "dbg 0719 d:" <<d << " " << cur_vs[d] << " - " << *(--vs_next_crd[d].end()) <<endl;
+  }
+
+  set_current_vstate_intersection();
   if(is_in_range() || drift > 0){
     q_raw[cur_vs] += 1;
     q_raw_is[cur_vs_is] += 1;
@@ -790,8 +813,6 @@ int ExtendedVcMD::set_vs_next(){
   std::vector< std::vector<int> > vs_next_crd(n_dim);
   // for(int i=0; i<n_dim; i++) vs_next_crd[i]=-1;
   // vs_next_crd[dimension] = ID of the overlapping virtual states
-  cur_vs_is.clear();
-  copy(cur_vs.begin(), cur_vs.end(), back_inserter(cur_vs_is));
 
   for(int d=0; d<n_dim; d++){
     vs_next_crd[d].push_back(cur_vs[d]);
@@ -816,11 +837,11 @@ int ExtendedVcMD::set_vs_next(){
     //cout << "dbg 0719 d:" <<d << " " << cur_vs[d] << " - " << *(--vs_next_crd[d].end()) <<endl;
   }
   // dbg
-  cout << "cur_vs_is : ";
-  for( const auto itr : cur_vs_is ){
-    cout << itr << " ";
-  }
-  cout << endl;
+  //cout << "cur_vs_is : ";
+  //for( const auto itr : cur_vs_is ){
+  //cout << itr << " ";
+  //}
+  //cout << endl;
 
   vs_next.clear();
   std::vector<int> tmp_vs_next;
@@ -1150,20 +1171,20 @@ int ExtendedVcMD::set_enhance_groups(int *       in_n_atoms_in_groups,
 }
 
 int ExtendedVcMD::alloc_crd_centers() {
-  cout << "dbg 0304 1a[2]" << endl;
+  //cout << "dbg 0304 1a[2]" << endl;
   crd_groups = new real **[n_enhance_groups];
   for (int i_grp = 0; i_grp < n_enhance_groups; i_grp++) {
     int grp_id        = enhance_groups[i_grp];
     crd_groups[i_grp] = new real *[n_atoms_in_groups[grp_id]];
     for (int j = 0; j < n_atoms_in_groups[grp_id]; j++) { crd_groups[i_grp][j] = new real[3]; }
   }
-  cout << "dbg 0304 1a[3] " << n_enhance_groups << endl;  
+  //cout << "dbg 0304 1a[3] " << n_enhance_groups << endl;  
   crd_centers = new real *[n_enhance_groups];
   for (int i = 0; i < n_enhance_groups; i++) { crd_centers[i] = new real[3]; }
-  cout << "dbg 0304 1a[4] " << n_dim << endl;  
+  //cout << "dbg 0304 1a[4] " << n_dim << endl;  
   unit_vec = new real *[n_dim];
   for (int i = 0; i < n_dim; i++) { unit_vec[i] = new real[3]; }
-  cout << "dbg 0304 1a[5]" << endl;
+  //cout << "dbg 0304 1a[5]" << endl;
   return 0;
 }
 int ExtendedVcMD::free_crd_centers() {
@@ -1205,4 +1226,26 @@ int ExtendedVcMD::write_aus_restart(std::string fn_out) {
 			     n_atoms_in_groups, crd_groups);
     writer.close();
     return 0;
+}
+int ExtendedVcMD::set_current_vstate_intersection() {
+  cur_vs_is.clear();
+  copy(cur_vs.begin(), cur_vs.end(), back_inserter(cur_vs_is));
+
+  for(int d=0; d<n_dim; d++){
+    if ( cur_vs[d] > 0 ){
+      if (lambda[d] < vc_range_max[d][cur_vs[d]-1]){
+	cur_vs_is.push_back(0);
+      }else{
+	cur_vs_is.push_back(1);
+      }
+    }else{
+      if(vc_range_min[d].size() > 1 && lambda[d] >= vc_range_min[d][cur_vs[d]+1]){
+	cur_vs_is.push_back(1);
+      }else{
+	cur_vs_is.push_back(0);
+      }
+    }
+    //cout << "dbg 0719 d:" <<d << " " << cur_vs[d] << " - " << *(--vs_next_crd[d].end()) <<endl;
+  }
+  return 0;
 }

@@ -1,21 +1,19 @@
-# Celeste
+# myPresto/omegagene
 
-Celeste is a Molecular Dynamics package (more description here).
+myPresto/omegagene is a Molecular Dynamics package (more description here).
 
 
-## Celeste Software Requirements
+## myPresto/omegagene Software Requirements
 
 * CMake 3.4+
-* For the GPU-version of Celeste, CUDA 7.0+ is required for C++11 support.
+* For the GPU-version of myPresto/omegagene, CUDA 7.0+ is required for C++11 support.
 * A C++11 compiler:
     * GCC: 4.8+
     * Clang: 3.6+
     * AppleClang: 5.0+
     * Intel: 15.0+ (minimal version required by CUDA 7.0+)
-* OpenMP 3.1+
 
-
-## Building Celeste (Simple)
+## Building myPresto/omegagene (Simple)
 
 1. Set up a target build folder:
 
@@ -25,7 +23,7 @@ Celeste is a Molecular Dynamics package (more description here).
 
 1. Configure the build.  CMake will determine all the external software dependencies for the selected build variant, and exit with errors if the dependency requirements are not met.  CMake must be invoked on the `CMakeLists.txt` file in the **<PROJECT_ROOT>** directory:
 
-        # Run ONE of the following commands to configure for building the desired variant of celeste
+        # Run ONE of the following commands to configure for building the desired variant of myPresto/omegagene
         # in <PROJECT_ROOT>/target directory
         localhost:target local$ cmake -DCELESTE_WO_NS=1 ..
         localhost:target local$ cmake -DCELESTE_GPU=1 ..
