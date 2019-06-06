@@ -95,25 +95,18 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
             } else {
                 constraint_type = CONST_DUMMY;
             }
-
         } else if (*itr == "--const-max-loops") {
             constraint_max_loops = atoi((*++itr).c_str());
-
         } else if (*itr == "--const-tolerance") {
             constraint_tolerance = atof((*++itr).c_str());
-
         } else if (*itr == "--thermo-const-max-loops") {
             thermo_const_max_loops = atoi((*++itr).c_str());
-
         } else if (*itr == "--thermo-const-tolerance") {
             thermo_const_tolerance = atof((*++itr).c_str());
-
         } else if (*itr == "--cutoff") {
             cutoff = atof((*++itr).c_str());
-
         } else if (*itr == "--n-steps") {
             n_steps = atoi((*++itr).c_str());
-
         } else if (*itr == "--time-step") {
             time_step = atof((*++itr).c_str());
         } else if (*itr == "--electrostatic") {
