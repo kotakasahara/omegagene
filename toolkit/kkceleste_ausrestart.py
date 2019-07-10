@@ -64,7 +64,7 @@ class CelesteAUSRestart(object):
             crd_group = []
             grp_id = atom_group_names.index(name) 
             for atom_id in atom_groups[grp_id]:
-                atom = restart.crd[atom_id]
+                atom = restart.crd[atom_id-1]
                 crd_group.append(atom)
             self.crd_groups.append(crd_group)
             print("Group : " + name + " group-id: " + str(grp_id) \
