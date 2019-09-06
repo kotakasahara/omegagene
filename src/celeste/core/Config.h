@@ -97,6 +97,7 @@ struct Config : public CelesteObject {
     real         hps_epsiron   = 0.0;
 
     real        expected_num_density = -1.0;
+    real        coef_max_n_cell_pairs = 1.2;
     // int  aus_type = AUSTYPE_MASSCENTER;
 
     real        langevin_gamma = 0.0;

@@ -9,10 +9,9 @@
 
 #define N_ATOM_CELL 8
 #define N_BITMASK (N_ATOM_CELL * N_ATOM_CELL + 31) / 32
-#define COEF_MAX_N_ATOMS_CELL 1.2
 #define MAX_N_CELL_UNI 10
 #define MAX_N_PAIR_Z 100
-#define COEF_MAX_N_CELL_PAIRS 1.2
+#define COEF_MAX_N_ATOMS_CELL 1.2
 
 typedef struct cell_pair_info {
     int cell_id1;
@@ -31,7 +30,7 @@ class MiniCell : public CelesteObject {
     //  the number of atoms in the whole system
     int n_atoms;
     real density;
-
+    real coef_max_n_cell_pairs;
     int  n_cells;
     int  n_columns;
     int  n_cells_xyz[3];
@@ -258,7 +257,8 @@ class MiniCell : public CelesteObject {
                             const PBC *in_pbc,
                             const int  in_max_n_nb15off,
                             int *      in_nb15off,
-			    const real in_dens);
+			    const real in_dens,
+			    const real in_coef_max_n_cell_pairs);
 
     // real move_crd_in_cell(const int atomid, const int dim, const real val);
     void add_energy(const real_fc in_vdw, const real_fc in_ele) {
