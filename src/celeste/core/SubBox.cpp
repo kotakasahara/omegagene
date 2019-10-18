@@ -470,8 +470,7 @@ int SubBox::set_nsgrid() {
 
     // cout << "set_grid_parameters" << endl;
   nsgrid.set_grid_parameters(n_atoms, cfg->nsgrid_cutoff, pbc, max_n_nb15off, nb15off,
-			     cfg->expected_num_density,
-			     cfg->coef_max_n_cell_pairs);
+			     cfg->expected_num_density);
     // cout << "set_box_info" << endl;
     nsgrid.set_box_info(n_boxes_xyz, box_l);
 

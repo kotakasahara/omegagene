@@ -257,8 +257,8 @@ int MiniCell::set_grid_xy() {
 
     max_n_cell_pairs =
         ((n_neighbors_xyz[0] * 2 + 1) * (n_neighbors_xyz[1] * 2 + 1) * (n_neighbors_xyz[0] + n_neighbors_xyz[1] + 2))
-        * 0.5 * max_n_cells * coef_max_n_cell_pairs;
-    int tmp_max2 = (max_n_cells*max_n_cells) / 2 + max_n_cells;
+        * 0.5 * max_n_cells * COEF_MAX_N_CELL_PAIRS;
+    int tmp_max2 = (max_n_cells*max_n_cells) / 2;
     cout << " max_n_cell_pairs : " << max_n_cell_pairs << " " << tmp_max2 << endl;
     if (max_n_cell_pairs > tmp_max2){
       max_n_cell_pairs = tmp_max2;
@@ -1233,8 +1233,7 @@ int MiniCell::set_grid_parameters(const int  in_n_atoms,
                                   const PBC *in_pbc,
                                   const int  in_max_n_nb15off,
                                   int *      in_nb15off,
-				  const real in_dens,
-				  const real in_coef_max_n_cell_pairs) {
+				  const real in_dens) {
     // set member variables
     //  n_atoms
     //  cutoff_pair
@@ -1246,7 +1245,6 @@ int MiniCell::set_grid_parameters(const int  in_n_atoms,
     pbc              = (PBC *)in_pbc;
     nb15off          = in_nb15off;
     density          = in_dens;
-    coef_max_n_cell_pairs = in_coef_max_n_cell_pairs;
 
     max_n_nb15off = in_max_n_nb15off;
 

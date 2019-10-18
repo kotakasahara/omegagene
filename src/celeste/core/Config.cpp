@@ -340,8 +340,6 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
 	  cout << "  HPS EPS " << hps_epsiron << endl;
         } else if (*itr == "--expected-num-density") {
 	  expected_num_density = atof((*++itr).c_str());
-        } else if (*itr == "--coef-max-n-cell-pairs"){
-	  coef_max_n_cell_pairs = atof((*++itr).c_str());
         } else if (*itr == "--langevin-gamma") {
 	  langevin_gamma = atof((*++itr).c_str());
 	  langevin_gamma /= 1000;
