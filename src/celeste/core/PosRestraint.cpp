@@ -6,7 +6,7 @@ PRUnit::PRUnit() {}
 
 PRUnit::~PRUnit() {}
 
-int PRUnit::set_parameters(int in_atomid, real crd_x, real crd_y, real crd_z, real in_dist_margin, real in_coef) {
+int PRUnit::set_parameters(int in_atomid, real crd_x, real crd_y, real crd_z, real in_dist_margin, real in_coef, int rest_type) {
     atomid      = in_atomid;
     crd[0]      = crd_x;
     crd[1]      = crd_y;
@@ -40,8 +40,8 @@ int PosRestraintObject::free_prunits() {
     return 0;
 }
 
-int PosRestraintObject::add_prunit(int in_aid, real in_x, real in_y, real in_z, real in_margin, real in_coef) {
-    prunits[n_prunits].set_parameters(in_aid, in_x, in_y, in_z, in_margin, in_coef);
+int PosRestraintObject::add_prunit(int in_aid, real in_x, real in_y, real in_z, real in_margin, real in_coef, int in_type) {
+  prunits[n_prunits].set_parameters(in_aid, in_x, in_y, in_z, in_margin, in_coef, in_type);
     n_prunits++;
     return n_prunits;
 }
@@ -69,6 +69,7 @@ real_fc PosRestraintHarmonic::apply_restraint(int n_atoms, real **crd, PBC &pbc,
         real diff[3];
         pbc.diff_crd_minim_image(diff, crd[prunits[i].get_atomid()], prunits[i].get_crd());
         real r_sq = diff[0] * diff[0] + diff[1] * diff[1] + diff[2] * diff[2];
+	if(prunits[i].get_rest_type() == POSRESTUNIT_Z) { r_sq = diff[2] * diff[2]; } 
         real r    = sqrt(r_sq);
 
         real coef;
@@ -87,9 +88,12 @@ real_fc PosRestraintHarmonic::apply_restraint(int n_atoms, real **crd, PBC &pbc,
         real_fc frc[3];
         for (int d = 0; d < 3; d++) {
             // force[drunits[i].atomid1] += diff[d] / r;
-            force[prunits[i].get_atomid()][d] += k_g * diff[d] / r;
+	  real f_d =  k_g * diff[d] / r;
+	  if(prunits[i].get_rest_type() == POSRESTUNIT_Z && d != 2) f_d = 0.0;
+	  force[prunits[i].get_atomid()][d] += f_d;
             // frc[d] += diff[d] / r;
         }
     }
     return ene;
 }
+///////////////////////////////////////////////////////////////

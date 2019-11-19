@@ -607,13 +607,15 @@ int Read::load_ls_pos_restraint(PosRestraintObject *pr) {
         int   aid;
         float crd_x, crd_y, crd_z;
         float dist_margin, coef;
+	int rest_type;
         read_bin_values(&aid, 1);
         read_bin_values(&crd_x, 1);
         read_bin_values(&crd_y, 1);
         read_bin_values(&crd_z, 1);
         read_bin_values(&dist_margin, 1);
         read_bin_values(&coef, 1);
-        pr->add_prunit(aid, crd_x, crd_y, crd_z, dist_margin, coef);
+	read_bin_values(&rest_type, 1);
+	pr->add_prunit(aid, crd_x, crd_y, crd_z, dist_margin, coef, rest_type);
     }
     return 0;
 }

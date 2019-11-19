@@ -72,6 +72,7 @@ class CelesteObject {
     enum { CRDOUT_GROMACS = 0, CRDOUT_PRESTO, CRDOUT_DUMMY };
     enum { DISTREST_NONE = 0, DISTREST_HARMONIC, DISTREST_DUMMY };
     enum { POSREST_NONE = 0, POSREST_HARMONIC, POSREST_DUMMY };
+    enum { POSRESTUNIT_NORMAL = 0, POSRESTUNIT_Z };
     //
     static const int MAX_N_ATOMTYPE;
     //
