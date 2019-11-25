@@ -1,0 +1,52 @@
+----------------------------
+Usage: mdinput_generator.py [options]
+
+Options:
+  -h, --help     show this help message and exit
+  -i FN_CONFIG   Input config file
+  -o FN_OUT      Output binary file
+  -w FN_WARNING  Output warning file
+  -v VERSION     version of binary
+----------------------------
+Reading input files
+read_config
+fn-i-tpl : md.tpl
+fn-i-initial-pdb : inp.pdb
+fn-i-restart : md.restart
+cell-x : 200
+cell-y : 200
+cell-z : 200
+cell-center-x : 70
+cell-center-y : 70
+cell-center-z : 70
+fn-i-atom-groups : atom_groups.inp
+read_tpl
+md.tpl
+MD
+New mol:mol1: 1
+read initial pdb
+prepare system
+read restart
+set_crd_vel_from_restart
+atom_groups.inp
+atom_groups.inp
+Group-ID: 1 n_atoms: 57 mol1
+Group-ID: 2 n_atoms: 57 all
+Writingb the inary
+# bonds : 56
+# angles : 55
+# torsions : 54
+# improper : 0
+size: buf_box          : 96
+size: buf_coordinates  : 1372
+size: buf_velocities   : 1372
+size: buf_topol        : 36228
+size: buf_shake        : 0
+size: buf_settle       : 0
+size: buf_extended     : 0
+size: buf_atom_groups  : 485
+size: buf_dist_rest    : 4
+size: buf_pos_rest     : 4
+size: buf_extended_vcmd: 0
+size: buf_group_coord  : 0
+End

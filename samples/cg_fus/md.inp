@@ -1,0 +1,10 @@
+--fn-i-tpl               md.tpl
+--fn-i-initial-pdb       inp.pdb
+--fn-i-restart           md.restart
+--cell-x                 200
+--cell-y                 200
+--cell-z                 200
+--cell-center-x          70
+--cell-center-y          70
+--cell-center-z          70
+--fn-i-atom-groups       atom_groups.inp
