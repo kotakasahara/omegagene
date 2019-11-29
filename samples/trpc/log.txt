@@ -1,0 +1,254 @@
+omegagene 967a4ed (2019-04-23 17:35:40 +0900)
+conf.set_arguments
+-----------------------------------
+Reading from configuration file:  md_input.cfg
+--mode                  md                 
+--integrator            leapfrog-presto    
+--thermostat            scaling     
+                                    
+--cutoff                12.0        
+--n-steps               10          
+--time-step             2.0         
+--electrostatic         zero-dipole 
+                                    
+                                    
+--ele-alpha             0           
+                                    
+--temperature           300         
+--print-interval-log    1           
+--print-interval-coord  1           
+--fn-o-coord            trpc.trr    
+--format-o-coord        presto      
+                                    
+--nsgrid-cutoff         13.0        
+--nsgrid-update-intvl   50          
+-----------------------------------
+/setup
+mainstream
+dynamics_mode
+DBG1: ForceFieldObject::ForceFieldObject()
+DBG1: ForceField::ForceField()
+DBG1: ForceFieldObject::ForceFieldObject()
+DBG1: ForceField::ForceField()
+DBG1: dynamics->set_config_parameters(cfg)
+DBG1: RunMode::set_config_parameters()
+-- Load Celeste input package.
+--- Load file header.
+---- Input file format : version v.0.40.c
+size_box:            96
+size_crd:            318652
+size_vel:            318652
+size_topol:          990376
+size_constraint:     158068
+size_settle:         0
+size_extended:       0
+size_groups:         4
+size_dist_restraint: 4
+size_pos_restraint:  4
+size_group_coord:    0
+size_extended_vcmd:  0
+--- Load PBC definition   : 96 bytes.
+load_ls_box : 61.2425 0 0 0 61.2425 0 0 0 61.2425 -30.6212 -30.6212 -30.6212 L[i]: 61.2425
+L[i]: 61.2425
+L[i]: 61.2425
+--- Load atom coordinates : 318652 bytes.
+n_atoms: 13277
+--- Load atom velocities  : 318652 bytes.
+read_ls_vel ... n_atoms: 13277
+--- Load topology data    : 990376 bytes.
+n_bonds 13258
+n_angles 565
+n_torsions 1162
+n_impros 61
+n_nb14 812
+n_nb15off 29270
+alloc_excess_pairs 29270
+excess set 14635 / 29270
+--- Load constraint definition : 158068 bytes.
+--- Load atom group definition : 4 bytes.
+n_groups 0
+--- Load distance restraint definition : 4 bytes.
+--- Load position restraint definition : 4 bytes.
+alloc 0
+DBG1: dynamics->initial_preprocess()
+DBG1: DynamicsMode::initial_preprocess()
+DBG1: ForceFieldObject::ForceFieldObject()
+DBG1: ForceField::ForceField()
+DBG1: ForceFieldObject::set_config_parameters()
+DBG1: ElectrostaticObject::ElectrostaticObject()
+dielect_inv inf debye_inv -nan
+DBG1: ForceField::initial_preprocess
+DBG1: ZeroMultipoleSum::set_zms_params()
+cal_self_energy 
+DBG1: ZeroMultipoleSum::cal_self_energy()
+fcoeff : 0.000578703703703704
+bcoeff : 0.000289351851851852
+scoeff : 0.000868055555555556
+zmcore : 0.125
+chgsum : 4562.21030342015
+chgsmm: 53.45330376
+selfEnergy_dcore : 1109.36913125211
+d_self: -1109.36913125211
+sum of energy self: -1109.36913125211
+writer presto new 0
+subbox_setup() 1 1 1
+DBG1: ForceFieldObject::ForceFieldObject()
+DBG1: ForceField::ForceField()
+DBG1: ForceFieldObject::set_config_parameters()
+DBG1: ElectrostaticObject::ElectrostaticObject()
+dielect_inv inf debye_inv -nan
+DBG1: ForceField::initial_preprocess
+DBG1: ZeroMultipoleSum::set_zms_params()
+uniform grid ... n_uni_z: 9 L_z_uni: 6.80472222222222
+MiniCell::set_box_info
+print_box_info(): box_id=0
+box_crd : 0, 0, 0 / 1, 1, 1
+box_l : 61.2425, 61.2425, 61.2425
+exbox_l : 61.2425, 61.2425, 61.2425
+box_upper_bound : 30.62125, 30.62125, 30.62125
+exbox_upper_bound : 30.62125, 30.62125, 30.62125
+box_lower_bound : -30.62125, -30.62125, -30.62125
+exbox_lower_bound : -30.62125, -30.62125, -30.62125
+MiniCell::set_max_n_atoms_region()
+max_n_atoms_exbox : 25774
+max_n_atoms_box : 14958
+min_cell_width_xy : 5.17268765259078
+ ... 229698.803304266, 0.0578017813284508, 138.404039047535
+max_n_atoms_column 277 max_n_atoms_exbox: 25774
+n_cell_x : 11   n_cell_y : 11   n_cell_z : 33
+max_n_cells : 3993 1780
+ max_n_cell_pairs : 939153 7972024
+Initial kinetic energy : 4957.17815333747
+Initial temperature : 125.26537421525
+Degree of freedom : 39828
+test_dynamicsmode
+DBG1: dynamics->main_stream()
+Step:        0    Time:     0.0000
+Total:               -nan
+Potential: 2.2640650543e+07    Kinetic:            -nan
+Bond:      2.2690932744e+07    Angle:    9.4049857658e+01
+Torsion:   2.1118922003e+02    Improper: 4.2558932634e+00
+14-VDW:    6.5936560442e+01    14-Ele:   8.6369019824e+02
+VDW:       7.6217745013e+03    Ele:      -5.9143097294e+04
+Temperature:                 -nan
+Comput Time:       5.1001399755e-01
+dbg1218 b 0 0
+Step:        1    Time:     2.0000
+Total:               -nan
+Potential:           -nan    Kinetic:            -nan
+Bond:                -nan    Angle:              -nan
+Torsion:   4.7373524444e+02    Improper: 0.0000000000e+00
+14-VDW:              -nan    14-Ele:             -nan
+VDW:                 -nan    Ele:                -nan
+Temperature:                 -nan
+Comput Time:       1.0944010019e+00
+dbg1218 b 0 0
+Step:        2    Time:     4.0000
+Total:               -nan
+Potential:           -nan    Kinetic:            -nan
+Bond:                -nan    Angle:              -nan
+Torsion:   4.7373524444e+02    Improper: 0.0000000000e+00
+14-VDW:              -nan    14-Ele:             -nan
+VDW:                 -nan    Ele:                -nan
+Temperature:                 -nan
+Comput Time:       1.6814969778e+00
+dbg1218 b 0 0
+Step:        3    Time:     6.0000
+Total:               -nan
+Potential:           -nan    Kinetic:            -nan
+Bond:                -nan    Angle:              -nan
+Torsion:   4.7373524444e+02    Improper: 0.0000000000e+00
+14-VDW:              -nan    14-Ele:             -nan
+VDW:                 -nan    Ele:                -nan
+Temperature:                 -nan
+Comput Time:       2.2666389942e+00
+dbg1218 b 0 0
+Step:        4    Time:     8.0000
+Total:               -nan
+Potential:           -nan    Kinetic:            -nan
+Bond:                -nan    Angle:              -nan
+Torsion:   4.7373524444e+02    Improper: 0.0000000000e+00
+14-VDW:              -nan    14-Ele:             -nan
+VDW:                 -nan    Ele:                -nan
+Temperature:                 -nan
+Comput Time:       2.8507230282e+00
+dbg1218 b 0 0
+Step:        5    Time:    10.0000
+Total:               -nan
+Potential:           -nan    Kinetic:            -nan
+Bond:                -nan    Angle:              -nan
+Torsion:   4.7373524444e+02    Improper: 0.0000000000e+00
+14-VDW:              -nan    14-Ele:             -nan
+VDW:                 -nan    Ele:                -nan
+Temperature:                 -nan
+Comput Time:       3.4365200996e+00
+dbg1218 b 0 0
+Step:        6    Time:    12.0000
+Total:               -nan
+Potential:           -nan    Kinetic:            -nan
+Bond:                -nan    Angle:              -nan
+Torsion:   4.7373524444e+02    Improper: 0.0000000000e+00
+14-VDW:              -nan    14-Ele:             -nan
+VDW:                 -nan    Ele:                -nan
+Temperature:                 -nan
+Comput Time:       4.0218439102e+00
+dbg1218 b 0 0
+Step:        7    Time:    14.0000
+Total:               -nan
+Potential:           -nan    Kinetic:            -nan
+Bond:                -nan    Angle:              -nan
+Torsion:   4.7373524444e+02    Improper: 0.0000000000e+00
+14-VDW:              -nan    14-Ele:             -nan
+VDW:                 -nan    Ele:                -nan
+Temperature:                 -nan
+Comput Time:       4.6071138382e+00
+dbg1218 b 0 0
+Step:        8    Time:    16.0000
+Total:               -nan
+Potential:           -nan    Kinetic:            -nan
+Bond:                -nan    Angle:              -nan
+Torsion:   4.7373524444e+02    Improper: 0.0000000000e+00
+14-VDW:              -nan    14-Ele:             -nan
+VDW:                 -nan    Ele:                -nan
+Temperature:                 -nan
+Comput Time:       5.1923780441e+00
+dbg1218 b 0 0
+Step:        9    Time:    18.0000
+Total:               -nan
+Potential:           -nan    Kinetic:            -nan
+Bond:                -nan    Angle:              -nan
+Torsion:   4.7373524444e+02    Improper: 0.0000000000e+00
+14-VDW:              -nan    14-Ele:             -nan
+VDW:                 -nan    Ele:                -nan
+Temperature:                 -nan
+Comput Time:       5.7764368057e+00
+dbg1218 b 0 0
+== The last step ==
+Step:       10    Time:    20.0000
+Total:               -nan
+Potential:           -nan    Kinetic:            -nan
+Bond:                -nan    Angle:              -nan
+Torsion:   4.7373524444e+02    Improper: 0.0000000000e+00
+14-VDW:              -nan    14-Ele:             -nan
+VDW:                 -nan    Ele:                -nan
+Temperature:                 -nan
+Comput Time:       6.3609299660e+00
+DynamicsMode::terminal_process()
+delete writer_trr 0
+term
+DBG1 DynamicsModePresto::~DynamicsModePresto()
+DBG1 DynamicsMode::~DynamicsMode()
+DBG1 RunMode::~RunMode()
+free_atom_vars()
+free atom vars
+free_lj_params()
+free_bonds()
+free_angles()
+free_torsions()
+free_impros()
+free_nb14()
+free_excess_pairs()
+free_nb15off()
+terminate Celeste
+Terminated.
+Time: 7.038165
