@@ -273,7 +273,6 @@ int DynamicsMode::sub_output() {
     i_itr++;
     if ((*itr) < 0 || mmsys.cur_step == 0 || (mmsys.cur_step) % (*itr) != 0)
       continue;
-    //cout << "dbg1218 a" << endl;
     if (!cp){
       subbox.copy_crd_prev(mmsys.crd);
       cp = true;
@@ -281,7 +280,6 @@ int DynamicsMode::sub_output() {
     int outgrp = 0;
     if ( mmsys.out_group.size() > i_itr )
       outgrp = mmsys.out_group[i_itr];
-    cout << "dbg1218 b " <<outgrp << " " << mmsys.out_group.size() << endl;
     writer_trr[i_itr]->write_trr(mmsys.n_atoms,
 				 (int)mmsys.cur_step,
 				 mmsys.cur_time,
@@ -296,7 +294,6 @@ int DynamicsMode::sub_output() {
 				 mmsys.atom_groups[outgrp]);
 				 //mmsys.n_atoms_in_groups[mmsys.out_group[i_itr]],
 				 //mmsys.atom_groups[mmsys.out_group[i_itr]]);
-    //cout << "dbg1218 c" << endl;
   }
   return 0;
 }
