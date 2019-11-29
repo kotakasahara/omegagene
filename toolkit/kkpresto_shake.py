@@ -36,17 +36,17 @@ class SHKReader(kkpresto.PrestoAsciiReader):
         line = self.readline()
         while line:
             terms = re.compile("\s+").split(line.strip())
-            #print terms
+            #print(terms
             if line[0:6] == "SHAKE>":
                 reading_mol_id += 1
                 reading_mol = self.readline().strip()
-                print "Mol " + str(reading_mol_id) + ": " + reading_mol
+                print("Mol " + str(reading_mol_id) + ": " + reading_mol)
 
                 if reading_mol in exclude or \
                         (len(readonly) > 0 and not reading_mol in readonly):
-                    print "Skip this molecule."
+                    print("Skip this molecule.")
                 self.shake.append([])
-                #print "Len " + str(len(self.shake))
+                #print("Len " + str(len(self.shake))
             elif len(terms) >= 4:
                 if reading_mol in exclude or \
                         (len(readonly) > 0 and not reading_mol in readonly):
@@ -89,7 +89,7 @@ class SHKReader(kkpresto.PrestoAsciiReader):
                     sys.stderr.write(line)
                     sys.exit(0)
                 self.shake[reading_mol_id].append(PrestoShake(atom_center, atom_ids, dists))
-                #print "SHAKE " + str(reading_mol_id) + " " + str(atom_center) + " ... " + ",".join([str(x) for x in atom_ids])
+                #print("SHAKE " + str(reading_mol_id) + " " + str(atom_center) + " ... " + ",".join([str(x) for x in atom_ids])
             elif len(terms) == 0: pass
             elif len(terms) == 1 and terms[0] == "0": pass
             else:
@@ -112,7 +112,7 @@ class SHKReader(kkpresto.PrestoAsciiReader):
         """
         for molid, shakes in enumerate(self.shake):
             #molid = i+1
-            print "expand_shake _info " + str(molid)
+            print("expand_shake _info " + str(molid))
             tplmol = tpl.mols[molid]
             for shk in shakes:
                 for mol_i in range(0, tplmol.mol_num):
@@ -159,16 +159,16 @@ class SHKReader(kkpresto.PrestoAsciiReader):
                     else:
                         pass
 
-        #print "tpl.remove_bond_angle_constraint"
+        #print("tpl.remove_bond_angle_constraint"
         #tpl.remove_bond_angle_constraints(self.const_pairs)
         return tpl
 
     def print_shake_info(self):
-        print "- For input SHAKE info:"
+        print("- For input SHAKE info:")
         for mol_i, shk in enumerate(self.shake):
-            print "-- mol: %d: "%mol_i
-            print "--- the number of constraint: %d"%len(shk)
-        print "- For expanded SHAKE info for the system:"
+            print("-- mol: %d: "%mol_i)
+            print("--- the number of constraint: %d"%len(shk))
+        print("- For expanded SHAKE info for the system:")
         for n_const, const in self.shake_sys.items():
-            print "-- shake const: %d, num: %d"%(n_const, len(const))
+            print("-- shake const: %d, num: %d"%(n_const, len(const)))
         return

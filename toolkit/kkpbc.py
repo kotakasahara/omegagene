@@ -26,7 +26,7 @@ class PBC(object):
         info += str(self.z)  + ", "
         info += str(self.a)  + ", "
         info += str(self.b)  + ", "
-        info += str(self.c)  + "\N"
+        info += str(self.c)  + "\n"
         return info
     def set_center(self, center):
         self.origin = center - (self.L_half)

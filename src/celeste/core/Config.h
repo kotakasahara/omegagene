@@ -62,6 +62,7 @@ struct Config : public CelesteObject {
     std::string fn_o_energyflow          = "md_o.efl";
     std::string fn_o_vcmd_start  = "start_o.virt";
     std::string fn_o_vcmd_qraw   = "vcmd_qraw.dat";  
+    std::string fn_o_vcmd_qraw_is   = "vcmd_qraw_is.dat";  
     int vcmd_drift = 0;
     int         begin_count_qraw = 0;
     real        extend_default_q_raw = 1e-5;

@@ -115,7 +115,7 @@ class GroTrrReader(kkkit.FileBI):
             self.set_real(False)
             self.size_header = 84
         else:
-            print "size_x is not n_atoms*3*4 or *8"
+            print("size_x is not n_atoms*3*4 or *8")
             sys.exit()
 
         self.read_real() #time
@@ -297,7 +297,7 @@ class GroTrrWriter(kkkit.FileBO):
             else:
                 for i, x in enumerate(crd):
                     if i in ignore: continue
-		    self.f.write(st.pack(">"+prec_esc3, x[0],x[1],x[2]))
+                    self.f.write(st.pack(">"+prec_esc3, x[0],x[1],x[2]))
         if v_size != 0:
             if bin:
                 for  i,x in enumerate(vel):

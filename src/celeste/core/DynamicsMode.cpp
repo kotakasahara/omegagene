@@ -105,7 +105,7 @@ int DynamicsMode::initial_preprocess() {
     cout << "  VS log output ... " << cfg->fn_o_vmcmd_log << endl;
     cout << "  Lambda output ... " << cfg->fn_o_extended_lambda << endl;
     mmsys.vcmd->set_files(cfg->fn_o_vmcmd_log, cfg->fn_o_extended_lambda, cfg->format_o_extended_lambda,
-			  cfg->fn_o_vcmd_qraw, cfg->fn_o_vcmd_start);
+			  cfg->fn_o_vcmd_qraw, cfg->fn_o_vcmd_start, cfg->fn_o_vcmd_qraw_is);
     mmsys.vcmd->set_lambda_interval(cfg->print_intvl_extended_lambda);
     mmsys.vcmd->print_info();
     cout << "print_info" << endl;
@@ -273,7 +273,6 @@ int DynamicsMode::sub_output() {
     i_itr++;
     if ((*itr) < 0 || mmsys.cur_step == 0 || (mmsys.cur_step) % (*itr) != 0)
       continue;
-    //cout << "dbg1218 a" << endl;
     if (!cp){
       subbox.copy_crd_prev(mmsys.crd);
       cp = true;
@@ -281,7 +280,6 @@ int DynamicsMode::sub_output() {
     int outgrp = 0;
     if ( mmsys.out_group.size() > i_itr )
       outgrp = mmsys.out_group[i_itr];
-    cout << "dbg1218 b " <<outgrp << " " << mmsys.out_group.size() << endl;
     writer_trr[i_itr]->write_trr(mmsys.n_atoms,
 				 (int)mmsys.cur_step,
 				 mmsys.cur_time,
@@ -296,7 +294,6 @@ int DynamicsMode::sub_output() {
 				 mmsys.atom_groups[outgrp]);
 				 //mmsys.n_atoms_in_groups[mmsys.out_group[i_itr]],
 				 //mmsys.atom_groups[mmsys.out_group[i_itr]]);
-    //cout << "dbg1218 c" << endl;
   }
   return 0;
 }

@@ -339,7 +339,7 @@ class ExtendedVcMD : public Extended {
 		   real_fc *work, int n_atoms_box);
     int scale_force(real_fc *work, int n_atoms);
     int set_files(std::string fn_vslog, std::string fn_lambda, int format_lambda,
-		  std::string fn_qcano, std::string fn_qraw);
+		  std::string fn_qraw, std::string fn_start, std::string fn_qraw_is);
     
     std::vector<int> get_init_vs() { return init_vs; };
     void set_init_vs(std::vector<int> in_vs) {
@@ -368,6 +368,7 @@ class ExtendedVcMD : public Extended {
     real ***get_crd_groups() { return crd_groups; };
     int set_mass(real_pw *in_mass, real_pw *in_mass_groups, real_pw *in_mass_groups_inv);
     int write_aus_restart(std::string fn_out);
+    int set_current_vstate_intersection();
 };
 
 #endif

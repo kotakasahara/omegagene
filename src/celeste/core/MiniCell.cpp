@@ -1383,6 +1383,8 @@ int MiniCell::set_max_n_atoms_region() {
         //<< " [" <<rx[0]<<","<<rx[1]<<","<<rx[2]<<"]" <<endl;
         //<< " max_n_cell_reg:"<<max_n_cells_region[i]<< endl;
     }
+    if (max_n_atoms_exbox > n_atoms) max_n_atoms_exbox = n_atoms;
+    if (max_n_atoms_box > n_atoms) max_n_atoms_box = n_atoms;
     // -1,-1,-1 => 56 regions
     // -1,-1, 0 => 12 regions
     // -1, 0,-1 => 12 regions

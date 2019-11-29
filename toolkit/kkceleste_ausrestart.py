@@ -64,12 +64,12 @@ class CelesteAUSRestart(object):
             crd_group = []
             grp_id = atom_group_names.index(name) 
             for atom_id in atom_groups[grp_id]:
-                atom = restart.crd[atom_id]
+                atom = restart.crd[atom_id-1]
                 crd_group.append(atom)
             self.crd_groups.append(crd_group)
-            print "Group : " + name + " group-id: " + str(grp_id) \
+            print("Group : " + name + " group-id: " + str(grp_id) \
                 + " enhance-grp: " + str(len(self.crd_groups)-1) \
-                + " n_atoms: " + str(len(crd_group)) + " atoms."
+                + " n_atoms: " + str(len(crd_group)) + " atoms.")
         self.n_enhance_groups = len(self.crd_groups)
         return 
     def check_com_proximity(self, restart, mass,
@@ -81,12 +81,12 @@ class CelesteAUSRestart(object):
             center = numpy.zeros(3, dtype=numpy.float32)
             sum_mass = 0.0
             for atom_id in atom_groups[grp_id]:
-                center += restart.crd[atom_id] * mass[atom_id]
-                sum_mass += mass[atom_id]
+                center += restart.crd[atom_id-1] * mass[atom_id-1]
+                sum_mass += mass[atom_id-1]
             center /= sum_mass
             min_dist = 1e10
             for atom_id in atom_groups[grp_id]:
-                dist = numpy.sqrt(numpy.sum((restart.crd[atom_id] - center)**2))
+                dist = numpy.sqrt(numpy.sum((restart.crd[atom_id-1] - center)**2))
 
                 if min_dist >= dist: min_dist = dist
                 
@@ -100,7 +100,7 @@ class CelesteAUSRestartReader(kkkit.FileBI):
     def __init__(self, fn):
         super(CelesteAUSRestartReader, self).__init__(fn)
     def read_aus_restart(self, atom_groups, atom_group_names):
-        print "Read AUS restart file: "
+        print("Read AUS restart file: ")
         self.open()
         self.crd_groups = {}
         rest = CelesteAUSRestart()
@@ -123,7 +123,7 @@ class CelesteAUSRestartReader(kkkit.FileBI):
                 #print buf_crd
             name = atom_group_names[grp_id]
             rest.crd_groups.append(crd_group)
-            print "Group : " + name + " " + str(len(crd_group)) + " atoms."
+            print("Group : " + name + " " + str(len(crd_group)) + " atoms.")
         self.close()
         return rest
 

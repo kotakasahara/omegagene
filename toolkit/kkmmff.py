@@ -81,15 +81,15 @@ class FF(object):
         self.d_self_mon = np.sum(self.energy_self)
 
         if FF.DEBUG:
-            print "fcoeff : " + str(self.fcoeff)
-            print "bcoeff : " + str(self.bcoeff)
-            print "scoeff : " + str(self.scoeff)
-            print "zcore : " + str(self.zcore)
-            print "chgsum : " + str(chgsum)
-            print "chgsmm : " + str(chgsmm)
-            print "selfEnergy_dcore : " + str(self.zcore*chgsmm*0.5*cst.Const().charge_coeff)
-            print "d_self : " + str(self.d_self)
-            print "sum of energy_self : " + str(self.d_self_mon)
+            print("fcoeff : " + str(self.fcoeff))
+            print("bcoeff : " + str(self.bcoeff))
+            print("scoeff : " + str(self.scoeff))
+            print("zcore : " + str(self.zcore))
+            print("chgsum : " + str(chgsum))
+            print("chgsmm : " + str(chgsmm))
+            print("selfEnergy_dcore : " + str(self.zcore*chgsmm*0.5*cst.Const().charge_coeff))
+            print("d_self : " + str(self.d_self))
+            print("sum of energy_self : " + str(self.d_self_mon))
         return 
 
     def calc_zd_alpha0(self, r12, r12sq, r12inv, r12inv_2, r12inv_3, cc):
