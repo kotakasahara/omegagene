@@ -627,41 +627,41 @@ class RangeInfo(kkkit.FileI):
         #self.ene_range = (float(terms[0]), float(terms[1]))
         #self.ene_width = self.ene_range[1] - self.ene_range[0]
         
-        line = self.f.readline().strip()
+        line = self.readline_comment().strip()
         n_vs = int(line.split()[0])
-        self.f.readline()
+        self.readline_comment()
         self.vs_range = {}
         #vsid = 0
         for vsid in range(1,n_vs+1):
-            line = self.f.readline().strip()
+            line = self.readline_comment().strip()
             terms = line.split()
             ene_min = float(terms[0])
             ene_max = float(terms[1])
-            line = self.f.readline().strip()
+            line = self.readline_comment().strip()
             p2 = float(terms[0])
             p1 = float(terms[1])
             self.vs_range[vsid] = (ene_min, ene_max, p1, p2)
         for vsid in range(1,n_vs+1):
-            self.vs_params[i_vs] = []
-            order = int(self.f.readline().strip())
-            for i in range(order+2):
-                self.vs_params[i_vs].append(self.f.readline().strip())
+            self.vs_params[vsid] = []
+            order = int(self.readline_comment().strip())
+            for i in range(order+3):
+                self.vs_params[vsid].append(self.readline_comment().strip())
         self.close()
         return 0
     def read(self):
         self.open()
 
-        line = self.f.readline().strip()
+        line = self.readline_comment().strip()
         terms = line.split()
         self.ene_range = (float(terms[0]), float(terms[1]))
         self.ene_width = self.ene_range[1] - self.ene_range[0]
         
-        line = self.f.readline().strip()
+        line = self.readline_comment().strip()
         n_vs = int(line.split()[0])
         
         self.vs_range = {}
         for i in range(0,n_vs):
-            line = self.f.readline().strip()
+            line = self.readline_comment().strip()
             terms = line.split()
             vsid = int(terms[0])
             ratio_min = float(terms[1])
@@ -693,6 +693,6 @@ class McMDInitialDef(kkkit.FileI):
         return
     def read(self):
         self.open()     
-        self.init_vs = int(self.f.readline().strip())
-        self.seed = int(self.f.readline().strip())
+        self.init_vs = int(self.readline_comment().strip())
+        self.seed = int(self.readline_comment().strip())
         return
