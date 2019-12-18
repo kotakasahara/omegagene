@@ -256,16 +256,18 @@ class VcMDParamsReader(kkkit.FileI):
                     sys.stderr.write("The minimum and maximum values of lambda in each VS should be specified in float values.\n")
                     sys.exit(1)
                 cur_ranges.append((float(terms[0]), float(terms[1])))
+
             lambda_ranges.append(cur_ranges)
             #print "dim " + str(cur_dim)
             #print group_names[-1]
             #print n_vs
             #print cur_ranges
-        #print "n_states : " + str(n_states)
+            #print "n_states : " + str(n_states)
         while 1:
-            terms = self.readline_comment().strip().split()
-            if not terms or re.match("end", terms[0], re.IGNORECASE):
+            line =self.readline_comment()
+            if not line or re.match("end", line, re.IGNORECASE):
                 break
+            terms = line.strip().split()
             # elif re.match("default", terms[0], re.IGNORECASE):
             # default_q = float(terms[1])
             crd = tuple([int(x) for x in terms[:dim]])

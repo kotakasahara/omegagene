@@ -352,12 +352,12 @@ int DynamicsMode::cal_kinetic_energy(const real **vel) {
         real kine_atom = 0.0;
         for (int d = 0; d < 3; d++) kine_atom += vel[atomid][d] * vel[atomid][d];
         kine_pre += kine_atom * mmsys.mass[atomid];
-        // cout << "dbg_kine: " << mmsys.mass[atomid] << " " << vel[atomid][0];
-        // cout << " " << vel[atomid][1] <<" " << vel[atomid][2] << endl;
+	//cout << "dbg_kine: " << mmsys.mass[atomid] << " " << vel[atomid][0];
+	//cout << " " << vel[atomid][1] <<" " << vel[atomid][2] << endl;
     }
-    // cout << "ke_pre " << kine_pre << endl;
+    //cout << "ke_pre " << kine_pre << endl;
     mmsys.kinetic_e = kine_pre * KINETIC_COEFF;
-    // cout << "ke " << mmsys.kinetic_e << endl;;
+    //cout << "ke " << mmsys.kinetic_e << " " << temperature_coeff << endl;;
     mmsys.temperature = mmsys.kinetic_e * temperature_coeff;
     return 0;
 }

@@ -37,6 +37,9 @@ def opt_parse():
     p.add_option('--rho-entire', dest='rho_entire',
                  action="store_true",
                  help="")
+    p.add_option('--cal-dir', dest='cal_dir',
+                 default=".",
+                 help="")
     opts, args = p.parse_args()
     print "----------------------------"
     p.print_help()
@@ -44,7 +47,7 @@ def opt_parse():
     return opts, args
 
 class VcMDData(object):
-    def __init__(self, bin_width, fn_config, fn_lambda, fn_vslog):
+    def __init__(self, bin_width, fn_config, fn_lambda, fn_vslog, path_cal):
         self.bin_width = bin_width
 
         # self.distrib[bin_id][(vs1,vs2...)] = prob
@@ -55,7 +58,7 @@ class VcMDData(object):
         self.sum_prob = 0.0
         self.dim = 0
 
-        self.path_cal = "."
+        self.path_cal = path_cal
         self.fn_lambda = fn_lambda
         self.fn_vslog = fn_vslog
         self.fn_config = fn_config
@@ -245,7 +248,8 @@ def _main():
     opts, args = opt_parse()
 
     vcdat = VcMDData(opts.bin_width, opts.fn_config,
-                     opts.fn_lambda, opts.fn_vslog)
+                     opts.fn_lambda, opts.fn_vslog,
+                     opts.cal_dir)
     vcdat.set_trajectory_files(opts.stages, opts.series)
 
     if opts.rho_entire:
