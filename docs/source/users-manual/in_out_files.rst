@@ -19,6 +19,9 @@ Input Files
 9. V-AUS restart file (.dat)
 10. Atom group definition file (.inp)
 11. Distance restraint file (.inp)
+12. Position restraint file (.inp)
+13. VcMD parameter file (.inp)
+14. VcMD initial state file (.inp)
 
 System configuration file (.cfg)
 ===================================
@@ -69,6 +72,10 @@ Common configurations
     * The integrator by Zhang [Zhang_1997]_
     * For the Hoover-Evans thermostat ("hoover-evans")
     * SHAKE cannot be applied.
+  * langevin
+    * Langevin integrator.
+    * The thermostat must be set to "none"
+    * "langevin-gamma" is required.
 * --thermostat            scaling
   * none
     * NVE
@@ -84,33 +91,50 @@ Common configurations
   * The integration time step
 * --electrostatic         zero-dipole
   * "zero-dipole"
-    * The Zero-dipole summation (ZD) method developed by Fukuda [Fukuda_2011]_ .
+    The Zero-dipole summation (ZD) method developed by Fukuda [Fukuda_2011]_ .
   * "zero-quadrupole"
   * "zero-octupole"
   * "zero-hexadecapole"
-    * The Zero-multipole summation (ZM) method developed by Fukuda [Fukuda_2014]_ .
-  * For GPU mode, only zero-dipole with --ele-alpha 0.0 is acceptable.
+    The Zero-multipole summation (ZM) method developed by Fukuda [Fukuda_2014]_ .
+  * "debye-huckel"
+    For coarse-grained simulation.
+    For GPU mode, only zero-dipole with --ele-alpha 0.0 is acceptable.
+    To use "debye-huckel" with the HPS model with GPU, omegagene must be built with -DCELESTE_HPSGPU option.
 * --ele-alpha             0.0
   * The dumping factor fo ZM method.
   * For GPU mode, only 0.0 is acceptable
+* --debye-huckel-dielectric
+  * A parameter for Debye-Huckel approx.
+* --debye-huckel-ionic-strength  
+  * A parameter for Debye-Huckel approx.
+* --debye-huckel-temperature  300
+  * A parameter for Debye-Huckel approx.
+* --nonbond   lennard-jones
+  * "lennard-jones"
+    * Usual LJ potential.
+  * "hydrophobicity-scale-lj"
+    LJ potential modified with the hydrophobicity scale model.
+    To use this otpion on a GPU, omegagene must be built with -DCELESTE_HPSGPU=1 option for cmake.
 * --temperature           300
   * Temperature for the thermostat.
-*--temperature-init
+* --temperature-init
   * The initial temperature. Default value is the temperature specified by "--temperature" setting.
   * With this setting, "--heating-steps" should be set.
-*--heating-steps
+* --heating-steps
   * The temperature is linearly increased or decreased from the --temperature-init to --temperature during the steps specified in this setting.
+* --berendsen tau 
+  * Tau parameter for the Berendsen thermostat.
+* --langevin-gamma
+  * Gamma parameter for the Langevin integrator.
 * --print-interval-log    1
   * Output interval for the log (the standard output)
 * --print-interval-coord  1
   * Output interval for the trajectory file.
 * --fn-o-coord            et1.trr
   * Output file name for the trajectory file.
-* --format-o-coord        gromacs
+* --format-o-coord        presto
   * The file format of the trajectory.
   * presto
-  * gromacs
-    * (!) The little endian
 * --fn-o-restart          md.restart
   * Output restart file name.
 #* --fn-o-log              et1.log
@@ -125,8 +149,8 @@ Common configurations
   * Settings for canceling the center of mass
   * none
   * cancel
-    * Translation of the center of mass for some specified groups are cancelled.
-    * The groups should be specified in "--com-cancel-group-name"
+    Translation of the center of mass for some specified groups are cancelled.
+    The groups should be specified in "--com-cancel-group-name"
 * --com-cancel-group-name  grpA
   * The name of an atom group COM motions of which to be cancelled.
   * Multiple values can be specified.
@@ -140,22 +164,24 @@ Configuration for restraints
   * harmonic
 * --dist-restraint-weight
 0  * Scaling coefficient for the distance restraints
-#* --position-restraint
-#  * none
-#  * harmonic
-#* --position-restraint-weight
-#  * Scaling coefficient for the
+* --position-restraint
+  * none
+  * harmonic
+* --position-restraint-weight
+  * Scaling coefficient for the
 
 Configuration for the extended ensemble methods
 ----------------------------------------------------
 
 * --extended-ensemble             v-mcmd
   * none
-    * Extended ensemble is not used
+    Extended ensemble is not used
   * v-mcmd
-    * The TTP-V-McMD method [Higo et al. (2013)]_
+    The V-McMD method [Higo et al. (2013)]_
   * v-aus
-    * The TTP-V-AUS method [Higo et al. (2015)]_
+    The V-AUS method [Higo et al. (2015)]_
+  * vcmd
+    The VcMD emthod [Higo et al. (2017a)]_ [Higo et al. (2017b)]_ [Hayami et al. (2018)]_ [Hayami et al. (2019)]_
 * --fn-o-vmcmd-log                ttp_v_mcmd.out
   * Output file name of a virtual-system trajecotry.
 * --fn-o-extended-lambda            mule.ene
@@ -174,6 +200,20 @@ Configuration for the extended ensemble methods
   * A parameter for the recovery force in V-AUS simulation.
   * A margin of the lambda value.
 * --enhance-recovery-coef
+  * Strength of the recovery force which works when the reaction coordinate is out of the predefined range.
+* --fn-o-vcmd-start
+  * Output file name describing the virtual state in the last step. This can be used for restarting the VcMD runs.
+* --fn-o-vcmd-q-raw
+  * Output file name for the populations of each virtual state.
+* --fn-o-vcmd-q-raw_is
+  * Output file name for the populations of each intersection of virtual states.
+* --begin-count-q-raw
+  * The step number which begans to count the populations.
+* --vcmd-drift
+  * 0 or 1.
+  * 1 indicates the simulations with drifting in the virtual system without detailed-balance.
+* --print-interval-group-com
+  * Interval steps for output the reaction coordinate values.
 
 .. [Zhang_1997]_ Zhang "Operator-splitting integrators for constant-temperature molecular dynamics" J. Chem. Phys. 106 (14) 1997
 
@@ -300,6 +340,70 @@ The group1 is composed of atoms 1, 4, 6, 7, 8, and 9. The group2 is composed of 
 
 The atom-ID are began from 1.
 
+Distance restraint file (.inp)
+-----------------------------------------------
+
+This file defining the distance restraints between pairs of atoms. Each line between the keywords  "RDDSTC> LIST" and "RDDSTC> STOP" defines a restraint.
+Distances between two atoms were restrained with the flat bottom potential. Each line specifies identities of two atoms, restraint forces for lower and upper bound, and lower and upller borders to apply restraint potential.
+
+* Molecule-ID of the 1st atom
+* Residue-ID of the 1st atom
+* Residue name of the 1st atom
+* Atom name of the 1st atom
+* Molecule-ID of the 2nd atom
+* Residue-ID of the 2nd atom
+* Residue name of the 2nd atom
+* Atom name of the 2nd atom
+* The force coefficient for the lower bound.
+* The force coefficient for the upper bound.
+* Lower limit of the distance.
+* Upper limit of the distance.
+
+Position restraint file (.inp)
+-----------------------------------------------
+
+Each line specifies a position restraint for an atom.
+
+* Atom-ID
+* Equilibrium X coordinate
+* Equilibrium Y coordinate
+* Equilibrium Z coordinate
+* Margin distance from the equilibrium position.
+* Force coefficient.
+* Type of restraint. "normal" or "z". Restraint with "z" omits the X and Y coordinates.
+
+VcMD parameter file (.inp)
+-----------------------------------------------
+
+This file describes the definition of the virtual system and potentials for each states.
+
+::
+  100   ; The interval steps for virtual state transitions.
+  2     ; The number of dimensions
+  3   group1 group2  ; The number of virtual states, and names of two groups 
+                     ; defining the reaction coordinate, for the 1st axis.
+  3.0   5.0    ; The range of the reaction coordinates for the 1st state.
+  4.0   6.0    ; That for the 2nd state.
+  5.0   7.0    ; That for the 3rd state.
+  4   group1 group3  ; The definition for the second axis.    
+  3.0   5.0
+  4.0   6.0
+  5.0   7.0
+  6.0   8.0
+  END
+
+VcMD initial state file (.inp)
+-----------------------------------------------
+
+This file specifies the initial virtual state.::
+  2           ; The number of dimension
+  5           ; Initial virtual state coordinate of the 1st dimension
+  6           ; Initial virtual state coordinate of the 2nd dimension
+  46582642    ; Random seed
+
+
+
+
 ------------------------------------
 Output files
 ------------------------------------
@@ -416,4 +520,4 @@ For example, in the case that virtual-system transitions are done in every 1000 
 V-AUS restart file
 ---------------------
 
-
+A binary file required for restarting V-AUS and VcMD simulations.

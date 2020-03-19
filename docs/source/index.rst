@@ -15,7 +15,7 @@ The documention consists of the following three components:
 
    users-manual/index
    build-manual/index
-   dev-manual/index
+#   dev-manual/index
 
 First-time users are advised to consult the :doc:`users-manual/index` first to learn how to get started with omegagene.
 
@@ -30,7 +30,7 @@ omegagene has several unique features, such as, the zero-multipole summation met
 
 1. MD simulations on NVE ensemble
 2. MD simulations on NVT ensemble (The velocity rescaling, or Hoover-Evans thermostat)
-3. MD simulations on Multi-canonical ensemble, with the Virtual-system coupled McMD method.
+3. MD simulations on Virtual-system coupled samplers
 4. Applying constraints with SHAKE algorithm
 5. Calculations of electrostatic potentials based on the zero-dipole summation method.
 6. Calculations of pairwise potentials on GPGPU (powered by CUDA 7.0, Computer Capability 3.5 is required).
@@ -49,14 +49,13 @@ Developers
 
 * KASAHARA Kota, Ritsumeikan Univ., Japan
 * MA Benson, Univ. Illinois, US
-* GOTO Kota, TITECH, Japan
+* GOTO Kota, Tokyo Tech, Japan
 * BHASKAR Dasgupta, Osaka Univ., Japan
 * HIGO Junichi, Osaka Univ., Japan
 * FUKUDA Ikuo, Osaka Univ., Japan
 * MASHIMO Tadaaki, AIST, Japan
-* AKIYAMA Yutaka, TITECH, Japan
+* AKIYAMA Yutaka, Tokyo Tech, Japan
 * NAKAMURA Haruki, Osaka Univ., Japan
-
 
 
 Indices and tables
