@@ -117,14 +117,14 @@ Common configurations
     To use this otpion on a GPU, omegagene must be built with -DCELESTE_HPSGPU=1 option for cmake.
 * --temperature           300
   * Temperature for the thermostat.
-* --temperature-init
+* --temperature-init      300
   * The initial temperature. Default value is the temperature specified by "--temperature" setting.
   * With this setting, "--heating-steps" should be set.
-* --heating-steps
+* --heating-steps         0
   * The temperature is linearly increased or decreased from the --temperature-init to --temperature during the steps specified in this setting.
-* --berendsen tau 
+* --berendsen-tau        0.2
   * Tau parameter for the Berendsen thermostat.
-* --langevin-gamma
+* --langevin-gamma       0.1
   * Gamma parameter for the Langevin integrator.
 * --print-interval-log    1
   * Output interval for the log (the standard output)
@@ -137,10 +137,6 @@ Common configurations
   * presto
 * --fn-o-restart          md.restart
   * Output restart file name.
-#* --fn-o-log              et1.log
-#  *
-#* --fn-o-energy           et1.ene
-#  *
 * --nsgrid-cutoff         13.0
   * The cutoff length for the neighbor search (angestrome unit).
 * --nsgrid-update-intvl   10
@@ -149,8 +145,8 @@ Common configurations
   * Settings for canceling the center of mass
   * none
   * cancel
-    Translation of the center of mass for some specified groups are cancelled.
-    The groups should be specified in "--com-cancel-group-name"
+    * Translation of the center of mass for some specified groups are cancelled.
+    * pThe groups should be specified in "--com-cancel-group-name"
 * --com-cancel-group-name  grpA
   * The name of an atom group COM motions of which to be cancelled.
   * Multiple values can be specified.
@@ -163,7 +159,7 @@ Configuration for restraints
   * none
   * harmonic
 * --dist-restraint-weight
-0  * Scaling coefficient for the distance restraints
+  * Scaling coefficient for the distance restraints
 * --position-restraint
   * none
   * harmonic
@@ -192,10 +188,6 @@ Configuration for the extended ensemble methods
   * File format of the log of the lambda value.
   * ascii
   * binary
-#* --aus-type                        3
-#  * Type of AUS reaction coordinate.
-#  * 3
-#    * The reaction coordinate is defined as the distance between centers of mass of the groups.
 * --enhance-sigma
   * A parameter for the recovery force in V-AUS simulation.
   * A margin of the lambda value.

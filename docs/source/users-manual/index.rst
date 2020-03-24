@@ -11,4 +11,4 @@ Contents:
     run_md
     in_out_files
     analysis
-    samples
+    tutorial_cg 
