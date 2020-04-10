@@ -331,7 +331,7 @@ class SubBox : public CelesteObject {
     void extended_enable_vs_transition();
     int  cancel_com_motion();
 
-    int set_com_motion(int n_groups, int *group_ids, int *n_atoms_in_groups, int **groups, real *mass_inv_groups);
+    int set_com_motion(int n_groups, int *group_ids, int *n_atoms_in_groups, int **groups, real_pw *mass_inv_groups);
 
     int print_work(int atom_id);
 

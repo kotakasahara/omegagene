@@ -1269,8 +1269,8 @@ int SubBox::calc_energy_ele_excess() {
         real_fc tmp_work[3];
         int     atomidx1 = excess_pairs[i][0] * 3;
         int     atomidx2 = excess_pairs[i][1] * 3;
-        real    c1[3]    = {crd[atomidx1], crd[atomidx1 + 1], crd[atomidx1 + 2]};
-        real    c2[3]    = {crd[atomidx2], crd[atomidx2 + 1], crd[atomidx2 + 2]};
+        real_pw    c1[3]    = {crd[atomidx1], crd[atomidx1 + 1], crd[atomidx1 + 2]};
+        real_pw    c2[3]    = {crd[atomidx2], crd[atomidx2 + 1], crd[atomidx2 + 2]};
         ff.calc_zms_excess(tmp_ene, tmp_work, c1, c2, charge[excess_pairs[i][0]], charge[excess_pairs[i][1]]);
         ele_excess += tmp_ene;
         for (int d = 0; d < 3; d++) {
@@ -1710,7 +1710,7 @@ int SubBox::cancel_com_motion() {
     return commotion.cancel_translation(atomids_rev, vel_next);
 }
 
-int SubBox::set_com_motion(int n_groups, int *group_ids, int *n_atoms_in_groups, int **groups, real *mass_inv_groups) {
+int SubBox::set_com_motion(int n_groups, int *group_ids, int *n_atoms_in_groups, int **groups, real_pw *mass_inv_groups) {
     return commotion.set_groups(n_groups, group_ids, n_atoms_in_groups, groups, mass_inv_groups, mass);
 }
 /*

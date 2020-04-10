@@ -411,7 +411,8 @@ real_pw ForceField::calc_pairwise(real_pw &ene_vdw,
     return r12;
 }
 
-int ForceField::calc_zms_excess(real &ene, real_fc work[], real *crd1, real *crd2, real_pw &charge1, real_pw &charge2) {
+int ForceField::calc_zms_excess(real &ene, real_fc work[], real_pw *crd1, real_pw *crd2,
+				real_pw &charge1, real_pw &charge2) {
 
     real d12[3];
     pbc->diff_crd_minim_image(d12, crd1, crd2);

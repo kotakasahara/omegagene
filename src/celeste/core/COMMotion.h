@@ -22,8 +22,8 @@ class COMMotion : public CelesteObject {
                    int *     in_group_ids,
                    int *     in_n_atoms_in_groups,
                    int **    in_groups,
-                   real *    in_mass_inv_groups,
-                   real *    in_mass);
+                   real_pw *    in_mass_inv_groups,
+                   real_pw *    in_mass);
     int cancel_translation(int *atomids_rev, real *vel_next);
 };
 

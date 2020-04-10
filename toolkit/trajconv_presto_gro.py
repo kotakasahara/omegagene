@@ -22,9 +22,9 @@ def get_options():
                  action="append",
                  help="resname to be removed")
     p.add_option('-i', '--i-crd', dest='fn_in',
-                 help="file name for the input trajectory file; the same as --cod")
+                 help="file name for the input trajectory file")
     p.add_option('-o', dest='fn_out',
-                 help="file name for the input trajectory file; the same as --cod")
+                 help="file name for the output trajectory file")
     p.add_option('--i-vel', dest='fn_vel',
                  help="file name for a presto velocities")
     p.add_option('--lx', dest='cell_x',
@@ -205,8 +205,8 @@ def convert_gp(fn_trr, fn_crd, rm_atom_ids=set(),
                frame_begin=-1, time_step=-1.0, frame_step=-1):
     cur_frame = frame_begin
     ## box : numpy.array([float, float, float])
-    trr_reader = kkgro_trr.GroTrrReader(fn_crd)
-    crd_writer = kkcrd.PrestoCrdWriter(fn_trr)
+    trr_reader = kkgro_trr.GroTrrReader(fn_trr)
+    crd_writer = kkcrd.PrestoCrdWriter(fn_crd)
     
     trr_reader.open()
     crd_writer.open()
