@@ -669,6 +669,8 @@ __global__ void set_idx_head_cell_pairs(const int *d_n_cell_pairs, int *d_idx_he
       //d_n_cell_pairs[i] , d_idx_head_cell_pairs[i]);
     }
 
+
+    
   }
   // printf("max cp: %d\n",idx_cp);
 }
