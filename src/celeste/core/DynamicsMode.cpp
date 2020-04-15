@@ -144,7 +144,7 @@ int DynamicsMode::initial_preprocess() {
   cout << "Initial kinetic energy : " << mmsys.kinetic_e << endl;
   cout << "Initial temperature : " << mmsys.temperature << endl;
   cout << "Degree of freedom : " << mmsys.d_free << endl;
-  
+
   // for velocity-Verlet
   calc_energy_force();
   cout << "test_dynamicsmode" << endl;
@@ -713,7 +713,7 @@ int DynamicsModeVelocityVerlet::calc_in_each_step() {
     calc_energy_force();
 
     if (cfg->constraint_type != CONST_NONE) { apply_constraint(); }
-// cout << "revise_coordinates"<<endl;
+    cout << "revise_coordinates"<<endl;
 #ifndef F_WO_NS
     subbox.update_coordinates_nsgrid();
 #endif
@@ -723,7 +723,7 @@ int DynamicsModeVelocityVerlet::calc_in_each_step() {
     mmsys.ctime_update_coord += endTimeCoord - startTimeCoord;
 
     const clock_t startTimeVel = clock();
-    // cout << "update_velocities"<<endl;
+     cout << "update_velocities"<<endl;
     subbox.cpy_vel_prev();
     subbox.update_velocities_vv(cfg->time_step);
     const clock_t endTimeVel = clock();

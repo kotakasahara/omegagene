@@ -3,6 +3,7 @@
 using namespace std;
 
 #ifdef F_CUDA
+extern "C" void cudaMemoryTest();
 extern "C" int cuda_set_device(int device_id);
 
 extern "C" int cuda_alloc_atom_info(int max_n_atoms_exbox,
@@ -483,7 +484,6 @@ int SubBox::set_nsgrid() {
     nsgrid.set_crds_to_homebox(get_crds(), get_atomids(), get_n_atoms_box());
     // nsgrid.setup_replica_regions();
     // nsgrid.alloc_variables_box();
-
     nsgrid.set_atoms_into_grid_xy();
     nsgrid.set_atomids_buf();
 #ifdef F_CUDA
@@ -492,35 +492,53 @@ int SubBox::set_nsgrid() {
     gpu_device_setup();
 
     cuda_memcpy_htod_atom_info(charge, atom_type);
-
+    //cout << "dbg0413 set_nsgrid 01" << endl;
+    //cudaMemoryTest();
     update_device_cell_info();
-
+    //cout << "dbg0413 set_nsgrid 02" << endl;
+    //cudaMemoryTest();
     nsgrid_crd_to_gpu();
-
+    //cout << "dbg0413 set_nsgrid 03" << endl;
+    //cudaMemoryTest();
 #ifdef F_ECP
     nsgrid.enumerate_cell_pairs();
     cuda_memcpy_htod_cell_pairs(nsgrid.get_cell_pairs(), nsgrid.get_idx_head_cell_pairs(), nsgrid.get_n_cell_pairs());
-
+    //cout << "dbg0413 set_nsgrid 04a" << endl;
+    //cudaMemoryTest();
 #else
+    //cout << "dbg0413 set_nsgrid 05" << endl;
+    //cudaMemoryTest();
 
     cuda_enumerate_cell_pairs(nsgrid.get_atomids(), nsgrid.get_n_cells(),
                               // nsgrid.get_n_uni(),
                               nsgrid.get_n_neighbor_cols(), nsgrid.get_idx_atom_cell_xy());
+    //cout << "dbg0413 set_nsgrid 04b" << endl;
+    //cudaMemoryTest();
+    //cout << "dbg0413 set_nsgrid 06" << endl;
+    //cudaMemoryTest();
 
 #endif
 
 #else
     nsgrid.enumerate_cell_pairs();
 #endif
+    //cout << "dbg0413 set_nsgrid 07" << endl;
+    //cudaMemoryTest();
 
     return 0;
 }
 int SubBox::nsgrid_crd_to_gpu() {
 #ifdef F_CUDA
-
+  //cout << "dbg0413 nsgrid_crd_to_gpu 00" << endl;
+  //cudaMemoryTest();
     cuda_memcpy_htod_crd(nsgrid.get_crd());
+    //cout << "dbg0413 nsgrid_crd_to_gpu 01" << endl;
+    //cudaMemoryTest();
+    //cout << "dbg0413 nsgrid_crd_to_gpu 02" << endl;
     cuda_set_crd();
-
+    //cout << "dbg0413 nsgrid_crd_to_gpu 03" << endl;
+    //cudaMemoryTest();
+    //cout << "dbg0413 nsgrid_crd_to_gpu 04" << endl;
 #endif
     return 0;
 }
@@ -545,7 +563,7 @@ int SubBox::nsgrid_update() {
     cuda_enumerate_cell_pairs(nsgrid.get_atomids(), nsgrid.get_n_cells(),
                               // nsgrid.get_n_uni(),
                               nsgrid.get_n_neighbor_cols(), nsgrid.get_idx_atom_cell_xy());
-
+    
 #endif
 
 #else
@@ -1610,6 +1628,7 @@ int SubBox::gpu_device_setup() {
     cuda_debye_huckel_constant(cfg->dh_dielectric,
 			       cfg->dh_temperature,
 			       cfg->dh_ionic_strength);
+    cout << "dbg gpu_device_setup end" << endl;
 #endif
     return 0;
 }
@@ -1629,6 +1648,7 @@ int SubBox::update_device_cell_info() {
 int SubBox::calc_energy_pairwise_cuda() {
     nsgrid.init_energy_work();
 #ifndef F_HPSCUDA
+    //cout << "dbg0413 cuda_pairwise_ljzd" << endl;
     cuda_pairwise_ljzd(flg_mod_15mask);
 #endif
 #ifdef F_HPSCUDA

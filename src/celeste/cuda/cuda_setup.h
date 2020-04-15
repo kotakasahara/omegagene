@@ -75,7 +75,6 @@ __constant__ real_pw D_FCOEFF;
 // x,y,z: Cartesian coordinate,
 // w: charge
 real4 *  d_crd_chg;
-real4 *  h_crd_chg;
 real2 *  d_cell_z;
 real_pw *d_crd;
 

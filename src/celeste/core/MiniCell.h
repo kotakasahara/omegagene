@@ -9,10 +9,10 @@
 
 #define N_ATOM_CELL 8
 #define N_BITMASK (N_ATOM_CELL * N_ATOM_CELL + 31) / 32
-#define COEF_MAX_N_ATOMS_CELL 1.2
+#define COEF_MAX_N_ATOMS_CELL 1.0
 #define MAX_N_CELL_UNI 10
 #define MAX_N_PAIR_Z 100
-#define COEF_MAX_N_CELL_PAIRS 1.2
+#define COEF_MAX_N_CELL_PAIRS 2.5
 
 typedef struct cell_pair_info {
     int cell_id1;
