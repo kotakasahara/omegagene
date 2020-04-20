@@ -1341,11 +1341,11 @@ int MiniCell::set_crds_to_homebox(real *in_crd, int *in_atomids, int in_n_atoms_
         crd[idx + 1]   = in_crd[idx + 1];
         crd[idx + 2]   = in_crd[idx + 2];
         atomids_buf[i] = in_atomids[i];
-        //if (crd[idx + 0] <= pbc->lower_bound[0] || crd[idx + 0] >= pbc->upper_bound[0]
-	//|| crd[idx + 1] <= pbc->lower_bound[1] || crd[idx + 1] >= pbc->upper_bound[1]
-	//|| crd[idx + 2] <= pbc->lower_bound[2] || crd[idx + 2] >= pbc->upper_bound[2]) {
-	//cout << "CRD!!! " << crd[idx] << " " << crd[idx + 1] << " " << crd[idx + 2] << endl;
-	//}
+        if (crd[idx + 0] <= pbc->lower_bound[0] || crd[idx + 0] >= pbc->upper_bound[0]
+	    || crd[idx + 1] <= pbc->lower_bound[1] || crd[idx + 1] >= pbc->upper_bound[1]
+	    || crd[idx + 2] <= pbc->lower_bound[2] || crd[idx + 2] >= pbc->upper_bound[2]) {
+	  cout << "CRD!!! " << crd[idx] << " " << crd[idx + 1] << " " << crd[idx + 2] << endl;
+	}
     }
     return 0;
 }

@@ -472,20 +472,20 @@ int SubBox::set_nsgrid() {
     // cout << "set_grid_parameters" << endl;
   nsgrid.set_grid_parameters(n_atoms, cfg->nsgrid_cutoff, pbc, max_n_nb15off, nb15off,
 			     cfg->expected_num_density);
-    // cout << "set_box_info" << endl;
-    nsgrid.set_box_info(n_boxes_xyz, box_l);
+  // cout << "set_box_info" << endl;
+  nsgrid.set_box_info(n_boxes_xyz, box_l);
 
-    nsgrid.set_max_n_atoms_region();
+  nsgrid.set_max_n_atoms_region();
 
-    // nsgrid.setup_crd_into_grid(crd, charge, atom_type);
-    nsgrid.set_grid_xy();
-    nsgrid.alloc_variables();
-    revise_coordinates_pbc();
-    nsgrid.set_crds_to_homebox(get_crds(), get_atomids(), get_n_atoms_box());
-    // nsgrid.setup_replica_regions();
-    // nsgrid.alloc_variables_box();
-    nsgrid.set_atoms_into_grid_xy();
-    nsgrid.set_atomids_buf();
+  // nsgrid.setup_crd_into_grid(crd, charge, atom_type);
+  nsgrid.set_grid_xy();
+  nsgrid.alloc_variables();
+  revise_coordinates_pbc();
+  nsgrid.set_crds_to_homebox(get_crds(), get_atomids(), get_n_atoms_box());
+  // nsgrid.setup_replica_regions();
+  // nsgrid.alloc_variables_box();
+  nsgrid.set_atoms_into_grid_xy();
+  nsgrid.set_atomids_buf();
 #ifdef F_CUDA
     if (cfg->gpu_device_id >= 0) cuda_set_device(cfg->gpu_device_id);
     cout << "gpu_device_setup()" << endl;
