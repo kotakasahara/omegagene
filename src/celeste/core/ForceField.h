@@ -75,7 +75,7 @@ class ForceField : public ForceFieldObject {
 			real_pw *crd2,
 			real_pw &charge1, real_pw &charge2);
 
-    int cal_self_energy(const int &  n_atoms,
+    virtual int cal_self_energy(const int &  n_atoms,
                         const int &  n_excess,
                         const int **&excess_pairs,
 

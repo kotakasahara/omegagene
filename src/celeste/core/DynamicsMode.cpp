@@ -476,7 +476,7 @@ int DynamicsModePresto::calc_in_each_step() {
 #endif
     const clock_t startTimeEne = clock();
     //cout <<"calc_energy()" <<endl;
-    subbox.calc_energy();
+    subbox.calc_energy(mmsys.cur_step);
      //cout << "gather_energies()"<<endl;
     gather_energies();
 
@@ -593,7 +593,7 @@ int DynamicsModeZhang::calc_in_each_step() {
 
     const clock_t startTimeEne = clock();
     // cout << "calc_energy()" << endl;
-    subbox.calc_energy();
+    subbox.calc_energy(mmsys.cur_step);
     // cout << "gather_energies()"<<endl;
     gather_energies();
     const clock_t endTimeEne = clock();
@@ -681,7 +681,7 @@ int DynamicsMode::calc_energy_force() {
     mmsys.ctime_cuda_htod_atomids += endTimeHtod - startTimeHtod;
 #endif
     const clock_t startTimeEne = clock();
-    subbox.calc_energy();
+    subbox.calc_energy(mmsys.cur_step);
     // cout << "gather_energies()"<<endl;
     gather_energies();
     if (cfg->dist_restraint_type != DISTREST_NONE || cfg->pos_restraint_type != POSREST_NONE) {
@@ -782,7 +782,7 @@ int DynamicsModeLangevin::calc_in_each_step() {
 #endif
 
     //cout <<"calc_energy()" <<endl;
-    subbox.calc_energy();
+    subbox.calc_energy(mmsys.cur_step);
      //cout << "gather_energies()"<<endl;
     gather_energies();
 
@@ -883,7 +883,7 @@ int DynamicsModeLangevinVV::calc_in_each_step() {
     }
 #endif
 
-    subbox.calc_energy();
+    subbox.calc_energy(mmsys.cur_step);
      //cout << "gather_energies()"<<endl;
     gather_energies();
 

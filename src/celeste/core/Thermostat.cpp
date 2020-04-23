@@ -239,7 +239,7 @@ int ThermostatHooverEvans::apply_thermostat_with_shake(int               n_atoms
 ThermostatNoseHoover::ThermostatNoseHoover() : ThermostatObject() {}
 ThermostatNoseHoover::~ThermostatNoseHoover() {}
 
-int ThermostatNoseHoover::set_constant(int n_atoms, real *mass_inv, real *vel, real *force) {
+int ThermostatNoseHoover::set_constant(int n_atoms, real_pw *mass_inv, real *vel, real *force) {
     return 0;
 }
 int ThermostatNoseHoover::apply_thermostat(int      n_atoms,

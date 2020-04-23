@@ -17,7 +17,8 @@ VERSION_LIST = ["v.0.34.b",  # 0
                 "v.0.39.a",  # 3
                 "v.0.39.h",  # 4
                 "v.0.40.c",  # 5 
-                "v.0.44"]  # 6
+                "v.0.44",  # 6
+                "v.0.49"]  # 7
 #VERSION_ID = 0
 #VERSION = VERSION_LIST[VERSION_ID]
 
@@ -354,9 +355,14 @@ class MDInputGen(object):
         buf += st.pack("@ddd", system.pbc.L[0],0.0,0.0)
         buf += st.pack("@ddd", 0.0, system.pbc.L[1],0.0)
         buf += st.pack("@ddd", 0.0, 0.0, system.pbc.L[2])
-        buf += st.pack("@ddd", system.pbc.origin[0],
+        if self.version_id < 7:
+            buf += st.pack("@ddd", system.pbc.origin[0],
                        system.pbc.origin[1],
                        system.pbc.origin[2])
+        else:
+            buf += st.pack("@ddd", system.pbc.center[0],
+                       system.pbc.center[1],
+                       system.pbc.center[2])
         return buf
 
     def dump_crdvel(self, crd):

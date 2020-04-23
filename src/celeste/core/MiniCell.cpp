@@ -220,8 +220,8 @@ int MiniCell::set_grid_xy() {
     cout << "min_cell_width_xy : " << min_cell_width_xy << endl;
     cout << " ... " << volume << ", "  << (real)n_atoms/volume << ", " << (real)N_ATOM_CELL /
        ((real)(n_atoms)/pbc->cal_volume()) << endl;
-    n_cells_xyz[0] = floor(exbox_l[0] / min_cell_width_xy);
-    n_cells_xyz[1] = floor(exbox_l[1] / min_cell_width_xy);
+    n_cells_xyz[0] = (int)floor(exbox_l[0] / min_cell_width_xy);
+    n_cells_xyz[1] = (int)floor(exbox_l[1] / min_cell_width_xy);
     L_cell_xyz[0]  = exbox_l[0] / (real_pw)n_cells_xyz[0];
     L_cell_xyz[1]  = exbox_l[1] / (real_pw)n_cells_xyz[1];
 
@@ -232,10 +232,10 @@ int MiniCell::set_grid_xy() {
     //  1.3 times larger than the expected number.
     //  there is no data the factor 1.3 is good or not.
     //  this point should be tested.
-    max_n_atoms_column = ceil((real_pw)max_n_atoms_exbox / (real_pw)n_columns * 1.3);
+    max_n_atoms_column = (int)ceil((real_pw)max_n_atoms_exbox / (real_pw)n_columns * 1.3);
     // for implicit
     if ( density > 0 ) 
-      max_n_atoms_column = ceil(exbox_l[2] * L_cell_xyz[0] * L_cell_xyz[1] * density * 1.3);
+      max_n_atoms_column = (int)ceil(exbox_l[2] * L_cell_xyz[0] * L_cell_xyz[1] * density * 1.3);
     if (max_n_atoms_column >= n_atoms) max_n_atoms_column = n_atoms;
     
     cout << "max_n_atoms_column " << max_n_atoms_column << " max_n_atoms_exbox: " << max_n_atoms_exbox << endl;
@@ -244,8 +244,8 @@ int MiniCell::set_grid_xy() {
     cout << "n_cell_x : "  << n_cells_xyz[0] << "   n_cell_y : "  << n_cells_xyz[1] 
 	 << "   n_cell_z : "  << n_cells_xyz[2] << endl;
 
-    n_neighbors_xyz[0] = ceil(cutoff_pair / L_cell_xyz[0]);
-    n_neighbors_xyz[1] = ceil(cutoff_pair / L_cell_xyz[1]);
+    n_neighbors_xyz[0] = (int)ceil(cutoff_pair / L_cell_xyz[0]);
+    n_neighbors_xyz[1] = (int)ceil(cutoff_pair / L_cell_xyz[1]);
 
     max_n_cells = n_cells_xyz[0] * n_cells_xyz[1] * n_cells_xyz[2];
     
@@ -317,7 +317,18 @@ int MiniCell::set_atoms_into_grid_xy() {
             while (x < 0.0) x += exbox_l[d];
             while (x >= exbox_l[d]) x -= exbox_l[d];
 
-            cell_crd_xy[d] = floor(x / L_cell_xyz[d]);
+            cell_crd_xy[d] = (int)floor(x / L_cell_xyz[d]);
+	    /*if(atomids_buf[atom_id_g] == 12833 && d==0){
+	      cout << "dbg0422l " 
+		   << " blb " << box_lower_bound[0] 
+		   << " bub " << box_upper_bound[0] 
+		   << " exbox_l " << exbox_l[0]
+		   << " cell_crd_xy[0] " << cell_crd_xy[0]
+		   << " x " << x
+		   << " floor " << floor(x / L_cell_xyz[d])
+		   << endl;
+	    }
+	    */
         }
 
         // int column_id = cell_crd_xy[0] + cell_crd_xy[1] * n_cells_xyz[0];
@@ -328,7 +339,8 @@ int MiniCell::set_atoms_into_grid_xy() {
 
         // idx_cell_xy_atom[column_id][n_atoms_col[column_id]] = atom_id;
         n_atoms_col[column_id]++;
-
+	
+	//cout << "dbg0422a " << atom_id_g <<" " << atomids_buf[atom_id_g] << " " << column_id << " " << cell_crd_xy[0] << " " << cell_crd_xy[1] << " x: " << crd[atom_id_g * 3 + 0] << " " << crd[atom_id_g * 3 + 1] << endl;
     }    
     //cout << "set_idx_xy_head_atom_from_n_atoms_col()" << endl;
     set_idx_xy_head();
@@ -343,10 +355,10 @@ int MiniCell::set_atoms_into_grid_xy() {
 
     ///cout << "set_dummy_atoms()" << endl;
     set_dummy_atoms();
-
     //cout << "reorder_atominfo_in_columns() " <<endl;
     reorder_atominfo_in_columns();
     set_atomids_rev();
+
     //cout << " // set_atomids_rev"<<endl;
     // debug_set_atoms_into_grid();
 
@@ -461,7 +473,8 @@ int MiniCell::reorder_atominfo_for_columns() {
   n_atoms_col[tmp2_column]++;
   atomids[to_atomid_g] = tmp2_atomid;
 
-  //  for (int i = 0; i < idx_xy_head_atom[n_columns]; i++) { 
+  //dbg0422
+  ///for (int i = 0; i < idx_xy_head_atom[n_columns]; i++) { 
   //cout << " dbg 0525 C " << i << " " << atomids[i] << " col "<< idx_atom_cell_xy[i] << endl;
   //}
 
@@ -577,7 +590,8 @@ int MiniCell::reorder_atominfo_in_columns() {
         for (int i = 0; i < n_cells_z[column_id] * N_ATOM_CELL; i++) {
             int atom_id_grid            = idx_xy_head_atom[column_id] + i;
             idx_atom_cell[atom_id_grid] = idx_xy_head_cell[column_id] + i / N_ATOM_CELL;
-	    //cout << "dbg 0525 D col:" << column_id << " cell:" << idx_atom_cell[atom_id_grid] << " atom:" << atomids[atom_id_grid] << endl;
+	    //dbg0422d
+	    //cout << "dbg 0525 D col:" << column_id << " cell:" << idx_atom_cell[atom_id_grid] << " " << atom_id_grid << " atom:" << atomids[atom_id_grid] << endl;
         }
     }
     return 0;
@@ -779,7 +793,8 @@ int MiniCell::set_idx_xy_head() {
 	idx_xy_head_cell[column_id] = -1;
 	idx_xy_head_atom[column_id] = -1;
       }
-      //cout << "column_id " << column_id <<  " head " << idx_xy_head_atom[column_id] << endl;
+      //dbg0422 
+      //cout << "dbg0422b column_id " << column_id <<  " head " << idx_xy_head_atom[column_id] << endl;
       for (int cur_cell_z = 0; cur_cell_z < n_cells_z[column_id]; cur_cell_z++, cur_cell_id++) {
 	//cout << "set " << cur_cell_id << "("<<column_x<<","<<column_y<<","<<cur_cell_z<<") " <<atom_index<<endl;
 	idx_crd_cell[column_x][column_y][cur_cell_z] = cur_cell_id;
@@ -833,7 +848,7 @@ int MiniCell::set_idx_xy_head() {
 int MiniCell::set_atomids_rev() {
     for (int atom_id_grid = 0; atom_id_grid < get_n_atom_array(); atom_id_grid++) {
         if (atomids[atom_id_grid] >= 0) { atomids_rev[atomids[atom_id_grid]] = atom_id_grid; }
-        // cout << "set_atomids_rev " << atomids[atom_id_grid] << " " << atom_id_grid << endl;
+	//cout << "dbg0422e set_atomids_rev " << atomids[atom_id_grid] << " " << atom_id_grid << endl;
     }
     return 0;
 }
@@ -923,13 +938,13 @@ int MiniCell::enumerate_cell_pairs() {
     // int     tmp_n_cell_pair  = 0;
     real_pw dx[3] = {0.0, 0.0, 0.0};
     for (int cell1_id = 0; cell1_id < n_cells; cell1_id++) {
-        cell1[0]       = cell_crd[cell1_id][0];
+      cell1[0]       = cell_crd[cell1_id][0];
         cell1[1]       = cell_crd[cell1_id][1];
         cell1[2]       = cell_crd[cell1_id][2];
         //int column1_id = get_column_id_from_crd(cell1[0], cell1[1]);
 
         idx_head_cell_pairs[cell1_id] = n_cell_pairs;
-	//cout << "dbg idx_head["<< cell1_id<< "] ("<<cell1[0]<<","<<cell1[1]
+	//cout << "dbg0422f idx_head["<< cell1_id<< "] ("<<cell1[0]<<","<<cell1[1]
 	//<<","<<cell1[2]<<") = " << n_cell_pairs << endl;
         real_pw cell1_z_bottom = get_cell_z_min(cell1_id);
         real_pw cell1_z_top    = get_cell_z_max(cell1_id);
@@ -963,7 +978,7 @@ int MiniCell::enumerate_cell_pairs() {
 
             ////  --val
             for (d_cell[1] = -n_neighbors_xyz[1]; d_cell[1] <= n_neighbors_xyz[1]; d_cell[1]++) {
-                cell_rel[1] = cell1[1] + d_cell[1];
+	      cell_rel[1] = cell1[1] + d_cell[1];
                 image[1]    = 0;
                 cell2[1]    = cell_rel[1];
                 if (cell_rel[1] < 0) {
@@ -1019,6 +1034,7 @@ int MiniCell::enumerate_cell_pairs() {
 		    i < n_cells_z[col2id]; i++){
 		  int cell2_id = idx_xy_head_cell[col2id]+i; 
 		  bool cell2_odd = cell2_id % 2 != 0;
+		  
 		  if (check_valid_pair(cell1_id, cell2_id, cell1_odd, cell2_odd))
 		    add_cell_pair(cell1_id, cell2_id, image);
 		}
@@ -1057,19 +1073,21 @@ int MiniCell::enumerate_cell_pairs() {
 		      if (last_cell < tmp_cell)
 			last_cell = tmp_cell;
 		    }
-		    //		    cout << "dbg0525 cell2 " << i_img << " " << first_uni_id << " - " << last_uni_id << " : " <<  first_cell << " - " << last_cell << endl;
                     for (int cell2_id = first_cell; cell2_id >= 0 && cell2_id <= last_cell; cell2_id++) {
-                        real_pw cell2_z_top    = get_cell_z_max(cell2_id) + image[2] * pbc->L[2];
-                        real_pw cell2_z_bottom = get_cell_z_min(cell2_id) + image[2] * pbc->L[2];
-                        if (cell2_z_top < cell1_z_bottom) {
-                            dx[2] = cell1_z_bottom - cell2_z_top;
+		      //if (cell1_id == 0 && cell2_id == 1251){
+		      //cout << "dbg0525 cell2 " << i_img << " " << first_uni_id << " - " << last_uni_id << " : " <<  first_cell << " - " << last_cell << endl;
+		      //}
+		    real_pw cell2_z_top    = get_cell_z_max(cell2_id) + image[2] * pbc->L[2];
+		    real_pw cell2_z_bottom = get_cell_z_min(cell2_id) + image[2] * pbc->L[2];
+		    if (cell2_z_top < cell1_z_bottom) {
+		      dx[2] = cell1_z_bottom - cell2_z_top;
+		      dx[2] = dx[2] * dx[2];
+		    } else if (cell2_z_bottom > cell1_z_top) {
+		      dx[2] = cell2_z_bottom - cell1_z_top;
                             dx[2] = dx[2] * dx[2];
-                        } else if (cell2_z_bottom > cell1_z_top) {
-                            dx[2] = cell2_z_bottom - cell1_z_top;
-                            dx[2] = dx[2] * dx[2];
-                        } else {
-                            dx[2] = 0.0;
-                        }
+		    } else {
+		      dx[2] = 0.0;
+		    }
                         /*
                 dx[2] = cell2_z_top - cell1_z_bottom;
                         if((cell2_z_top <= cell1_z_top && cell2_z_top >= cell1_z_bottom) ||
@@ -1087,8 +1105,17 @@ int MiniCell::enumerate_cell_pairs() {
                         }
 
                         bool cell2_odd = cell2_id % 2 != 0;
+			//	if (cell1_id == 0 && cell2_id == 1251){
+			  //	  cout << "dbg0422h d_cell: " << d_cell[0] << " " << d_cell[1] << " " << d_cell[2]
+			//	  << " cell_rel: " << cell_rel[0] << " " << cell_rel[1] << " " << cell_rel[2]
+			//	  << " n_cells_xyz: " << n_cells_xyz[0] << " " << n_cells_xyz[1]
+			//	  << " dx: " << dx[0] << " " << dx[1] << " " << dx[2] 
+			//	   << " image: " << image[0] << " " << image[1] << " " << image[2]
+			//<< " cell1: " << cell1[0]  << " " << cell1[1]  << " " << cell1[2]  << " "
+			//<< " cell2: " << cell2[0]  << " " << cell2[1]  << " " << cell2[2]  << " "
+			//<< endl;
+			//}
                         if (check_valid_pair(cell1_id, cell2_id, cell1_odd, cell2_odd))
-			  
                             add_cell_pair(cell1_id, cell2_id, image);
                     }
                 }
@@ -1117,7 +1144,7 @@ bool MiniCell::check_valid_pair(const int cell1_id, const int cell2_id, const bo
     // return cell1_id <= cell2_id;
 }
 int MiniCell::add_cell_pair(const int cell_id1, const int cell_id2, const int image[3]) {
-  //cout << "addpair " << cell_id1 <<"-"<< cell_id2 <<endl;
+  //cout << "dbg0422g addpair " << cell_id1 <<"-"<< cell_id2 <<endl;
    // for debug
   //for(int i=0; i< n_cell_pairs; i++){
   //if(cell_pairs[i].cell_id1 == cell_id1 && cell_pairs[i].cell_id2 == cell_id2)
@@ -1133,15 +1160,15 @@ int MiniCell::add_cell_pair(const int cell_id1, const int cell_id2, const int im
     if (image[0] == -1)
         bit_image = bit_image | 1;
     else if (image[0] == 1)
-        bit_image = bit_image | 2;
+      bit_image = bit_image | 2;
     if (image[1] == -1)
-        bit_image = bit_image | 4;
+      bit_image = bit_image | 4;
     else if (image[1] == 1)
-        bit_image = bit_image | 8;
+      bit_image = bit_image | 8;
     if (image[2] == -1)
-        bit_image = bit_image | 16;
+      bit_image = bit_image | 16;
     else if (image[2] == 1)
-        bit_image                  = bit_image | 32;
+      bit_image = bit_image | 32;
     cell_pairs[n_cell_pairs].image = bit_image;
     // cout << "cell pair [" << n_cell_pairs << "].image= "<< bit_image << endl;
     // cell_pairs[n_cell_pairs].cx = image[0];
@@ -1276,7 +1303,7 @@ int MiniCell::move_atom(int n_atom, real *in_crd, real *in_prev_crd) {
     return 0;
 }
 
-int MiniCell::set_box_info(int in_n_boxes_xyz[], real in_box_l[]) {
+int MiniCell::set_box_info(int in_n_boxes_xyz[], real in_box_l[]){
     // set
     //   box_id,      box_crd
     //   n_boxes, n_boxes_xyz
@@ -1284,7 +1311,6 @@ int MiniCell::set_box_info(int in_n_boxes_xyz[], real in_box_l[]) {
     //   exbox_l, exbox_upper_bound, exbox_lower_bound
     //
     cout << "MiniCell::set_box_info" << endl;
-
     box_id = 0;
 #if defined(F_MPI)
 // home_box_id = rank;
@@ -1295,17 +1321,19 @@ int MiniCell::set_box_info(int in_n_boxes_xyz[], real in_box_l[]) {
     get_box_crd_from_id((const int &)box_id, box_crd);
     for (int d = 0; d < 3; d++) {
         box_l[d] = in_box_l[d];
+        box_lower_bound[d] = pbc->lower_bound[d];
+        box_upper_bound[d] = pbc->upper_bound[d];
+        //box_lower_bound[d] = pbc->lower_bound[d] + box_l[d] * box_crd[d];
+        //box_upper_bound[d] = box_lower_bound[d] + box_l[d];
 
-        box_lower_bound[d] = pbc->lower_bound[d] + box_l[d] * box_crd[d];
-        box_upper_bound[d] = box_lower_bound[d] + box_l[d];
         if (n_boxes_xyz[d] > 1) {
             exbox_lower_bound[d] = box_lower_bound[d] - cutoff_pair_half;
             exbox_upper_bound[d] = box_upper_bound[d] + cutoff_pair_half;
             exbox_l[d]           = box_l[d] + cutoff_pair;
         } else {
-            exbox_lower_bound[d] = box_lower_bound[d];
-            exbox_upper_bound[d] = box_upper_bound[d];
-            exbox_l[d]           = box_l[d];
+	  exbox_lower_bound[d] = box_lower_bound[d];
+	  exbox_upper_bound[d] = box_upper_bound[d];
+	  exbox_l[d]           = box_l[d];
         }
     }
     print_box_info();

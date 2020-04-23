@@ -117,7 +117,7 @@ class ThermostatNoseHoover : public ThermostatObject {
   public:
     ThermostatNoseHoover();
     ~ThermostatNoseHoover();
-    virtual int set_constant(int n_atoms, real *mass, real *vel, real *force);
+    virtual int set_constant(int n_atoms, real_pw *mass, real *vel, real *force);
     virtual int apply_thermostat(const int n_atoms,
                                  real_fc * work,
                                  real *    vel,

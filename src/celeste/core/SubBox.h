@@ -240,9 +240,9 @@ class SubBox : public CelesteObject {
     int set_nb15off(int *in_nb15off);
     int set_lj_param(const int in_n_lj_types, real_pw *in_lj_6term, real_pw *in_lj_12term,
 		     real_pw *in_hps_cutoff, real_pw *in_hps_lambda);
-    int  calc_energy();
-    int  calc_energy_pairwise();
-    int  calc_energy_pairwise_wo_neighborsearch();
+    int  calc_energy(unsigned long cur_step);
+    int  calc_energy_pairwise(unsigned long cur_step);
+    int  calc_energy_pairwise_wo_neighborsearch(unsigned long cur_step);
     bool check_nb15off(const int &a1, const int &a2, const int *bitmask, int &mask_id, int &interact_bit);
     int      calc_energy_bonds();
     int      calc_energy_angles();

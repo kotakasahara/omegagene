@@ -445,6 +445,17 @@ int SubBox::set_parameters(int     in_n_atoms,
 #endif
     // cout << "rank: " << rank << " max_n_atoms_box: " << max_n_atoms_box << endl;
     for (int d = 0; d < 3; d++) {
+      box_l[d]   = pbc->L[d];
+      exbox_l[d] = pbc->L[d];
+      box_crd[d] = 0;
+      box_lower[d]   = pbc->lower_bound[d];
+      box_upper[d]   = pbc->upper_bound[d];
+      exbox_lower[d] = box_lower[d];
+      exbox_upper[d] = box_upper[d];
+    }      
+      
+      /* for MPI (not working) 
+    for (int d = 0; d < 3; d++) {
         box_l[d]   = pbc->L[d] / n_boxes_xyz[d];
         exbox_l[d] = box_l[d] + cutoff_pair;
     }
@@ -455,8 +466,10 @@ int SubBox::set_parameters(int     in_n_atoms,
         exbox_lower[d] = box_lower[d] - cutoff_pair_half;
         exbox_upper[d] = box_upper[d] + cutoff_pair_half;
     }
-    // cout << "DBG SubBox box_lower " << box_lower[0] << " " << box_lower[1] << " " << box_lower[2] << endl;
-    // cout << "DBG SubBox box_upper " << box_upper[0] << " " << box_upper[1] << " " << box_upper[2] << endl;
+      */
+    //cout << "dbg0422o SubBox box_lower " << box_lower[0] << " " << box_lower[1] << " " << box_lower[2] << endl;
+    //cout << "dbg0422p SubBox box_upper " << box_upper[0] << " " << box_upper[1] << " " << box_upper[2] << endl;
+
     ff = ForceField();
     ff.set_config_parameters(cfg);
     ff.initial_preprocess((const PBC *)pbc);
@@ -474,6 +487,7 @@ int SubBox::set_nsgrid() {
 			     cfg->expected_num_density);
   // cout << "set_box_info" << endl;
   nsgrid.set_box_info(n_boxes_xyz, box_l);
+
 
   nsgrid.set_max_n_atoms_region();
 
@@ -623,7 +637,7 @@ int SubBox::rank0_div_box(real **in_crd, real **in_vel) {
 
     for (int atomid = 0; atomid < n_atoms; atomid++) {
         int box_assign[3];
-        for (int d = 0; d < 3; d++) box_assign[d] = floor((in_crd[atomid][d] - pbc->lower_bound[d]) / box_l[d]);
+        for (int d = 0; d < 3; d++) box_assign[d] = (int)floor((in_crd[atomid][d] - pbc->lower_bound[d]) / box_l[d]);
         int      box_id                           = get_box_id_from_crd(box_assign);
         all_atomids[box_id][all_n_atoms[box_id]]  = atomid;
         atomids_rev[atomid]                       = all_n_atoms[box_id];
@@ -889,18 +903,18 @@ int SubBox::set_lj_param(const int in_n_lj_types, real_pw *in_lj_6term, real_pw 
     return 0;
 }
 
-int SubBox::calc_energy() {
+int SubBox::calc_energy(unsigned long cur_step) {
     init_energy();
     init_work();
 
     const clock_t start_time_pair = clock();
 #if defined(F_WO_NS)
-    calc_energy_pairwise_wo_neighborsearch();
+    calc_energy_pairwise_wo_neighborsearch(cur_step);
 #elif defined(F_CUDA)
     calc_energy_pairwise_cuda();
 #else
     //cout << "dbg0524 ENE1 " << nsgrid.get_energy()[0] << " "  << nsgrid.get_energy()[1] << endl;
-    calc_energy_pairwise();
+    calc_energy_pairwise(cur_step);
     //cout << "dbg0524 ENE2 " << nsgrid.get_energy()[0] << " "  << nsgrid.get_energy()[1] << endl;
 #endif
     const clock_t end_time_pair = clock();
@@ -939,7 +953,7 @@ int SubBox::calc_energy() {
     // cout << "SubBox::calc_energy " << pote_vdw << " " << pote_ele << endl;
     return 0;
 }
-int SubBox::calc_energy_pairwise() {
+int SubBox::calc_energy_pairwise(unsigned long cur_step) {
      // for debug
      /*cout << " E : " << pote_vdw << ", " << pote_ele << endl;
        double sum_dist = 0.0;
@@ -974,16 +988,39 @@ int SubBox::calc_energy_pairwise() {
       int     atomid2      = nsgrid.get_atomid_from_gridorder(atomid_grid2);
       real_pw crd2[3];
       nsgrid.get_crd(atomid_grid2, crd2[0], crd2[1], crd2[2]);
+      /*if(atomid2 == 12833){
+	cout << "dbg0422i " << crd2[0] << " " << crd2[1] << " " << crd2[2] << endl;
+	cout << "dbg0422k " << cellpairs[cp].image
+	     << " " <<  (cellpairs[cp].image&1)
+	     << " " <<  (cellpairs[cp].image&2)
+	     << " " << (cellpairs[cp].image&4)
+	     << " " <<  (cellpairs[cp].image&8)
+	     << " " <<  (cellpairs[cp].image&16)
+	     << " " <<  (cellpairs[cp].image&32)
+	     <<endl;
+	     }*/
       pbc->fix_pbc_image(crd2, cellpairs[cp].image);
+      //if(atomid2 == 12833){
+      //cout << "dbg0422j " << crd2[0] << " " << crd2[1] << " " << crd2[2] << endl;
+      //}
       for (int a1 = 0; a1 < N_ATOM_CELL; a1++) {
 	int atomid_grid1 = atoms_index_c1 + a1;
 	int atomid1      = nsgrid.get_atomid_from_gridorder(atomid_grid1);
+
+	// dbg0524
+	//if ( (atomid1 == 12833 || atomid2 == 12833)){
+	//cout << "dbg0524b 12833 !! " << atomid1 << " " << atomid2 << " " << cp << " " << c1 << " " << c2 
+	//<< endl;
+	//}
+	
 	// n_pairs ++;
 	int mask_id;
 	int interact_bit;
 	if (check_nb15off(a1, a2, cellpairs[cp].pair_mask, mask_id, interact_bit)) {
-	  //cout << "dbg0524 ENEskip " <<cp << " cid " <<c1 << " "<<c2 <<" ainc " << a1 << " " << a2 << " aid "<< atomid1 << " " << atomid2 << endl;
+	  //	  if(atomid1 == 12833 || atomid2 == 12833){
+	  //	    cout << "dbg0524 ENEskip " <<cp << " cid " <<c1 << " "<<c2 <<" ainc " << a1 << " " << a2 << " aid "<< atomid1 << " " << atomid2 << endl;
 	  // n_pairs_15off++;
+	  //	  }
 	  continue;
 	}
 	real_pw crd1[3];
@@ -1009,8 +1046,24 @@ int SubBox::calc_energy_pairwise() {
 				       charge[atomid1], charge[atomid2],
 				       cfg->nonbond, 
 				       cfg->hps_epsiron);
+
+
+	//if( (tmp_ene_vdw != 0.0 || tmp_ene_ele != 0.0) &&
+	//	if(atomid1 == 12833 || atomid2 == 12833){
+	//cout << "dbg0524_ENEpair_"<<cur_step<< "  "  <<cp << " cid " <<c1 << " "<<c2 <<" ainc " << a1 << " " << a2  << "  " << tmp_ene_vdw << " " << tmp_ene_ele << " " << r12 << " " << atomid1<< " " << atomid2 << " " << atomid_grid1 << " "<<atomid_grid2 << " " << crd1[0] << " " << crd1[1] << " " << crd1[2] << endl;
+	//	}
+
+
 	if (r12 > cfg->nsgrid_cutoff) { cellpairs[cp].pair_mask[mask_id] &= ~interact_bit; }
-	//cout << "dbg0524 ENEpair " <<cp << " cid " <<c1 << " "<<c2 <<" ainc " << a1 << " " << a2 << " aid "<< atomid1 << " " << atomid2 << "  " << tmp_ene_vdw << endl;
+
+	/*
+	if( (tmp_ene_vdw != 0.0 || tmp_ene_ele != 0.0)){
+	  int a1m = atomid1;
+	  int a2m = atomid2;
+	  if(a1m > a2m) { a1m = atomid2; a2m = atomid1; }
+	  cout << "dbg0524_ENEpair_"<<cur_step<< "  "  <<cp << " cid " <<c1 << " "<<c2 <<" ainc " << a1 << " " << a2 << " aid "<< a1m << "-" << a2m << "  " << tmp_ene_vdw << " " << tmp_ene_ele << " " << r12 << " " << atomid1<< "-" << atomid2 << endl;
+	  }*/
+
 	nsgrid.add_energy(tmp_ene_vdw, tmp_ene_ele);
 	/*
 	  if(isnan(tmp_ene_vdw)){
@@ -1071,7 +1124,7 @@ int SubBox::calc_energy_pairwise() {
   return 0;
 }
 
-int SubBox::calc_energy_pairwise_wo_neighborsearch() {
+int SubBox::calc_energy_pairwise_wo_neighborsearch(unsigned long cur_step) {
     /*
       cout << " E : " << pote_vdw << ", " << pote_ele << endl;
       double sum_dist = 0.0;
@@ -1093,7 +1146,11 @@ int SubBox::calc_energy_pairwise_wo_neighborsearch() {
     for (int atomid2 = 0, atomid2_3 = 0; atomid2 < atomid1; atomid2++, atomid2_3 += 3) {
       // n_pairs++;
       real_pw crd2[3] = {(real_pw)crd[atomid2_3], (real_pw)crd[atomid2_3 + 1], (real_pw)crd[atomid2_3 + 2]};
-      
+      /*
+      if ( (atomid1 == 1094 && atomid2 == 3412) ||(atomid2 == 1094 && atomid1 == 3412)){	
+	cout << "dbg0524c_ENEpair_" << cur_step <<" "<< crd1[0] << " " << crd1[1] << " " << crd1[2] << " " << crd2[0] << " " << crd2[1] << " " << crd2[2] << endl;
+      }
+      */
       bool flg = true;
       for (int i = atomid1 * max_n_nb15off; i < atomid1 * max_n_nb15off + max_n_nb15off; i++) {
 	if (nb15off[i] == atomid2) {
@@ -1130,7 +1187,14 @@ int SubBox::calc_energy_pairwise_wo_neighborsearch() {
 				     charge[atomid1], charge[atomid2],
 				     cfg->nonbond, 
 				     cfg->hps_epsiron);
-      //cout << "dbg0524 ENEpair " << atomid1 << " " << atomid2 << "  " << tmp_ene_vdw << endl;
+      /*
+      if( (tmp_ene_vdw != 0.0 || tmp_ene_ele != 0.0)){
+	  int a1m = atomid1;
+	  int a2m = atomid2;
+	  if(a1m > a2m) { a1m = atomid2; a2m = atomid1; }
+	  cout << "dbg0524_ENEpair_" << cur_step << " " << a1m << "-" << a2m << "  " << tmp_ene_vdw << " " << tmp_ene_ele << " " << r12 <<   " " << crd1[0] << " " << crd1[1] << " " << crd1[2] << " " << crd2[0] << " " << crd2[1] << " " << crd2[2] << endl;
+      }
+      */
       pote_vdw += tmp_ene_vdw;
       pote_ele += tmp_ene_ele;
       work[atomid1_3] += tmp_work[0];
@@ -1416,30 +1480,39 @@ int SubBox::set_velocity_from_crd() {
     return 0;
 }
 int SubBox::revise_coordinates_pbc() {
-    for (int atomid_b = 0, atomid_b3 = 0; atomid_b < all_n_atoms[rank]; atomid_b++, atomid_b3 += 3) {
-        for (int d = 0; d < 3; d++) {
-            if (crd[atomid_b3 + d] >= pbc->upper_bound[d]) {
-                crd[atomid_b3 + d] -= pbc->L[d];
-            } else if (crd[atomid_b3 + d] < pbc->lower_bound[d]) {
-                crd[atomid_b3 + d] += pbc->L[d];
-            }
-        }
+  for (int atomid_b = 0, atomid_b3 = 0; atomid_b < all_n_atoms[rank]; atomid_b++, atomid_b3 += 3) {
+    //if(atomids[atomid_b] == 12833){
+    //cout << "dbg0422m " << atomid_b << " " << atomids[atomid_b] << " " << crd[atomid_b3]
+    //<< " " << pbc->upper_bound[0]
+    //<< " " << pbc->lower_bound[0]
+    //<< endl;
+    //      }
+    for (int d = 0; d < 3; d++) {
+      if (crd[atomid_b3 + d] >= pbc->upper_bound[d]) {
+	crd[atomid_b3 + d] -= pbc->L[d];
+      } else if (crd[atomid_b3 + d] < pbc->lower_bound[d]) {
+	crd[atomid_b3 + d] += pbc->L[d];
+      }
     }
-    return 0;
+    //if(atomids[atomid_b] == 12833){
+    //cout << "dbg0422m2 " << atomid_b << " " << atomids[atomid_b] << " " << crd[atomid_b3] << endl;
+    //}
+  }
+  return 0;
 }
 
 int SubBox::copy_vel_just(real **p_vel) {
-    for (int atomid_b = 0, atomid_b3 = 0; atomid_b < all_n_atoms[rank]; atomid_b++, atomid_b3 += 3) {
-        for (int d = 0; d < 3; d++) {
-            p_vel[atomids[atomid_b]][d] = (vel[atomid_b3 + d] + vel_next[atomid_b3 + d]) * 0.5;
-        }
+  for (int atomid_b = 0, atomid_b3 = 0; atomid_b < all_n_atoms[rank]; atomid_b++, atomid_b3 += 3) {
+    for (int d = 0; d < 3; d++) {
+      p_vel[atomids[atomid_b]][d] = (vel[atomid_b3 + d] + vel_next[atomid_b3 + d]) * 0.5;
     }
-    return 0;
-    /// copy velocities from this object to the mmsys
-    //  this.vel_just => mmsys.p_vel
-    //  it called from DynamicsMoce.cpp
-
-    // return get_vel(vel_just, p_vel);
+  }
+  return 0;
+  /// copy velocities from this object to the mmsys
+  //  this.vel_just => mmsys.p_vel
+  //  it called from DynamicsMoce.cpp
+  
+  // return get_vel(vel_just, p_vel);
 }
 /*int SubBox::set_force_from_velocity(const real time_step){
   time_step_inv = 1.0 / time_step;
@@ -1938,6 +2011,7 @@ int SubBox::set_params_langevin(celeste::random::Random *in_mt,
 {
   random_mt = in_mt;  
   langevin_gamma = in_gamma;
+  return 0;
 }
 
 //int SubBox::set_params_langevin(celeste::random::Random *in_mt,
