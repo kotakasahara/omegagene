@@ -543,18 +543,10 @@ int SubBox::set_nsgrid() {
 }
 int SubBox::nsgrid_crd_to_gpu() {
 #ifdef F_CUDA
-  //cout << "dbg0413 nsgrid_crd_to_gpu 00" << endl;
-  //cudaMemoryTest();
-    cuda_memcpy_htod_crd(nsgrid.get_crd());
-    //cout << "dbg0413 nsgrid_crd_to_gpu 01" << endl;
-    //cudaMemoryTest();
-    //cout << "dbg0413 nsgrid_crd_to_gpu 02" << endl;
-    cuda_set_crd();
-    //cout << "dbg0413 nsgrid_crd_to_gpu 03" << endl;
-    //cudaMemoryTest();
-    //cout << "dbg0413 nsgrid_crd_to_gpu 04" << endl;
+  cuda_memcpy_htod_crd(nsgrid.get_crd_gpu());
+  cuda_set_crd();
 #endif
-    return 0;
+  return 0;
 }
 
 int SubBox::nsgrid_update() {
@@ -1347,12 +1339,12 @@ int SubBox::calc_energy_14nb() {
 int SubBox::calc_energy_ele_excess() {
     real ele_excess = 0.0;
     for (int i = 0; i < n_excess; i++) {
-        real    tmp_ene;
+        real_pw    tmp_ene;
         real_fc tmp_work[3];
         int     atomidx1 = excess_pairs[i][0] * 3;
         int     atomidx2 = excess_pairs[i][1] * 3;
-        real_pw    c1[3]    = {crd[atomidx1], crd[atomidx1 + 1], crd[atomidx1 + 2]};
-        real_pw    c2[3]    = {crd[atomidx2], crd[atomidx2 + 1], crd[atomidx2 + 2]};
+        real_pw    c1[3]    = {(real_pw)crd[atomidx1], (real_pw)crd[atomidx1 + 1], (real_pw)crd[atomidx1 + 2]};
+        real_pw    c2[3]    = {(real_pw)crd[atomidx2], (real_pw)crd[atomidx2 + 1], (real_pw)crd[atomidx2 + 2]};
         ff.calc_zms_excess(tmp_ene, tmp_work, c1, c2, charge[excess_pairs[i][0]], charge[excess_pairs[i][1]]);
         ele_excess += tmp_ene;
         for (int d = 0; d < 3; d++) {

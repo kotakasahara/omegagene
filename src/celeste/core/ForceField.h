@@ -69,15 +69,15 @@ class ForceField : public ForceFieldObject {
                           real_pw &charge2,
 			  int type_lj,
 			  real_pw hps_epsiron);
-    int calc_zms_excess(real &ene,
+    int calc_zms_excess(real_pw &ene,
 			real_fc work[],
 			real_pw *crd1,
 			real_pw *crd2,
 			real_pw &charge1, real_pw &charge2);
 
     virtual int cal_self_energy(const int &  n_atoms,
-                        const int &  n_excess,
-                        const int **&excess_pairs,
+				const int &  n_excess,
+				const int **&excess_pairs,
 
                         /*const int& n_bonds,
                         const int**& bond_atomid_pairs,
@@ -86,9 +86,9 @@ class ForceField : public ForceFieldObject {
                         const int& n_torsions,
                         const int**& torsion_atomid_quads,
                         const int*& torsion_nb14,*/
-                        real_pw *&charge,
-                        real *&   energy_self,
-                        real &    energy_self_sum);
+				real_pw *&charge,
+				real *&   energy_self,
+				real &    energy_self_sum);
 };
 
 

@@ -128,7 +128,7 @@ class MiniCell : public CelesteObject {
     int *    mpi_recvbuf_atomids;
 
     // atominfo
-    real_pw **crd_in_cell;
+    real **crd_in_cell;
 
     int *atomids_rev;
     int *atomids;
@@ -139,7 +139,8 @@ class MiniCell : public CelesteObject {
     //        set_crds_to_homebox
     int *atomids_buf;
 
-    real_pw *crd;
+    real *crd;
+    real_pw *crd_gpu;
     real_fc *work;
     real_fc *energy;
 
@@ -213,7 +214,8 @@ class MiniCell : public CelesteObject {
     const CellPair get_cell_pair(const int cpid) { return cell_pairs[cpid]; };
     CellPair *&                            get_cell_pairs() { return cell_pairs; };
     int *&                                 get_idx_head_cell_pairs() { return idx_head_cell_pairs; };
-    real_pw *&                             get_crd() { return crd; };
+    real *&                             get_crd() { return crd; };
+    real_pw *&                          get_crd_gpu();
     void get_crd(int atomid_grid, real_pw &x, real_pw &y, real_pw &z);
     real_fc *&get_work() { return work; };
     real_fc *&get_energy() { return energy; };

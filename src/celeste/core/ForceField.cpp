@@ -34,29 +34,29 @@ int ForceField::set_config_parameters(const Config *cfg) {
     }else if (cfg->ele_alpha < EPS) {
         switch (cfg->electrostatic) {
             case ELCTRST_ZERODIPOLE:
-                ele = new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff,
-                                           &ZeroMultipoleSum::calc_zero02pole_alpha0,
-                                           &ZeroMultipoleSum::calc_zero02pole_excess_alpha0,
-					   0,0,0);
-                break;
+	      ele = new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff,
+					 &ZeroMultipoleSum::calc_zero02pole_alpha0,
+					 &ZeroMultipoleSum::calc_zero02pole_excess_alpha0,
+					 0.0,0.0,0.0);
+	      break;
             case ELCTRST_ZEROQUADRUPOLE:
                 ele = new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff,
                                            &ZeroMultipoleSum::calc_zero04pole_alpha0,
                                            &ZeroMultipoleSum::calc_zero04pole_excess_alpha0,
-					   0,0,0);
+					   0.0,0.0,0.0);
                 break;
             case ELCTRST_ZEROOCTUPOLE:
                 ele = new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff,
                                            &ZeroMultipoleSum::calc_zero08pole_alpha0,
                                            &ZeroMultipoleSum::calc_zero08pole_excess_alpha0,
-					   0,0,0);
+					   0.0,0.0,0.0);
 
                 break;
             case ELCTRST_ZEROHEXADECAPOLE:
                 ele = new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff,
                                            &ZeroMultipoleSum::calc_zero16pole_alpha0,
                                            &ZeroMultipoleSum::calc_zero16pole_excess_alpha0,
-					   0,0,0);
+					   0.0,0.0,0.0);
                 break;
         }
     } else {
@@ -65,26 +65,26 @@ int ForceField::set_config_parameters(const Config *cfg) {
                 ele =
                     new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff,
                                          &ZeroMultipoleSum::calc_zero02pole, &ZeroMultipoleSum::calc_zero02pole_excess,
-					   0,0,0);
+					   0.0,0.0,0.0);
                 break;
             case ELCTRST_ZEROQUADRUPOLE:
                 ele =
                     new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff,
                                          &ZeroMultipoleSum::calc_zero04pole, &ZeroMultipoleSum::calc_zero04pole_excess,
-					   0,0,0);
+					   0.0,0.0,0.0);
                 break;
             case ELCTRST_ZEROOCTUPOLE:
                 ele =
                     new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff,
                                          &ZeroMultipoleSum::calc_zero08pole, &ZeroMultipoleSum::calc_zero08pole_excess,
-					   0,0,0);
+					   0.0,0.0,0.0);
 
                 break;
             case ELCTRST_ZEROHEXADECAPOLE:
                 ele =
-                    new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff,
-                                         &ZeroMultipoleSum::calc_zero16pole, &ZeroMultipoleSum::calc_zero16pole_excess,
-					   0,0,0);
+		  new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff,
+				       &ZeroMultipoleSum::calc_zero16pole, &ZeroMultipoleSum::calc_zero16pole_excess,
+				       0.0,0.0,0.0);
                 break;
         }
     }
@@ -411,18 +411,18 @@ real_pw ForceField::calc_pairwise(real_pw &ene_vdw,
     return r12;
 }
 
-int ForceField::calc_zms_excess(real &ene, real_fc work[], real_pw *crd1, real_pw *crd2,
+int ForceField::calc_zms_excess(real_pw &ene, real_fc work[], real_pw *crd1, real_pw *crd2,
 				real_pw &charge1, real_pw &charge2) {
 
-    real d12[3];
+    real_pw d12[3];
     pbc->diff_crd_minim_image(d12, crd1, crd2);
-    real r12_2     = d12[0] * d12[0] + d12[1] * d12[1] + d12[2] * d12[2];
-    real r12       = sqrt(r12_2);
-    real r12_inv   = 1.0 / r12;
-    real r12_2_inv = r12_inv * r12_inv;
-    real r12_3_inv = r12_2_inv * r12_inv;
-    real cc        = charge1 * charge2 * CHARGE_COEFF;
-    real work_coef;
+    real_pw r12_2     = d12[0] * d12[0] + d12[1] * d12[1] + d12[2] * d12[2];
+    real_pw r12       = sqrt(r12_2);
+    real_pw r12_inv   = 1.0 / r12;
+    real_pw r12_2_inv = r12_inv * r12_inv;
+    real_pw r12_3_inv = r12_2_inv * r12_inv;
+    real_pw cc        = charge1 * charge2 * CHARGE_COEFF;
+    real_pw work_coef;
     // cout << "dbg0204: cc " << cc << " " <<  charge1 << " " << charge2 << " " << r12_2 << " " << r12_inv << endl;
     (ele->*(ele->func_calc_zms_excess))(ene, work_coef, r12, r12_2, r12_inv, r12_2_inv, r12_3_inv, cc);
     for (int d = 0; d < 3; d++) work[d] = work_coef * d12[d];

@@ -371,6 +371,9 @@ int DynamicsMode::subbox_setup() {
     // subbox.set_max_n_atoms_region();
     // cout << "alloc_variables" << endl;
     subbox.alloc_variables();
+
+    
+
     subbox.alloc_variables_for_bonds(mmsys.n_bonds);
     subbox.alloc_variables_for_angles(mmsys.n_angles);
     subbox.alloc_variables_for_torsions(mmsys.n_torsions);

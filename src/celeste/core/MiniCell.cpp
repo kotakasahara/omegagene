@@ -41,50 +41,54 @@ MiniCell::~MiniCell() {
 }
 
 int MiniCell::alloc_variables() {
-    cell_crd = new int *[max_n_cells];
-    for (int i = 0; i < max_n_cells; i++) { cell_crd[i] = new int[3]; }
-    idx_crd_cell = new int **[n_cells_xyz[0]];
-    for (int i = 0; i < n_cells_xyz[0]; i++) {
-        idx_crd_cell[i] = new int *[n_cells_xyz[1]];
-        for (int j = 0; j < n_cells_xyz[1]; j++) {
-            idx_crd_cell[i][j] = new int[n_cells_xyz[2]];
-            // for(int k=0; k < n_cells_xyz[2]; k++)
-            // idx_crd_cell[i][j][k] = 0;
-        }
+  cell_crd = new int *[max_n_cells];
+  for (int i = 0; i < max_n_cells; i++) { cell_crd[i] = new int[3]; }
+  idx_crd_cell = new int **[n_cells_xyz[0]];
+  for (int i = 0; i < n_cells_xyz[0]; i++) {
+    idx_crd_cell[i] = new int *[n_cells_xyz[1]];
+    for (int j = 0; j < n_cells_xyz[1]; j++) {
+      idx_crd_cell[i][j] = new int[n_cells_xyz[2]];
+      // for(int k=0; k < n_cells_xyz[2]; k++)
+      // idx_crd_cell[i][j][k] = 0;
     }
-    // memset(idx_crd_cell, 0, sizeof(int) * max_n_cells);
-    idx_atom_cell = new int[get_max_n_atom_array()];
-    n_atoms_col   = new int[n_columns];
-    n_cells_z     = new int[n_columns];
-    // crd_in_cell = new real*[max_n_atoms_exbox + n_columns * N_ATOM_CELL];
-    // for (int i=0; i < max_n_atoms_exbox + n_columns * N_ATOM_CELL; i++){
-    // crd_in_cell[i] = new real[2];
-    //}
+  }
+  // memset(idx_crd_cell, 0, sizeof(int) * max_n_cells);
+  idx_atom_cell = new int[get_max_n_atom_array()];
+  n_atoms_col   = new int[n_columns];
+  n_cells_z     = new int[n_columns];
+  // crd_in_cell = new real*[max_n_atoms_exbox + n_columns * N_ATOM_CELL];
+  // for (int i=0; i < max_n_atoms_exbox + n_columns * N_ATOM_CELL; i++){
+  // crd_in_cell[i] = new real[2];
+  //}
+  
+  idx_atom_cell_xy = new int[get_max_n_atom_array()];
+  idx_xy_head_atom = new int[n_columns + 1];
+  
+  // idx_cell_head_atom = new int[max_n_cells+1];
+  idx_cell_n_atoms = new int[max_n_cells];
+  // dummy_particles = new int*[n_columns];
+  // for(int i=0; i < n_columns; i++){
+  // dummy_particles[i] = new int[N_ATOM_CELL];
 
-    idx_atom_cell_xy = new int[get_max_n_atom_array()];
-    idx_xy_head_atom = new int[n_columns + 1];
-
-    // idx_cell_head_atom = new int[max_n_cells+1];
-    idx_cell_n_atoms = new int[max_n_cells];
-    // dummy_particles = new int*[n_columns];
-    // for(int i=0; i < n_columns; i++){
-    // dummy_particles[i] = new int[N_ATOM_CELL];
-
-    atomids_rev = new int[get_max_n_atom_array()];
-    atomids_buf = new int[get_max_n_atom_array()];
+  atomids_rev = new int[get_max_n_atom_array()];
+  atomids_buf = new int[get_max_n_atom_array()];
 #ifdef F_CUDA
-    cout << "cuda_hostalloc_atom_info" << endl;
-    cuda_hostalloc_atom_info(crd, atomids, work, energy, get_max_n_atom_array());
-    cout << "cuda_hostalloc_cell_info" << endl;
-    cuda_hostalloc_cell_info( // cell_pairs, idx_head_cell_pairs,
-        idx_xy_head_cell,
-        // max_n_cell_pairs, max_n_cells+1,
-        n_columns + 1);
+
+  //cuda_hostalloc_atom_info(crd_gpu, atomids, work, energy, get_max_n_atom_array());
+  cuda_hostalloc_atom_info(crd_gpu, atomids, work, energy, get_max_n_atom_array());
+
+  cuda_hostalloc_cell_info( // cell_pairs, idx_head_cell_pairs,
+			   idx_xy_head_cell,
+			   // max_n_cell_pairs, max_n_cells+1,
+			   n_columns + 1);
+
+  crd                 = new real[get_max_n_atom_array() * 3];
 #ifdef F_ECP
-    cuda_hostalloc_cellpair_info(cell_pairs, idx_head_cell_pairs, n_cells_z, max_n_cell_pairs, max_n_cells, n_columns);
+  cuda_hostalloc_cellpair_info(cell_pairs, idx_head_cell_pairs, n_cells_z, max_n_cell_pairs, max_n_cells, n_columns);
 #endif
 #else
-    crd                 = new real_pw[get_max_n_atom_array() * 3];
+
+    crd_gpu             = new real_pw[get_max_n_atom_array() * 3];
     atomids             = new int[get_max_n_atom_array()];
     work                = new real_fc[get_max_n_atom_array() * 3];
     energy              = new real_fc[2];
@@ -173,7 +177,7 @@ int MiniCell::free_variables() {
     delete[] atomids_rev;
     delete[] atomids_buf;
 #ifdef F_CUDA
-    cuda_hostfree_atom_info(crd, atomids, work, energy);
+    cuda_hostfree_atom_info(crd_gpu, atomids, work, energy);
     cuda_hostfree_cell_info( // cell_pairs, idx_head_cell_pairs,
         idx_xy_head_cell);
 #ifdef F_ECP
@@ -184,6 +188,7 @@ int MiniCell::free_variables() {
 
 #else
     delete[] crd;
+    delete[] crd_gpu;
     delete[] work;
     delete[] atomids;
     delete[] energy;
@@ -1221,10 +1226,16 @@ int MiniCell::set_cell_pair_bitmask(const int cell_id1, const int cell_id2, int 
     return 0;
 }
 
+real_pw*& MiniCell::get_crd_gpu(){
+  for(int i = 0; i < get_max_n_atom_array() * 3; i++){
+    crd_gpu[i] = (real_pw)crd[i];
+  }
+  return crd_gpu;
+}
 void MiniCell::get_crd(int atomid_grid, real_pw &x, real_pw &y, real_pw &z) {
-    x = crd[atomid_grid * 3];
-    y = crd[atomid_grid * 3 + 1];
-    z = crd[atomid_grid * 3 + 2];
+  x = (real_pw)crd[atomid_grid * 3];
+  y = (real_pw)crd[atomid_grid * 3 + 1];
+  z = (real_pw)crd[atomid_grid * 3 + 2];
 }
 
 int MiniCell::get_column_id_from_crd(int x, int y) {
@@ -1369,10 +1380,10 @@ int MiniCell::set_crds_to_homebox(real *in_crd, int *in_atomids, int in_n_atoms_
         crd[idx + 1]   = in_crd[idx + 1];
         crd[idx + 2]   = in_crd[idx + 2];
         atomids_buf[i] = in_atomids[i];
-        if (crd[idx + 0] <= pbc->lower_bound[0] || crd[idx + 0] >= pbc->upper_bound[0]
-	    || crd[idx + 1] <= pbc->lower_bound[1] || crd[idx + 1] >= pbc->upper_bound[1]
-	    || crd[idx + 2] <= pbc->lower_bound[2] || crd[idx + 2] >= pbc->upper_bound[2]) {
-	  cout << "CRD!!! " << crd[idx] << " " << crd[idx + 1] << " " << crd[idx + 2] << endl;
+        if (crd[idx + 0] < pbc->lower_bound[0] || crd[idx + 0] > pbc->upper_bound[0]
+	    || crd[idx + 1] < pbc->lower_bound[1] || crd[idx + 1] > pbc->upper_bound[1]
+	    || crd[idx + 2] < pbc->lower_bound[2] || crd[idx + 2] > pbc->upper_bound[2]) {
+	  cout << "CRD!!! " << idx/3 << " " <<  crd[idx] << " " << crd[idx + 1] << " " << crd[idx + 2] << endl;
 	}
     }
     return 0;

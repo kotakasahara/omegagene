@@ -5,7 +5,7 @@ using namespace std;
 
 ZeroMultipoleSum::ZeroMultipoleSum(const int           in_zms_mode,
                                    const real          in_alpha,
-                                   const real          in_cutoff,
+                                   const real_pw       in_cutoff,
                                    const ZmsCalc       in_func,
                                    const ZmsCalcExcess in_func_excess,
 				   const real          in_dielectric,
@@ -187,26 +187,26 @@ int ZeroMultipoleSum::set_zms_params() {
 
     return 0;
 }
-int ZeroMultipoleSum::calc_zero02pole_excess_alpha0(real &      ene_ele,
-                                                    real &      grad_coeff,
-                                                    const real &r12,
-                                                    const real &r12_2,
-                                                    const real &r12_inv,
-                                                    const real &r12_2_inv,
-                                                    const real &r12_3_inv,
-                                                    const real &cc) {
+int ZeroMultipoleSum::calc_zero02pole_excess_alpha0(real_pw &      ene_ele,
+                                                    real_pw &      grad_coeff,
+                                                    const real_pw &r12,
+                                                    const real_pw &r12_2,
+                                                    const real_pw &r12_inv,
+                                                    const real_pw &r12_2_inv,
+                                                    const real_pw &r12_3_inv,
+                                                    const real_pw &cc) {
     ene_ele    = cc * bcoeff * r12_2;
     grad_coeff = cc * fcoeff;
     return 0;
 }
-int ZeroMultipoleSum::calc_zero02pole_excess(real &      ene_ele,
-                                             real &      grad_coeff,
-                                             const real &r12,
-                                             const real &r12_2,
-                                             const real &r12_inv,
-                                             const real &r12_2_inv,
-                                             const real &r12_3_inv,
-                                             const real &cc) {
+int ZeroMultipoleSum::calc_zero02pole_excess(real_pw &      ene_ele,
+                                             real_pw &      grad_coeff,
+                                             const real_pw &r12,
+                                             const real_pw &r12_2,
+                                             const real_pw &r12_inv,
+                                             const real_pw &r12_2_inv,
+                                             const real_pw &r12_3_inv,
+                                             const real_pw &cc) {
     real_pw tmp     = ewald_alpha * r12;
     real_pw errorfc = erfc(tmp);
     real_pw errorfn = 1.0 - errorfc;
@@ -214,26 +214,26 @@ int ZeroMultipoleSum::calc_zero02pole_excess(real &      ene_ele,
     grad_coeff      = -cc * (errorfc * r12_3_inv + piewald * exp(-tmp * tmp) * r12_2_inv - fcoeff - r12_3_inv);
     return 0.0;
 }
-int ZeroMultipoleSum::calc_zero04pole_excess_alpha0(real &      ene_ele,
-                                                    real &      grad_coeff,
-                                                    const real &r12,
-                                                    const real &r12_2,
-                                                    const real &r12_inv,
-                                                    const real &r12_2_inv,
-                                                    const real &r12_3_inv,
-                                                    const real &cc) {
+int ZeroMultipoleSum::calc_zero04pole_excess_alpha0(real_pw &      ene_ele,
+                                                    real_pw &      grad_coeff,
+                                                    const real_pw &r12,
+                                                    const real_pw &r12_2,
+                                                    const real_pw &r12_inv,
+                                                    const real_pw &r12_2_inv,
+                                                    const real_pw &r12_3_inv,
+                                                    const real_pw &cc) {
     ene_ele    = cc * (-zqcoeff2 * r12_2 - zqcoeff4 * r12_2 * r12_2);
     grad_coeff = -cc * (zqcoeff22 + zqcoeff44 * r12_2);
     return 0;
 }
-int ZeroMultipoleSum::calc_zero04pole_excess(real &      ene_ele,
-                                             real &      grad_coeff,
-                                             const real &r12,
-                                             const real &r12_2,
-                                             const real &r12_inv,
-                                             const real &r12_2_inv,
-                                             const real &r12_3_inv,
-                                             const real &cc) {
+int ZeroMultipoleSum::calc_zero04pole_excess(real_pw &      ene_ele,
+                                             real_pw &      grad_coeff,
+                                             const real_pw &r12,
+                                             const real_pw &r12_2,
+                                             const real_pw &r12_inv,
+                                             const real_pw &r12_2_inv,
+                                             const real_pw &r12_3_inv,
+                                             const real_pw &cc) {
     real_pw tmp     = ewald_alpha * r12;
     real_pw errorfc = erfc(tmp);
     real_pw errorfn = 1.0 - errorfc;
@@ -242,27 +242,27 @@ int ZeroMultipoleSum::calc_zero04pole_excess(real &      ene_ele,
         -cc * (errorfc * r12_3_inv + piewald * exp(-tmp * tmp) * r12_2_inv + zqcoeff22 + zqcoeff44 * r12_2 - r12_3_inv);
     return 0.0;
 }
-int ZeroMultipoleSum::calc_zero08pole_excess_alpha0(real &      ene_ele,
-                                                    real &      grad_coeff,
-                                                    const real &r12,
-                                                    const real &r12_2,
-                                                    const real &r12_inv,
-                                                    const real &r12_2_inv,
-                                                    const real &r12_3_inv,
-                                                    const real &cc) {
+int ZeroMultipoleSum::calc_zero08pole_excess_alpha0(real_pw &      ene_ele,
+                                                    real_pw &      grad_coeff,
+                                                    const real_pw &r12,
+                                                    const real_pw &r12_2,
+                                                    const real_pw &r12_inv,
+                                                    const real_pw &r12_2_inv,
+                                                    const real_pw &r12_3_inv,
+                                                    const real_pw &cc) {
     const real r12_4 = r12_2 * r12_2;
     ene_ele          = cc * (-zocoeff2 * r12_2 - zocoeff4 * r12_4 - zocoeff6 * r12_4 * r12);
     grad_coeff       = -cc * (zocoeff22 + zocoeff44 * r12_2 + zocoeff66 * r12_4);
     return 0;
 }
-int ZeroMultipoleSum::calc_zero08pole_excess(real &      ene_ele,
-                                             real &      grad_coeff,
-                                             const real &r12,
-                                             const real &r12_2,
-                                             const real &r12_inv,
-                                             const real &r12_2_inv,
-                                             const real &r12_3_inv,
-                                             const real &cc) {
+int ZeroMultipoleSum::calc_zero08pole_excess(real_pw &      ene_ele,
+                                             real_pw &      grad_coeff,
+                                             const real_pw &r12,
+                                             const real_pw &r12_2,
+                                             const real_pw &r12_inv,
+                                             const real_pw &r12_2_inv,
+                                             const real_pw &r12_3_inv,
+                                             const real_pw &cc) {
     const real_pw tmp     = ewald_alpha * r12;
     const real_pw errorfc = erfc(tmp);
     const real_pw errorfn = 1.0 - errorfc;
@@ -272,14 +272,14 @@ int ZeroMultipoleSum::calc_zero08pole_excess(real &      ene_ele,
                         + zocoeff66 * r12_4 - r12_3_inv);
     return 0.0;
 }
-int ZeroMultipoleSum::calc_zero16pole_excess_alpha0(real &      ene_ele,
-                                                    real &      grad_coeff,
-                                                    const real &r12,
-                                                    const real &r12_2,
-                                                    const real &r12_inv,
-                                                    const real &r12_2_inv,
-                                                    const real &r12_3_inv,
-                                                    const real &cc) {
+int ZeroMultipoleSum::calc_zero16pole_excess_alpha0(real_pw &      ene_ele,
+                                                    real_pw &      grad_coeff,
+                                                    const real_pw &r12,
+                                                    const real_pw &r12_2,
+                                                    const real_pw &r12_inv,
+                                                    const real_pw &r12_2_inv,
+                                                    const real_pw &r12_3_inv,
+                                                    const real_pw &cc) {
     const real_pw r12_4 = r12_2 * r12_2;
     const real_pw r12_6 = r12_4 * r12_2;
     const real_pw r12_8 = r12_4 * r12_4;
@@ -287,14 +287,14 @@ int ZeroMultipoleSum::calc_zero16pole_excess_alpha0(real &      ene_ele,
     grad_coeff          = -cc * (zhcoeff22 + zhcoeff44 * r12_2 + zhcoeff66 * r12_2 + zhcoeff88 * r12_6 - r12_3_inv);
     return 0;
 }
-int ZeroMultipoleSum::calc_zero16pole_excess(real &      ene_ele,
-                                             real &      grad_coeff,
-                                             const real &r12,
-                                             const real &r12_2,
-                                             const real &r12_inv,
-                                             const real &r12_2_inv,
-                                             const real &r12_3_inv,
-                                             const real &cc) {
+int ZeroMultipoleSum::calc_zero16pole_excess(real_pw &      ene_ele,
+                                             real_pw &      grad_coeff,
+                                             const real_pw &r12,
+                                             const real_pw &r12_2,
+                                             const real_pw &r12_inv,
+                                             const real_pw &r12_2_inv,
+                                             const real_pw &r12_3_inv,
+                                             const real_pw &cc) {
     const real_pw r12_4   = r12_2 * r12_2;
     const real_pw r12_6   = r12_4 * r12_2;
     const real_pw tmp     = ewald_alpha * r12;
@@ -452,14 +452,14 @@ int ZeroMultipoleSum::calc_debye_huckel(real_pw &      ene_ele,
   grad_coeff = - ene_ele * (r12_inv + debye_length_inv);
   return 0;
 }
-int ZeroMultipoleSum::calc_null(real &      ene_ele,
-				real &      grad_coeff,
-				const real &r12,
-				const real &r12_2,
-				const real &r12_inv,
-				const real &r12_2_inv,
-				const real &r12_3_inv,
-				const real &cc) {
+int ZeroMultipoleSum::calc_null(real_pw &      ene_ele,
+				real_pw &      grad_coeff,
+				const real_pw &r12,
+				const real_pw &r12_2,
+				const real_pw &r12_inv,
+				const real_pw &r12_2_inv,
+				const real_pw &r12_3_inv,
+				const real_pw &cc) {
   ene_ele    = 0.0;
   grad_coeff = 0.0;
   return 0;

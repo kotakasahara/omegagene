@@ -45,7 +45,7 @@ extern "C" int cuda_alloc_atom_info(int in_max_n_atoms_exbox,
                                     int in_max_n_cell_pairs,
                                     int in_n_columns) {
   printf("cuda_alloc_atom_info\n");
-  printf("d_crd : %d \n",max_n_atom_array * 3 * sizeof(real_pw));
+  printf("d_crd : %d \n", max_n_atom_array * 3 * sizeof(real_pw));
   max_n_atoms_exbox = in_max_n_atoms_exbox;
   // max_n_atom_array = in_max_n_atom_array;
   max_n_cell_pairs = in_max_n_cell_pairs;
@@ -265,10 +265,10 @@ extern "C" int cuda_hostalloc_atom_type_charge(int *&h_atom_type, real_pw *&h_ch
 
 // cuda_hostalloc_atom_info
 //   Allocation for MiniCell members
-extern "C" int cuda_hostalloc_atom_info(real_pw *&h_crd,
+extern "C" int cuda_hostalloc_atom_info(real_pw *& h_crd,
                                         int *&    h_atomids,
-                                        real_fc *&h_work,
-                                        real_fc *&h_energy,
+                                        real_fc *& h_work,
+                                        real_fc *& h_energy,
                                         int       in_max_n_atom_array) {
     max_n_atom_array = in_max_n_atom_array;
     printf("hostalloc_atom_info %d\n", max_n_atom_array);
