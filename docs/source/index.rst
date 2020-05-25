@@ -1,29 +1,13 @@
 ===============================================
-Welcome to the myPresto/omegagene Documentation!
+myPresto/omegagene Documentation
 ===============================================
 
-:Author: Kota Kasahara
+--------------------
+About myPresto/omegagene
+--------------------
 
-------------------------------------
-Documentation Structure
-------------------------------------
-
-The documention consists of the following three components:
-
-.. toctree::
-   :maxdepth: 1
-
-   users-manual/index
-   build-manual/index
-
-First-time users are advised to consult the :doc:`users-manual/index` first to learn how to get started with omegagene.
-
-------------------------------------
-About omegagene
-------------------------------------
-
-**"omegagene"** is the name of the molecular dynamics (MD) simulation software.
-omegagene has several unique features, such as, the zero-multipole summation method and the virtual-system coupled multi-canonical MD method.
+**"myPresto/omegagene"** is the molecular dynamics (MD) simulation software.
+myPresto/omegagene has several unique features, such as, the zero-multipole summation method and the virtual-system coupled sampler.
 
   The current version of omegagene can perform:
 
@@ -33,6 +17,7 @@ omegagene has several unique features, such as, the zero-multipole summation met
 4. Applying constraints with SHAKE algorithm
 5. Calculations of electrostatic potentials based on the zero-dipole summation method.
 6. Calculations of pairwise potentials on GPGPU (powered by CUDA 7.0, Computer Capability 3.5 is required).
+7. Coarse-grained MD simulations with the hydrophobicity scale model and Debye-Huckel approximation.
 
 ------------------------------------
 Developers
@@ -41,19 +26,47 @@ Developers
 * KASAHARA Kota, Ritsumeikan Univ., Japan
 * TERAZAWA Hiroki, Ritsumeikan Univ., Japan
 * ITAYA Hayato, Ritsumeikan Univ., Japan
+* GOTO Satoshi, Ritsumeikan Univ., Japan
 * TAKAHASHI Takuya, Ritsumeikan Univ., Japan
 * MA Benson, Univ. Illinois, US
 * GOTO Kota, Tokyo Tech, Japan
 * BHASKAR Dasgupta, Osaka Univ., Japan
-* HIGO Junichi, Osaka Univ., Japan
+* HIGO Junichi, Univ. Hyogo, Japan
 * FUKUDA Ikuo, Osaka Univ., Japan
 * MASHIMO Tadaaki, AIST, Japan
 * AKIYAMA Yutaka, Tokyo Tech, Japan
 * NAKAMURA Haruki, Osaka Univ., Japan
 
-Indices and tables
-==================
+==============================
+Users' Manual
+==============================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. toctree::
+    :numbered:
+    :maxdepth: 2
+
+    users-manual/run_md
+    users-manual/in_out_files
+    users-manual/analysis
+
+==============================
+Build Manual
+==============================
+
+.. toctree::
+    :numbered:
+    :maxdepth: 2
+
+    build-manual/installation
+    build-manual/build_notes
+
+==============================
+Tutorial
+==============================
+
+.. toctree::
+    :numbered:
+    :maxdepth: 2
+
+    users-manual/tutorial_cg 
+

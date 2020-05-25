@@ -24,7 +24,7 @@ omega_toolkit generates a binary file by combining some of the input files.
 
 ::
 
-  python2.7 ${OMEGATK}/mdinput_generator.py -i system.cfg -o system.cls
+  python2.7 ${OMEGATK}/mdinput_generator.py -i system.cfg -o system.cls -v v.0.49
 
 Example of system.cfg file is shown below:
 
