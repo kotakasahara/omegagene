@@ -151,27 +151,27 @@ These three files are quite important for conducting coarse grained MD simulatio
 ::
 
   --processor                   single        ;    # the numner of processors for conducting MD
-  --gpu-device-id  0                               # the number of GPUs for conducting MD
-  --mode                        md            ;    # simulation mode
-  --integrator                  langevin  ;        # the mothod of integration
-  --langevin-gamma              0.1   ;      ;     # the values for gamma used for langevin integrator
-  --cutoff                      20.0          ;    # the value of cut off distance
+;  --gpu-device-id               0                  # GPU device ID for conducting MD
+  --mode                        md            ;    # simulation mode 
+  --integrator                  langevin  ;        # the method of integration
+  --langevin-gamma              0.1   ;      ;     # the parameter for friction coefficient
+  --cutoff                      20.0          ;    # the cut-off distance in angstrome
   --n-steps                     1000000       ;    # the simulation steps
-  --time-step                   10            ;    # the time scale (fs) for 1 step
-  --electrostatic               debye-huckel  ;    # the treaty of electrostatic interactions
+  --time-step                   10            ;    # the integration time step (fs)
+  --electrostatic               debye-huckel  ;    # the electrostatic interactions
   --debye-huckel-dielectric     85            ;    # the value of relative dielectric constant for debye-huckel equation
-  --debye-huckel-temperature    600           ;    # the value of temperature for debye-huckel equation
+  --debye-huckel-temperature    600           ;    # the temperature for debye-huckel equation
   --debye-huckel-ionic-strength 0.00015       ;    # the ionic-strength value for debye-huckel equation
-  --ele-alpha                   0             ;    # ???
+  --ele-alpha                   0             ;    # the alpha parameter for ZMM method
   --thermostat                  none               # options for using thermostat in MD
   --temperature                 600           ;    # simulation temperature
-  --com-motion                  cancel      ;      # ???
-  --com-cancel-group-name       all                # ???
-  --group-o-coord    all                           # ???
+  --com-motion                  cancel      ;      # the option for canceling the motion of center-of-mass (COM)
+  --com-cancel-group-name       all                # the name of predefined group for the canceling of COM motion
+  --group-o-coord    all                           # the name of predefined group to output the trajectory
   --print-interval-log          100           ;    # the interval steps of making logs
   --print-interval-coord        10000          ;   # the interval steps of making cods
-  --fn-o-coord                  md.cod        ;    # the name of cod output file
-  --format-o-coord              presto             # ???
+  --fn-o-coord                  md.cod        ;    # the name of the trajectory output file
+  --format-o-coord              presto             # the file format for the trajectory (only "presto" is supported currently)
   --fn-o-restart                md.restart         # the file contains the final conformation's positions
   --nsgrid-cutoff               40                 # the threshhold distance for neighbor molecules
   --nsgrid-update-intvl         10                 # the update interval for nsgrid

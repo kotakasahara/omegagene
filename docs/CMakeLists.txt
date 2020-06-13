@@ -30,6 +30,14 @@ add_custom_target(html ALL
 	${SPHINX_EXECUTABLE} -q -b html -c "${SPHINX_SOURCES_DIR}" -d "${SPHINX_CACHE_DIR}" "${SPHINX_SOURCES_DIR}" "${SPHINX_BUILD_DIR}/html"
     COMMENT "Building HTML documentation with Sphinx")
 
+add_custom_target(latexpdf ALL
+	${SPHINX_EXECUTABLE} -q -b latexpdf -c "${SPHINX_SOURCES_DIR}" -d "${SPHINX_CACHE_DIR}" "${SPHINX_SOURCES_DIR}" "${SPHINX_BUILD_DIR}/latexpdf"
+    COMMENT "Building PDF documentation with Sphinx")
+
+add_custom_target(latexpdfja ALL
+	${SPHINX_EXECUTABLE} -q -b latexpdfja -c "${SPHINX_SOURCES_DIR}" -d "${SPHINX_CACHE_DIR}" "${SPHINX_SOURCES_DIR}" "${SPHINX_BUILD_DIR}/latexpdfja"
+    COMMENT "Building PDF documentation with Sphinx")
+
 add_custom_target(manpage ALL
     ${SPHINX_EXECUTABLE} -q -b man -c "${SPHINX_SOURCES_DIR}" -d "${SPHINX_CACHE_DIR}" "${SPHINX_SOURCES_DIR}" "${SPHINX_BUILD_DIR}/manpage"
     COMMENT "Building manpage documentation with Sphinx")
