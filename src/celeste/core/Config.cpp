@@ -280,9 +280,9 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
         } else if (*itr == "--position-restraint") {
             itr++;
             if (*itr == "none") {
-                pos_restraint_type = POSREST_NONE;
+	      pos_restraint_type = POSREST_NONE;
             } else if (*itr == "harmonic") {
-                pos_restraint_type = POSREST_HARMONIC;
+	      pos_restraint_type = POSREST_HARMONIC;
             } else {
                 pos_restraint_type = POSREST_DUMMY;
             }

@@ -4,30 +4,38 @@ import re
 import kkpdb
 import kkpresto
 
+POSRESUNIT_NORMAL = 0
+POSRESUNIT_Z = 1
+POSRESUNIT_MULTIWELL01 = 2
 
 class CelestePosRest(object):
-    POSRESUNIT_NORMAL = 0
-    POSRESUNIT_Z = 0
     def __init__(self, atomid, crd_x, crd_y, crd_z, dist_margin, coef,
-                 rest_type_txt):
+                 rest_type_txt, params):
         self.atomid = atomid
         self.crd_x = crd_x
         self.crd_y = crd_y
         self.crd_z = crd_z
         self.dist_margin = dist_margin
         self.coef = coef
+        self.rest_type = -1
+        self.n_params = 0
+        self.params = []
         if rest_type_txt == "normal":
             self.rest_type = POSRESUNIT_NORMAL
         elif rest_type_txt == "z":
             self.rest_type = POSRESUNIT_Z
+        elif rest_type_txt == "multiwell01":
+            self.rest_type = POSRESUNIT_MULTIWELL01
         else:
-            sys.stderr.write("Error: Unknown position restraint type : " + self.rest_type + "\n")
+            sys.stderr.write("Error: Unknown position restraint type : " + self.rest_type_txt + "\n")
             sys.exit(1)
         return 
     def get_text(self):
         type_txt = "normal"
         if self.rest_type == POSRESUNIT_Z:
             type_txt = "z"
+        if self.rest_type == POSRESUNIT_MULTIWELL01:
+            type_txt = "multiwell01"
         line = "%8d %10.6f %10.6f %10.6f %6.3f %10.6f %s"%(self.atomid,
                                                            self.crd_x, self.crd_y, self.crd_z,
                                                            self.dist_margin, self.coef, type_txt)
@@ -47,6 +55,9 @@ class CelestePosRestReader(kkpresto.PrestoAsciiReader):
             if not line: break
             #print line
             terms = line.strip().split()
+            if len(terms) < 1:
+                #sys.stderr.write("skip line : " + line + "\n")
+                continue
             atomid = int(terms[0]) -1
             crd_x = float(terms[1])
             crd_y = float(terms[2])
@@ -56,8 +67,12 @@ class CelestePosRestReader(kkpresto.PrestoAsciiReader):
             rest_type_txt = "normal"
             if len(terms) >= 7:
                 rest_type_txt = terms[6]
+            extra_params = []
+            if len(terms) >= 8:
+                extra_params = terms[7:]
             ppr = CelestePosRest(atomid, crd_x, crd_y, crd_z, dist_margin, coef,
-                                 rest_type_txt)
+                                 rest_type_txt,
+                                 extra_params)
             restraints.append(ppr)
 
         self.close()

@@ -251,9 +251,9 @@ int DynamicsMode::apply_dist_restraint() {
     return 0;
 }
 int DynamicsMode::apply_pos_restraint() {
-    mmsys.pote_pos_rest = mmsys.pos_restraint->apply_restraint(mmsys.n_atoms, mmsys.crd, mmsys.pbc, mmsys.force);
-    subbox.add_force_from_mmsys(mmsys.force);
-    return 0;
+  mmsys.pote_pos_rest = mmsys.pos_restraint->apply_restraint(mmsys.n_atoms, mmsys.crd, mmsys.pbc, mmsys.force);
+  subbox.add_force_from_mmsys(mmsys.force);
+  return 0;
 }
 
 int DynamicsMode::sub_output() {
@@ -302,35 +302,35 @@ int DynamicsMode::sub_output_log() {
   stringstream ss;
   string       strbuf;
   char         buf[1024];
-    sprintf(buf, "Step: %8lu    Time: %10.4f\n", mmsys.cur_step, mmsys.cur_time);
+  sprintf(buf, "Step: %8lu    Time: %10.4f\n", mmsys.cur_step, mmsys.cur_time);
+  ss << string(buf);
+  real total_e = mmsys.set_potential_e() + mmsys.kinetic_e;
+  sprintf(buf, "Total:     %14.10e\n", total_e);
+  ss << string(buf);
+  sprintf(buf, "Potential: %14.10e    Kinetic:  %14.10e\n", mmsys.potential_e, mmsys.kinetic_e);
+  ss << string(buf);
+  sprintf(buf, "Bond:      %14.10e    Angle:    %14.10e\n", mmsys.pote_bond, mmsys.pote_angle);
+  ss << string(buf);
+  sprintf(buf, "Torsion:   %14.10e    Improper: %14.10e\n", mmsys.pote_torsion, mmsys.pote_impro);
+  ss << string(buf);
+  sprintf(buf, "14-VDW:    %14.10e    14-Ele:   %14.10e\n", mmsys.pote_14vdw, mmsys.pote_14ele);
+  ss << string(buf);
+  sprintf(buf, "VDW:       %14.10e    Ele:      %14.10e\n", mmsys.pote_vdw, mmsys.pote_ele);
+  ss << string(buf);
+  if (cfg->dist_restraint_type != DISTREST_NONE) {
+    sprintf(buf, "Distance restraint: %14.10e\n", mmsys.pote_dist_rest);
     ss << string(buf);
-    real total_e = mmsys.set_potential_e() + mmsys.kinetic_e;
-    sprintf(buf, "Total:     %14.10e\n", total_e);
+  }
+  if (cfg->pos_restraint_type != POSREST_NONE) {
+    sprintf(buf, "Position restraint: %14.10e\n", mmsys.pote_pos_rest);
     ss << string(buf);
-    sprintf(buf, "Potential: %14.10e    Kinetic:  %14.10e\n", mmsys.potential_e, mmsys.kinetic_e);
-    ss << string(buf);
-    sprintf(buf, "Bond:      %14.10e    Angle:    %14.10e\n", mmsys.pote_bond, mmsys.pote_angle);
-    ss << string(buf);
-    sprintf(buf, "Torsion:   %14.10e    Improper: %14.10e\n", mmsys.pote_torsion, mmsys.pote_impro);
-    ss << string(buf);
-    sprintf(buf, "14-VDW:    %14.10e    14-Ele:   %14.10e\n", mmsys.pote_14vdw, mmsys.pote_14ele);
-    ss << string(buf);
-    sprintf(buf, "VDW:       %14.10e    Ele:      %14.10e\n", mmsys.pote_vdw, mmsys.pote_ele);
-    ss << string(buf);
-    if (cfg->dist_restraint_type != DISTREST_NONE) {
-        sprintf(buf, "Distance restraint: %14.10e\n", mmsys.pote_dist_rest);
-        ss << string(buf);
-    }
-    if (cfg->pos_restraint_type != POSREST_NONE) {
-        sprintf(buf, "Position restraint: %14.10e\n", mmsys.pote_pos_rest);
-        ss << string(buf);
-    }
-    sprintf(buf, "Temperature:       %14.10e\n", mmsys.temperature);
-    ss << string(buf);
-    sprintf(buf, "Comput Time:       %14.10e\n", (float)mmsys.ctime_per_step / (float)CLOCKS_PER_SEC);
-    ss << string(buf);
-    /*
-      ss << "Step: " << mmsys.cur_step  << "\t";
+  }
+  sprintf(buf, "Temperature:       %14.10e\n", mmsys.temperature);
+  ss << string(buf);
+  sprintf(buf, "Comput Time:       %14.10e\n", (float)mmsys.ctime_per_step / (float)CLOCKS_PER_SEC);
+  ss << string(buf);
+  /*
+    ss << "Step: " << mmsys.cur_step  << "\t";
     ss << "Time: " << mmsys.cur_time << " [ps]" << endl;
     ss << "Bond:  " << mmsys.pote_bond << "\t";
     ss << "Angle: " << mmsys.pote_angle << "\t";
@@ -580,6 +580,7 @@ int DynamicsModeZhang::calc_in_each_step() {
     subbox.update_coordinates_cur(time_step_half);
     subbox.cpy_vel_prev();
 
+
 #ifndef F_WO_NS
     const clock_t startTimeHtod = clock();
     if (mmsys.cur_step % cfg->nsgrid_update_intvl == 0) {
@@ -630,17 +631,14 @@ int DynamicsModeZhang::calc_in_each_step() {
     mmsys.ctime_update_velo += endTimeVel - startTimeVel;
 
     const clock_t startTimeCoord = clock();
-
     subbox.update_coordinates_cur(time_step_half);
 // cout << "revise_coordinates"<<endl;
 #ifndef F_WO_NS
     subbox.update_coordinates_nsgrid();
 #endif
     subbox.revise_coordinates_pbc();
-
     const clock_t endTimeCoord = clock();
     mmsys.ctime_update_coord += endTimeCoord - startTimeCoord;
-
     const clock_t startTimeKine = clock();
     // subbox.velocity_average();
 
@@ -651,6 +649,16 @@ int DynamicsModeZhang::calc_in_each_step() {
 
     const clock_t endTimeStep = clock();
     mmsys.ctime_per_step += endTimeStep - startTimeStep;
+
+    // test output 0707
+    if ((cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0){
+      mmsys.set_potential_e();
+      cout << "DBG0707 " << mmsys.cur_step  << " " 
+	   << subbox.get_crds()[0]  << " " 
+	   << subbox.get_crds()[1]  << " " 
+	   << subbox.get_crds()[2]  << " " 
+	   << mmsys.potential_e  <<  endl;	
+    }
 
     return 0;
 }

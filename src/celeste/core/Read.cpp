@@ -89,7 +89,9 @@ int Read::load_launch_set(MmSystem &mmsys) {
     }
     if (size_pos_restraint > 0) {
         cout << "--- Load position restraint definition : " << size_pos_restraint << " bytes." << endl;
-        load_ls_pos_restraint(mmsys.pos_restraint);
+        mmsys.n_pos_restraints = load_ls_pos_restraint(mmsys.pos_restraint);
+	mmsys.d_free += 3;
+	
     }
     if (size_extended_vcmd > 0) {
         cout << "--- Load VcMD: " << size_extended_vcmd << " bytes." << endl;
@@ -131,7 +133,7 @@ int Read::load_ls_header(MmSystem &mmsys) {
     cout << "---- Input file format : version " << mmsys.launchset_version << endl;
     if (mmsys.launchset_version != LS_VERSION) {
         stringstream ss;
-        ss << "ERROR: " << filename << " : the version is imcompatible." << endl;
+        ss << "ERROR: " << filename << " : the version is incompatible." << endl;
         ss << "[" << LS_VERSION << "] is required." << endl;
         ss << "The input file is [" << mmsys.launchset_version << "]" << endl;
         error_exit(ss.str(), "1A00003");
@@ -197,7 +199,6 @@ int Read::load_ls_crd(MmSystem &mmsys) {
         return 1;
     }
     mmsys.d_free = mmsys.n_atoms * 3 - 3;
-
     mmsys.alloc_atom_vars();
 
     for (int i = 0; i < mmsys.n_atoms; i++) {
@@ -615,9 +616,17 @@ int Read::load_ls_pos_restraint(PosRestraintObject *pr) {
         read_bin_values(&dist_margin, 1);
         read_bin_values(&coef, 1);
 	read_bin_values(&rest_type, 1);
-	pr->add_prunit(aid, crd_x, crd_y, crd_z, dist_margin, coef, rest_type);
+	int n_params; 
+	real buf;
+	real params[MAX_N_POSRES_PARAMS];
+	read_bin_values(&n_params, 1);
+	for (int i = 0; i < n_params; i++){
+	  read_bin_values(&buf, 1);
+	  params[i] = buf;
+	}
+	pr->add_prunit(aid, crd_x, crd_y, crd_z, dist_margin, coef, rest_type, n_params, params);
     }
-    return 0;
+    return n_prunits;
 }
 
 int Read::load_ls_group_coord(MmSystem &mmsys) {

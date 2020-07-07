@@ -142,6 +142,7 @@ class MmSystem : public CelesteObject {
 
     DistRestraintObject *dist_restraint;
     PosRestraintObject * pos_restraint;
+    int n_pos_restraints;
 
     random::Random random_mt;
 

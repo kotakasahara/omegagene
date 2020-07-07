@@ -86,6 +86,7 @@ SubBox::SubBox() {
     flg_settle                = 0;
 }
 SubBox::~SubBox() {
+  if (DBG >= 1) cout << "DBG1 SubBox::~SubBox()"<<endl;
 #if defined(F_CUDA)
     cuda_free_atom_info();
     cuda_free_lj_params();
@@ -94,10 +95,13 @@ SubBox::~SubBox() {
 #endif
 #endif
     free_variables();
+    if (DBG >= 1) cout << "DBG1 delete constraint"<<endl;
     delete constraint;
+    if (DBG >= 1) cout << "DBG1 delete settle"<<endl; 
     delete settle;
-
+    if (DBG >= 1) cout << "DBG1 delete thermostat"<<endl; 
     delete thermostat;
+    if (DBG >= 1) cout << "DBG1 end of ~SubBox()"<<endl; 
 }
 
 int SubBox::alloc_variables() {
@@ -289,7 +293,6 @@ int SubBox::free_variables() {
     delete[] work;
     delete[] work_prev;
     //delete[] frc;
-    delete[] atomids;
 
     if (cfg->thermostat_type != THMSTT_NONE) { delete[] buf_crd; }
 
@@ -301,6 +304,10 @@ int SubBox::free_variables() {
 #endif
     delete[] mass;
     delete[] mass_inv;
+    delete[] atomids;
+    delete[] atomids_rev;
+
+
     free_variables_for_bonds();
     free_variables_for_angles();
     free_variables_for_torsions();
@@ -1655,7 +1662,9 @@ int SubBox::init_thermostat(const int in_thermostat_type, const real in_temperat
     } else if (in_thermostat_type == THMSTT_SCALING) {
         thermostat = new ThermostatScaling();
     } else if (in_thermostat_type == THMSTT_HOOVER_EVANS) {
-        thermostat = new ThermostatHooverEvans();
+      thermostat = new ThermostatHooverEvans();
+    }else{
+      thermostat = new ThermostatObject();      
     }
     thermostat->set_temperature(in_temperature_init);
     thermostat->set_temperature_coeff(d_free);

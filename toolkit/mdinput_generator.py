@@ -18,7 +18,8 @@ VERSION_LIST = ["v.0.34.b",  # 0
                 "v.0.39.h",  # 4
                 "v.0.40.c",  # 5 
                 "v.0.44",  # 6
-                "v.0.49"]  # 7
+                "v.0.49",  # 7
+                "v.0.51"]  # 8
 #VERSION_ID = 0
 #VERSION = VERSION_LIST[VERSION_ID]
 
@@ -695,6 +696,10 @@ class MDInputGen(object):
             buf += st.pack("@f", pr.dist_margin)
             buf += st.pack("@f", pr.coef)
             buf += st.pack("@i", pr.rest_type)
+            if self.version_id >= 8:            
+                buf += st.pack("@i", len(pr.params))
+                for i_prm in pr.params:
+                    buf += st.pack("@f", i_prm)
         return buf
     def evaluate(self):
         self.evaluate_aus_group_center()

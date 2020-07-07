@@ -14,7 +14,8 @@ class CelesteAUSRestart(object):
     def __init__(self):
         self.AUS_TYPE = {"dummy":0, "type1":1, "type2":2,
                          "dist-mass-centers":3,
-                         "dist-min":4
+                         "dist-min":4,
+                         "crdxyz":5
                          }
         self.header = ""
         self.aus_type_str = "dummy"

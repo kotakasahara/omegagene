@@ -358,6 +358,7 @@ class ExtendedVcMD : public Extended {
 
     int print_info();
     int set_struct_parameters(real *crd, PBC *pbc);
+    int set_struct_parameters_crd(real *crd, PBC *pbc);
     int set_struct_parameters_mass_center(real *crd, PBC *pbc);
     int set_struct_parameters_min(real *crd, PBC *pbc);
     int set_enhance_groups(int *            in_n_atoms_in_groups,

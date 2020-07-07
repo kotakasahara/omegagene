@@ -655,6 +655,8 @@ int ExtendedVcMD::set_struct_parameters(real *crd, PBC *pbc) {
   }else if(reactcrd_type == AUSTYPE_MIN){
     set_struct_parameters_mass_center(crd, pbc);
     set_struct_parameters_min(crd, pbc);    
+  }else if(reactcrd_type == AUSTYPE_CRDXYZ){
+    set_struct_parameters_crd(crd, pbc);
   }
   return 0;
 }
@@ -682,6 +684,32 @@ int ExtendedVcMD::set_struct_parameters_mass_center(real *crd, PBC *pbc) {
   }
   //cout << "dbg 0303 set_struct_parameters (finished)" << endl;  
   return 0;
+}
+int ExtendedVcMD::set_struct_parameters_crd(real *crd, PBC *pbc) {
+  set_crd_centers(crd, pbc);
+  int  i_pair = 0;
+  for(const auto itr_dim : enhance_group_pairs){
+    int i_grp = itr_dim[0];
+    //real diff[3] = crd_centers[i_grp];
+    //int j_grp = itr_dim[1];
+    //pbc->diff_crd_minim_image(diff, crd_centers[i_grp], crd_centers[j_grp]);
+    //real dist = sqrt(diff[0] * diff[0] + diff[1] * diff[1] + diff[2] * diff[2]);
+    //real dist = sqrt(diff[0] * diff[0] + diff[1] * diff[1] + diff[2] * diff[2]);
+    for (int d = 0; d < 3; d++){
+      if(d==i_pair) unit_vec[i_pair][d] = 1.0;
+      else unit_vec[i_pair][d] = 0.0;
+    }
+    //cout << "dbg uv " << i_grp << " " << j_grp << " " << unit_vec[i_pair][0] << " "
+    //<< unit_vec[i_pair][1] << " "
+    //<< unit_vec[i_pair][2] <<endl;
+    lambda[i_pair]=crd_centers[i_grp][i_pair];
+    //cout << lambda[i_pair] << endl;
+    i_pair++;
+    if(i_pair==3) break;
+  }
+  //cout << "dbg 0303 set_struct_parameters (finished)" << endl;  
+  return 0;
+
 }
 int ExtendedVcMD::set_struct_parameters_min(real *crd, PBC *pbc) {
 
@@ -1020,7 +1048,9 @@ int ExtendedVcMD::scale_force(real_fc *work, int n_atoms) {
     real dew = const_k * recovery;
     //    cout << "dbg 0304 scale d:"<<d<<" recov: " << recovery << " dew:" << dew << endl;
     real direction = 1.0;
-    for (int pair_ab = 0; pair_ab < 2; pair_ab++) {
+    int n_rep = 2;
+    if(reactcrd_type == AUSTYPE_CRDXYZ) n_rep = 1;
+    for (int pair_ab = 0; pair_ab < n_rep; pair_ab++) {
       int i_grp = enhance_group_pairs[d][pair_ab];
       int grp_id = enhance_groups[i_grp];
       real bias[3];
