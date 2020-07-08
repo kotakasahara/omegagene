@@ -47,7 +47,7 @@ class PosRestraintObject : public CelesteObject {
     int alloc_prunits(const int in_n);
     int free_prunits();
     int add_prunit(int in_aid, real in_x, real in_y, real in_z, real in_margin, real in_coef, int in_type, int in_n_params, real *in_params);
-    virtual real_fc apply_restraint(int n_atoms, real **crd, PBC &pbc, real **force);
+    virtual real_fc apply_restraint(int n_atoms, real *crd, PBC &pbc, real **force);
 };
 
 ////////////////////////////////////////////////////////////
@@ -59,7 +59,7 @@ class PosRestraintHarmonic : public PosRestraintObject {
   public:
     PosRestraintHarmonic();
     ~PosRestraintHarmonic();
-    virtual real_fc apply_restraint(int n_atoms, real **crd, PBC &pbc, real **force);
+    virtual real_fc apply_restraint(int n_atoms, real *crd, PBC &pbc, real **force);
 };
 ////////////////////////////////////////////////////////////
 #endif

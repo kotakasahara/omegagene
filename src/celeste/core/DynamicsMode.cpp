@@ -246,12 +246,12 @@ int DynamicsMode::apply_constraint() {
 }
 
 int DynamicsMode::apply_dist_restraint() {
-    mmsys.pote_dist_rest = mmsys.dist_restraint->apply_restraint(mmsys.n_atoms, mmsys.crd, mmsys.pbc, mmsys.force);
-    subbox.add_force_from_mmsys(mmsys.force);
-    return 0;
+  mmsys.pote_dist_rest = mmsys.dist_restraint->apply_restraint(mmsys.n_atoms, subbox.get_crds(), mmsys.pbc, mmsys.force);
+  subbox.add_force_from_mmsys(mmsys.force);
+  return 0;
 }
 int DynamicsMode::apply_pos_restraint() {
-  mmsys.pote_pos_rest = mmsys.pos_restraint->apply_restraint(mmsys.n_atoms, mmsys.crd, mmsys.pbc, mmsys.force);
+  mmsys.pote_pos_rest = mmsys.pos_restraint->apply_restraint(mmsys.n_atoms, subbox.get_crds(), mmsys.pbc, mmsys.force);
   subbox.add_force_from_mmsys(mmsys.force);
   return 0;
 }
@@ -364,7 +364,7 @@ int DynamicsMode::cal_kinetic_energy(const real **vel) {
 
 int DynamicsMode::subbox_setup() {
     // cout << "subbox.set_parameters" << endl;
-    subbox.set_parameters(mmsys.n_atoms, &(mmsys.pbc), cfg, cfg->nsgrid_cutoff, cfg->box_div[0], cfg->box_div[1],
+  subbox.set_parameters(mmsys.n_atoms, &(mmsys.pbc), cfg, cfg->nsgrid_cutoff, cfg->box_div[0], cfg->box_div[1],
                           cfg->box_div[2]);
     subbox.set_lj_param(mmsys.n_lj_types, mmsys.lj_6term, mmsys.lj_12term,
 			mmsys.lj_hps_cutoff, mmsys.lj_hps_lambda);
@@ -456,7 +456,7 @@ DynamicsModePresto::~DynamicsModePresto() {
 }
 
 int DynamicsModePresto::calc_in_each_step() {
-
+  
     const clock_t startTimeStep  = clock();
     const clock_t startTimeReset = clock();
 
@@ -580,7 +580,6 @@ int DynamicsModeZhang::calc_in_each_step() {
     subbox.update_coordinates_cur(time_step_half);
     subbox.cpy_vel_prev();
 
-
 #ifndef F_WO_NS
     const clock_t startTimeHtod = clock();
     if (mmsys.cur_step % cfg->nsgrid_update_intvl == 0) {
@@ -594,7 +593,6 @@ int DynamicsModeZhang::calc_in_each_step() {
     const clock_t endTimeHtod = clock();
     mmsys.ctime_cuda_htod_atomids += endTimeHtod - startTimeHtod;
 #endif
-
     const clock_t startTimeEne = clock();
     // cout << "calc_energy()" << endl;
     subbox.calc_energy(mmsys.cur_step);
@@ -602,13 +600,15 @@ int DynamicsModeZhang::calc_in_each_step() {
     gather_energies();
     const clock_t endTimeEne = clock();
     mmsys.ctime_calc_energy += endTimeEne - startTimeEne;
-
-    if (cfg->extended_ensemble != EXTENDED_NONE) {
-        subbox.extended_apply_bias(mmsys.cur_step, mmsys.set_potential_e());
+    if (cfg->extended_ensemble == EXTENDED_VMCMD) {
+      subbox.extended_apply_bias(mmsys.cur_step, mmsys.set_potential_e());
+    } else if (cfg->extended_ensemble == EXTENDED_VAUS) {
+      subbox.extended_apply_bias_struct_param(mmsys.cur_step);
+    } else if (cfg->extended_ensemble == EXTENDED_VCMD) {
+      subbox.vcmd_apply_bias(mmsys.cur_step);
     }
     if (cfg->dist_restraint_type != DISTREST_NONE) { apply_dist_restraint(); }
     if (cfg->pos_restraint_type != POSREST_NONE) { apply_pos_restraint(); }
-
     const clock_t startTimeVel = clock();
     subbox.cpy_crd_prev();
     // subbox.apply_thermostat();

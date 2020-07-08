@@ -50,7 +50,7 @@ int PosRestraintObject::add_prunit(int in_aid, real in_x, real in_y, real in_z, 
     return n_prunits;
 }
 
-real_fc PosRestraintObject::apply_restraint(int n_atoms, real **crd, PBC &pbc, real **force) {
+real_fc PosRestraintObject::apply_restraint(int n_atoms, real *crd, PBC &pbc, real **force) {
 
     return 0;
 }
@@ -63,7 +63,7 @@ PosRestraintHarmonic::~PosRestraintHarmonic() {
     free_prunits();
 }
 
-real_fc PosRestraintHarmonic::apply_restraint(int n_atoms, real **crd, PBC &pbc, real **force) {
+real_fc PosRestraintHarmonic::apply_restraint(int n_atoms, real *crd, PBC &pbc, real **force) {
   
     for (int i = 0; i < n_atoms; i++) {
       for (int d = 0; d < 3; d++) { force[i][d] = 0.0; }
@@ -71,11 +71,13 @@ real_fc PosRestraintHarmonic::apply_restraint(int n_atoms, real **crd, PBC &pbc,
     real_fc ene = 0.0;
     for (int i = 0; i < n_prunits; i++) {
       real diff[3];
-      pbc.diff_crd_minim_image(diff, crd[prunits[i].get_atomid()], prunits[i].get_crd());
+      real t_crd[3] = {crd[prunits[i].get_atomid()*3],
+		       crd[prunits[i].get_atomid()*3+1],
+		       crd[prunits[i].get_atomid()*3+2]};
+      pbc.diff_crd_minim_image(diff, t_crd, prunits[i].get_crd());
       real r_sq = diff[0] * diff[0] + diff[1] * diff[1] + diff[2] * diff[2];
       if(prunits[i].get_rest_type() == POSRESTUNIT_Z) { r_sq = diff[2] * diff[2]; } 
       real r    = sqrt(r_sq);
-      
       real coef;
       real ref_dist;
       if (r > prunits[i].get_dist_margin()) {
@@ -91,7 +93,7 @@ real_fc PosRestraintHarmonic::apply_restraint(int n_atoms, real **crd, PBC &pbc,
       if(prunits[i].get_rest_type() == POSRESTUNIT_MULTIWELL01){
 	for (int i_param=0; i_param < prunits[i].get_n_params(); i_param++){
 	  c_ene *= (dist_diff_sq - prunits[i].get_params()[i_param]);
-	  if(prunits[i].get_n_params() == 2) break;
+	  if(i_param == 1) break;
 	}
       }
       ene += c_ene;

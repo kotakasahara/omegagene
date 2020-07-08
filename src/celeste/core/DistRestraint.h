@@ -45,7 +45,7 @@ class DistRestraintObject : public CelesteObject {
     int alloc_drunits(const int in_n);
     int free_drunits();
     int add_drunit(int in_aid1, int in_aid2, real in_coef_low, real in_coef_high, real in_dist_low, real in_dist_high);
-    virtual real_fc apply_restraint(int n_atoms, real **crd, PBC &pbc, real **force);
+    virtual real_fc apply_restraint(int n_atoms, real *crd, PBC &pbc, real **force);
 };
 
 ////////////////////////////////////////////////////////////
@@ -57,6 +57,6 @@ class DistRestraintHarmonic : public DistRestraintObject {
   public:
     DistRestraintHarmonic();
     ~DistRestraintHarmonic();
-    virtual real_fc apply_restraint(int n_atoms, real **crd, PBC &pbc, real **force);
+    virtual real_fc apply_restraint(int n_atoms, real *crd, PBC &pbc, real **force);
 };
 #endif

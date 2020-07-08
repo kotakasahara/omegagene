@@ -46,7 +46,7 @@ int DistRestraintObject::add_drunit(int  in_aid1,
     n_drunits++;
     return n_drunits;
 }
-real_fc DistRestraintObject::apply_restraint(int n_atoms, real **crd, PBC &pbc, real **force) {
+real_fc DistRestraintObject::apply_restraint(int n_atoms, real *crd, PBC &pbc, real **force) {
 
     return 0;
 }
@@ -58,7 +58,7 @@ DistRestraintHarmonic::~DistRestraintHarmonic() {
     free_drunits();
 }
 
-real_fc DistRestraintHarmonic::apply_restraint(int n_atoms, real **crd, PBC &pbc, real **force) {
+real_fc DistRestraintHarmonic::apply_restraint(int n_atoms, real *crd, PBC &pbc, real **force) {
 
     for (int i = 0; i < n_atoms; i++) {
         for (int d = 0; d < 3; d++) { force[i][d] = 0.0; }
@@ -66,7 +66,13 @@ real_fc DistRestraintHarmonic::apply_restraint(int n_atoms, real **crd, PBC &pbc
     real_fc ene = 0.0;
     for (int i = 0; i < n_drunits; i++) {
         real diff[3];
-        pbc.diff_crd_minim_image(diff, crd[drunits[i].get_atomid1()], crd[drunits[i].get_atomid2()]);
+	real t_crd1[3] = {crd[drunits[i].get_atomid1()*3],
+			  crd[drunits[i].get_atomid1()*3+1],
+			  crd[drunits[i].get_atomid1()*3+2]};
+	real t_crd2[3] = {crd[drunits[i].get_atomid2()*3],
+			  crd[drunits[i].get_atomid2()*3+1],
+			  crd[drunits[i].get_atomid2()*3+2]};
+        pbc.diff_crd_minim_image(diff, t_crd1, t_crd2);
         real r_sq = diff[0] * diff[0] + diff[1] * diff[1] + diff[2] * diff[2];
         real r    = sqrt(r_sq);
 

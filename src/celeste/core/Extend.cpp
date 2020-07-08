@@ -818,7 +818,6 @@ int ExtendedVcMD::apply_bias(unsigned long cur_step,
     }
     //cout << "dbg 0719 d:" <<d << " " << cur_vs[d] << " - " << *(--vs_next_crd[d].end()) <<endl;
   }
-
   set_current_vstate_intersection();
   if(is_in_range() || drift > 0){
     q_raw[cur_vs] += 1;
