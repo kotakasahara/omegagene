@@ -796,7 +796,7 @@ bool ExtendedVcMD::is_in_range(){
   return flg;
 }
 
-int ExtendedVcMD::apply_bias(unsigned long cur_step,
+real ExtendedVcMD::apply_bias(unsigned long cur_step,
 			     real_fc *work, int n_atoms_box) {
   
   std::vector< std::vector<int> > vs_next_crd(n_dim);
@@ -830,7 +830,7 @@ int ExtendedVcMD::apply_bias(unsigned long cur_step,
 
     if (flg_vs_transition) trial_transition();
   }
-  scale_force(work, n_atoms_box);
+  real ene = scale_force(work, n_atoms_box);
   if (cur_step > 0 && cur_step % write_lambda_interval == 0 &&
       cur_step <= n_steps) { write_lambda(); }
   
@@ -1024,10 +1024,12 @@ int ExtendedVcMD::trial_transition(){  // source ... vs_id of current state
   return idx;
 }
 
-int ExtendedVcMD::scale_force(real_fc *work, int n_atoms) {
+real ExtendedVcMD::scale_force(real_fc *work, int n_atoms) {
+  real ene = 0.0;
   for ( int d = 0; d < n_dim; d++){
     real param    = lambda[d];
     real recovery = 0.0;
+    real diff = 0.0;
     //cout << "dbg 0304 scale d:"<<d<< " lambda:"<<lambda[d]
     //<< " cur_vs:" << cur_vs[d] 
     //<< " " << vc_range_min[d][cur_vs[d]]<< "~" 
@@ -1040,10 +1042,12 @@ int ExtendedVcMD::scale_force(real_fc *work, int n_atoms) {
       param = vc_range_min[d][cur_vs[d]];
     }else if (lambda[d] >= vc_range_max[d][cur_vs[d]] + sigma){
       //cout << "dbg 0304 scale d:"<<d<< " max lambda:"<<lambda[d] << " > " << vc_range_max[d][cur_vs[d]] << " vs:" << cur_vs[d]<< endl;
-      recovery = recov_coef * (lambda[d] - (vc_range_max[d][cur_vs[d]] + sigma));
+      diff = (lambda[d] - (vc_range_max[d][cur_vs[d]] + sigma));
+      recovery = recov_coef * diff;
       param = vc_range_max[d][cur_vs[d]];
     }
     int i_pair = 0;
+    ene += recovery * diff;
     real dew = const_k * recovery;
     //    cout << "dbg 0304 scale d:"<<d<<" recov: " << recovery << " dew:" << dew << endl;
     real direction = 1.0;

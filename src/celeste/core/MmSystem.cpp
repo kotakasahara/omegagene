@@ -16,6 +16,8 @@ MmSystem::MmSystem() : CelesteObject() {
     ctime_update_velo         = 0;
     ctime_calc_kinetic        = 0;
     ctime_update_coord        = 0;
+
+    n_acc = 0;
 }
 
 MmSystem::~MmSystem() {
@@ -732,7 +734,7 @@ int MmSystem::set_excess_pairs() {
 
 real_fc MmSystem::set_potential_e() {
     potential_e = pote_bond + pote_angle + pote_torsion + pote_impro + pote_14vdw + pote_14ele + pote_vdw + pote_ele
-                  + pote_dist_rest + pote_pos_rest;
+                  + pote_dist_rest + pote_pos_rest + pote_extend;
     return potential_e;
 }
 
@@ -747,10 +749,42 @@ int MmSystem::reset_energy() {
     pote_ele       = 0.0;
     pote_dist_rest = 0.0;
     pote_pos_rest  = 0.0;
+    pote_extend  = 0.0;
+    potential_e = 0.0;
     for (int atomid = 0; atomid < n_atoms; atomid++)
         for (int d = 0; d < 3; d++) force[atomid][d] = 0.0;
 
     return 0;
+}
+int MmSystem::cpy_energy_to_prev() {
+  potential_e_prev = potential_e;
+  pote_bond_prev = pote_bond;
+  pote_angle_prev =  pote_angle;
+  pote_torsion_prev   =    pote_torsion;
+  pote_impro_prev     =    pote_impro;
+  pote_14vdw_prev     =    pote_14vdw;
+  pote_14ele_prev     =    pote_14ele;
+  pote_vdw_prev       =    pote_vdw;
+  pote_ele_prev       =    pote_ele;
+  pote_dist_rest_prev =    pote_dist_rest;
+  pote_pos_rest_prev  =    pote_pos_rest;
+  pote_extend_prev  =    pote_extend;
+  return 0;
+}
+int MmSystem::cpy_energy_from_prev() {
+  potential_e = potential_e_prev;
+  pote_bond = pote_bond_prev;
+  pote_angle =  pote_angle_prev;
+  pote_torsion   =    pote_torsion_prev;
+  pote_impro     =    pote_impro_prev;
+  pote_14vdw     =    pote_14vdw_prev;
+  pote_14ele     =    pote_14ele_prev;
+  pote_vdw       =    pote_vdw_prev;
+  pote_ele       =    pote_ele_prev;
+  pote_dist_rest =    pote_dist_rest_prev;
+  pote_pos_rest  =    pote_pos_rest_prev;
+  pote_extend  =    pote_extend_prev;
+  return 0;
 }
 /*
 int MmSystem::velocity_swap(){

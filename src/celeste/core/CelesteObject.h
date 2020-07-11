@@ -24,6 +24,7 @@ typedef double real_bp;
 typedef double real_cst;
 
 #define MAX_N_NB15OFF 32
+#define MAX_N_POSRES_PARAMS 32
 
 #ifdef F_MPI
 #include <mpi.h>
@@ -47,7 +48,7 @@ class CelesteObject {
     enum { M_TEST = 0, M_DYNAMICS, M_DUMMY };
     enum { PRCS_SINGLE = 0, PRCS_MPI, PRCS_CUDA, PRCS_MPI_CUDA, PRCS_DUMMY };
     enum { INTGRTR_ZHANG = 0, INTGRTR_LEAPFROG_PRESTO, INTGRTR_VELOCITY_VERLET, 
-	   INTGRTR_LANGEVIN,INTGRTR_LANGEVIN_VV, INTGRTR_DUMMY };
+	   INTGRTR_LANGEVIN,INTGRTR_LANGEVIN_VV, INTGRTR_MC, INTGRTR_DUMMY };
     enum {
         ELCTRST_WOLF             = 0,
         ELCTRST_ZERODIPOLE       = 1,
@@ -100,7 +101,6 @@ class CelesteObject {
     static const real JOULE_CAL;
     static const real KINETIC_COEFF;
     static const real BOLTZMAN;
-    static const int MAX_N_POSRES_PARAMS;
     //  static const int MAX_N_NB15OFF;
 
     template <typename TYPE>

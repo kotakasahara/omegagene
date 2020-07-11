@@ -13,7 +13,7 @@ class PRUnit : public CelesteObject {
     real coef;
     int rest_type;
     int n_params;
-    real* params;
+    real params[MAX_N_POSRES_PARAMS];
     //  POSRESTUNIT_NORMAL = 0, POSRESTUNIT_Z = 1
     //  POSRESTUNIT_MULTIWELL01 = 2
   public:
@@ -27,7 +27,7 @@ class PRUnit : public CelesteObject {
     real  get_coef() { return coef; };
     real  get_rest_type() { return rest_type; };
     int get_n_params(){ return n_params; };
-    real *get_params(){ return params; };
+    real get_params(int i){ return params[i]; };
 };
 
 class PosRestraintObject : public CelesteObject {

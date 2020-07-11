@@ -187,8 +187,8 @@ int DynamicsMode::main_stream() {
       cout << "output restart " << mmsys.cur_step << endl;
       output_restart();
     }
-    if ((cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0
-	|| mmsys.cur_step == cfg->n_steps - 1) {
+    if (((cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0
+	 || mmsys.cur_step == cfg->n_steps - 1) && cfg->integrator_type != INTGRTR_MC) {
       sub_output_log();
     }
     mmsys.cur_time += cfg->time_step;
@@ -325,6 +325,10 @@ int DynamicsMode::sub_output_log() {
     sprintf(buf, "Position restraint: %14.10e\n", mmsys.pote_pos_rest);
     ss << string(buf);
   }
+  if (cfg->extended_ensemble != EXTENDED_NONE){
+    sprintf(buf, "Extended:           %14.10e\n", mmsys.pote_pos_rest);
+    ss << string(buf);
+  }
   sprintf(buf, "Temperature:       %14.10e\n", mmsys.temperature);
   ss << string(buf);
   sprintf(buf, "Comput Time:       %14.10e\n", (float)mmsys.ctime_per_step / (float)CLOCKS_PER_SEC);
@@ -408,7 +412,8 @@ int DynamicsMode::subbox_setup() {
     // subbox.set_ff(&ff);
 
     if(cfg->integrator_type == INTGRTR_LANGEVIN_VV ||
-       cfg->integrator_type == INTGRTR_LANGEVIN) {
+       cfg->integrator_type == INTGRTR_LANGEVIN || 
+       cfg->integrator_type == INTGRTR_MC) {
       subbox.set_params_langevin(&mmsys.random_mt, cfg->langevin_gamma);
     }
       //cfg->langevin_gamma,
@@ -443,7 +448,7 @@ int DynamicsMode::gather_energies() {
     //real tmp           = mmsys.pote_ele;
     mmsys.pote_ele += mmsys.energy_self_sum;
     // cout << "tmp ele: " << tmp << " " << mmsys.energy_self_sum << " " << mmsys.pote_ele << endl;
-
+    
     return 0;
 }
 
@@ -607,8 +612,10 @@ int DynamicsModeZhang::calc_in_each_step() {
     } else if (cfg->extended_ensemble == EXTENDED_VCMD) {
       subbox.vcmd_apply_bias(mmsys.cur_step);
     }
+    
     if (cfg->dist_restraint_type != DISTREST_NONE) { apply_dist_restraint(); }
     if (cfg->pos_restraint_type != POSREST_NONE) { apply_pos_restraint(); }
+
     const clock_t startTimeVel = clock();
     subbox.cpy_crd_prev();
     // subbox.apply_thermostat();
@@ -649,11 +656,10 @@ int DynamicsModeZhang::calc_in_each_step() {
 
     const clock_t endTimeStep = clock();
     mmsys.ctime_per_step += endTimeStep - startTimeStep;
-
     // test output 0707
     if ((cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0){
       mmsys.set_potential_e();
-      cout << "DBG0707 " << mmsys.cur_step  << " " 
+      cout << "DBG0707c " << mmsys.cur_step  << " " 
 	   << subbox.get_crds()[0]  << " " 
 	   << subbox.get_crds()[1]  << " " 
 	   << subbox.get_crds()[2]  << " " 
@@ -798,11 +804,11 @@ int DynamicsModeLangevin::calc_in_each_step() {
     gather_energies();
 
     if (cfg->dist_restraint_type != DISTREST_NONE || cfg->pos_restraint_type != POSREST_NONE) {
-        subbox.copy_crd(mmsys.crd);
-        if (cfg->dist_restraint_type != DISTREST_NONE) apply_dist_restraint();
-        if (cfg->pos_restraint_type != POSREST_NONE) apply_pos_restraint();
+      //subbox.copy_crd(mmsys.crd);
+      if (cfg->dist_restraint_type != DISTREST_NONE) apply_dist_restraint();
+      if (cfg->pos_restraint_type != POSREST_NONE) apply_pos_restraint();
     }
-
+    
     if (cfg->extended_ensemble == EXTENDED_VMCMD) {
       subbox.extended_apply_bias(mmsys.cur_step, mmsys.set_potential_e());
     } else if (cfg->extended_ensemble == EXTENDED_VAUS) {
@@ -810,7 +816,7 @@ int DynamicsModeLangevin::calc_in_each_step() {
     } else if (cfg->extended_ensemble == EXTENDED_VCMD) {
       subbox.vcmd_apply_bias(mmsys.cur_step);
     }
-
+    
     subbox.cpy_crd_prev2();
     if (mmsys.cur_step == 0){
       subbox.cpy_vel_prev();
@@ -852,6 +858,16 @@ int DynamicsModeLangevin::calc_in_each_step() {
     const clock_t endTimeStep = clock();
     mmsys.ctime_per_step += endTimeStep - startTimeStep;
 
+    // test output 0707
+    if ((cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0){
+      mmsys.set_potential_e();
+      cout << "DBG0707 " << mmsys.cur_step  << " " 
+	   << subbox.get_crds()[0]  << " " 
+	   << subbox.get_crds()[1]  << " " 
+	   << subbox.get_crds()[2]  << " " 
+	   << mmsys.potential_e  <<  endl;	
+    }
+
     return 0;
 }
 
@@ -879,10 +895,9 @@ DynamicsModeLangevinVV::~DynamicsModeLangevinVV() {
 }
 
 int DynamicsModeLangevinVV::calc_in_each_step() {
-
     const clock_t startTimeStep  = clock();
     mmsys.reset_energy();
-
+    
 #ifndef F_WO_NS
     const clock_t startTimeHtod = clock();
     if (mmsys.cur_step % cfg->nsgrid_update_intvl == 0) {
@@ -899,9 +914,9 @@ int DynamicsModeLangevinVV::calc_in_each_step() {
     gather_energies();
 
     if (cfg->dist_restraint_type != DISTREST_NONE || cfg->pos_restraint_type != POSREST_NONE) {
-        subbox.copy_crd(mmsys.crd);
-        if (cfg->dist_restraint_type != DISTREST_NONE) apply_dist_restraint();
-        if (cfg->pos_restraint_type != POSREST_NONE) apply_pos_restraint();
+      //subbox.copy_crd(mmsys.crd);
+      if (cfg->dist_restraint_type != DISTREST_NONE) apply_dist_restraint();
+      if (cfg->pos_restraint_type != POSREST_NONE) apply_pos_restraint();
     }
 
     if (cfg->extended_ensemble == EXTENDED_VMCMD) {
@@ -968,3 +983,81 @@ int DynamicsModeLangevinVV::apply_constraint() {
     return 0;
 }
 
+////
+
+DynamicsModeMC::DynamicsModeMC() : DynamicsMode() {}
+
+DynamicsModeMC::~DynamicsModeMC() {
+  if (DBG >= 1) cout << "DBG1 DynamicsModeMC::~DynamicsModeMC()" << endl;  
+  cout << "Accepted : " << mmsys.n_acc << endl;
+}
+
+int DynamicsModeMC::calc_in_each_step() {
+  const clock_t startTimeStep = clock();
+
+  if(mmsys.cur_step > 0){
+    subbox.cpy_crd_prev();
+    subbox.testmc_trial_move(cfg->testmc_delta_x);
+#ifndef F_WO_NS
+    subbox.update_coordinates_nsgrid();
+#endif
+    subbox.revise_coordinates_pbc();
+  }    
+
+  mmsys.cpy_energy_to_prev();
+  mmsys.reset_energy();
+
+  subbox.calc_energy(mmsys.cur_step);
+  gather_energies();
+
+  if (cfg->dist_restraint_type != DISTREST_NONE || cfg->pos_restraint_type != POSREST_NONE) {
+    subbox.copy_crd(mmsys.crd);
+    if (cfg->dist_restraint_type != DISTREST_NONE) apply_dist_restraint();
+    if (cfg->pos_restraint_type != POSREST_NONE) apply_pos_restraint();
+  }
+
+  if (cfg->extended_ensemble == EXTENDED_VCMD) {
+    mmsys.pote_extend  = subbox.vcmd_apply_bias(mmsys.cur_step);
+  }
+  mmsys.set_potential_e();
+  //// Metropolis
+  bool flg_accept = true;
+  real delta_e = mmsys.potential_e + mmsys.pote_extend - (mmsys.potential_e_prev + mmsys.pote_extend_prev);
+  real rnd = 0;
+  real prob = 0;
+  if(delta_e > 0) {
+    rnd = mmsys.random_mt();
+    prob = exp(-delta_e/(GAS_CONST/JOULE_CAL * 1e-3 * mmsys.temperature));
+    if (rnd  > prob ) flg_accept = false;
+  }
+  if(!flg_accept && mmsys.cur_step > 0){
+    subbox.cpy_crd_from_prev();    
+    mmsys.cpy_energy_from_prev();
+#ifndef F_WO_NS
+    subbox.update_coordinates_nsgrid();
+#endif
+  } else{
+    mmsys.n_acc ++;
+  }
+
+  if ((cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0){  
+    cout << "DBG0707b " << mmsys.cur_step  << " " 
+	 << subbox.get_crds()[0]  << " " 
+	 << subbox.get_crds()[1]  << " " 
+      	 << subbox.get_crds()[2]  << " " 
+	 << mmsys.potential_e  <<  " " 
+	 << mmsys.pote_extend  <<  " "
+	 << delta_e << " " << rnd << " " << prob;
+
+  if(!flg_accept && mmsys.cur_step > 0){
+    cout << " rej";
+  }else{
+    cout << " acc";
+  }
+  cout << endl;	
+  
+  const clock_t endTimeStep = clock();
+  mmsys.ctime_per_step += endTimeStep - startTimeStep;
+
+  return 0;
+}

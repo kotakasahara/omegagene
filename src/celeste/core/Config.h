@@ -101,6 +101,8 @@ struct Config : public CelesteObject {
 
     real        langevin_gamma = 0.0;
 
+    real        testmc_delta_x = 1.0;
+
     Config() = default;
     Config(std::vector<std::string> &&arg);
     Config(const std::string &filepath) : Config(extract_args_from_file(filepath)) {}

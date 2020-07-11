@@ -112,6 +112,21 @@ class MmSystem : public CelesteObject {
 
     real_fc pote_dist_rest;
     real_fc pote_pos_rest;
+    real_fc pote_extend;
+
+    // for the previous step
+    real_fc potential_e_prev;
+    real_fc pote_bond_prev;
+    real_fc pote_angle_prev;
+    real_fc pote_torsion_prev;
+    real_fc pote_impro_prev;
+    real_fc pote_14vdw_prev;
+    real_fc pote_14ele_prev;
+    real_fc pote_vdw_prev;
+    real_fc pote_ele_prev;
+    real_fc pote_dist_rest_prev;
+    real_fc pote_pos_rest_prev;
+    real_fc pote_extend_prev;
 
     real kinetic_e;
     real temperature;
@@ -144,6 +159,7 @@ class MmSystem : public CelesteObject {
     PosRestraintObject * pos_restraint;
     int n_pos_restraints;
 
+    unsigned long n_acc;
     random::Random random_mt;
 
     // time
@@ -240,6 +256,8 @@ class MmSystem : public CelesteObject {
     // calc
 
     int reset_energy();
+    int cpy_energy_to_prev();
+    int cpy_energy_from_prev();
     // int velocity_swap();
     // int velocity_average();
     // int update_velocities();

@@ -173,16 +173,29 @@ int ThermostatScaling::apply_thermostat_with_shake(int               n_atoms,
 ThermostatHooverEvans::ThermostatHooverEvans() : ThermostatObject() {}
 ThermostatHooverEvans::~ThermostatHooverEvans() {}
 
-int ThermostatHooverEvans::set_constant(int n_atoms, real_pw *mass_inv, real *vel, real *force) {
-    real k0 = 0.0;
-    for (int i = 0, i_3 = 0; i < n_atoms; i++) {
-        real pre = 0.0;
-        for (int d = 0; d < 3; d++, i_3++) { pre += vel[i_3] * vel[i_3]; }
-        k0 += pre * mass_inv[i];
+int ThermostatHooverEvans::set_constant(int n_atoms, real_pw *mass, real *vel, real *force) {
+  //real ff = 0.0;
+  real vf = 0.0;
+  real k0 = 0.0;
+  for (int i = 0, i_3 = 0; i < n_atoms; i++) {
+    real pre = 0.0;
+    real ff_i = 0.0;
+    real vf_i = 0.0;
+    for (int d = 0; d < 3; d++, i_3++) {
+      pre += vel[i_3] * vel[i_3]; 
+      //ff_i += work[i_3] * work[i_3];
+      //vf_i += vel[i_3] * work[i_3];
     }
-    const_k0_inv = 1.0 / k0;
-    cout << "Gaussian constraint constant K0 : " << k0 << endl;
-    return 0;
+    //ff += ff_i * mass_inv[i];
+    //vf += vf_i * mass_inv[i];
+    k0 += pre * mass[i];
+  }
+  cout << "dbg0708 sthe setconst " << vel[0] << " " << vel[1] << " "<< vel[2] << " " << mass[0]  << endl;
+  const_k0_inv = 1.0 / k0;
+  //zeta0 = -const_k0_inv * vf;
+  //alpha = sqrt(const_k0_inv * ff);
+  cout << "Gaussian constraint constant K0 : " << k0 << endl;
+  return 0;
 }
 
 int ThermostatHooverEvans::apply_thermostat(int      n_atoms,
@@ -200,17 +213,24 @@ int ThermostatHooverEvans::apply_thermostat(int      n_atoms,
             vf_i += vel[i_3] * work[i_3];
             ff_i += work[i_3] * work[i_3];
         }
-        vf += vf_i * mass_inv[i];
+        vf += vf_i;
         ff += ff_i * mass_inv[i];
     }
-    real xi         = -const_k0_inv * vf;
+    cout << "dbg0708 tsnh1 " <<  vel[0] << " " <<  vel[1] << " " << vel[2] 
+	 << " " << work[0] << " " << work[1] << " " <<work[2] << endl;
+
+    real zeta       = -const_k0_inv * vf;
     real alpha      = sqrt(const_k0_inv * ff);
     real beta       = exp(-alpha * time_step);
-    real gamma      = (xi - alpha) / (xi + alpha);
+    real gamma      = (zeta - alpha) / (zeta + alpha);
     real gamma_beta = gamma / beta;
+    cout << "dbg0708 tsnh " << vf << " " 
+	 << ff << " " << zeta << " " << alpha
+	 << " " << beta << " " << gamma << endl;
     for (int i = 0, i_3 = 0; i < n_atoms * 3; i++) {
-        vel_next[i_3] = (1.0 - gamma) / (beta - gamma_beta)
-                        * (vel[i_3] + work[i_3] * (1.0 + gamma - beta - gamma_beta) / (alpha - gamma * alpha));
+        vel_next[i] = (1.0 - gamma) / (beta - gamma_beta)
+                        * (vel[i] + work[i] * (1.0 + gamma - beta - gamma_beta) / (alpha - gamma * alpha
+));
     }
 
     return 0;

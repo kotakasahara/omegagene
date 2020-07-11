@@ -3,7 +3,6 @@
 
 #include <cstdio>
 #include <sstream>
-
 #include "MmSystem.h"
 #include "RunMode.h"
 #include "SubBox.h"
@@ -34,7 +33,7 @@ class DynamicsMode : public RunMode {
     // super: string fn_o_log;
     // super: string fn_o_energy;
     // super: string fn_o_energyflow;
-    SubBox subbox;
+  SubBox subbox;
 
   public:
     // super: MmSystem mmsys;
@@ -111,5 +110,13 @@ class DynamicsModeLangevinVV : public DynamicsMode {
 };
 
 
+class DynamicsModeMC : public DynamicsMode {
+  private:
+  protected:
+  public:
+    DynamicsModeMC();
+    ~DynamicsModeMC();
+    virtual int calc_in_each_step();
+};
 
 #endif

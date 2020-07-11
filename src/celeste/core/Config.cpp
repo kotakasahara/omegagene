@@ -80,6 +80,8 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
 	      integrator_type = INTGRTR_LANGEVIN;
             } else if (*itr == "langevin-vv") {
 	      integrator_type = INTGRTR_LANGEVIN_VV;
+            } else if (*itr == "mc") {
+	      integrator_type = INTGRTR_MC;
             } else {
                 integrator_type = INTGRTR_DUMMY;
             }
@@ -344,6 +346,8 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
 	  langevin_gamma = atof((*++itr).c_str());
 	  langevin_gamma /= 1000;
 	  // convert the unit from ps^-1 to fs^-1
+        } else if (*itr == "--testmc-delta-x") {
+	  testmc_delta_x = atof((*++itr).c_str());
         } else {
 	  stringstream ss;
 	  error_exit(ss.str(), "1A00001");

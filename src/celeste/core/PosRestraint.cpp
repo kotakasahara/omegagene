@@ -15,7 +15,11 @@ int PRUnit::set_parameters(int in_atomid, real crd_x, real crd_y, real crd_z, re
     coef        = in_coef;
     rest_type   = in_rest_type;
     n_params    = in_n_params;
-    params      = in_params;
+    for(int i=0; i<n_params; i++){
+      params[i] = in_params[i];
+    }
+    //params      = in_params;
+    //cout << "dbg0708b "  << params[0]<< " " << params[1] << endl;
     return 0;
 }
 
@@ -46,8 +50,8 @@ int PosRestraintObject::free_prunits() {
 int PosRestraintObject::add_prunit(int in_aid, real in_x, real in_y, real in_z, real in_margin, real in_coef, int in_type, int in_n_params, real* in_params) {
   prunits[n_prunits].set_parameters(in_aid, in_x, in_y, in_z, in_margin, in_coef, in_type,
 				    in_n_params, in_params);
-    n_prunits++;
-    return n_prunits;
+  n_prunits++;
+  return n_prunits;
 }
 
 real_fc PosRestraintObject::apply_restraint(int n_atoms, real *crd, PBC &pbc, real **force) {
@@ -87,12 +91,13 @@ real_fc PosRestraintHarmonic::apply_restraint(int n_atoms, real *crd, PBC &pbc, 
 	continue;
       real k         = weight * coef;
       real dist_diff = r - ref_dist;
+      if (dist_diff < EPS) continue;
       real dist_diff_sq = dist_diff * dist_diff;
-      real c_ene  =k * dist_diff_sq;
+      real c_ene  = k * dist_diff_sq;
       
       if(prunits[i].get_rest_type() == POSRESTUNIT_MULTIWELL01){
 	for (int i_param=0; i_param < prunits[i].get_n_params(); i_param++){
-	  c_ene *= (dist_diff_sq - prunits[i].get_params()[i_param]);
+	  c_ene *= dist_diff_sq - prunits[i].get_params(i_param);
 	  if(i_param == 1) break;
 	}
       }
@@ -103,7 +108,7 @@ real_fc PosRestraintHarmonic::apply_restraint(int n_atoms, real *crd, PBC &pbc, 
 	real_fc frc[3];
 	for (int d = 0; d < 3; d++) {
 	  // force[drunits[i].atomid1] += diff[d] / r;
-	  real f_d =  k_g * diff[d] / r;
+	  real f_d =  k_g * diff[d] / dist_diff;
 	  if(prunits[i].get_rest_type() == POSRESTUNIT_Z && d != 2) f_d = 0.0;
 	  force[prunits[i].get_atomid()][d] += f_d;
 	}
@@ -111,15 +116,20 @@ real_fc PosRestraintHarmonic::apply_restraint(int n_atoms, real *crd, PBC &pbc, 
 	real dist_diff_3 = dist_diff_sq * dist_diff;
 	real dist_diff_5 = dist_diff_sq * dist_diff_3;
 	real k_g = 6.0 * k * dist_diff_5 +
-	  4.0 * k * dist_diff_3 * (prunits[i].get_params()[0] + prunits[i].get_params()[1]) +
-	  2.0 * k * dist_diff * prunits[i].get_params()[0] * prunits[i].get_params()[1];
+	  4.0 * k * dist_diff_3 * (prunits[i].get_params(0) + prunits[i].get_params(1)) +
+	  2.0 * k * dist_diff * prunits[i].get_params(0) * prunits[i].get_params(1);
+	
 	for (int d = 0; d < 3; d++) {
 	  real f_d = (k_g * 1.0 / dist_diff * diff[d]);
-	  force[prunits[i].get_atomid()][d] += f_d;	    
+	  force[prunits[i].get_atomid()][d] += f_d;
+	  //cout << "dbg0708a " << dist_diff << " " << k << " " 
+	  //<< prunits[i].get_params(0) << " " 
+	  //<< prunits[i].get_params(1) << " "  << endl;
 	}
       }
-      // frc[d] += diff[d] / r;
+      // Frc[d] += diff[d] / r;
     }
+
     return ene;
 }
 ///////////////////////////////////////////////////////////////

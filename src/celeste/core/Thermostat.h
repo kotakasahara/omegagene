@@ -17,7 +17,7 @@ class ThermostatObject : public CelesteObject {
     real time_step_inv_sq;
     real const_k0_inv;
     real tau_inv;
-
+    real zeta_0;
   public:
     ThermostatObject();
     ~ThermostatObject();

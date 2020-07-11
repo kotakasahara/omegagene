@@ -325,7 +325,7 @@ class SubBox : public CelesteObject {
     int set_extended(int flg, ExtendedVMcMD *in_ext);
     int set_vcmd(int flg, ExtendedVcMD *in_ext);
     int extended_apply_bias(unsigned long cur_step, real in_lambda);
-    int vcmd_apply_bias(unsigned long cur_step);
+    real vcmd_apply_bias(unsigned long cur_step);
     int extended_apply_bias_struct_param(unsigned long cur_step);
     int extended_write_aus_restart(std::string fn_out, int type_ext);
     void extended_enable_vs_transition();
@@ -361,5 +361,7 @@ class SubBox : public CelesteObject {
     int set_velocities_just_langevin(const real dt);
     int update_coordinates_langevin(const real dt_half, const real gamma, const real temperature, const int cur_step);
     int update_coordinates_from_vel(const real dt);
+
+    int testmc_trial_move(const real delta_max);
 };
 #endif

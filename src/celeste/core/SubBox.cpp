@@ -1662,6 +1662,7 @@ int SubBox::init_thermostat(const int in_thermostat_type, const real in_temperat
     } else if (in_thermostat_type == THMSTT_SCALING) {
         thermostat = new ThermostatScaling();
     } else if (in_thermostat_type == THMSTT_HOOVER_EVANS) {
+      cout << "dbg0708 thermostat he" <<endl;
       thermostat = new ThermostatHooverEvans();
     }else{
       thermostat = new ThermostatObject();      
@@ -1672,7 +1673,8 @@ int SubBox::init_thermostat(const int in_thermostat_type, const real in_temperat
     real tau = cfg->berendsen_tau;
     if (cfg->time_step < tau) tau = cfg->time_step;
     thermostat->set_time_step(cfg->time_step, tau);
-    thermostat->set_constant(n_atoms_box, mass_inv, vel_next, work);
+    cout << "dbg0708 thermostat set_constant"<<endl;
+    thermostat->set_constant(n_atoms_box, mass, vel_next, work);
     return 0;
 }
 
@@ -1775,10 +1777,10 @@ int SubBox::set_vcmd(int flg, ExtendedVcMD *in_ext) {
   return 0;
 }
 
-int SubBox::vcmd_apply_bias(unsigned long cur_step){
+real SubBox::vcmd_apply_bias(unsigned long cur_step){
   vcmd->set_struct_parameters(crd, pbc);
-  vcmd->apply_bias(cur_step, work, n_atoms_box);
-  return 0;
+  real ene = vcmd->apply_bias(cur_step, work, n_atoms_box);
+  return ene;
 }
 int SubBox::extended_apply_bias(unsigned long cur_step, real in_lambda) {
   extended->apply_bias(cur_step, in_lambda, work, n_atoms_box);
@@ -2045,6 +2047,7 @@ int SubBox::set_velocities_just_langevin(const real dt){
       real crd_p2 = crd_prev2[atomid_b3+d];
       crd_p2 += nearbyint((crd_p1-crd_p2)/pbc->L[d]) * pbc->L[d];      
       vel[atomid_b3+d] = (crd_p1 - crd_p2) * dt2inv;
+      //cout << "DBG0708 "  << atomid_b << " " << d << " " << crd_p1 << " " << crd_prev2[atomid_b3+d] << " " << crd_p2 << " " << vel[atomid_b3+d] << endl;
     }
   }  
   return 0;
@@ -2061,6 +2064,7 @@ int SubBox::update_coordinates_from_vel(const real dt){
 }
 int SubBox::update_coordinates_langevin(const real dt_half, const real gamma, const real temperature, const int cur_step){
   // subbox.cpy_crd_prev();
+  //cout << "dbg0708w " <<  work[0] << " " << work[1] << " " << work[2] <<endl;
   for (int atomid_b = 0, atomid_b3 = 0;
        atomid_b < all_n_atoms[rank];
        atomid_b++, atomid_b3 += 3) {
@@ -2068,8 +2072,6 @@ int SubBox::update_coordinates_langevin(const real dt_half, const real gamma, co
       real zeta = random_mt->normal(0.0, 1.0);
       real det_f = -FORCE_VEL*work[atomid_b3+d];
       real  stc_f = zeta * sqrt(GAS_CONST*temperature*gamma*mass[atomid_b]/dt_half * 1e-7);
-
-      
       real crd_p1 = crd_prev[atomid_b3+d];
       real crd_p2 = crd_prev2[atomid_b3+d];
       crd_p2 += nearbyint((crd_p1-crd_p2)/pbc->L[d]) * pbc->L[d];
@@ -2085,6 +2087,7 @@ int SubBox::update_coordinates_langevin(const real dt_half, const real gamma, co
       //if(abs(det_f) > 0.1){
       //cout << "dbg0718c " << cur_step << " " << atomid_b << " " << d << " " << crd_p1 <<" " << crd_p2 << " "  << det_f << " " << zeta << " " << stc_f << endl;
       //      }
+      //cout << "dbg0708 " << crd_p1 << " " << crd_p2 << " " << det_f << " "  << stc_f << endl;
       crd[atomid_b3+d] = 1.0/(1.0+gamma*dt_half) * 
 	(2*crd_p1 - crd_p2 + 
 	 gamma*dt_half*crd_p2 + 
@@ -2092,5 +2095,16 @@ int SubBox::update_coordinates_langevin(const real dt_half, const real gamma, co
 	 );
     }
   }
+  return 0;
+}
+
+int SubBox::testmc_trial_move(const real delta_max){
+
+  real dx = (*random_mt)() * delta_max * 2 - delta_max;
+  real dy = (*random_mt)() * delta_max * 2 - delta_max;
+  real dz = (*random_mt)() * delta_max * 2 - delta_max;
+  crd[0] += dx;
+  crd[1] += dy;
+  crd[2] += dz;
   return 0;
 }

@@ -601,32 +601,36 @@ int Read::load_ls_dist_restraint(DistRestraintObject *dr) {
     return 0;
 }
 int Read::load_ls_pos_restraint(PosRestraintObject *pr) {
-    int n_prunits;
-    read_bin_values(&n_prunits, 1);
-    pr->alloc_prunits(n_prunits);
-    for (int i = 0; i < n_prunits; i++) {
-        int   aid;
-        float crd_x, crd_y, crd_z;
-        float dist_margin, coef;
-	int rest_type;
-        read_bin_values(&aid, 1);
-        read_bin_values(&crd_x, 1);
-        read_bin_values(&crd_y, 1);
-        read_bin_values(&crd_z, 1);
-        read_bin_values(&dist_margin, 1);
-        read_bin_values(&coef, 1);
-	read_bin_values(&rest_type, 1);
-	int n_params; 
-	real buf;
-	real params[MAX_N_POSRES_PARAMS];
-	read_bin_values(&n_params, 1);
-	for (int i = 0; i < n_params; i++){
-	  read_bin_values(&buf, 1);
-	  params[i] = buf;
-	}
-	pr->add_prunit(aid, crd_x, crd_y, crd_z, dist_margin, coef, rest_type, n_params, params);
+  int n_prunits;
+  read_bin_values(&n_prunits, 1);
+  pr->alloc_prunits(n_prunits);
+  for (int i = 0; i < n_prunits; i++) {
+    int   aid;
+    float crd_x, crd_y, crd_z;
+    float dist_margin, coef;
+    int rest_type;
+    read_bin_values(&aid, 1);
+    read_bin_values(&crd_x, 1);
+    read_bin_values(&crd_y, 1);
+    read_bin_values(&crd_z, 1);
+    read_bin_values(&dist_margin, 1);
+    read_bin_values(&coef, 1);
+    read_bin_values(&rest_type, 1);
+    //cout << "dbg0708 read c " << coef << endl;
+    int n_params; 
+    float buf;
+    real params[MAX_N_POSRES_PARAMS];
+    read_bin_values(&n_params, 1);
+    //cout << "dbg0708 read n " << n_params << endl;
+    for (int j = 0; j < n_params; j++){
+      read_bin_values(&buf, 1);
+      params[j] = buf;
+      //cout << "dbg0708 read " << buf << " " << params[j] << endl;
     }
-    return n_prunits;
+    pr->add_prunit(aid, crd_x, crd_y, crd_z, dist_margin, coef, rest_type, n_params, params);
+    
+  }
+  return n_prunits;
 }
 
 int Read::load_ls_group_coord(MmSystem &mmsys) {

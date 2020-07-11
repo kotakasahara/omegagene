@@ -18,8 +18,8 @@ class CelestePosRest(object):
         self.dist_margin = dist_margin
         self.coef = coef
         self.rest_type = -1
-        self.n_params = 0
-        self.params = []
+        self.n_params = len(params)
+        self.params = params
         if rest_type_txt == "normal":
             self.rest_type = POSRESUNIT_NORMAL
         elif rest_type_txt == "z":
@@ -69,7 +69,8 @@ class CelestePosRestReader(kkpresto.PrestoAsciiReader):
                 rest_type_txt = terms[6]
             extra_params = []
             if len(terms) >= 8:
-                extra_params = terms[7:]
+                extra_params = [ float(x) for x in terms[7:]]
+                print(extra_params)
             ppr = CelestePosRest(atomid, crd_x, crd_y, crd_z, dist_margin, coef,
                                  rest_type_txt,
                                  extra_params)

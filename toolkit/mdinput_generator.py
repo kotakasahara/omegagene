@@ -295,6 +295,7 @@ class MDInputGen(object):
         buf_dist_rest = self.dump_dist_rest(self.dist_rest)
 
         if self.version_id >= 1:
+            print("dbg0708  dump_pos_rest")
             buf_pos_rest = self.dump_pos_rest(self.pos_rest)
         buf_group_coord = ""
         if self.version_id >= 2:
@@ -689,6 +690,7 @@ class MDInputGen(object):
         buf = ""
         buf += st.pack("@i", len(pos_rest))
         for pr in pos_rest:
+            print("dbg0708 1")
             buf += st.pack("@i", pr.atomid)
             buf += st.pack("@f", pr.crd_x)
             buf += st.pack("@f", pr.crd_y)
@@ -697,9 +699,12 @@ class MDInputGen(object):
             buf += st.pack("@f", pr.coef)
             buf += st.pack("@i", pr.rest_type)
             if self.version_id >= 8:            
+                print("dbg0708 2")
                 buf += st.pack("@i", len(pr.params))
+                print(pr.params)
                 for i_prm in pr.params:
-                    buf += st.pack("@f", i_prm)
+                    buf += st.pack("@f", float(i_prm))
+                    print("dbg0708 " +str(i_prm))
         return buf
     def evaluate(self):
         self.evaluate_aus_group_center()
