@@ -98,8 +98,10 @@ real_fc PosRestraintHarmonic::apply_restraint(int n_atoms, real *crd, PBC &pbc, 
       if(prunits[i].get_rest_type() == POSRESTUNIT_MULTIWELL01){
 	for (int i_param=0; i_param < prunits[i].get_n_params(); i_param++){
 	  c_ene *= dist_diff_sq - prunits[i].get_params(i_param);
-	  if(i_param == 1) break;
+	  //if(i_param == 1) break;
 	}
+      }else if(prunits[i].get_rest_type() == POSRESTUNIT_INV_HARMONIC){
+	c_ene = k * 1.0/((dist_diff+1.0)*(dist_diff+1.0));
       }
       ene += c_ene;
       // force
@@ -126,6 +128,7 @@ real_fc PosRestraintHarmonic::apply_restraint(int n_atoms, real *crd, PBC &pbc, 
 	  //<< prunits[i].get_params(0) << " " 
 	  //<< prunits[i].get_params(1) << " "  << endl;
 	}
+      }else if(prunits[i].get_rest_type() == POSRESTUNIT_INV_HARMONIC){
       }
       // Frc[d] += diff[d] / r;
     }

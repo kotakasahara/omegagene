@@ -994,7 +994,7 @@ DynamicsModeMC::~DynamicsModeMC() {
 
 int DynamicsModeMC::calc_in_each_step() {
   const clock_t startTimeStep = clock();
-
+  
   if(mmsys.cur_step > 0){
     subbox.cpy_crd_prev();
     subbox.testmc_trial_move(cfg->testmc_delta_x);
@@ -1003,19 +1003,19 @@ int DynamicsModeMC::calc_in_each_step() {
 #endif
     subbox.revise_coordinates_pbc();
   }    
-
+  
   mmsys.cpy_energy_to_prev();
   mmsys.reset_energy();
-
+  
   subbox.calc_energy(mmsys.cur_step);
   gather_energies();
-
+  
   if (cfg->dist_restraint_type != DISTREST_NONE || cfg->pos_restraint_type != POSREST_NONE) {
     subbox.copy_crd(mmsys.crd);
     if (cfg->dist_restraint_type != DISTREST_NONE) apply_dist_restraint();
     if (cfg->pos_restraint_type != POSREST_NONE) apply_pos_restraint();
   }
-
+  
   if (cfg->extended_ensemble == EXTENDED_VCMD) {
     mmsys.pote_extend  = subbox.vcmd_apply_bias(mmsys.cur_step);
   }
@@ -1039,7 +1039,7 @@ int DynamicsModeMC::calc_in_each_step() {
   } else{
     mmsys.n_acc ++;
   }
-
+  
   if ((cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0){  
     cout << "DBG0707b " << mmsys.cur_step  << " " 
 	 << subbox.get_crds()[0]  << " " 
@@ -1048,16 +1048,15 @@ int DynamicsModeMC::calc_in_each_step() {
 	 << mmsys.potential_e  <<  " " 
 	 << mmsys.pote_extend  <<  " "
 	 << delta_e << " " << rnd << " " << prob;
-
-  if(!flg_accept && mmsys.cur_step > 0){
-    cout << " rej";
-  }else{
-    cout << " acc";
+    if(!flg_accept && mmsys.cur_step > 0){
+      cout << " rej";
+    }else{
+      cout << " acc";
+    }
+    cout << endl;	
   }
-  cout << endl;	
-  
   const clock_t endTimeStep = clock();
   mmsys.ctime_per_step += endTimeStep - startTimeStep;
-
+  
   return 0;
 }

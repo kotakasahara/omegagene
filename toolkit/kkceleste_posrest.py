@@ -7,6 +7,7 @@ import kkpresto
 POSRESUNIT_NORMAL = 0
 POSRESUNIT_Z = 1
 POSRESUNIT_MULTIWELL01 = 2
+POSRESUNIT_INV_HARMONIC = 3
 
 class CelestePosRest(object):
     def __init__(self, atomid, crd_x, crd_y, crd_z, dist_margin, coef,
@@ -26,6 +27,8 @@ class CelestePosRest(object):
             self.rest_type = POSRESUNIT_Z
         elif rest_type_txt == "multiwell01":
             self.rest_type = POSRESUNIT_MULTIWELL01
+        elif rest_type_txt == "inv_harmonic":
+            self.rest_type = POSRESUNIT_INV_HARMONIC
         else:
             sys.stderr.write("Error: Unknown position restraint type : " + self.rest_type_txt + "\n")
             sys.exit(1)
@@ -36,6 +39,8 @@ class CelestePosRest(object):
             type_txt = "z"
         if self.rest_type == POSRESUNIT_MULTIWELL01:
             type_txt = "multiwell01"
+        if self.rest_type == POSRESUNIT_INV_HARMONIC:
+            type_txt = "inv_harmonic"
         line = "%8d %10.6f %10.6f %10.6f %6.3f %10.6f %s"%(self.atomid,
                                                            self.crd_x, self.crd_y, self.crd_z,
                                                            self.dist_margin, self.coef, type_txt)
