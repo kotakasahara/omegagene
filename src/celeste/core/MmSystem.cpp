@@ -3,6 +3,7 @@
 using namespace std;
 
 MmSystem::MmSystem() : CelesteObject() {
+
     cur_time                  = 0.0;
     leapfrog_coef             = 1.0;
     max_n_nb15off             = MAX_N_NB15OFF;
@@ -22,6 +23,7 @@ MmSystem::MmSystem() : CelesteObject() {
 
 MmSystem::~MmSystem() {
     free_all();
+    cout << "DBG1 ~MmSystem()" << endl;
 }
 
 int MmSystem::free_all() {
@@ -834,7 +836,7 @@ int MmSystem::output_ctimes() {
 }
 
 int MmSystem::ff_setup(const Config *cfg) {
-    ff = ForceField();
+  //ff = ForceField();
     ff.set_config_parameters(cfg);
     ff.initial_preprocess((const PBC *)&pbc);
     ff.cal_self_energy((const int &)n_atoms, (const int &)n_excess, (const int **&)excess_pairs,

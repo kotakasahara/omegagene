@@ -95,10 +95,10 @@ SubBox::~SubBox() {
 #endif
 #endif
     free_variables();
-    if (DBG >= 1) cout << "DBG1 delete constraint"<<endl;
-    delete constraint;
     if (DBG >= 1) cout << "DBG1 delete settle"<<endl; 
     delete settle;
+    if (DBG >= 1) cout << "DBG1 delete constraint"<<endl;
+    delete constraint;
     if (DBG >= 1) cout << "DBG1 delete thermostat"<<endl; 
     delete thermostat;
     if (DBG >= 1) cout << "DBG1 end of ~SubBox()"<<endl; 
@@ -477,7 +477,7 @@ int SubBox::set_parameters(int     in_n_atoms,
     //cout << "dbg0422o SubBox box_lower " << box_lower[0] << " " << box_lower[1] << " " << box_lower[2] << endl;
     //cout << "dbg0422p SubBox box_upper " << box_upper[0] << " " << box_upper[1] << " " << box_upper[2] << endl;
 
-    ff = ForceField();
+    //ff = ForceField();
     ff.set_config_parameters(cfg);
     ff.initial_preprocess((const PBC *)pbc);
 

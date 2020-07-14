@@ -17,13 +17,17 @@ ForceField::ForceField() : ForceFieldObject() {
     gmul[10] = 10.0;
 
     // if(DBG >= 1)
-    // cout << "DBG1: ForceField::ForceField() owari"<<endl;
+    cout << "//DBG1: ForceField::ForceField()"<<endl;
 }
 
-ForceField::~ForceField() {}
+ForceField::~ForceField() {
+  cout << "~ForceField()" << endl;
+  delete ele;
+}
 
 int ForceField::set_config_parameters(const Config *cfg) {
     ForceFieldObject::set_config_parameters(cfg);
+    
     if(cfg->electrostatic == ELCTRST_DEBYE_HUCKEL){
       ele = new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff,
 				 &ZeroMultipoleSum::calc_debye_huckel,
@@ -34,6 +38,7 @@ int ForceField::set_config_parameters(const Config *cfg) {
     }else if (cfg->ele_alpha < EPS) {
         switch (cfg->electrostatic) {
             case ELCTRST_ZERODIPOLE:
+	      cout << "dbg0711 ele" << endl;
 	      ele = new ZeroMultipoleSum(cfg->electrostatic, cfg->ele_alpha, cfg->cutoff,
 					 &ZeroMultipoleSum::calc_zero02pole_alpha0,
 					 &ZeroMultipoleSum::calc_zero02pole_excess_alpha0,

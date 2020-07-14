@@ -118,13 +118,13 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
             } else if (*itr == "zero-quadrupole") {
                 electrostatic = ELCTRST_ZEROQUADRUPOLE;
             } else if (*itr == "zero-octupole") {
-                electrostatic = ELCTRST_ZEROOCTUPOLE;
+	      electrostatic = ELCTRST_ZEROOCTUPOLE;
             } else if (*itr == "zero-hexadecapole") {
-                electrostatic = ELCTRST_ZEROHEXADECAPOLE;
+	      electrostatic = ELCTRST_ZEROHEXADECAPOLE;
             } else if (*itr == "debye-huckel") {
-                electrostatic = ELCTRST_DEBYE_HUCKEL;
+	      electrostatic = ELCTRST_DEBYE_HUCKEL;
             } else {
-                electrostatic = ELCTRST_DUMMY;
+	      electrostatic = ELCTRST_DUMMY;
             }
 
         } else if (*itr == "--ele-alpha") {

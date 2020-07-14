@@ -39,7 +39,6 @@ int Celeste::test_mode() {
 
 int Celeste::dynamics_mode() {
     cout << "dynamics_mode\n";
-
     // #if defined(F_CUDA) && defined(F_MPI)
     //   cout << "F_CUDA + F_MPI flags = ON" << endl;
     //  MpiGpuDynamicsMode* dynamics = new MpiGpuDynamicsMode;
@@ -61,7 +60,9 @@ int Celeste::dynamics_mode() {
     } else if (config.integrator_type == INTGRTR_LANGEVIN_VV) {
         dynamics = new DynamicsModeLangevinVV();
     } else if (config.integrator_type == INTGRTR_MC){
+      cout << "dbg0713a" << endl;
       dynamics = new DynamicsModeMC();
+      cout << "dbg0713b" << endl;      
     } else {
         cerr << "Unknown Integrator" << endl;
         std::exit(-1);

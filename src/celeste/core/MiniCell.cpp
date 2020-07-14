@@ -38,6 +38,7 @@ MiniCell::MiniCell() {}
 
 MiniCell::~MiniCell() {
     free_variables();
+    cout << "DBG1 ~MiniCell" << endl;
 }
 
 int MiniCell::alloc_variables() {

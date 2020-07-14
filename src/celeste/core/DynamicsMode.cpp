@@ -173,6 +173,9 @@ int DynamicsMode::terminal_process() {
     delete mmsys.vcmd;
   }
 
+  delete mmsys.dist_restraint;
+  delete mmsys.pos_restraint;
+
   cout << "term" << endl;
   return 0;
 }
@@ -985,7 +988,9 @@ int DynamicsModeLangevinVV::apply_constraint() {
 
 ////
 
-DynamicsModeMC::DynamicsModeMC() : DynamicsMode() {}
+DynamicsModeMC::DynamicsModeMC() : DynamicsMode() {
+  if (DBG >= 1) cout << "DBG1 DynamicsModeMC::DynamicsModeMC()" << endl;  
+}
 
 DynamicsModeMC::~DynamicsModeMC() {
   if (DBG >= 1) cout << "DBG1 DynamicsModeMC::~DynamicsModeMC()" << endl;  
@@ -1044,10 +1049,10 @@ int DynamicsModeMC::calc_in_each_step() {
     cout << "DBG0707b " << mmsys.cur_step  << " " 
 	 << subbox.get_crds()[0]  << " " 
 	 << subbox.get_crds()[1]  << " " 
-      	 << subbox.get_crds()[2]  << " " 
-	 << mmsys.potential_e  <<  " " 
-	 << mmsys.pote_extend  <<  " "
-	 << delta_e << " " << rnd << " " << prob;
+      	 << subbox.get_crds()[2]  << " " ;
+      //<< mmsys.potential_e  <<  " " 
+      //<< mmsys.pote_extend  <<  " "
+      // << delta_e << " " << rnd << " " << prob;
     if(!flg_accept && mmsys.cur_step > 0){
       cout << " rej";
     }else{
