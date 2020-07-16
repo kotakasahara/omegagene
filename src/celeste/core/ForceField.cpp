@@ -23,6 +23,7 @@ ForceField::ForceField() : ForceFieldObject() {
 ForceField::~ForceField() {
   cout << "~ForceField()" << endl;
   delete ele;
+  cout << "//~ForceField()" << endl;
 }
 
 int ForceField::set_config_parameters(const Config *cfg) {

@@ -500,6 +500,7 @@ int SubBox::set_nsgrid() {
 
   // nsgrid.setup_crd_into_grid(crd, charge, atom_type);
   nsgrid.set_grid_xy();
+  cout << "dbg0716 nsgrid.alloc_variables" << endl;
   nsgrid.alloc_variables();
   revise_coordinates_pbc();
   nsgrid.set_crds_to_homebox(get_crds(), get_atomids(), get_n_atoms_box());

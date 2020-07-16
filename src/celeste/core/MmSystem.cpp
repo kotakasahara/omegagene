@@ -22,8 +22,9 @@ MmSystem::MmSystem() : CelesteObject() {
 }
 
 MmSystem::~MmSystem() {
-    free_all();
     cout << "DBG1 ~MmSystem()" << endl;
+    free_all();
+    cout << "//DBG1 ~MmSystem()" << endl;
 }
 
 int MmSystem::free_all() {

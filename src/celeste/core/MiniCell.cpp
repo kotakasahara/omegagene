@@ -37,11 +37,15 @@ extern "C" int cuda_hostfree_cellpair_info(CellPair *h_cell_pairs, int *h_idx_he
 MiniCell::MiniCell() {}
 
 MiniCell::~MiniCell() {
-    free_variables();
-    cout << "DBG1 ~MiniCell" << endl;
+  cout << "DBG1 ~MiniCell" << endl;
+#ifndef F_WO_NS
+  free_variables();
+#endif
+  cout << "//DBG1 ~MiniCell" << endl;
 }
 
 int MiniCell::alloc_variables() {
+  cout << "dbg0716mc alloc " << endl;
   cell_crd = new int *[max_n_cells];
   for (int i = 0; i < max_n_cells; i++) { cell_crd[i] = new int[3]; }
   idx_crd_cell = new int **[n_cells_xyz[0]];
@@ -100,7 +104,10 @@ int MiniCell::alloc_variables() {
 #endif
     // region
     region_atoms = new int *[125];
-    for (int i = 0; i < 125; i++) { region_atoms[i] = new int[max_n_atoms_region[i]]; }
+    for (int i = 0; i < 125; i++) {
+      region_atoms[i] = new int[max_n_atoms_region[i]]; 
+      cout << "dbg0716mc new " << i << endl;
+    }
     uni2cell_z = new int *[n_uni];
     for (int i = 0; i < n_uni; i++) { uni2cell_z[i] = new int[2]; }
     cell2uni_z = new int *[max_n_cells];
@@ -150,12 +157,14 @@ int MiniCell::init_energy_work() {
 }
 
 int MiniCell::free_variables() {
-    for (int i = 0; i < max_n_cells; i++) { delete[] cell_crd[i]; }
-    delete[] cell_crd;
-    for (int i = 0; i < n_cells_xyz[0]; i++) {
-        for (int j = 0; j < n_cells_xyz[1]; j++) { delete[] idx_crd_cell[i][j]; }
-        delete[] idx_crd_cell[i];
-    }
+  
+  for (int i = 0; i < max_n_cells; i++) { delete[] cell_crd[i]; }
+  delete[] cell_crd;
+  for (int i = 0; i < n_cells_xyz[0]; i++) {
+    for (int j = 0; j < n_cells_xyz[1]; j++) { delete[] idx_crd_cell[i][j]; }
+    delete[] idx_crd_cell[i];
+  }
+
     delete[] idx_crd_cell;
     delete[] idx_atom_cell;
 
@@ -166,6 +175,7 @@ int MiniCell::free_variables() {
     //}
     // delete[] crd_in_cell;
     delete[] idx_atom_cell_xy;
+
     delete[] idx_xy_head_atom;
     // delete[] idx_cell_head_atom;
     delete[] idx_cell_n_atoms;
@@ -188,6 +198,7 @@ int MiniCell::free_variables() {
 #endif
 
 #else
+
     delete[] crd;
     delete[] crd_gpu;
     delete[] work;
@@ -198,14 +209,14 @@ int MiniCell::free_variables() {
     delete[] idx_head_cell_pairs;
 #endif
 
-    for (int i = 0; i < 125; i++) { delete[] region_atoms[i]; }
-    delete[] region_atoms;
+  for (int i = 0; i < 125; i++) { delete[] region_atoms[i]; cout << "dbg " << i<< endl;}
+  delete[] region_atoms;
 
     for (int i = 0; i < n_uni; i++) { delete[] uni2cell_z[i]; }
     delete[] uni2cell_z;
-
     for (int i = 0; i < max_n_cells; i++) { delete[] cell2uni_z[i]; }
     delete[] cell2uni_z;
+
     return 0;
 }
 
