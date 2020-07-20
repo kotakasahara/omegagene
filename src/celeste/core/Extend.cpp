@@ -838,7 +838,7 @@ real ExtendedVcMD::apply_bias(unsigned long cur_step,
   if (cur_step > 0 && cur_step % write_lambda_interval == 0 &&
       cur_step <= n_steps) { write_lambda(); }
   
-  return 0;
+  return ene;
 }
 int ExtendedVcMD::set_vs_next(){
   std::vector< std::vector<int> > vs_next_crd(n_dim);
@@ -1042,16 +1042,29 @@ real ExtendedVcMD::scale_force(real_fc *work, int n_atoms) {
     // case 1 : under the lower limit
     if (lambda[d] < vc_range_min[d][cur_vs[d]] - sigma){
       //cout << "dbg 0304 scale d:"<<d<< " min lambda:"<<lambda[d] << " < " << vc_range_min[d][cur_vs[d]] << " vs:" << cur_vs[d] <<endl;
-      recovery = recov_coef * (lambda[d] - (vc_range_min[d][cur_vs[d]] - sigma));
+      diff = (lambda[d] - (vc_range_min[d][cur_vs[d]] - sigma));
+      if ( recov_coef < EPS ){
+	recovery = 1e100;
+	diff = 1.0;
+      }else{
+	recovery = recov_coef * diff;
+      }
       param = vc_range_min[d][cur_vs[d]];
     }else if (lambda[d] >= vc_range_max[d][cur_vs[d]] + sigma){
       //cout << "dbg 0304 scale d:"<<d<< " max lambda:"<<lambda[d] << " > " << vc_range_max[d][cur_vs[d]] << " vs:" << cur_vs[d]<< endl;
       diff = (lambda[d] - (vc_range_max[d][cur_vs[d]] + sigma));
-      recovery = recov_coef * diff;
+      if ( recov_coef < EPS ){
+	recovery = 1e100;
+	diff = 1.0;
+      }else{
+	recovery = recov_coef * diff;
+      }
       param = vc_range_max[d][cur_vs[d]];
     }
     int i_pair = 0;
     ene += recovery * diff;
+    //cout << "dbg0720 " << d << " "  << ene << " " << diff  << " "
+    //<< lambda[d] << " " << cur_vs[d] << " " << vc_range_min[d][cur_vs[d]] <<" " << vc_range_max[d][cur_vs[d]] << endl;
     real dew = const_k * recovery;
     //    cout << "dbg 0304 scale d:"<<d<<" recov: " << recovery << " dew:" << dew << endl;
     real direction = 1.0;
@@ -1078,7 +1091,7 @@ real ExtendedVcMD::scale_force(real_fc *work, int n_atoms) {
     // cout << "dbg 0304 scale " << endl;
     i_pair++;
   }
-  return 0;
+  return ene;
 }
 
 int ExtendedVcMD::set_files(string fn_vslog, string fn_lambda, int format_lambda,

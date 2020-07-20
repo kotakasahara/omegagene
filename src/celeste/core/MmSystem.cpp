@@ -737,7 +737,7 @@ int MmSystem::set_excess_pairs() {
 
 real_fc MmSystem::set_potential_e() {
     potential_e = pote_bond + pote_angle + pote_torsion + pote_impro + pote_14vdw + pote_14ele + pote_vdw + pote_ele
-                  + pote_dist_rest + pote_pos_rest + pote_extend;
+      + pote_dist_rest + pote_pos_rest;
     return potential_e;
 }
 

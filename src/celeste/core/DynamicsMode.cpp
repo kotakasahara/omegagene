@@ -504,7 +504,7 @@ int DynamicsModePresto::calc_in_each_step() {
     } else if (cfg->extended_ensemble == EXTENDED_VAUS) {
       subbox.extended_apply_bias_struct_param(mmsys.cur_step);
     } else if (cfg->extended_ensemble == EXTENDED_VCMD) {
-      subbox.vcmd_apply_bias(mmsys.cur_step);
+      mmsys.pote_extend = subbox.vcmd_apply_bias(mmsys.cur_step);
     }
 
     const clock_t startTimeVel = clock();
@@ -613,7 +613,7 @@ int DynamicsModeZhang::calc_in_each_step() {
     } else if (cfg->extended_ensemble == EXTENDED_VAUS) {
       subbox.extended_apply_bias_struct_param(mmsys.cur_step);
     } else if (cfg->extended_ensemble == EXTENDED_VCMD) {
-      subbox.vcmd_apply_bias(mmsys.cur_step);
+      mmsys.pote_extend = subbox.vcmd_apply_bias(mmsys.cur_step);
     }
     
     if (cfg->dist_restraint_type != DISTREST_NONE) { apply_dist_restraint(); }
@@ -1035,6 +1035,24 @@ int DynamicsModeMC::calc_in_each_step() {
     prob = exp(-delta_e/(GAS_CONST/JOULE_CAL * 1e-3 * mmsys.temperature));
     if (rnd  > prob ) flg_accept = false;
   }
+  
+  if ((cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0){  
+    cout << "DBG0707b " << mmsys.cur_step  << " " 
+	 << subbox.get_crds()[0]  << " " 
+	 << subbox.get_crds()[1]  << " " 
+      	 << subbox.get_crds()[2]  << " " 
+      //  << mmsys.potential_e_prev  <<  " " 
+      //  << mmsys.pote_extend_prev  <<  " "
+	 << mmsys.potential_e  <<  " " 
+	 << mmsys.pote_extend  <<  " ";
+      // << delta_e << " " << rnd << " " << prob;
+    if(!flg_accept && mmsys.cur_step > 0){
+      cout << " rej";
+    }else{
+      cout << " acc";
+    }
+    cout << endl;	
+  }
   if(!flg_accept && mmsys.cur_step > 0){
     subbox.cpy_crd_from_prev();    
     mmsys.cpy_energy_from_prev();
@@ -1044,22 +1062,7 @@ int DynamicsModeMC::calc_in_each_step() {
   } else{
     mmsys.n_acc ++;
   }
-  
-  if ((cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0){  
-    cout << "DBG0707b " << mmsys.cur_step  << " " 
-	 << subbox.get_crds()[0]  << " " 
-	 << subbox.get_crds()[1]  << " " 
-      	 << subbox.get_crds()[2]  << " " ;
-      //<< mmsys.potential_e  <<  " " 
-      //<< mmsys.pote_extend  <<  " "
-      // << delta_e << " " << rnd << " " << prob;
-    if(!flg_accept && mmsys.cur_step > 0){
-      cout << " rej";
-    }else{
-      cout << " acc";
-    }
-    cout << endl;	
-  }
+
   const clock_t endTimeStep = clock();
   mmsys.ctime_per_step += endTimeStep - startTimeStep;
   
