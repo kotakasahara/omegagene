@@ -1033,7 +1033,7 @@ int DynamicsModeMC::calc_in_each_step() {
   if(delta_e > 0) {
     rnd = mmsys.random_mt();
     prob = exp(-delta_e/(GAS_CONST/JOULE_CAL * 1e-3 * mmsys.temperature));
-    if (rnd  > prob ) flg_accept = false;
+    if ( delta_e > 1.0e99 || rnd  > prob ) flg_accept = false;
   }
   
   if ((cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0){  
