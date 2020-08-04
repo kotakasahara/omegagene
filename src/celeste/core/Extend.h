@@ -335,8 +335,9 @@ class ExtendedVcMD : public Extended {
 		   int in_begin_count_q_raw, int in_drift);
     real set_crd_centers(real *crd, PBC *pbc);
     bool is_in_range();
-    real apply_bias(unsigned long cur_step,
-		   real_fc *work, int n_atoms_box);
+    int vs_step(unsigned long cur_step);
+		   
+    
     real scale_force(real_fc *work, int n_atoms);
     int set_files(std::string fn_vslog, std::string fn_lambda, int format_lambda,
 		  std::string fn_qraw, std::string fn_start, std::string fn_qraw_is);

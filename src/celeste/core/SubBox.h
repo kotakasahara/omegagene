@@ -325,7 +325,9 @@ class SubBox : public CelesteObject {
     int set_extended(int flg, ExtendedVMcMD *in_ext);
     int set_vcmd(int flg, ExtendedVcMD *in_ext);
     int extended_apply_bias(unsigned long cur_step, real in_lambda);
-    real vcmd_apply_bias(unsigned long cur_step);
+    int vcmd_vs_step(unsigned long cur_step);
+    real vcmd_set_struct_parameters();
+    real vcmd_scale_force();
     int extended_apply_bias_struct_param(unsigned long cur_step);
     int extended_write_aus_restart(std::string fn_out, int type_ext);
     void extended_enable_vs_transition();

@@ -246,8 +246,8 @@ class VcMDParamsReader(kkkit.FileI):
             for j in range(n_vs):
                 # [Min lambda] [Max lambda] 
                 terms = self.readline_comment().strip().split()
-                assert(len(terms) == 2)
                 try:
+                    assert(len(terms) == 2)
                     lmin = float(terms[0])
                     lmax = float(terms[1])
                 except:

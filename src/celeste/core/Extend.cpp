@@ -800,9 +800,7 @@ bool ExtendedVcMD::is_in_range(){
   return flg;
 }
 
-real ExtendedVcMD::apply_bias(unsigned long cur_step,
-			     real_fc *work, int n_atoms_box) {
-  
+int ExtendedVcMD::vs_step(unsigned long cur_step){
   std::vector< std::vector<int> > vs_next_crd(n_dim);
   for(int d=0; d<n_dim; d++){
     vs_next_crd[d].push_back(cur_vs[d]);
@@ -822,8 +820,9 @@ real ExtendedVcMD::apply_bias(unsigned long cur_step,
     }
     //cout << "dbg 0719 d:" <<d << " " << cur_vs[d] << " - " << *(--vs_next_crd[d].end()) <<endl;
   }
+
   set_current_vstate_intersection();
-  if(is_in_range() || drift > 0){
+  if( (is_in_range() || drift > 0 || recov_coef < EPS ) && n_steps != cur_step){
     q_raw[cur_vs] += 1;
     q_raw_is[cur_vs_is] += 1;
     q_raw_sum += 1;
@@ -834,12 +833,12 @@ real ExtendedVcMD::apply_bias(unsigned long cur_step,
 
     if (flg_vs_transition) trial_transition();
   }
-  real ene = scale_force(work, n_atoms_box);
+
   if (cur_step > 0 && cur_step % write_lambda_interval == 0 &&
       cur_step <= n_steps) { write_lambda(); }
-  
-  return ene;
+  return 0;
 }
+
 int ExtendedVcMD::set_vs_next(){
   std::vector< std::vector<int> > vs_next_crd(n_dim);
   // for(int i=0; i<n_dim; i++) vs_next_crd[i]=-1;

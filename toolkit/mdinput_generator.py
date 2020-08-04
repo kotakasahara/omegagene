@@ -19,7 +19,8 @@ VERSION_LIST = ["v.0.34.b",  # 0
                 "v.0.40.c",  # 5 
                 "v.0.44",  # 6
                 "v.0.49",  # 7
-                "v.0.51"]  # 8
+                "v.0.51",  # 8
+                "v.0.52"]  # 9
 #VERSION_ID = 0
 #VERSION = VERSION_LIST[VERSION_ID]
 
@@ -301,7 +302,9 @@ class MDInputGen(object):
         if self.version_id >= 2:
             if self.aus_restart:
                 buf_group_coord = self.aus_restart.dump_group_coord()
-
+        buf_pote = ""
+        if self.version_id >= 9:
+            buf_pote = st.pack("@d", self.restart.e_pot)
         #if config.get_val("particle-cluster-shake"):
         f.write(st.pack("@i", len(buf_box)))
         f.write(st.pack("@i", len(buf_coordinates)))
@@ -318,6 +321,9 @@ class MDInputGen(object):
             f.write(st.pack("@i", len(buf_extended_vcmd)))
         if self.version_id >= 2:
             f.write(st.pack("@i", len(buf_group_coord)))
+        if self.version_id >= 9:
+            f.write(st.pack("@i", len(buf_pote)))
+
         print("size: buf_box          : " + str(len(buf_box)))
         print("size: buf_coordinates  : " + str(len(buf_coordinates)))
         print("size: buf_velocities   : " + str(len(buf_velocities)))
@@ -333,6 +339,8 @@ class MDInputGen(object):
             print("size: buf_extended_vcmd: " + str(len(buf_extended_vcmd)))
         if self.version_id >= 2:
             print("size: buf_group_coord  : " + str(len(buf_group_coord)))
+        if self.version_id >= 9:
+            print("size: buf_pote  : " + str(len(buf_pote)))
 
         f.write(buf_box)
         f.write(buf_coordinates)
@@ -349,6 +357,8 @@ class MDInputGen(object):
             f.write(buf_extended_vcmd)
         if self.version_id >= 2:
             f.write(buf_group_coord)
+        if self.version_id >= 9:            
+            f.write(buf_pote)
         f.close()
         return
 

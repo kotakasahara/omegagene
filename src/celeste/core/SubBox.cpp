@@ -1778,10 +1778,19 @@ int SubBox::set_vcmd(int flg, ExtendedVcMD *in_ext) {
   return 0;
 }
 
-real SubBox::vcmd_apply_bias(unsigned long cur_step){
+real SubBox::vcmd_set_struct_parameters(){
   vcmd->set_struct_parameters(crd, pbc);
-  real ene = vcmd->apply_bias(cur_step, work, n_atoms_box);
+  return 0;
+}
+
+real SubBox::vcmd_scale_force(){
+  vcmd_set_struct_parameters();
+  real ene = vcmd->scale_force(work, n_atoms_box);
   return ene;
+}
+int SubBox::vcmd_vs_step(unsigned long cur_step){
+  vcmd->vs_step(cur_step);
+  return 0;
 }
 int SubBox::extended_apply_bias(unsigned long cur_step, real in_lambda) {
   extended->apply_bias(cur_step, in_lambda, work, n_atoms_box);

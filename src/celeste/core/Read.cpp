@@ -101,6 +101,12 @@ int Read::load_launch_set(MmSystem &mmsys) {
         cout << "--- Load group coordinates for restarting V-AUS: " << size_group_coord << " bytes." << endl;
         load_ls_group_coord(mmsys);
     }
+    
+    if (size_pote > 0) {
+        cout << "--- Load potential: " << size_pote << " bytes." << endl;
+        load_ls_pote(mmsys);
+    }
+    
     // cout << "load_ls_pcluster()" << endl;
     // load_ls_pcluster(mmsys);
     close();
@@ -152,6 +158,7 @@ int Read::load_ls_header(MmSystem &mmsys) {
     read_bin_values(&size_pos_restraint, 1);
     read_bin_values(&size_extended_vcmd, 1);
     read_bin_values(&size_group_coord, 1);
+    read_bin_values(&size_pote, 1);
 
     if (DBG == 1) {
         cout << "size_box:            " << size_box << endl;
@@ -166,6 +173,7 @@ int Read::load_ls_header(MmSystem &mmsys) {
         cout << "size_pos_restraint:  " << size_pos_restraint << endl;
         cout << "size_group_coord:    " << size_group_coord << endl;
         cout << "size_extended_vcmd:  " << size_extended_vcmd << endl;
+        cout << "size_pote:           " << size_pote << endl;
     }
 
     return 0;
@@ -616,16 +624,16 @@ int Read::load_ls_pos_restraint(PosRestraintObject *pr) {
     read_bin_values(&dist_margin, 1);
     read_bin_values(&coef, 1);
     read_bin_values(&rest_type, 1);
-    //cout << "dbg0708 read c " << coef << endl;
+    cout << "dbg0708 read c " << coef << endl;
     int n_params; 
     float buf;
     real params[MAX_N_POSRES_PARAMS];
     read_bin_values(&n_params, 1);
-    //cout << "dbg0708 read n " << n_params << endl;
+    cout << "dbg0708 read n " << n_params << endl;
     for (int j = 0; j < n_params; j++){
       read_bin_values(&buf, 1);
       params[j] = buf;
-      //cout << "dbg0708 read " << buf << " " << params[j] << endl;
+      cout << "dbg0708 read " << buf << " " << params[j] << endl;
     }
     pr->add_prunit(aid, crd_x, crd_y, crd_z, dist_margin, coef, rest_type, n_params, params);
     
@@ -769,7 +777,13 @@ int Read::load_ls_vcmd(MmSystem &mmsys) {
   //cout << "dbg 0304 read e" << endl;
   return 0;
 }
-
+int Read::load_ls_pote(MmSystem &mmsys) {
+  double pote;
+  read_bin_values(&pote, 1);
+  mmsys.potential_e = pote;
+  cout << "dbg0803a " << mmsys.potential_e << endl;
+  return 0;
+}
 template <typename TYPE>
 int Read::read_bin_values(TYPE *recept, int len) {
     ifs.read((char *)recept, sizeof(TYPE) * len);

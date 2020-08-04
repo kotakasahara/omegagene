@@ -191,7 +191,7 @@ int DynamicsMode::main_stream() {
       output_restart();
     }
     if (((cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0
-	 || mmsys.cur_step == cfg->n_steps - 1) && cfg->integrator_type != INTGRTR_MC) {
+	 || mmsys.cur_step == cfg->n_steps - 1)  && cfg->integrator_type != INTGRTR_MC) {
       sub_output_log();
     }
     mmsys.cur_time += cfg->time_step;
@@ -216,9 +216,9 @@ int DynamicsMode::output_restart() {
     subbox.copy_vel_next(mmsys.vel_just);
   }
   writer_restart.set_fn(cfg->fn_o_restart);
+  mmsys.set_potential_e();
   writer_restart.write_restart(mmsys.n_atoms, (int)mmsys.cur_step, (double)mmsys.cur_time,
-			       (double)(mmsys.pote_bond + mmsys.pote_angle + mmsys.pote_torsion + mmsys.pote_impro
-					+ mmsys.pote_14vdw + mmsys.pote_14ele + mmsys.pote_vdw + mmsys.pote_ele),
+			       (double)(mmsys.potential_e + mmsys.pote_extend),
 			       (double)mmsys.kinetic_e, mmsys.crd, mmsys.vel_just);
   
   if (cfg->extended_ensemble == EXTENDED_VAUS){
@@ -504,7 +504,9 @@ int DynamicsModePresto::calc_in_each_step() {
     } else if (cfg->extended_ensemble == EXTENDED_VAUS) {
       subbox.extended_apply_bias_struct_param(mmsys.cur_step);
     } else if (cfg->extended_ensemble == EXTENDED_VCMD) {
-      mmsys.pote_extend = subbox.vcmd_apply_bias(mmsys.cur_step);
+      //mmsys.pote_extend = subbox.vcmd_apply_bias(mmsys.cur_step);
+      mmsys.pote_extend = subbox.vcmd_scale_force();
+      subbox.vcmd_vs_step(mmsys.cur_step);
     }
 
     const clock_t startTimeVel = clock();
@@ -613,7 +615,10 @@ int DynamicsModeZhang::calc_in_each_step() {
     } else if (cfg->extended_ensemble == EXTENDED_VAUS) {
       subbox.extended_apply_bias_struct_param(mmsys.cur_step);
     } else if (cfg->extended_ensemble == EXTENDED_VCMD) {
-      mmsys.pote_extend = subbox.vcmd_apply_bias(mmsys.cur_step);
+      //mmsys.pote_extend = subbox.vcmd_apply_bias(mmsys.cur_step);
+      mmsys.pote_extend = subbox.vcmd_scale_force();
+      subbox.vcmd_vs_step(mmsys.cur_step);
+
     }
     
     if (cfg->dist_restraint_type != DISTREST_NONE) { apply_dist_restraint(); }
@@ -817,7 +822,10 @@ int DynamicsModeLangevin::calc_in_each_step() {
     } else if (cfg->extended_ensemble == EXTENDED_VAUS) {
       subbox.extended_apply_bias_struct_param(mmsys.cur_step);
     } else if (cfg->extended_ensemble == EXTENDED_VCMD) {
-      subbox.vcmd_apply_bias(mmsys.cur_step);
+      //subbox.vcmd_apply_bias(mmsys.cur_step);
+      mmsys.pote_extend = subbox.vcmd_scale_force();
+      subbox.vcmd_vs_step(mmsys.cur_step);
+
     }
     
     subbox.cpy_crd_prev2();
@@ -927,7 +935,9 @@ int DynamicsModeLangevinVV::calc_in_each_step() {
     } else if (cfg->extended_ensemble == EXTENDED_VAUS) {
       subbox.extended_apply_bias_struct_param(mmsys.cur_step);
     } else if (cfg->extended_ensemble == EXTENDED_VCMD) {
-      subbox.vcmd_apply_bias(mmsys.cur_step);
+      //      subbox.vcmd_apply_bias(mmsys.cur_step);
+      mmsys.pote_extend = subbox.vcmd_scale_force();
+      subbox.vcmd_vs_step(mmsys.cur_step);
     }
 
     if(mmsys.cur_step > 0){
@@ -1000,16 +1010,15 @@ DynamicsModeMC::~DynamicsModeMC() {
 int DynamicsModeMC::calc_in_each_step() {
   const clock_t startTimeStep = clock();
   
-  if(mmsys.cur_step > 0){
-    subbox.cpy_crd_prev();
-    subbox.testmc_trial_move(cfg->testmc_delta_x);
+  subbox.cpy_crd_prev();
+  subbox.testmc_trial_move(cfg->testmc_delta_x);
 #ifndef F_WO_NS
-    subbox.update_coordinates_nsgrid();
+  subbox.update_coordinates_nsgrid();
 #endif
-    subbox.revise_coordinates_pbc();
-  }    
-  
+  subbox.revise_coordinates_pbc();
+
   mmsys.cpy_energy_to_prev();
+  //cout << "dbg0803 " << mmsys.potential_e_prev << endl;
   mmsys.reset_energy();
   
   subbox.calc_energy(mmsys.cur_step);
@@ -1022,7 +1031,8 @@ int DynamicsModeMC::calc_in_each_step() {
   }
   
   if (cfg->extended_ensemble == EXTENDED_VCMD) {
-    mmsys.pote_extend  = subbox.vcmd_apply_bias(mmsys.cur_step);
+    //mmsys.pote_extend  = subbox.vcmd_apply_bias(mmsys.cur_step);
+      mmsys.pote_extend = subbox.vcmd_scale_force();
   }
   mmsys.set_potential_e();
   //// Metropolis
@@ -1031,29 +1041,17 @@ int DynamicsModeMC::calc_in_each_step() {
   real rnd = 0;
   real prob = 0;
   if(delta_e > 0) {
+    //cout << "dbg0803b"<<endl;
     rnd = mmsys.random_mt();
     prob = exp(-delta_e/(GAS_CONST/JOULE_CAL * 1e-3 * mmsys.temperature));
-    if ( delta_e > 1.0e99 || rnd  > prob ) flg_accept = false;
-  }
-  
-  if ((cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0){  
-    cout << "DBG0707b " << mmsys.cur_step  << " " 
-	 << subbox.get_crds()[0]  << " " 
-	 << subbox.get_crds()[1]  << " " 
-      	 << subbox.get_crds()[2]  << " " 
-      //  << mmsys.potential_e_prev  <<  " " 
-      //  << mmsys.pote_extend_prev  <<  " "
-	 << mmsys.potential_e  <<  " " 
-	 << mmsys.pote_extend  <<  " ";
-      // << delta_e << " " << rnd << " " << prob;
-    if(!flg_accept && mmsys.cur_step > 0){
-      cout << " rej";
-    }else{
-      cout << " acc";
+    if ( mmsys.pote_extend > 1.0e99 || rnd  > prob ){
+      //cout << "dbg0803c"<<endl;
+      flg_accept = false;
     }
-    cout << endl;	
   }
-  if(!flg_accept && mmsys.cur_step > 0){
+  real tmp_pote_e = mmsys.potential_e;
+  real tmp_pote_extend = mmsys.pote_extend;
+  if(!flg_accept){ // && mmsys.cur_step > 0){
     subbox.cpy_crd_from_prev();    
     mmsys.cpy_energy_from_prev();
 #ifndef F_WO_NS
@@ -1061,6 +1059,37 @@ int DynamicsModeMC::calc_in_each_step() {
 #endif
   } else{
     mmsys.n_acc ++;
+  }
+  if (cfg->extended_ensemble == EXTENDED_VCMD) {
+    //mmsys.pote_extend  = subbox.vcmd_apply_bias(mmsys.cur_step);
+    subbox.vcmd_set_struct_parameters();
+    subbox.vcmd_vs_step(mmsys.cur_step);
+  }
+  
+  if ((cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0 || mmsys.cur_step >= cfg->n_steps-1){
+    if (mmsys.cur_step >= cfg->n_steps-1){  
+      cout << "DBG0707c ";
+    }else{
+      cout << "DBG0707b ";
+    }
+    cout << mmsys.cur_step  << " " 
+	 << subbox.get_crds()[0]  << " " 
+	 << subbox.get_crds()[1]  << " " 
+      	 << subbox.get_crds()[2]  << " " 
+      //  << mmsys.potential_e_prev  <<  " " 
+      //  << mmsys.pote_extend_prev  <<  " "
+	 << mmsys.potential_e  <<  " " 
+	 << mmsys.pote_extend  <<  " "
+	 << tmp_pote_e  <<  " " 
+	 << tmp_pote_extend  <<  " "
+	 << delta_e  <<  " ";
+      // << delta_e << " " << rnd << " " << prob;
+    if(!flg_accept){ // && mmsys.cur_step > 0){
+      cout << " rej";
+    }else{
+      cout << " acc";
+    }
+    cout << endl;	
   }
 
   const clock_t endTimeStep = clock();
