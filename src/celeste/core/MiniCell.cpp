@@ -45,7 +45,6 @@ MiniCell::~MiniCell() {
 }
 
 int MiniCell::alloc_variables() {
-  cout << "dbg0716mc alloc " << endl;
   cell_crd = new int *[max_n_cells];
   for (int i = 0; i < max_n_cells; i++) { cell_crd[i] = new int[3]; }
   idx_crd_cell = new int **[n_cells_xyz[0]];
@@ -106,7 +105,6 @@ int MiniCell::alloc_variables() {
     region_atoms = new int *[125];
     for (int i = 0; i < 125; i++) {
       region_atoms[i] = new int[max_n_atoms_region[i]]; 
-      cout << "dbg0716mc new " << i << endl;
     }
     uni2cell_z = new int *[n_uni];
     for (int i = 0; i < n_uni; i++) { uni2cell_z[i] = new int[2]; }
@@ -209,7 +207,7 @@ int MiniCell::free_variables() {
     delete[] idx_head_cell_pairs;
 #endif
 
-  for (int i = 0; i < 125; i++) { delete[] region_atoms[i]; cout << "dbg " << i<< endl;}
+    for (int i = 0; i < 125; i++) { delete[] region_atoms[i]; }
   delete[] region_atoms;
 
     for (int i = 0; i < n_uni; i++) { delete[] uni2cell_z[i]; }

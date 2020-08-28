@@ -147,7 +147,6 @@ int DynamicsMode::initial_preprocess() {
 
   // for velocity-Verlet
   calc_energy_force();
-  cout << "test_dynamicsmode" << endl;
   
   return 0;
 }
