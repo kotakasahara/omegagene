@@ -340,3 +340,16 @@ The probability of existance in the canonical ensemble is obtained by the follow
     --i-cano for_next/gen_p_cano_McMD/p_cano/P_E_T300.dat \
     -o prob.txt 
 
+
+--------------------------
+For the AUS method
+--------------------------
+
+The protocol for the AUS method is similar to the McMD.
+For running an AUS simulation on the omegagene, following settings are required.
+
+* --fn-i-aus-restart ... A file name for the output restart file.
+* --aus-type ... This should be "dist-mass-center*.
+* --enhance-group-name ... Names for two atom groups should be specified. The distance between centroids of these groups is used as the reaction coordinate.
+
+The same protocol using *for_next* scripts can be applied to the AUS method.
