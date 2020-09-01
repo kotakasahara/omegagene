@@ -12,3 +12,4 @@ Contents:
     in_out_files
     analysis
     tutorial_cg 
+    tutorial_mcmd
