@@ -1,0 +1,59 @@
+#/bin/csh
+
+###### SKIP satege=
+
+#echo "   "
+#set jobn = `more ../current_md_num`
+
+  set dir = cal04_mcmd1
+  echo " Job = "$dir
+  echo " "
+  rm ${dir}/e1*
+  
+@ nmax = 19
+##@ nmax = 12
+
+echo " "
+echo " number of temperatures (nmax) = " $nmax
+  echo " ####  If OK, input 1. #### "
+  set ok = $<
+  if( $ok == 1) goto def
+  echo " I stop here. "
+
+exit
+def:
+echo " "
+echo " "
+#############################################
+  @ ii = 1
+  cp nul aaa
+
+  while( $ii <= $nmax)
+    echo $ii
+   if($ii == 3 ) goto ccc
+   if($ii == 5 ) goto ccc
+    echo "     " $ii
+
+    set ff  = ../derv_den_Pc/${ii}/dden.dat
+#    ls -la ${ff}
+    cat aaa ${ff} > bbb
+    mv bbb aaa
+
+ccc:
+
+    @ ii ++
+  end
+
+  cat ${dir}/inp.dat_e1  aaa > e1.fit
+  rm aaa
+
+  ./aho.exe < e1.fit
+
+  mv e1.fit  ${dir}
+  mv fort.11 ${dir}/e1_fort.11
+  mv fort.12 ${dir}/e1_fort.12
+  mv fort.13 ${dir}/e1_fort.13
+  mv fort.16 ${dir}/e1_fort.16
+  mv fort.20 ${dir}/e1_fort.20
+
+exit

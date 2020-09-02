@@ -1,0 +1,177 @@
+
+        subroutine para_inp
+c******************************************************
+        include "COMDAT"
+c******************************************************
+        print*,' '
+        print*,' ************************'
+        print*,' * Subroutine para_inp. *'
+        print*,' ************************'
+        print*,'  1) Input some parameters. '
+        print*,'  2) Input file names for input. '
+        print*,'  3) Initialize some quantities. '
+        print*,' '
+c********************************************
+c  Parameter input field.
+
+        read(5,*) de,nene
+
+        read(5,*) emin1
+
+        read(5,601) mark
+601     format(a3)
+
+        if(nene.gt.nwin) then
+          print*,' ??????????????????????'
+          print*,' ? nwin is too small. ?'
+          print*,' ??????????????????????'
+          stop
+        endif
+
+        if(mark.ne."END") then
+          print*,' ??????????????????????????'
+          print*,' ? No end mark (1). stop. ?'
+          print*,' ??????????????????????????'
+          stop
+        endif
+c****
+        read(5,*) nfil
+
+        if(nfil.le.0) then
+          print*,' ??????????????????????????'
+          print*,' ? Detected: nfil .le. 0. ?'
+          print*,' ??????????????????????????'
+          stop
+        endif
+
+        do kk=1,nfil
+          read(5,*) kdum,nst(kk),nen(kk),wgt(kk)
+        enddo
+
+        read(5,601) mark
+
+        if(mark.ne."END") then
+          print*,' ??????????????????????????'
+          print*,' ? No end mark (3). stop. ?'
+          print*,' ??????????????????????????'
+          stop
+        endif
+
+c  End of parameter input.
+c********************************************
+c  Getting input file names.
+
+c  1) Real quantity file.
+
+        open(unit=15,file="file.name",status="old")
+        do kk=1,nfil
+          read(15,334) filname(kk)
+        enddo
+        close(15)
+334     format(a60)
+
+c  2) Virtual quantity file.
+
+        open(unit=16,file="filev.name",status="old")
+        do kk=1,nfil
+          read(16,334) filnamev(kk)
+        enddo
+        close(16)
+
+        write(6,260) nfil
+260     format('       N of input files = ',i4)
+        print*,' '
+c********************************************
+c  Output the parameters to the monitor file.
+
+        write(6,274) de,nene,emin1
+274     format('       bin size, N(bin), E(min) = ',f7.3,2x,i6,2x,f12.3)
+
+c********************************************
+c  Initializing.
+
+        do mm=1,nvert
+          icou(mm)=0
+        enddo
+
+        kktot=0
+        tot=0
+
+c  emin is shifted by half of DE.
+        emin1=emin1 - de/2.0
+
+        do mm=1,nvert
+          do jj=1,nwin
+            pdf(jj,mm)=0.0
+          enddo
+        enddo
+
+        do ii=1,nvert
+          do jj=1,nwin
+          do kk=1,nwin
+            ncmat(kk,jj,ii)=0
+          enddo
+          enddo
+        enddo
+c********************************************
+c  Input the range for each v-state.
+        read(22,*)
+        read(22,*) mvert
+        read(22,*)
+        do ii=1,mvert
+          read(22,*)
+          read(22,*) rng(1,ii),rng(2,ii)
+          read(22,*)
+        enddo
+
+        write(6,420) mvert
+420     format('  N of v states = ',i3)
+        do ii=1,mvert
+          write(6,422) ii,rng(1,ii),rng(2,ii)
+        enddo
+422     format('  range: ',i3,2x,f12.2,2x,f12.2)
+
+        if(mvert.gt.nvert) then
+          print*,' ?????????????????????????????'
+          print*,' ? nvert is too small. Stop. ?'
+          print*,' ?????????????????????????????'
+          stop
+        endif
+
+        if(emin1.gt.rng(1,1)) then
+          print*,' ???????????????????????????????????????????? '
+          print*,' ? emin1 is higher than the variable range. ?'
+          print*,' ???????????????????????????????????????????? '
+          stop
+        endif
+
+        emax1=emin1+de*nene
+        if(emax1.lt.rng(2,mvert)) then
+          print*,' ?????????????????????? '
+          print*,' ? nene is too small. ?'
+          print*,' ?????????????????????? '
+          stop
+        endif
+c********************************************
+c  Interval to calc. count matrix
+
+        read(17,*) intvc
+
+        print*,' '
+        write(6,182) intvc
+182     format(" Interval to calc. count matrix = ",i6)
+        print*,' '
+
+        do ii=1,max_snap
+          nwork(ii)=0
+        enddo
+
+        if(intvc+1.gt.max_snap) then
+          print*,' ??????????????????????????'
+          print*,' ? max_snap is too small. ?'
+          print*,' ??????????????????????????'
+          stop
+        endif
+c********************************************
+        return
+        end

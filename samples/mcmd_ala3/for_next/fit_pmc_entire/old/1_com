@@ -1,0 +1,108 @@
+#!/bin/csh
+
+ifort -o aaa.exe  integ.f
+#*******************************************
+echo " "
+echo "*************************************************************"
+echo "* 1) Output recovered pdf & range for each v-state.         *"
+echo "* 2) The entire range is output.           (not used)       *"
+echo "* 3) Concatenate v-state ranges into block ranges & output. *"
+echo "* 4) Integrate v-state pdf's into entire pdf.               *" 
+echo "*************************************************************"
+
+set flg_neighbor = $1
+set auto = $2
+
+echo "auto = $auto"
+set mdn = `more ../current_md_num`
+set nvs = `more ../current_vst_num`
+
+if ( $mdn < 10 ) then
+  set mdn_str = "0${mdn}"
+else
+  set mdn_str = "${mdn}"
+endif
+
+  echo " "
+  echo  "  MD No. ="  ${mdn}
+  echo  "  v states = 1 - " ${nvs}
+  echo "  "
+  set sfac = `head -1 scale.fact`
+  echo " Scaling factor = " $sfac
+  echo "  "
+
+  echo " May I proceed? "
+  echo " If OK, input 1.  If No, input any number else 1. "
+
+  if( $auto == 1 ) then
+    set ok = 1
+  else
+    set ok = $<
+  endif
+  if( $ok == 1 ) then
+   echo " OK. I proceed. "
+   goto p1 
+  endif
+  echo " I stop here. "
+  echo " "
+  exit
+#********
+p1:  
+
+  echo " Generate directory " cal${mdn_str}_mcmd1
+  set dir = cal${mdn_str}_mcmd1
+  rm -r $dir
+  mkdir $dir
+
+#  Link I/O files.
+
+#  @ ist= 1
+  @ ist= 1
+  while( $ist <= $nvs )
+    echo " file linking:" $ist " / " $nvs
+
+    set fil = ../v_distrib/cal${mdn_str}_mcmd1/v_pdf/s${ist}.pdf
+#   ls -la $fil
+
+# <I>
+    @ idev = 100 + $ist
+    ln -s  $fil  fort.${idev}
+# <O>
+    @ idot = 200 + $ist
+    ln -s  ${dir}/s${ist}.pdf  fort.${idot}
+    @ idotr = 300 + $ist
+    ln -s  ${dir}/range.s${ist}  fort.${idotr}
+    @ iotn = 400 + $ist
+    ln -s  ${dir}/range.b${ist}  fort.${iotn}
+
+    @ ist ++
+  end
+
+# <I>  not important.
+  ln -s ../../cal${mdn_str}_mcmd1/ttp_v_mcmd.inp  fort.501
+  ln -s scale.fact fort.11
+# <O>
+  ln -s ${dir}/range.entire  fort.90
+  @ nvs2 = $nvs
+  echo ${nvs2} ${flg_neighbor} > work1
+  ./aaa.exe < work1 > ${dir}/out1
+
+  rm aaa.exe  fort.*
+  rm work1
+#********
+  echo " "
+  echo " integrate pdfs. "
+  @ ii = 1
+#kk
+#  more  ${dir}/s${ii}.pdf >> ${dir}/entire.pdf
+  while( ${ii} <= ${nvs} )
+    echo "#" ${ii}
+    more  ${dir}/s${ii}.pdf >> ${dir}/entire.pdf
+    @ ii ++
+  end
+#kk
+#  @ ii --
+#  more  ${dir}/s${ii}.pdf >> ${dir}/entire.pdf
+#*************************************************
+  exit
+

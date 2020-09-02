@@ -1,0 +1,105 @@
+#!/bin/csh
+
+echo " "
+echo " **************************************************"
+echo " * Calc. derivatives of ln[pdf] for each v-state. *"
+echo " **************************************************"
+echo " "
+
+set flg_neighbor = $1
+set auto = $2
+  head -1 ../current_situation > aaa
+  set mdn = `more aaa`
+  rm aaa
+  head -2 ../current_situation > aaa
+  tail -1 aaa > bbb
+  set nvs = `more bbb`
+  rm aaa bbb
+if ( $mdn < 10 ) then
+  set mdn_str = "0${mdn}"
+else
+  set mdn_str = "${mdn}"
+endif
+
+  echo "   "
+  echo "  bin size for output derivative curves: "
+  more bin.size
+  echo "  OK for the above value?  <------- "
+  echo "   "
+
+  echo " "
+  echo  "  MD No. ="  ${mdn}
+  echo  "  N. of v states ="  ${nvs}
+  echo "  "
+
+  set sfac = `head -1 fac.squeeze `
+  echo " squeezing factor = " ${sfac} " <------ VERY IMPORTANT: OK? "
+  echo "         used to defuse down the large derivatives. "
+  echo "  "
+
+  echo " "
+  echo " Now calculate derivatives."
+  echo " May I proceed? "
+  echo " If OK, input 1.  If No, input any number else 1. "
+
+  if( $auto == 1 ) then
+    set ok = 1
+  else
+    set ok = $<
+  endif
+  if( $ok == 1 ) then
+    echo " OK. I proceed. "
+    goto p1 
+  endif
+
+  echo " I stop here. "
+  echo " "
+  exit
+
+#*************************************
+p1:
+
+  gfortran  -o aaa.exe  derv_poly.f 
+  set dir = cal${mdn_str}_mcmd1
+  #set dir = md${mdn}
+
+  @ ii = 1
+  while( $ii <= $nvs )
+    echo $ii
+# <I>
+    ln -s  ${dir}/b${ii}.fort.20   fort.50
+    ln -s  ${dir}/range.s${ii}  fort.60
+    ln -s  bin.size  fort.48
+
+#<O>
+    ln -s ${dir}/s${ii}.derv.poly  fort.51
+    ln -s ${dir}/s${ii}.derv.dat  fort.52 
+
+    ./aaa.exe  < fac.squeeze > out3
+    rm fort.*    
+
+    #if ($flg_neighbor == 0) then
+    cp ${dir}/s${ii}.derv.poly  ${dir}/s${ii}_d.derv.poly 
+    cp ${dir}/s${ii}.derv.dat ${dir}/s${ii}_d.derv.dat 
+    #endif 
+
+    @ ii ++
+  end
+
+  rm aaa.exe  
+  cp  fac.squeeze  ${dir}
+  mv  out3  ${dir}
+
+exit
+#*************************************
+  rm *.tar  
+  cp -r ${dir} ${dir}_f
+  tar cvf  ${dir}_f.tar  ${dir}_f
+  rm -r ${dir}_f
+
+  echo " "
+  echo "  end of all "
+  echo " "
+#*************************************
+  exit
+

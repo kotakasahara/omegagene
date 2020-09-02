@@ -1,0 +1,25 @@
+#
+rm dat/*
+
+set ii = 1
+
+while( ${ii} <= 8 ) 
+  cd s${ii}
+  rm *.res *.pdf
+  csh do_two
+  cp e1.pdf  ../dat/s${ii}.pdf
+
+  cd ..
+  @ ii ++
+end
+
+#cd s8
+#  rm *.res *.pdf
+#  csh do_two
+#  cp e1.pdf  ../dat/s8.pdf
+#cd ../
+
+tar cvf dat.tar dat
+gzip dat.tar
+mv dat.tar.gz ../../../../..
+

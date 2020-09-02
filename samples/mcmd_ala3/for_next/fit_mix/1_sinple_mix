@@ -1,0 +1,212 @@
+#!/bin/csh
+
+###############################
+  ifort -o abc.exe mix.f
+###############################
+set auto = $1
+echo "auto = $auto"
+  head -1 ../current_situation > aaa
+  set done = `more aaa`
+  rm aaa
+  head -2 ../current_situation > aaa
+  tail -1 aaa > bbb
+  set nst = `more bbb`
+  rm aaa bbb
+if ( $done < 10 ) then
+  set done_str = "0${done}"
+else
+  set done_str = "${done}"
+endif
+set next_pre = $2
+echo "next_pre " $next_pre
+
+echo " "
+echo " *********************************************************************"
+echo " * Calc. d ln[Pc(L,T)]/dL [next]                                     *"
+echo " *   = d ln[Pc(L,T)_pre]/dL [previous] + d ln[DPc(L,T)]/dL [current] *"
+echo " * Results are output.                                               *"
+echo " *********************************************************************"
+echo " "
+echo " You use fitting data from fit_pmc_entire. "
+echo " if the current simulation is not the first. "
+echo " "
+echo " MD done = " $done
+echo " N. of v-states = " $nst
+echo " "
+echo "  Input 1, if OK. "
+echo " "
+
+  if( $auto == 1 ) then
+    set ok = 1
+  else
+    set ok = $<
+  endif
+  if( $ok == 1 ) then
+   echo " OK. I proceed. "
+   goto p1 
+  endif
+  echo " Strange. I stop here. "
+  exit
+
+p1:
+
+  set dname = fit_pmc_entire
+
+  echo " Input directory name set: " $dname
+  echo " "
+
+###################### Set weight & range ############################
+
+  set rng = ../${dname}/cal${done_str}_mcmd1
+
+  echo " "
+  @ ist = 1
+  while ( $ist <= $nst ) 
+
+#  weight set.
+
+    head -$ist weight.dat > w$ist
+    tail -1 w$ist > aa
+    mv aa w$ist
+
+    set ff = ` more w$ist `
+    if( $ff != 1.0 ) then
+      echo "  "  $ist ":weight ** non zero ** = " $ff
+    else
+      echo "  "  $ist ":weight                = " $ff
+    endif
+
+# range set.
+    ln -s ${rng}/range.s${ist}  range.s${ist}
+
+    @ ist ++
+  end
+  echo " "
+
+##################### computation #################################
+
+echo " "
+echo "*******************************************"
+echo "* The output directory (ex. md3) is made  *"
+echo "* automativally when you run this script. *"
+echo "*******************************************"
+
+  echo " MD No. done = " $done
+  echo " N of v states = " $nst
+
+  rm -r cal${done_str}_mcmd1
+  rm cal${done_str}_mcmd1.tar 
+  mkdir cal${done_str}_mcmd1
+###############################
+@ ist = 1
+  while ( $ist <= $nst ) 
+    echo " v-state No. = " $ist
+    ln -s range.s${ist}  fort.40
+########
+#  Set md0 or md1 when V-AUS was done.
+#  Note: This part is not used for V-McMD.
+#        but used for md0 of V-AUS.
+
+##  if( $done == 0 ) then
+##    ln -s yes_no.md0  fort.70 
+##    ln -s ../${dname}/md0/s${ist}.derv.poly  fort.51
+##  endif
+      @ pre = ${done} - 1
+      if ( $pre < 10 ) then
+        set pre_str = "0${pre}"
+      else
+        set pre_str = "${pre}"
+      endif
+
+    if( $next_pre == "y" ) then
+      ln -s yes_no.mdx  fort.70 
+      ln -s ../fit_dden/cal${pre_str}_mcmd1/e1_fort.20   fort.50
+      ln -s ../${dname}/cal${done_str}_mcmd1/s${ist}_d.derv.poly  fort.51
+#      ln -s yes_no.md1  fort.70 
+#      ln -s ../${dname}/cal${done_str}_mcmd1/s${ist}_d.derv.poly  fort.51
+##    ln -s ../${dname}/md1/s${ist}.derv.poly  fort.51
+    endif
+####
+#  Case for mdx.
+#  Note: For V-McMD and for $done = 2, the directory md${pre} is not prepared.
+#        So, please generate it by your hands in advance.
+#        For V-AUS, the script works as it is.
+
+    if( $next_pre != "y" )  then
+      ln -s yes_no.mdx  fort.70 
+
+# Usual case.
+#      ln -s cal${pre_str}_mcmd1/s${ist}_d.fort.20   fort.50
+      ln -s cal${pre_str}_mcmd1/s${ist}.fort.20   fort.50
+#      ln -s cal${pre_str}_mcmd1/s1.fort.20   fort.50
+
+      #ln -s cal${pre_str}_mcmd1/s9.fort.20   fort___.50
+      #ln -s ../fit_dden/cal${pre_str}_mcmd1/e1_fort.20   fort.50
+      
+# Special case: reset of v-states.
+##    ln -s   ../rearrange_v/md${pre}/s${ist}.fort.20   fort.50
+
+#      ln -s ../${dname}/cal${done_str}_mcmd1/s${ist}_d.derv.poly  fort.51
+    ln -s ../${dname}/cal${done_str}_mcmd1/s${ist}.derv.poly  fort.51
+#     ln -s ../${dname}/cal${done_str}_mcmd1/s1_d.derv.poly  fort.51
+    endif
+########
+#  Output.
+    ln -s cal${done_str}_mcmd1/s${ist}.simple_fort.20 fort.60
+
+    ./abc.exe < w${ist} > cal${done_str}_mcmd1/out.s${ist}
+
+    rm fort.*
+    rm w${ist}
+
+    @ ist ++
+  end
+
+  cp weight.dat cal${done_str}_mcmd1
+  rm abc.exe 
+  rm range.s*  w?
+
+  echo " "
+  echo " MD No. done = " $done
+  echo " N of v states = " $nst
+  echo " "
+########################
+
+# exit
+
+#  Do not use below.
+
+  echo " "
+  echo " Question:"
+  echo " Do you proceed to the next step (2_***)?"
+  echo "  If you quit, please input 1. "
+  echo "  Then I copy:s*.simple_fort.20 --> s*.fort.20 in md${done} "
+  echo " "
+  echo "  IF YOU DO NOT UNDERSTAND THIS QUESTION, "
+  echo "  PLEASE PUSH RETURN KEY. "
+  echo " "
+
+  #set wi = $<
+  set wi = 1
+  if( $wi == 1 ) then
+    echo " "
+    echo "  copy. "
+
+    @ ii = 1
+    while( $ii <= $nst )
+      echo  $ii 
+      cp cal${done_str}_mcmd1/s${ii}.simple_fort.20  cal${done_str}_mcmd1/s${ii}.fort.20
+      cp cal${done_str}_mcmd1/s${ii}.simple_fort.20  cal${done_str}_mcmd1/s${ii}_d.fort.20
+      @ ii ++
+    end
+  endif
+
+  if( $wi != 1 ) then
+    echo " "
+    echo "  No copy. "
+  endif
+
+  echo " "
+
+########################
+exit

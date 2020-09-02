@@ -1,0 +1,146 @@
+#!/bin/csh
+
+################################################# 
+
+set iord = $1
+set auto = $2
+
+echo "auto = $auto"
+
+  head -1 ../current_situation > aaa
+  set done = `more aaa`
+  rm aaa
+  head -2 ../current_situation > aaa
+  tail -1 aaa > bbb
+  set nst = `more bbb`
+  rm aaa bbb
+if ( $done < 10 ) then
+  set done_str = "0${done}"
+else
+  set done_str = "${done}"
+endif
+
+
+  echo " "
+  echo " ***********************************************************************"
+  echo " * 1) Further fitting is done repeatedly to make a smooth connection.  *"
+  echo " * 2) Output polynomials for v-state widths (not block widths).        *"
+  echo " ***********************************************************************"
+  echo " "
+  echo " MD done = " $done
+  echo " N. of v-states = " $nst
+  echo " "
+      set parms = "7.0 "
+      set aaa = ` more bin.size `
+      echo "  Parameters: " $parms  $aaa   "       <------------------ OK?"
+  echo " "
+  set irep = 5
+  echo "  repetition times are " $irep
+  echo "     If you increase it, change this script. <---- NOTE "
+  echo "     Very larfe repetition is wrong. "
+  echo " "
+  echo "  Input 1, if OK. "
+  echo " "
+
+
+  if( $auto == 1 ) then
+    set ok = 1
+  else
+    set ok = $<
+  endif
+  if( $ok == 1 ) then
+   echo " OK. I proceed. "
+   goto p1 
+  endif
+  echo " Strange. I stop here. "
+  exit
+
+################################################# 
+p1:
+echo " ---------- "
+
+# Repeating.
+  @ mrep = 1
+  while ( $mrep <= $irep ) 
+
+    echo "  "
+    echo "iteration time = " $mrep
+
+#  Prepare input file for the first iteration.
+    if( $mrep == 1 ) then
+      @ kk = 1
+      cp nul derv_again.dat
+      while ( $kk <= $nst )
+        cat derv_again.dat  cal${done_str}_mcmd1/s${kk}.fort.12  > aa
+        mv aa derv_again.dat
+        echo "    Integrating derivatives of v-state: " $kk
+        @ kk ++
+      end
+      mv derv_again.dat cal${done_str}_mcmd1/derv_again.dat
+    endif
+
+#  Prepare input file for further iterations.
+    if( $mrep > 1 ) then
+      @ kk = 1
+      cp nul derv_again.dat
+      while ( $kk <= $nst )
+        cat derv_again.dat  cal${done_str}_mcmd1/s${kk}_d.fort.12  > aa
+        mv aa derv_again.dat
+        echo "    Integrating derivatives of v-state: " $kk
+        @ kk ++
+      end
+      mv derv_again.dat cal${done_str}_mcmd1/derv_again.dat
+    endif
+
+    set f1 = cal${done_str}_mcmd1/derv_again.dat
+    echo "   "
+
+# Fitting.
+    @ ii = 1
+    while( $ii <= $nst )
+
+      #@ iord = 9
+      #if( $ii == 1 ) @ iord = 9
+      #if( $ii == 2 ) @ iord = 9
+      #if( $ii == 3 ) @ iord = 9
+      #if( $ii == 4 ) @ iord = 9
+      #if( $ii == 5 ) @ iord = 9
+      #if( $ii == 6 ) @ iord = 9
+      #if( $ii == 7 ) @ iord = 9
+
+      echo "    " $ii " order = " $iord
+
+      echo $parms  $aaa  "  999.0  0.0 " $iord " 0.0" > aaa1
+
+      set f2 = ` head -1 cal${done_str}_mcmd1/b${ii}.range `
+      set f3 = ` head -1 ../fit_pmc_entire/cal${done_str}_mcmd1/range.s${ii} `
+      echo $f2 $f3  > a1
+      echo $f3 > a2
+
+      cat aaa1 a1 a2 $f1 > cal${done_str}_mcmd1/inp_derv_s${ii}_d.dat
+      rm a1 a2
+
+      src_pre/aho.exe < cal${done_str}_mcmd1/inp_derv_s${ii}_d.dat
+#  Overwrite.
+      mv fort.11 cal${done_str}_mcmd1/s${ii}_d.fort.11
+      mv fort.12 cal${done_str}_mcmd1/s${ii}_d.fort.12
+      mv fort.20 cal${done_str}_mcmd1/s${ii}_d.fort.20
+
+      rm fort.13 fort.16
+
+      @ ii ++
+    end
+
+    rm aaa1
+
+    @ mrep ++
+  end
+################################################# 
+  rm *.tar
+  cp -r cal${done_str}_mcmd1  cal${done_str}_mcmd1_m
+  tar cvf cal${done_str}_mcmd1_m.tar cal${done_str}_mcmd1_m
+  rm -r  cal${done_str}_mcmd1_m
+################################################# 
+
+  exit
+#######################################################################

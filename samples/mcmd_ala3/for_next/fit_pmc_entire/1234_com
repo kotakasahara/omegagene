@@ -1,0 +1,50 @@
+#!/bin/csh
+
+set ordmin = $1
+set ordmax = $2
+set flg_neighbor = $3
+
+  head -1 ../current_situation > aaa
+  set mdn = `more aaa`
+  rm aaa
+  head -2 ../current_situation > aaa
+  tail -1 aaa > bbb
+  set nvs = `more bbb`
+  rm aaa bbb
+
+#set mdn = `more ../current_md_num`
+#set nvs = `more ../current_vst_num`
+
+if ( $mdn < 10 ) then
+  set mdn_str = "0${mdn}"
+else
+  set mdn_str = "${mdn}"
+endif
+
+echo "Order $ordmin - $ordmax "
+if ( $flg_neighbor == 1 ) then
+  echo "include surrounding neighbors for fitting"
+else
+  echo "fit with only one state, surrounding ones will be omitted" 
+endif
+
+set dir = cal${mdn_str}_mcmd1
+rm -r ${dir}*
+
+csh ./1_com ${flg_neighbor} 1
+echo "abc"
+#foreach iord (3 4)
+set iord = $ordmin
+while ( $iord <= $ordmax )
+  csh ./2_com ${flg_neighbor} ${iord} 1 
+  csh ./3_com ${flg_neighbor} 1
+#  if (${flg_neighbor} == 1) then
+#    csh ./4_refit_derv.csh  ${iord} 1
+#  endif
+  cp -r ${dir} ${dir}_${iord}  
+  @ iord ++
+end
+
+echo "R"
+R --vanilla --slave --args ${mdn_str} ${nvs} ${ordmin} ${ordmax} fitpmc1.png fitpmc2.png < r_fitpmc.R
+echo "end"

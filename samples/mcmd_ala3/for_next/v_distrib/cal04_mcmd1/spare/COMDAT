@@ -1,0 +1,39 @@
+
+cc      include "COMDAT"
+c******************************************************
+        implicit real*8 (a-h,o-z)
+        parameter (nwin=2000)
+        parameter (nfilmx=5000)
+        parameter (nvert=15)
+c****
+        common/in1/de,emin1
+        common/in2/nene,nfil,kktot
+        common/in3/tot
+        common/in4/rng(2,nvert)
+        common/in5/mvert
+
+        character filname*60,filnamev*60
+        common/file1/filname(10000),filnamev(10000)
+c****
+        common/dat1/pdf(nwin,nvert)
+        common/dat2/nst(nfilmx),nen(nfilmx)
+        common/dat3/wgt(nfilmx)
+c****
+        parameter (nvchg=100000)
+        common/dat4/ipos(nvchg),ivert(nvchg)
+        common/dat5/icou(nvert)
+
+        character modif*2
+        character mark*3
+        character awork*1
+c****
+c  Count matrix.
+
+        parameter (max_snap=1000)
+        common/cont1/ncmat(nwin,nwin,nvert),intvc,kkone_use
+        common/cont2/nwork(max_snap)
+        common/cont3/npdf(nwin,nvert)
+        common/cont4/tmat(nwin,nvert,nvert)
+        common/cont5/kstart_bin(nvert),kend_bin(nvert)
+
+c******************************************************

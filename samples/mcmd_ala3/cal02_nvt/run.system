@@ -1,0 +1,11 @@
+--fn-i-tpl               ../cal01_inp/ala3.tpl
+--fn-i-initial-pdb       ../cal01_inp/ala3.pdb
+--fn-i-restart           run#{RUN_ID_PREV}_o.restart
+--cell-x                  39.7098
+--cell-y                  39.7098
+--cell-z                  39.7098
+--cell-center-x 0.0
+--cell-center-y 0.0
+--cell-center-z 0.0
+--fn-i-shake             ../cal01_inp/ala3.shk
+--fn-i-atom-groups       ../cal01_inp/atom_groups.inp

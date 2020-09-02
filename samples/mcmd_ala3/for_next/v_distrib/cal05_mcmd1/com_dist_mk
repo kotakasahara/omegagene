@@ -1,0 +1,16 @@
+#################################
+  limit coredumpsize 0
+# Compilation.
+  ifort  -o  uuu.exe  mk_e1dist.f
+#################################
+# <input>
+
+  ln -s  e1hall.pdf fort.50
+
+# <output>
+  ln -s e1.pdf fort.60
+
+  ./uuu.exe 
+
+  rm -rf fort.*
+  rm -rf uuu.exe

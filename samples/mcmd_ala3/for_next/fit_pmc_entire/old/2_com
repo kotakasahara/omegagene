@@ -1,0 +1,90 @@
+#!/bin/csh
+
+echo " "
+echo "****************************************************"
+echo "* 1) Generate input files for the block ranges.    *"
+echo "* 2) Do fitting for the block ranges and           *"
+echo "*    output polynomials for v-states (not blocks). *"
+echo "****************************************************"
+echo " "
+
+set flg_neighbor = $1
+set iord = $2
+set auto = $3
+
+set mdn = `more ../current_md_num`
+if ( $mdn < 10 ) then
+  set mdn_str = "0${mdn}"
+else
+  set mdn_str = "${mdn}"
+endif
+
+set nvs = `more ../current_vst_num`
+set vs_begin = 1
+
+  echo " "
+  echo  MD No. =  ${mdn}
+  echo "v states =  " ${vs_begin}  " - " ${nvs}
+  echo "  "
+  echo " May I proceed? "
+  echo " If OK, input 1.  If No, input any number else 1. "
+
+  if( $auto == 1 ) then
+    set ok = 1
+  else
+    set ok = $<
+  endif
+  if( $ok == 1 ) then
+   echo " OK. I proceed. "
+   goto p1 
+  endif
+
+  echo " I stop here. "
+  echo " "
+  exit
+#*************************************
+p1:
+
+  set dir = cal${mdn_str}_mcmd1
+  #@ iord = 8
+  echo " Order of polynomial ? "
+  if( $auto != 1 || $iord < 1 ) then
+    set iord = $<
+  endif
+  echo $iord
+
+  @ ii = ${vs_begin}
+  while( $ii <= $nvs )
+    echo $ii
+
+# 1) Generate inp_fit.dat for block.
+
+    set work1 = `more ${dir}/range.b${ii} `
+    set work2 = `more ${dir}/range.s${ii} `
+
+    echo "-50500.0   50.00   999.0  0.0 " $iord " 0.0" > aaa1
+    echo $work1  $work2 > aaa2
+    echo $work1 > aaa3
+    
+    if ( ${flg_neighbor} == 1 ) then 
+      cat aaa1 aaa2 aaa3 ${dir}/entire.pdf  > ${dir}/inp_fit.dat_b${ii}
+    else
+      cat aaa1 aaa2 aaa3 ${dir}/s${ii}.pdf  > ${dir}/inp_fit.dat_b${ii}
+    endif
+
+# 2) Do fitting for the block ranges and 
+#    output polynomials for v-states (not blocks). 
+
+    src_pre/aho.exe < ${dir}/inp_fit.dat_b${ii}
+
+    mv fort.11 ${dir}/b${ii}.fort.11
+    mv fort.12 ${dir}/b${ii}.fort.12
+    mv fort.20 ${dir}/b${ii}.fort.20
+
+    rm fort.* aaa*
+
+    @ ii ++
+  end
+#*************************************
+exit
+

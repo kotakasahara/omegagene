@@ -1,0 +1,43 @@
+--processor                   single        ;
+;--gpu-device-id  #{GPU_DEVICE_ID}
+--gpu-device-id  0
+--mode                        md            ;
+--integrator                  leapfrog-presto      ;
+--cutoff                      12.0          ;
+--n-steps                     50000       ;
+--time-step                   2.0
+--electrostatic               zero-dipole   ;
+--ele-alpha                   0             ;
+--thermostat                  scaling
+;--thermostat                  none
+--temperature                 300           ;
+--print-interval-log          5000           ;
+--print-interval-coord        5000          ;
+;--print-interval-velo         1             ;
+;--print-interval-force        1000          ;
+;--print-interval-energy       1000          ;
+;--print-interval-energyflow   1000          ;
+--fn-o-coord                  md.cod    ;
+--format-o-coord presto
+--group-o-coord  solute
+--fn-o-log                    md.log    ;
+--fn-o-energy                 md.ene    ;
+--fn-o-restart                md.restart
+--nsgrid-cutoff               13.0
+--nsgrid-update-intvl         10
+--constraint                  shake
+;--constraint                  none
+--const-max-loops             1000
+--const-tolerance             0.0000001
+--thermo-const-max-loops      100
+--thermo-const-tolerance      0.000001
+--extended-ensemble           v-mcmd
+--fn-o-vmcmd-log              ttp_v_mcmd.out
+--fn-o-extended-lambda          mult.ene
+--format-o-extended-lambda       binary
+--print-interval-extended-lambda 1
+--com-motion                 cancel      ;
+--com-cancel-group-name        solute
+--com-cancel-group-name        solvent
+;--dist-restraint               harmonic
+;--dist-restraint-weight       1.0

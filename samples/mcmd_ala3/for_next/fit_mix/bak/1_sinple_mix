@@ -1,0 +1,195 @@
+#!/bin/csh
+#
+set auto = $1
+echo "auto = $auto"
+
+set done = `more ../current_md_num`
+set nst = `more ../current_vst_num`
+if ( $done < 10 ) then
+  set done_str = "0${done}"
+else
+  set done_str = "${done}"
+endif
+
+echo " "
+echo " ************************************************************"
+echo " * Generate fitting params of dlnP/dl for the entire range. *"
+echo " ************************************************************"
+echo " "
+echo " MD done = " $done
+echo " N. of v-states = " $nst
+echo " "
+echo "  Input 1, if OK. "
+echo " "
+
+  if( $auto == 1 ) then
+    set ok = 1
+  else
+    set ok = $<
+  endif
+  if( $ok == 1 ) then
+   echo " OK. I proceed. "
+   goto p1 
+  endif
+  echo " Strange. I stop here. "
+  exit
+
+p1:
+
+echo "   Whick do you use, fit_pmc_each or fit_pmc_entire ? "
+echo "      Input 1 for fit_pmc_each (maybe bad) "
+echo "      Input 2 for fit_pmc_entire (better) "
+echo " "
+  
+  set dname = fit_pmc_entire
+
+  echo " Directory name set: " $dname
+  echo " "
+
+######################################################################
+###################### Set weight & range ############################
+######################################################################
+  set rng = ../${dname}/cal${done_str}_mcmd1
+
+# ls -la $predir 
+
+  echo " "
+  @ ist = 1
+  while ( $ist <= $nst ) 
+
+#  weight set.
+
+    head -$ist weight.dat > w$ist
+    tail -1 w$ist > aa
+    mv aa w$ist
+
+    set ff = ` more w$ist `
+    if( $ff != 1.0 ) then
+      echo "  "  $ist ":weight ** non zero ** = " $ff
+    else
+      echo "  "  $ist ":weight                = " $ff
+    endif
+
+# range set.
+
+    ln -s ${rng}/range.s${ist}  range.s${ist}
+    echo     ${rng}/range.s${ist} 
+    @ ist ++
+  end
+  echo " abc.exe "
+###################################################################
+##################### computation #################################
+###################################################################
+  ifort -o abc.exe mix.f
+###############################
+echo " "
+echo "*******************************************"
+echo "* The output directory (ex. md3) is made  *"
+echo "* automativally when you run this script. *"
+echo "*******************************************"
+
+  echo " MD No. done = " $done
+  echo " N of v states = " $nst
+
+  rm -r cal${done_str}_mcmd1
+  mkdir cal${done_str}_mcmd1
+###############################
+@ ist = 1
+  while ( $ist <= $nst ) 
+    echo " v-state No. = " $ist
+    ln -s range.s${ist}  fort.40
+########
+#  Case for md1.
+
+#    if( $done == 5) then
+#      ln -s yes_no.md1  fort.70 
+
+#      if(${wi} == 2) then
+#        ln -s ../fit_dden/cal04_mcmd1/e1_fort.20  fort.51
+#      endif
+
+#      if(${wi} == 1) then
+#  single p.
+#        if( ${sm} == 2 ) then
+#          ln -s ../${dname}/cal04_mcmd1/all/e1_fort.20  fort.51
+#        endif
+#  multi p.
+#        if( ${sm} == 1 ) then
+#          ln -s ../${dname}/cal04_mcmd1/each/s${ist}.derv.poly  fort.51
+#        endif
+#      endif
+#    endif
+
+########
+#  Case for mdx.
+
+
+      @ pre = ${done} - 1
+      if ( $pre < 10 ) then
+        set pre_str = "0${pre}"
+      else
+        set pre_str = "${pre}"
+      endif
+      if( $done == 10 ) then
+        echo " INITIAL RUN "
+        ln -s yes_no.md1  fort.70 
+        ln -s ../${dname}/cal${done_str}_mcmd1/b${ist}.fort.20  fort.51
+      endif
+      if( $done > 10 ) then
+      	echo "mix with cal${pre_str}"
+        ln -s yes_no.mdx  fort.70 
+        ln -s cal${pre_str}_mcmd1/s${ist}.fort.20 fort.50
+        ln -s ../${dname}/cal${done_str}_mcmd1/s${ist}.derv.poly  fort.51
+      endif
+
+
+########
+#  Output.
+    ln -s cal${done_str}_mcmd1/s${ist}.simple_fort.20 fort.60
+    
+    ./abc.exe < w${ist} > cal${done_str}_mcmd1/out.s${ist}
+
+    rm fort.*
+    rm w${ist}
+
+    @ ist ++
+  end
+
+  cp weight.dat cal${done_str}_mcmd1
+  rm abc.exe 
+  rm range.s*  w?
+
+  echo " "
+  echo " MD No. done = " $done
+  echo " N of v states = " $nst
+  echo " "
+########################
+  echo " "
+  echo " Question:"
+  echo " Do you proceed to the next step (2_***)?"
+  echo "  If you quit, please input 1. "
+  echo "  Then I copy:s*.simple_fort.20 --> s*.fort.20 in cal${done_str}_mcmd1 "
+
+  #set wi = $<
+  set wi = 1
+  if( $wi == 1 ) then
+    echo " "
+    echo "  copy. "
+
+    @ ii = 1
+    while( $ii <= $nst )
+      echo  $ii 
+      cp  cal${done_str}_mcmd1/s${ii}.simple_fort.20  cal${done_str}_mcmd1/s${ii}.fort.20
+      @ ii ++
+    end
+  endif
+
+  if( $wi != 1 ) then
+    echo " "
+    echo "  No copy. "
+  endif
+
+  echo " "
+
+########################
+exit

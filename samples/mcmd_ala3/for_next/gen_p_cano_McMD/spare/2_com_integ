@@ -1,0 +1,80 @@
+#
+
+echo "****************************************************"
+echo "* Integrate v-state ln[n(E)s for the entire range. *"
+echo "****************************************************"
+
+  ifort -o aaa.exe  gen_entire_pdf.f 
+
+  set done = ` head -1 md_vst `
+  head -2 md_vst > bbb 
+  set nst = ` tail -1 bbb `
+  rm bbb
+
+  echo " "
+  echo " md No. = " $done
+  echo " N of v states = " $nst
+  echo " "
+
+  echo "  Input 1, if OK. "
+  echo " "
+  set ok = $<
+  if( $ok == 1) goto p1 
+  echo " Strange. I stop here. "
+  exit
+###########################################
+p1:
+
+  echo $nst > aaa
+  ln -s aaa   fort.10
+
+  set dir = p_cano
+  set dir2 = ../fit_mix/md${done}
+
+  @ ii = 1
+  while( $ii <= $nst )
+    echo "  v-state = " $ii 
+
+# <I>
+    @ iinp = $ii + 100
+    @ iinp2 = $ii + 200
+    ln -s ${dir}/s${ii}_poly.dat  fort.${iinp}
+    ln -s ${dir2}/s${ii}.fort.20  fort.${iinp2}
+# <O>
+##  @ iot = $ii + 300
+##  ln -s ${dir}/s${ii}_pdf_move.dat  fort.${iot}
+
+    @ ii ++
+  end
+
+  ln -s ${dir}/whole.dat  fort.500
+
+  ./aaa.exe > ${dir}/out2
+
+  rm aaa.exe
+  rm fort.*  aaa
+
+###########################################
+  echo " "
+  echo "********************************************"
+  echo "* Re-fitting ln[n(E)] for the whole range. *"
+  echo "********************************************"
+  echo " "
+
+  cat  $dir/inp.dat_for_next  $dir/whole.dat  > fit.dat
+  src_pre/aho.exe < fit.dat 
+  mv fort.11 ${dir}/whole.fort.11
+  mv fort.12 ${dir}/whole.fort.12
+  mv fort.20 ${dir}/whole.fort.20
+  mv fit.dat ${dir}
+
+  rm fort.*
+###########################################
+  echo " "
+  echo " *********************************** "
+  echo " * You may rename the file p_cano. *"
+  echo " *********************************** "
+  echo " "
+
+exit
+#******************************

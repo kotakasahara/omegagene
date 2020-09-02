@@ -1,0 +1,20 @@
+
+1) in 1_com
+Please check dir2 is correctly set. 
+
+Please check the below line is correctly set:
+  set aaa = ${dir2}/inp_data/aus_coef_md${mdn}.inp
+
+2) in 2_com 
+Please check the polynomial orders are properly set.
+
+Please check paras is correctly set.
+The parameters involved in paras are the same as thoese in v_distriv/md*/inp_c1_all usually.
+
+3) in com3
+The value in fac.squeeze is OK?
+    The file scale.fact	is not used any more.
+
+
+
+

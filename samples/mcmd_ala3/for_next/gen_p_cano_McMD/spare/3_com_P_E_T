@@ -1,0 +1,17 @@
+#
+
+
+   echo "  "
+   echo "********************* "
+   echo "* Calculate P(E,T). * "
+   echo "********************* "
+   echo "  "
+
+   set temp = 300.0 
+   echo " T = " $temp
+
+
+
+
+ exit
+

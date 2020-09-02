@@ -1,0 +1,23 @@
+----------------------------
+Usage: fornext_vdistrib_mainv.py [options]
+
+Options:
+  -h, --help            show this help message and exit
+  -i FN_INP             file name for input file
+  --i-ene-files=FN_ENE_FILES
+                        file name for the list of energy trajectories
+  --i-vs-files=FN_VS_FILES
+                        file name for the list of vs trajectories
+  --i-ttpv=FN_TTPVINP   file name for the psygene input file describing ttp v
+                        mcmd configurations
+  --pref-out=PREF_OUT   prefix for output dir
+  --ene-margin=ENE_MARGIN
+                        margin for ene distribution
+  --ene-interval=ENE_INTERVAL
+                        interval frame number for reading energies
+  --ene-interval-file=ENE_INTERVAL_FILE
+                        Interval frame number for recording in the MD runs.
+  --weight-vs           Weighting as equally sample for all vs
+  --celeste-bin         Read Celeste binary data
+----------------------------
+data.read_inp

@@ -1,0 +1,29 @@
+#
+echo "  "
+echo "********************************************"
+echo "  Have you modified the following file? "
+echo "      current_situation "
+echo "********************************************"
+echo " ====== Monitering below: ====== "
+echo "  "
+echo " ../current_situation "
+more ../current_situation
+echo " "
+
+ echo " *** *** *** *** "
+ echo " 1) md no. "
+ echo " 2) n of v-states "
+ echo " 3) starting run no. "
+ echo " 4) ending run no. "
+
+ echo " "
+ echo " ########## IMPORTANT ############ "
+ echo "  bin size given in bin.size is very important. "
+ echo "  This quantities is used in re-fitting. "
+ echo " "
+ set aaa = `more bin.size`
+ echo "     the current value = " $aaa  " <---------------- OK? "
+ echo " "
+ echo "  This value may be small for V-AUS, "
+ echo "  and large for V-McMD."
+ echo " "

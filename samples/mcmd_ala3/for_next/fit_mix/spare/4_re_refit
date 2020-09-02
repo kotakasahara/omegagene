@@ -1,0 +1,100 @@
+#!bin/sch
+
+################################################# 
+
+  head -1 ../current_situation > aaa
+  set done = `more aaa`
+  rm aaa
+  head -2 ../current_situation > aaa
+  tail -1 aaa > bbb
+  set nst = `more bbb`
+  rm aaa bbb
+
+
+  echo " "
+  echo " ***********************************************************************"
+  echo " * 1) Further fitting is done repeatedly to make a smooth connection.  *"
+  echo " * 2) Output polynomials for v-state widths (not block widths).        *"
+  echo " ***********************************************************************"
+  echo " "
+  echo " MD done = " $done
+  echo " N. of v-states = " $nst
+  echo " "
+      set parms = "7.0  0.2 "
+      echo "  Parameters: " $parms   "       <------------------ OK?"
+  echo " "
+  set irep = 5
+  echo "  repetition times are  5."
+  echo "     If you increase it, change this script. <---- NOTE "
+  echo " "
+  echo "  Input 1, if OK. "
+  echo " "
+
+  set ok = $<
+  if( $ok == 1) goto p1 
+  echo " Strange. I stop here. "
+  exit
+
+################################################# 
+p1:
+
+#  Integrate again the individual derivatives for virtual-state.
+
+  @ kk = 1
+
+  cp nul derv_again.dat
+  while ( $kk <= $nst )
+    cat derv_again.dat  md$done/s${kk}.fort.12  > aa
+    mv aa derv_again.dat
+    echo "    Integrating derivatives of v-state: " $kk
+
+    @ kk ++
+  end
+
+  mv derv_again.dat md$done/derv_again.dat
+  rm aa
+
+  set f1 = md$done/derv_again.dat
+####
+@ ii = 1
+while( $ii <= $nst )
+
+  @ iord = 9
+  if( $ii == 1 ) @ iord = 9
+  if( $ii == 2 ) @ iord = 9
+  if( $ii == 3 ) @ iord = 9
+  if( $ii == 4 ) @ iord = 9
+  if( $ii == 5 ) @ iord = 9
+  if( $ii == 6 ) @ iord = 9
+  if( $ii == 7 ) @ iord = 9
+
+  echo $ii " order = " $iord
+
+  echo $parms  "  999.0  0.0 " $iord " 0.0" > aaa1
+
+  set f2 = ` head -1 md$done/b${ii}.range `
+  set f3 = ` head -1 ../fit_pmc_entire/md$done/range.s${ii} `
+  echo $f2 $f3  > a1
+  echo $f3 > a2
+
+  cat aaa1 a1 a2 $f1 > md$done/inp_derv_s${ii}_d.dat
+  rm a1 a2
+
+  src_pre/aho.exe < md$done/inp_derv_s${ii}_d.dat
+  mv fort.11 md${done}/s${ii}_d.fort.11
+  mv fort.12 md${done}/s${ii}_d.fort.12
+  mv fort.20 md${done}/s${ii}_d.fort.20
+
+  rm fort.13 fort.16
+
+  @ ii ++
+end
+
+rm aaa1
+################################################# 
+  rm *.tar
+  cp -r md${done}  md${done}_m
+  tar cvf md${done}_m.tar md${done}_m
+  rm -r  md${done}_m
+################################################# 
+exit

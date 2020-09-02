@@ -1,0 +1,71 @@
+#!/bin/csh
+
+################################################# 
+set auto = $1
+echo "auto = $auto"
+
+set done = `more ../current_md_num`
+set nst = `more ../current_vst_num`
+if ( $done < 10 ) then
+  set done_str = "0${done}"
+else
+  set done_str = "${done}"
+endif
+
+echo " "
+echo " *****************************************************"
+echo " * 1) Fit dln[P]/dL for each block.                 *"
+echo " * 2) Output polynomials for v-states (not blocks). *"
+echo " ****************************************************"
+echo " "
+echo " MD done = " $done
+echo " N. of v-states = " $nst
+echo " "
+echo "  Input 1, if OK. "
+echo " "
+
+
+  if( $auto == 1 ) then
+    set ok = 1
+  else
+    set ok = $<
+  endif
+  if( $ok == 1 ) then
+   echo " OK. I proceed. "
+   goto p1 
+  endif
+  echo " Strange. I stop here. "
+  exit
+
+################################################# 
+p1:
+
+set f1 = cal${done_str}_mcmd1/all_derv.dat
+
+@ iord = 7
+#@ iord = 4
+echo "-100000.0  100.0   999.0  0.0 " $iord " 0.0" > aaa1
+
+@ ii = 1
+while( $ii <= $nst )
+  echo $ii
+  set f2 = ` head -1 cal${done_str}_mcmd1/b${ii}.range `
+  set f3 = ` head -1 ../fit_pmc_entire/cal${done_str}_mcmd1/range.s${ii} `
+  echo $f2 $f3  > a1
+  echo $f3 > a2
+
+  cat aaa1 a1 a2 $f1 > cal${done_str}_mcmd1/inp_derv_s${ii}.dat
+  rm a1 a2
+
+  src_pre/aho.exe < cal${done_str}_mcmd1/inp_derv_s${ii}.dat
+  mv fort.11 cal${done_str}_mcmd1/s${ii}.fort.11
+  mv fort.12 cal${done_str}_mcmd1/s${ii}.fort.12
+  mv fort.20 cal${done_str}_mcmd1/s${ii}.fort.20
+
+  @ ii ++
+end
+
+rm aaa1
+################################################# 
+exit
+

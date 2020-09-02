@@ -1,0 +1,176 @@
+#!bin/sch
+
+  head -1 ../current_situation > aaa
+  set done = `more aaa`
+  rm aaa
+  head -2 ../current_situation > aaa
+  tail -1 aaa > bbb
+  set nst = `more bbb`
+  rm aaa bbb
+
+echo " "
+echo " ***************************************************"
+echo " * Calc. d ln[Pc(L,T)]/dL                          *"
+echo "        = d ln[Pc(L,T)_pre]/dL + d ln[DPc(L,T)]/dL *"
+echo " * and output.                                     *"
+echo " ***************************************************"
+echo " "
+echo " MD done = " $done
+echo " N. of v-states = " $nst
+echo " "
+echo "  Input 1, if OK. "
+echo " "
+
+  set ok = $<
+  if( $ok == 1) goto p1 
+  echo " Strange. I stop here. "
+  exit
+
+p1:
+
+echo " "
+echo " You use fitting data from fit_pmc_entire. "
+echo " "
+
+  set dname = fit_pmc_entire
+
+  echo " Input directory name set: " $dname
+  echo " "
+
+######################################################################
+###################### Set weight & range ############################
+######################################################################
+  set rng = ../${dname}/md${done}
+
+  echo " "
+  @ ist = 1
+  while ( $ist <= $nst ) 
+
+#  weight set.
+
+    head -$ist weight.dat > w$ist
+    tail -1 w$ist > aa
+    mv aa w$ist
+
+    set ff = ` more w$ist `
+    if( $ff != 1.0 ) then
+      echo "  "  $ist ":weight ** non zero ** = " $ff
+    else
+      echo "  "  $ist ":weight                = " $ff
+    endif
+
+# range set.
+    ln -s ${rng}/range.s${ist}  range.s${ist}
+
+    @ ist ++
+  end
+  echo " "
+###################################################################
+##################### computation #################################
+###################################################################
+  ifort -o abc.exe mix.f
+###############################
+echo " "
+echo "*******************************************"
+echo "* The output directory (ex. md3) is made  *"
+echo "* automativally when you run this script. *"
+echo "*******************************************"
+
+  echo " MD No. done = " $done
+  echo " N of v states = " $nst
+
+  rm -r md${done}
+  mkdir md${done}
+###############################
+@ ist = 1
+  while ( $ist <= $nst ) 
+    echo " v-state No. = " $ist
+    ln -s range.s${ist}  fort.40
+########
+#  Set md0 or md1 when V-AUS was done.
+#  Note: This part is not used for V-McMD.
+#        but used for md0 of V-AUS.
+
+##  if( $done == 0 ) then
+##    ln -s yes_no.md0  fort.70 
+##    ln -s ../${dname}/md0/s${ist}.derv.poly  fort.51
+##  endif
+    if( $done == 1 ) then
+      ln -s yes_no.md1  fort.70 
+      ln -s ../${dname}/md1/s${ist}.derv.poly  fort.51
+    endif
+####
+#  Case for mdx.
+#  Note: For V-McMD and for $done = 2, the directory md${pre} is not prepared.
+#        So, please generate it by your hands in advance.
+#        For V-AUS, the script works as it is.
+
+    if( $done >= 2) then
+      ln -s yes_no.mdx  fort.70 
+      @ pre = ${done} - 1
+
+# Usual case.
+        ln -s md${pre}/s${ist}.fort.20   fort.50
+# Special case: reset of v-states.
+##    ln -s   ../rearrange_v/md${pre}/s${ist}.fort.20   fort.50
+
+      ln -s ../${dname}/md${done}/s${ist}.derv.poly  fort.51
+    endif
+########
+#  Output.
+    ln -s md${done}/s${ist}.simple_fort.20 fort.60
+
+    ./abc.exe < w${ist} > md${done}/out.s${ist}
+
+    rm fort.*
+    rm w${ist}
+
+    @ ist ++
+  end
+
+  cp weight.dat md${done}
+  rm abc.exe 
+  rm range.s*  w?
+
+  echo " "
+  echo " MD No. done = " $done
+  echo " N of v states = " $nst
+  echo " "
+########################
+
+exit
+
+#  Do not use below.
+
+  echo " "
+  echo " Question:"
+  echo " Do you proceed to the next step (2_***)?"
+  echo "  If you quit, please input 1. "
+  echo "  Then I copy:s*.simple_fort.20 --> s*.fort.20 in md${done} "
+  echo " "
+  echo "  IF YOU DO NOT UNDERSTAND THIS QUESTION, "
+  echo "  PLEASE PUSH RETURN KEY. "
+  echo " "
+
+  set wi = $<
+  if( $wi == 1 ) then
+    echo " "
+    echo "  copy. "
+
+    @ ii = 1
+    while( $ii <= $nst )
+      echo  $ii 
+      cp  md${done}/s${ii}.simple_fort.20  md${done}/s${ii}.fort.20
+      @ ii ++
+    end
+  endif
+
+  if( $wi != 1 ) then
+    echo " "
+    echo "  No copy. "
+  endif
+
+  echo " "
+
+########################
+exit

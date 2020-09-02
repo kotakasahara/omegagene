@@ -1,0 +1,27 @@
+#
+
+  ifort -O3 -o aaa.exe  check_v.f
+#######################################
+  @ ii = 1
+
+  while( $ii < 128 )
+# <input>
+    echo $ii > kkk
+    ln -s  kkk  fort.11
+    ln -s ../dat_some/v${ii}  fort.10
+# <output>
+    ln -s  data  fort.20
+
+    echo "  file No. = " $ii
+    ./aaa.exe 
+    rm fort.10
+    @ ii ++
+
+exit
+
+  end
+#######################################
+  rm aaa.exe
+  rm kkk
+  rm fort.20  fort.11
+

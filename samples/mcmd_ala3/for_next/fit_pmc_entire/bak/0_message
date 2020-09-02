@@ -1,0 +1,25 @@
+#
+echo "********************************************"
+echo "  Have you modified two files below? "
+echo "      ../current_md_num"
+echo "      ../current_vst_num"
+#echo " ****  "
+#echo "  Is two Files n_start and n_end OK. "
+#echo "  Both files contain only one digit. "
+#echo "    Usually, the digit in n_start is 1, "
+#echo "    and one in n_end is the number of runs. "
+echo "********************************************"
+echo " ====== Monitering below: ====== "
+echo "  "
+echo " ../current_md_num "
+more ../current_md_num
+echo " ../current_vst_num"
+more ../current_vst_num
+echo " "
+
+#echo " *** *** *** *** "
+#echo " n_start "
+#more n_start
+#echo "n_end"
+#more n_end
+

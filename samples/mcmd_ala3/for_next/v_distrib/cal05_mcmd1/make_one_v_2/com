@@ -1,0 +1,20 @@
+#
+
+  ifort -o aaa.exe  gene_one.f
+
+  ln -s  ../v_2/s1.pdf  fort.101
+  ln -s  ../v_2/s2.pdf  fort.102
+  ln -s  ../v_2/s3.pdf  fort.103
+  ln -s  ../v_2/s4.pdf  fort.104
+  ln -s  ../v_2/s5.pdf  fort.105
+  ln -s  ../v_2/s6.pdf  fort.106
+  ln -s  ../v_2/s7.pdf  fort.107
+  ln -s  ../v_2/s8.pdf  fort.108
+  ln -s  ../v_2/s9.pdf  fort.109
+
+  ln -s  pmc.dat  fort.21
+
+
+  ./aaa.exe < inp > out
+
+  rm fort.*

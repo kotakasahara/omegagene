@@ -1,0 +1,46 @@
+#
+
+  gfortran -o abc.exe  cal_P_E_T.f 
+#######################################
+   echo "  "
+   echo "********************* "
+   echo "* Calculate P(E,T). * "
+   echo "********************* "
+   echo "  "
+#######################################
+   @ ii = 1
+   while( $ii <= 16 )
+
+     if( ${ii} == 1 ) set temp = 300
+     if( ${ii} == 2 ) set temp = 310
+     if( ${ii} == 3 ) set temp = 320
+     if( ${ii} == 4 ) set temp = 330
+     if( ${ii} == 5 ) set temp = 340
+     if( ${ii} == 6 ) set temp = 350
+     if( ${ii} == 7 ) set temp = 360
+     if( ${ii} == 8 ) set temp = 370
+     if( ${ii} == 9 ) set temp = 380
+     if( ${ii} == 10 ) set temp = 390
+     if( ${ii} == 11 ) set temp = 400
+     if( ${ii} == 12 ) set temp = 500
+     if( ${ii} == 13 ) set temp = 600
+     if( ${ii} == 14 ) set temp = 700
+     if( ${ii} == 15 ) set temp = 800
+     if( ${ii} == 16 ) set temp = 900
+
+     echo $temp > aaa
+
+     ln -s  p_cano/whole.fort.12  fort.20 
+     ln -s  p_cano/P_E_T${temp}.dat  fort.40 
+
+     ./abc.exe < aaa 
+     rm fort.*  aaa
+
+     @ ii ++
+   end
+
+##tar cvf p_cano.tar p_cano
+#######################################
+   rm abc.exe 
+
+ exit

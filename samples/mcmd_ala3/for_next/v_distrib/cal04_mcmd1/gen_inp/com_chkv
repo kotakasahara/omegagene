@@ -1,0 +1,37 @@
+#
+
+  ifort -O3 -o aaa.exe  check_v.f
+#######################################
+  @ ii = 1
+
+  while( $ii <= 128 )
+# <input>
+    echo $ii > kkk
+    ln -s  kkk  fort.11
+    ln -s ../dat_some/v${ii}  fort.10
+# <output>
+    ln -s  dat${ii}  fort.20
+
+    echo "  file No. = " $ii
+    ./aaa.exe  < para.inp
+    rm fort.*
+    @ ii ++
+  end
+
+  rm aaa.exe
+  rm kkk
+####
+  @ jj = 1
+  cp nul gen.dat
+  while( $jj <= 128 )
+    cat gen.dat dat${jj} >> xxx
+    mv xxx gen.dat
+    @ jj ++
+  end
+
+  rm dat*
+####
+  cat head.inf  gen.dat tail.inf > input.dat
+  rm gen.dat
+#######################################
+

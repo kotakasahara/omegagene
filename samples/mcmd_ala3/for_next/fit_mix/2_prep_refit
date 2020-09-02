@@ -1,0 +1,84 @@
+#!/bin/csh
+
+  ifort -o aaa.exe  block.f
+
+set auto = $1
+echo "auto = $auto"
+
+################################################# 
+#
+  head -1 ../current_situation > aaa
+  set done = `more aaa`
+  rm aaa
+  head -2 ../current_situation > aaa
+  tail -1 aaa > bbb
+  set nst = `more bbb`
+  rm aaa bbb
+if ( $done < 10 ) then
+  set done_str = "0${done}"
+else
+  set done_str = "${done}"
+endif
+
+
+echo " "
+echo " ************************************************************"
+echo " * 1) Output entire pdf by concatenating all v-state pdf's. *"
+echo " * 2) Output block ranges.                                  *"
+echo " ************************************************************"
+echo " "
+echo " MD done = " $done
+echo " N. of v-states = " $nst
+echo " "
+   set bin = `more bin.size`
+echo " Bin size for all_derv.dat: " $bin " <------- Note below"
+echo "           Note: all_derv.dat is used for fitting in the next procedure."
+echo " "
+echo "  Input 1, if OK. "
+echo " "
+
+  if( $auto == 1 ) then
+    set ok = 1
+  else
+    set ok = $<
+  endif
+  if( $ok == 1 ) then
+   echo " OK. I proceed. "
+   goto p1 
+  endif
+  echo " I stop here. "
+  exit
+
+################################################# 
+p1:
+
+# <I>
+  echo $nst > aaaaa
+  ln -s aaaaa  fort.10
+  ln -s bin.size  fort.14
+# <O>
+  touch cal${done_str}_mcmd1/all_derv.dat
+  ln -s cal${done_str}_mcmd1/all_derv.dat  fort.80
+#exit
+  @ ii = 1
+  while( $ii <= $nst )
+    echo $ii
+
+# <I>
+    @ nn = 100 + $ii
+    ln -s cal${done_str}_mcmd1/s${ii}.simple_fort.20  fort.${nn}
+# <O>
+    @ kk = 400 + $ii
+    ln -s cal${done_str}_mcmd1/b${ii}.range  fort.${kk}
+
+    @ ii ++
+  end
+
+  ./aaa.exe > cal${done_str}_mcmd1/out2
+
+  rm fort.*
+  rm aaa.exe aaaaa
+####################################################
+exit
+
+

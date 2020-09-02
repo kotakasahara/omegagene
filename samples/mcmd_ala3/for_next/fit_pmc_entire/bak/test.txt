@@ -1,0 +1,72 @@
+4,6c4,6
+< echo " **************************************************"
+< echo " * Calc. derivatives of ln[pdf] for each v-state. *"
+< echo " **************************************************"
+---
+> echo " *****************************************************"
+> echo " * Generate derivatives of ln[pdf] for each v-state. *"
+> echo " *****************************************************"
+7a8,15
+> set auto = $1
+> set mdn = `more ../current_md_num`
+> set nvs = `more ../current_vst_num`
+> if ( $mdn < 10 ) then
+>   set mdn_str = "0${mdn}"
+> else
+>   set mdn_str = "${mdn}"
+> endif
+9,25d16
+<   head -1 ../current_situation > aaa
+<   set mdn = `more aaa`
+<   rm aaa
+<   head -2 ../current_situation > aaa
+<   tail -1 aaa > bbb
+<   set nvs = `more bbb`
+<   rm aaa bbb
+< 
+<   echo " "
+<   echo  "  MD No. ="  ${mdn}
+<   echo  "  N. of v states ="  ${nvs}
+<   echo "  "
+< 
+<   set sfac = `head -1 fac.squeeze `
+<   echo " squeezing factor = " ${sfac}
+<   echo "         used to defuse down the large derivatives. "
+<   echo "  "
+32,35c23,30
+<   set ok = $<
+<   if( $ok == 1) then
+<      echo " OK. I proceed. "
+<      goto p1 
+---
+>   if( $auto == 1 ) then
+>     set ok = 1
+>   else
+>     set ok = $<
+>   endif
+>   if( $ok == 1 ) then
+>    echo " OK. I proceed. "
+>    goto p1 
+36a32
+> 
+45c41
+<   set dir = md${mdn}
+---
+>   set dir = cal${mdn_str}_mcmd1
+58c54
+<     ./aaa.exe  < fac.squeeze > out3
+---
+>     ./aaa.exe
+65,76d60
+<   cp  fac.squeeze  ${dir}
+<   mv  out3  ${dir}
+< 
+< #*************************************
+<   rm *.tar  
+<   cp -r md${mdn} md${mdn}_f
+<   tar cvf  md${mdn}_f.tar  md${mdn}_f
+<   rm -r md${mdn}_f
+< 
+<   echo " "
+<   echo "  end of all "
+<   echo " "

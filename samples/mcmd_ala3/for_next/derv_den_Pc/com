@@ -1,0 +1,61 @@
+#
+#  Set temperature at t below.
+
+set nstage = 19
+
+echo "  nstage = " $nstage
+
+  echo " ####  If OK, input 1. #### "
+  set ok = $<
+  if( $ok == 1) goto abc
+  echo " I stop here. "
+
+exit
+abc:
+####################################
+ifort -o abc.exe  derv_den_Pc.f
+####################################
+@ kk = 1
+while ( $kk <= ${nstage} )
+ if( $kk == 1) set t = 629.0212
+ if( $kk == 2) set t = 592.0200
+ if( $kk == 3) set t = 559.1300
+ if( $kk == 4) set t = 529.7021
+ if( $kk == 3) set t = 503.2170
+ if( $kk == 6) set t = 479.2543
+ if( $kk == 7) set t = 457.4700
+ if( $kk == 8) set t = 437.5800
+ if( $kk == 9) set t = 419.3475
+ if( $kk == 10) set t = 402.5736
+ if( $kk == 11) set t = 387.0900
+ if( $kk == 12) set t = 372.7533
+ if( $kk == 13) set t = 359.4407
+ if( $kk == 14) set t = 347.0462
+ if( $kk == 15) set t = 335.4780
+ if( $kk == 16) set t = 324.6561
+ if( $kk == 17) set t = 314.5106
+ if( $kk == 18) set t = 304.9800
+ if( $kk == 19) set t = 296.0100
+
+  rm -r ${kk}
+  mkdir ${kk}
+  echo $t > ${kk}/inp 
+
+  echo $kk $t
+
+#  In.
+  ln -s  ../v_distrib/cal04_mcmd1_pre/stg_${kk}/v_pdf/s1.pdf fort.10
+#  Out.
+  ln -s  ${kk}/dden.dat  fort.20
+
+  echo "./abc.exe < ${kk}/inp > ${kk}/aho.dat"
+  ./abc.exe < ${kk}/inp > ${kk}/aho.dat
+
+  rm fort.10  fort.20
+
+  @ kk ++
+end
+
+rm abc.exe
+
+exit
