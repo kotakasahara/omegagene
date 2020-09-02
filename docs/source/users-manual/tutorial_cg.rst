@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 =======================================
 Tutorial for Coarse-grained simulations
 =======================================
@@ -208,9 +209,5 @@ You can also change restart file (the structure at the final step) to pdb file.
 
   python2.7 ${OMEGATK}/restart_to_pdb.py -i md.restart --i-pdb inp.pdb -o finalstep.pdb
 
-------------------------------
-Checking the result by using VMD
-------------------------------
+The trajectory can be visualized by some visualizers (e.g., VMD and PyMOL).
 
-Launch your visualization software e.g. VMD.
-Please download the md.trr and inp.pdb, and apply these files to the software.
