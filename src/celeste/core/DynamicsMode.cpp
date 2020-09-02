@@ -666,11 +666,11 @@ int DynamicsModeZhang::calc_in_each_step() {
     // test output 0707
     if ((cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0){
       mmsys.set_potential_e();
-      cout << "DBG0707c " << mmsys.cur_step  << " " 
-	   << subbox.get_crds()[0]  << " " 
-	   << subbox.get_crds()[1]  << " " 
-	   << subbox.get_crds()[2]  << " " 
-	   << mmsys.potential_e  <<  endl;	
+      //cout << "DBG0707c " << mmsys.cur_step  << " " 
+      //<< subbox.get_crds()[0]  << " " 
+      //<< subbox.get_crds()[1]  << " " 
+      //<< subbox.get_crds()[2]  << " " 
+      //<< mmsys.potential_e  <<  endl;	
     }
 
     return 0;
@@ -871,11 +871,11 @@ int DynamicsModeLangevin::calc_in_each_step() {
     // test output 0707
     if ((cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0){
       mmsys.set_potential_e();
-      cout << "DBG0707 " << mmsys.cur_step  << " " 
-	   << subbox.get_crds()[0]  << " " 
-	   << subbox.get_crds()[1]  << " " 
-	   << subbox.get_crds()[2]  << " " 
-	   << mmsys.potential_e  <<  endl;	
+      //cout << "DBG0707 " << mmsys.cur_step  << " " 
+      //<< subbox.get_crds()[0]  << " " 
+      //<< subbox.get_crds()[1]  << " " 
+      //<< subbox.get_crds()[2]  << " " 
+      //<< mmsys.potential_e  <<  endl;	
     }
 
     return 0;

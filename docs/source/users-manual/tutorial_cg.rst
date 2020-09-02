@@ -1,6 +1,6 @@
-========================
+=======================================
 Tutorial for Coarse-grained simulations
-========================
+=======================================
 
 ------------------------------
 Download myPresto/omegagene
@@ -37,10 +37,13 @@ Run the following command to configure for building the desired variant of myPre
 
 ::
 
-	$ cmake -DCELESTE_HPS=1 ..
+	$ cmake -DCELESTE_WO_NS=1 .. 
 
-The option -DCELESTE_HPS=1 is required for coarse-grained simulations.
+If you use GPU, the option -DCELESTE_GPUHPS=1 is required for coarse-grained simulations.
 Building the software:
+
+::
+        $ make
 
 ------------------------------------
 MD simulations with coarse grained model
@@ -187,7 +190,17 @@ To execute the MD simulation using myPresto/omegagene, please conduct the comman
 
 ::
 
-  ${PATH_TO_THE_DIRECTORY_OMEGAGENE_INSTALLED}/omegagene  --cfg md.inp.run --inp md.inp.cls > md.out
+  ${PATH_TO_THE_DIRECTORY_OMEGAGENE_INSTALLED}/omegagene_wons  --cfg md.inp.run --inp md.inp.cls > md.out
+
+
+The trajectory file *md.cod* is written in myPresto format.
+This can be converted into the Gromacs trajectory format by the following command.
+
+
+::
+  python2.7 ${OMEGATK}/trajconv_presto_gro.py --i-pdb inp.pdb --i-crd md.cod -o md.trr --lx 200 --ly 200 --lz 200
+
+*--lx*, *--ly*, and *--lz* options are the cell dimensions for x, y, and z axes.
 
 You can also change restart file (the structure at the final step) to pdb file.
 

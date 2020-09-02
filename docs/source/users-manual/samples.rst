@@ -2,16 +2,34 @@
 Samples
 ========================
 
-:Author: Kota Kasahara
+*samples* directory includes some sample simulation data.
 
---------------------------
-Sample files
---------------------------
+- ala3
+- cg_q8
+- mcmd_ala3
 
-#As a sample, the files for the simulation of a mini-protein, Trp-cage, are included.
-#
-#:: 
-#
-#  python ${OMEGATK}/mdinput_generator.py -i system.cfg -o trpc.cls -v v.0.44
-#  omegagene --inp trpc.cls --cfg md.cfg
+------
+ala3
+------
+
+A sample for explicitly-solvated all-atom simulation.
+This simulation model includes three molecules of capped-Ala peptide.
+The simulation can be carried out by executing *run.bash* script.
+Output files for a short simulation (100 steps) with the NVE ensemble also attached.
+Users can test the built binary by using this data in terms of consistency with the attached output.
+The potential energies in each step are recorded in *log03_md.txt* file.
+
+-------
+cg_q8
+-------
+
+A sample data for coarse-grained simulations.
+See the "Tutorial for Coarse-grained simulations" in this documentation.
+
+-------
+mcmd_ala3
+-------
+
+A sample data for the McMD simulation.
+See the "Tutorial for multi-canonical MD (McMD) simulations" in this documentation.
 
