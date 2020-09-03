@@ -1,0 +1,13 @@
+--fn-i-tpl               ../../../cg_q8/out.tpl
+--fn-i-initial-pdb       ../../../cg_q8/inp.pdb
+--fn-i-restart           md_0.restart
+--cell-x                 50
+--cell-y                 50
+--cell-z                 50
+--cell-center-x          0.0
+--cell-center-y          0.0
+--cell-center-z          0.0
+--fn-i-atom-groups       ../../../cg_q8/atom_groups.inp
+--fn-i-vcmd-inp     ../vcmd.inp
+--fn-i-vcmd-initial start.virt
+--aus-type   dist-mass-centers
