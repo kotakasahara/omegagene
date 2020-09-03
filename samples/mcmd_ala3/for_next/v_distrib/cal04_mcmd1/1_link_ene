@@ -1,0 +1,65 @@
+#
+
+echo "**********************************************"
+echo " This script links simulation data to files "
+echo " in directory dat_some. "
+echo "**********************************************"
+
+##set mdn = `more ../../current_md_num`
+
+set ist = `more n_start`
+set iend = `more n_end`
+
+  echo " "
+  echo  " Production run consisting of some stages. "
+  echo "  "
+  echo '  start & end = ' ${ist} '&'  ${iend}
+  echo "  "
+
+  rm fil.e*  fil.v*
+  rm dat_some/*
+  cp nul fil.all
+  cp nul filv.all
+
+  @ ii = ${ist}
+
+while( $ii <= ${iend} )
+  if( $ii <= 50 ) then
+    set dir = /work1/t2g-hp130061/higo/ets1_nonphospho/md/md32/n${ii} 
+  endif
+  if( $ii >= 51 ) then
+    @ jj = $ii - 50
+    set dir = /work1/t2g-hp130061/higo/ets1_nonphospho/md/md33/n${jj} 
+  endif
+
+  ln  -s  ${dir}/mult.ene  e${ii}
+  ln  -s  ${dir}/ttp_v_mcmd.out v${ii}
+
+  echo "dat_some/"e${ii} > fil.e${ii}
+  echo "dat_some/"v${ii} > fil.v${ii}
+  cat fil.all  fil.e${ii}  > aaa
+  cat filv.all  fil.v${ii}  > bbb
+  mv aaa fil.all
+  mv bbb filv.all
+  mv e${ii}  dat_some
+  mv v${ii}  dat_some
+
+  rm fil.e${ii}  fil.v${ii}
+
+  @ ii++
+end
+
+echo " ******************************************************************"
+echo "      Please use this script only once,  "
+echo "      although multi-use does not cause any problem. "
+echo " "
+echo "      Please check if the files (e* and v*) in dat_some "
+echo "      are correctly linked to the original files by your eyes. "
+echo " ******************************************************************"
+echo "ls -la dat_some/e1"
+ls -la dat_some/e1
+echo "ls -la dat_some/v1"
+ls -la dat_some/v1
+
+exit
+

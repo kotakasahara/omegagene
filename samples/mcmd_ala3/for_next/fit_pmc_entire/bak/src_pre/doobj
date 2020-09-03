@@ -1,0 +1,8 @@
+#
+  ifort -o  aho.exe   \
+            fit.f \
+              dp1vlu.f  dpolft.f j4save.f xerhlt.f  xerprn.f xgetua.f  \
+              dpcoef.f   fdump.f    i1mach.f   xercnt.f   xermsg.f   xersve.f
+#  rm *.o
+
+#  mv aho.exe ..

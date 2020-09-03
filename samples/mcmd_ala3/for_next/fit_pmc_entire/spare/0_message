@@ -1,0 +1,17 @@
+#
+echo "  "
+echo "********************************************"
+echo "  Have you modified the following file? "
+echo "      current_situation "
+echo "********************************************"
+echo " ====== Monitering below: ====== "
+echo "  "
+echo " ../current_situation "
+more ../current_situation
+echo " "
+
+ echo " *** *** *** *** "
+ echo " 1) md no. "
+ echo " 2) n of v-states "
+ echo " 3) starting run no. "
+ echo " 4) ending run no. "

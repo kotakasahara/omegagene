@@ -1,0 +1,145 @@
+;*******************************************************************
+;        1)  Input Data files
+;*******************************************************************
+    EXE> SPACEINPUT
+         CENTRX= 0D0
+         CENTRY= 0D0
+         CENTRZ= 0D0
+
+         LXCELL= #{CELL_SIZE_X}
+         LYCELL= #{CELL_SIZE_Y}
+         LZCELL= #{CELL_SIZE_Z}
+         DXCELL= #{CELL_DIVISION_X}
+         DYCELL= #{CELL_DIVISION_Y}
+         DZCELL= #{CELL_DIVISION_Z}
+         QUIT
+
+    EXE> GPU
+          GPUALC= MPI         GPUDEV= 0
+          NBDSRV= GPU         NBDKNL= GRID
+          NBDBSP= NOCA
+          GRDSPC= 6d0         GRDSCL= 1.1d0
+          QUIT
+
+ EXE> INPUT
+        TOPOLO= FORM  
+        NAMETO= #{INP_TOPOLOGY}
+        COORDI= PDB
+        NAMECO= #{INP_PDB}
+        SETSHA= READ
+        NAMESH= #{INP_SHAKE}
+        SETVAR= NORE
+
+;  Rerefence coordinates.
+;        REFCOO= PDB
+;        NAMERE= 
+
+;  For position restraint.
+;        POSITI= READ
+;        NAMEPO= psr.inp
+
+        DISTAN= READ
+        DIHEDR= NORE
+        NAMEDI= #{INP_DIST_RESTRAINT}
+        QUIT
+;*******************************************************************
+;        3)  MD
+;*******************************************************************
+
+ EXE> MD
+;   3-1) Control Parameters for Molecular Dynamics
+
+        CONTIN= NO 
+        RESTAR= #{INP_RESTAR_FLG}
+;        RESTAR= YES
+        NAMERI= #{INP_RESTART}
+
+        LOOPLI= 2000000   ; 1.0 ns
+        SETTIM= 360000000
+        CPUTIM= 360000000
+        TIMEST= 1.0d0              ; time step of MD (fs).
+
+        OUTLOG= 10000   ; 10ps
+        LOGFOR= DETA
+        STOPCE= BOTH     ; Stop-center option is not used.
+
+;For canonical
+        METHOD= EXPA
+        THERMO= CONS
+        INTEGR= LEAP
+        EXPAND= TTPV
+        TTPINP= ASCI
+        NAMEIT= #{INP_TTP}
+        NAMEST= #{INP_VERT}
+        NAMEOT= ttp_v_mcmd.out
+
+        SETTEM= 300d0 
+        TEMPCO= YES        ; yes ---> independent temperature control.
+
+#{HEAT_OPTIONS}
+
+;        INITIA= SET       ; initial v = zero and slow heating.
+;        STARTT= 1d0       ; do not use for restart. ?
+;        HEATLO= 1000          ; do not use for restart. ?
+
+        RANDOM= #{RANDOM_SEED}     ; chnage for getting a different tragectory.
+        BESTFI= NO
+
+        CALDSR= CALC
+        WETDSR= 1.0
+;****************************
+;   3-2) File I/O Parameters
+
+         NAMERO= #{FILENAME_STEM}.restart
+
+         NAMECO= #{FILENAME_STEM}.cor
+         MNTRCO= SING
+         OUTCOO= 10000
+         NAMEEN= #{FILENAME_STEM}.ene
+         MNTREN= ASCI
+         OUTENE= 10000
+
+        OUTERG= 1
+        MNTRTO= ASCI
+        NAMETO= #{OUT_MC_ENE}
+
+;****************************
+;   2-5) Parameters of Energy calcutation
+;      ZDIP
+         CALZMM= ZDIP
+         CUTLEN= 12.D0
+         DIEFUN= CONS
+         DIEVAL= 1.0
+
+         CALV15= CALC
+         CALE15= CALC
+         CALHYD= NOCALC
+         CALV5N= NOCALC
+         CALE5N= NOCALC
+         CALH5N= NOCALC
+
+;     For boundary. 
+         BOUNDA= PERI
+         SETCEN= NO
+         EWAPRM= 0.0000d0
+         CENTRX= 0D0
+         CENTRY= 0D0
+         CENTRZ= 0D0
+         LXCELL= #{CELL_SIZE_X}
+         LYCELL= #{CELL_SIZE_Y}
+         LZCELL= #{CELL_SIZE_Z}
+
+
+;  Do not forget to put a file name for SHAKE in INPUT.
+        SHAKEM= HBON
+        QUIT
+;*******************************************************************
+;        5)  OUTPUT (Output Files)
+;*******************************************************************
+
+  EXE> OUTPUT
+        COORDI= PDB          NAMECO= #{FILENAME_STEM}.pdb
+        QUIT
+;*******************************************************************
+  EXE> END
+

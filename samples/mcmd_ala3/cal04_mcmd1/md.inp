@@ -1,0 +1,10 @@
+--fn-i-tpl               #{INP_TOPOLOGY}
+--fn-i-initial-pdb       #{INP_PDB}
+--fn-i-restart           #{INP_RESTART}
+--cell-x                 #{CELL_SIZE_X}
+--cell-y                 #{CELL_SIZE_Y}
+--cell-z                 #{CELL_SIZE_Z}
+--fn-i-shake             #{INP_SHAKE}
+--fn-i-ttp-v-mcmd-inp     #{INP_TTP}
+--fn-i-ttp-v-mcmd-initial #{INP_VERT}
+--fn-i-atom-groups    ../../../cal01_inp/atom_groups.inp

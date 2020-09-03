@@ -1,0 +1,151 @@
+
+#echo " exit "
+#exit
+
+#################################
+#set mdn = `more ../../current_md_num`
+#set nst = `more ../../current_vst_num`
+
+
+  head -1 ../current_situation > aaa
+  set mdn = `more aaa`
+  rm aaa
+  head -2 ../current_situation > aaa
+  tail -1 aaa > bbb
+  set nvs = `more bbb`
+  rm aaa bbb
+  if ( $mdn < 10 ) then
+    set mdn_str = "0${mdn}"
+  else
+    set mdn_str = "${mdn}"
+  endif
+
+
+#################################
+  echo " "
+  echo " *********************************************"
+  echo "   md No. & N. of v states = " $mdn "&" $nst
+  echo "   Pdf's are saven in s* and v_pdf. "
+  echo "        s* is used for the subsequent procerure. "
+  echo "        v_pdf is for monitoring the shape of pdf. "
+  echo " *********************************************"
+  echo " "
+#****
+
+head  -1 inp_c1_all > pp1
+set pp3 = `more pp1`
+echo " Bin size & N of bins : " $pp3
+rm pp1
+echo " "
+
+head  -2 inp_c1_all > pp1
+tail -1 pp1 > pp2
+set pp3 = `more pp2`
+echo " minimum lambda = " $pp3
+rm pp1 pp2
+echo " "
+
+head  -4 inp_c1_all > pp1
+tail -1 pp1 > pp2
+set pp3 = `more pp2`
+echo " N of input files : " $pp3
+rm pp1 pp2
+echo " "
+
+head  -5 inp_c1_all > pp1
+tail -1 pp1 > pp2
+set pp3 = `more pp2`
+echo " The used trajectory range: " $pp3
+rm pp1 pp2
+echo " "
+
+set pp4 = `more converg.inp`
+echo "  convergence factor = " $pp4
+echo " "
+#****
+  echo " Everything is OK? "
+  echo " ####  If OK, input 1. #### "
+#  set ok = $<
+set ok = 1
+  if( $ok == 1) goto abc
+  echo " I stop here. "
+  exit
+
+abc:
+
+# Set file for output.
+  rm -r v_pdf
+  set out = v_pdf
+  mkdir v_pdf
+
+#################################
+# Compilation.
+
+  ifort  -o  aho.exe  main_v.f  para_inp.f  out_pdf_orig.f  out_pdf_shft.f  \
+                      out_v_info.f  sum_pdf.f  sum_count.f  cal_pdf.f  \
+                      t_mat.f  kp_cmat_orig.f   modi_cmat.f  cal_denomi.f  cal_denomi_orig.f  range_v.f \
+                      maximum_entropy.f  \
+                      err_msg.f  
+
+#################################
+# (1) Compute the original pdf.
+# <output>
+  ln -s e1hall.pdf fort.20
+  ln -s bin.info fort.16
+  ln -s tran.mat fort.21
+
+# <input>
+  ln -s /work1/t2g-hp130061/cal/transcript/ph07_nterm/st30_withdna2/cal${mdn_str}_mcmd1/ttp_v_mcmd.inp  fort.22
+  cp  fil.all  file.name
+  cp  filv.all  filev.name
+  ln -s  count_intv.inp  fort.17  
+  ln -s  converg.inp  fort.27
+
+  @ ii = 1
+  while ($ii <= $nst ) 
+    @ idv = 100 + $ii
+    ln -s s${ii}.pdf  fort.${idv}
+    @ ii ++
+  end
+
+  ./aho.exe < inp_c1_all > aho_h.res
+
+  rm fort.*
+  rm file.name  filev.name
+
+#  more aho_h.res
+  rm aho.exe
+#####################
+# (2) Trancate zero region in the pdf made above.
+
+  rm -r s? s?? s???
+
+  @ ii = 1
+
+  while( $ii <= $nst ) 
+    mkdir s${ii}
+
+    ls -la s${ii}.pdf
+    mv s${ii}.pdf  e1hall.pdf 
+    csh com_dist_mk
+    mv e1.pdf  s${ii}
+
+    @ ii ++
+  end
+#####################
+# (3) Keep pdf for monitor.
+
+  @ ii = 1
+
+  while( $ii <= $nst ) 
+    cp s${ii}/e1.pdf  ${out}/s${ii}.pdf
+    @ ii ++
+  end
+
+#exit
+
+  tar cvf ${out}.tar  ${out}
+# gzip ${out}.tar 
+# mv  ${out}.tar.gz  ../../../..
+
+#R --vanilla --slave --args 7 v_distrib.png < r_vdistrib.R

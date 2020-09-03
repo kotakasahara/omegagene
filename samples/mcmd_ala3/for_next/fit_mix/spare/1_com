@@ -1,0 +1,105 @@
+#!bin/sch
+#
+set done = `more ../current_md_num`
+set nst = `more ../current_vst_num`
+
+echo " "
+echo " ************************************************************"
+echo " * Generate fitting params of dlnP/dl for the entire range. *"
+echo " ************************************************************"
+echo "  Input 1, if OK. "
+echo " "
+
+  set ok = $<
+  if( $ok == 1) goto p1 
+  echo " Strange. I stop here. "
+
+exit
+######################################################################
+###################### data preparation ##############################
+######################################################################
+p1:
+
+  set predir = ../fit_pmc/md${done}
+  echo " "
+  @ ist = 1
+  while ( $ist <= $nst ) 
+    head -$ist weight.dat > w$ist
+    tail -1 w$ist > aa
+    mv aa w$ist
+
+    set ff = ` more w$ist `
+    if( $ff != 1.0 ) then
+      echo "  "  $ist ":weight ** non zero ** = " $ff
+    else
+      echo "  "  $ist ":weight                = " $ff
+    endif
+
+    ln -s ${predir}/range.s${ist}  range.s${ist}
+
+    @ ist ++
+  end
+  echo " "
+######################################################################
+#####################  computation ###################################
+###################################################################
+  ifort -o abc.exe mix.f
+###############################
+echo " "
+echo "******************************************"
+echo "* The output directory (ex. md3) is made *"
+echo "* automativally when you run this script. *"
+echo "******************************************"
+
+  echo " MD No. done = " $done
+  echo " N of v states = " $nst
+
+  rm -r md${done}
+  mkdir md${done}
+###############################
+@ ist = 1
+  while ( $ist <= $nst ) 
+    echo " v-state No. = " $ist
+
+    ln -s range.s${ist}  fort.40
+
+########
+#  Case 1  for md1.
+
+    if( $done == 1) then
+      ln -s yes_no.md1  fort.70 
+      ln -s ../fit_pmc/md1/all.derv.poly  fort.51
+    endif
+########
+#  Case 2  for mdx.
+
+  if( $done >= 2) then
+    ln -s yes_no.mdx  fort.70 
+
+    @ pre = ${done} - 1
+    ln -s md${pre}/s${ist}_fort.20   fort.50
+    ln -s ../fit_pmc/md${done}/all.derv.poly   fort.51
+
+  endif
+########
+#  Output.
+  ln -s md${done}/s${ist}_fort.20 fort.60
+
+  ./abc.exe < w${ist} > md${done}/out.s${ist}
+
+  rm fort.50  fort.51  fort.60  fort.70  fort.40
+  rm w${ist}
+
+  @ ist ++
+end
+
+  cp weight.dat md${done}
+  rm abc.exe 
+  rm range.s*
+
+  echo " "
+  echo " MD No. done = " $done
+  echo " N of v states = " $nst
+  echo " "
+
+exit

@@ -1,0 +1,79 @@
+----------------------------
+Usage: mdinput_generator.py [options]
+
+Options:
+  -h, --help     show this help message and exit
+  -i FN_CONFIG   Input config file
+  -o FN_OUT      Output binary file
+  -w FN_WARNING  Output warning file
+  -v VERSION     version of binary
+----------------------------
+Reading input files
+read_config
+fn-i-tpl : ala3.tpl
+fn-i-initial-pdb : ala3.pdb
+fn-i-restart : md.restart
+cell-x : 39.7098
+cell-y : 39.7098
+cell-z : 39.7098
+cell-center-x : 0.0
+cell-center-y : 0.0
+cell-center-z : 0.0
+fn-i-shake : ala3.shk
+fn-i-atom-groups : atom_groups.inp
+read_tpl
+ala3.tpl
+ala
+New mol:AlaA: 1
+New mol:AlaB: 1
+New mol:AlaC: 1
+New mol:WAT: 2047
+read initial pdb
+prepare system
+read restart
+set_crd_vel_from_restart
+Mol 0: AlaA
+Mol 1: AlaB
+Mol 2: AlaC
+Mol 3: WAT
+expand_shake _info 0
+expand_shake _info 1
+expand_shake _info 2
+expand_shake _info 3
+- For input SHAKE info:
+-- mol: 0: 
+--- the number of constraint: 6
+-- mol: 1: 
+--- the number of constraint: 6
+-- mol: 2: 
+--- the number of constraint: 6
+-- mol: 3: 
+--- the number of constraint: 1
+- For expanded SHAKE info for the system:
+-- shake const: 2, num: 9
+-- shake const: 3, num: 2047
+-- shake const: 4, num: 9
+atom_groups.inp
+atom_groups.inp
+Group-ID: 1 n_atoms: 66 solute
+Group-ID: 2 n_atoms: 6141 solvent
+Writingb the inary
+# bonds : 6204
+# angles : 108
+# torsions : 177
+# improper : 12
+dbg0708  dump_pos_rest
+size: buf_box          : 96
+size: buf_coordinates  : 148972
+size: buf_velocities   : 148972
+size: buf_topol        : 468140
+size: buf_shake        : 74424
+size: buf_settle       : 0
+size: buf_extended     : 0
+size: buf_atom_groups  : 24863
+size: buf_dist_rest    : 4
+size: buf_pos_rest     : 4
+size: buf_extended_vcmd: 0
+size: buf_group_coord  : 0
+size: buf_pote  : 8
+End

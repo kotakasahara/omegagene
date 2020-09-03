@@ -1,0 +1,62 @@
+#!bin/sch
+
+  ifort -o aaa.exe  block.f
+################################################# 
+#
+  head -1 ../current_situation > aaa
+  set done = `more aaa`
+  rm aaa
+  head -2 ../current_situation > aaa
+  tail -1 aaa > bbb
+  set nst = `more bbb`
+  rm aaa bbb
+
+echo " "
+echo " ************************************************************"
+echo " * 1) Output entire pdf by concatenating all v-state pdf's. *"
+echo " * 2) Output block ranges.                                  *"
+echo " ************************************************************"
+echo " "
+echo " MD done = " $done
+echo " N. of v-states = " $nst
+echo " "
+echo "  Input 1, if OK. "
+echo " "
+
+  set ok = $<
+  if( $ok == 1) goto p1 
+  echo " Strange. I stop here. "
+  exit
+
+################################################# 
+p1:
+
+# <I>
+  echo $nst > aaaaa
+  ln -s aaaaa  fort.10
+  ln -s bin.size  fort.14
+# <O>
+  ln -s md$done/all_derv.dat  fort.80
+
+  @ ii = 1
+  while( $ii <= $nst )
+    echo $ii
+
+# <I>
+    @ nn = 100 + $ii
+    ln -s md$done/s${ii}.simple_fort.20  fort.${nn}
+# <O>
+    @ kk = 400 + $ii
+    ln -s md$done/b${ii}.range  fort.${kk}
+
+    @ ii ++
+  end
+
+  ./aaa.exe > md$done/out2
+
+  rm fort.*
+  rm aaa.exe aaaaa
+####################################################
+exit
+
+

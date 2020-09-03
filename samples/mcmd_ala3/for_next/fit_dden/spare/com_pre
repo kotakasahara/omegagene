@@ -1,0 +1,106 @@
+#
+
+#echo "   "
+#set jobn = `more ../current_md_num`
+
+  echo "   "
+  echo " This is specialized for md1_*.  Are you OK?"
+
+  set dir = md1
+  echo " Job = "$dir
+  echo " "
+  rm ${dir}/e1*
+#____________
+  
+  @ nmax = 2
+  @ ii = 1
+  cp nul aaa
+
+  while( $ii <= $nmax)
+    echo $ii
+
+    set ff  = ../derv_den_Pc/${dir}_${ii}/dden.dat
+    ls -la ${ff}
+    cat aaa ${ff} > bbb
+    mv bbb aaa
+    @ ii ++
+  end
+
+  cat ${dir}/inp.dat_e1 aaa > e1.fit
+  rm aaa
+
+  ./aho.exe < e1.fit
+
+  mv e1.fit  ${dir}
+  mv fort.11 ${dir}/e1_fort.11
+  mv fort.12 ${dir}/e1_fort.12
+  mv fort.13 ${dir}/e1_fort.13
+  mv fort.16 ${dir}/e1_fort.16
+  mv fort.20 ${dir}/e1_fort.20
+
+exit
+#____________
+
+  set f1  = ../derv_den_Pc/md1_1/dden.dat
+  ls -la ${f1}
+  set f2  = ../derv_den_Pc/md1_2/dden.dat
+  ls -la ${f2}
+#  set f3  = ../derv_den_Pc/md1_3/dden.dat
+#  ls -la ${f3}
+#  set f4  = ../derv_den_Pc/md1_4/dden.dat
+#  ls -la ${f4}
+#  set f5  = ../derv_den_Pc/md1_5/dden.dat
+#  ls -la ${f5}
+#  set f6  = ../derv_den_Pc/md1_6/dden.dat
+#  ls -la ${f6}
+#  set f7  = ../derv_den_Pc/md1_7/dden.dat
+#  ls -la ${f7}
+#  set f8  = ../derv_den_Pc/md1_8/dden.dat
+#  ls -la ${f8}
+#  set f9  = ../derv_den_Pc/md1_9/dden.dat
+#  ls -la ${f9}
+#  set f10  = ../derv_den_Pc/md1_10/dden.dat
+#  ls -la ${f10}
+#  set f11  = ../derv_den_Pc/md1_11/dden.dat
+#  ls -la ${f11}
+#  set f12  = ../derv_den_Pc/md1_12/dden.dat
+#  ls -la ${f12}
+#  set f13  = ../derv_den_Pc/md1_13/dden.dat
+#  ls -la ${f13}
+#  set f14  = ../derv_den_Pc/md1_14/dden.dat
+#  ls -la ${f14}
+#  set f15  = ../derv_den_Pc/md1_15/dden.dat
+#  ls -la ${f15}
+#  set f16  = ../derv_den_Pc/md1_16/dden.dat
+#  ls -la ${f16}
+#  set f17  = ../derv_den_Pc/md1_17/dden.dat
+#  ls -la ${f17}
+#  set f18  = ../derv_den_Pc/md1_18/dden.dat
+#  ls -la ${f18}
+#  set f19  = ../derv_den_Pc/md1_19/dden.dat
+#  ls -la ${f19}
+#  set f20  = ../derv_den_Pc/md1_20/dden.dat
+#  ls -la ${f20}
+#  set f21  = ../derv_den_Pc/md1_21/dden.dat
+#  ls -la ${f21}
+#  set f22  = ../derv_den_Pc/md1_22/dden.dat
+#  ls -la ${f22}
+
+    cat  ${f2} ${f1} > ahodat
+#    cat  ${f22} ${f21} ${f20} ${f19} ${f18} ${f17} ${f16} ${f15} ${f14} ${f13} ${f12} ${f11} ${f10} ${f9} ${f8} ${f7} ${f6} ${f5} ${f4} ${f3} ${f2} ${f1} > ahodat
+
+    cat ${dir}/inp.dat_e1  ahodat > e1.fit
+    rm ahodat
+  endif
+
+  ./aho.exe < e1.fit
+
+  mv e1.fit  ${dir}
+  mv fort.11 ${dir}/e1_fort.11
+  mv fort.12 ${dir}/e1_fort.12
+  mv fort.13 ${dir}/e1_fort.13
+  mv fort.16 ${dir}/e1_fort.16
+  mv fort.20 ${dir}/e1_fort.20
+
+exit
+

@@ -1,0 +1,39 @@
+#
+echo "  "
+echo "********************************************"
+echo "  Have you modified the following file? "
+echo "      current_situation "
+echo "********************************************"
+echo " ====== Monitering below: ====== "
+echo "  "
+echo " ../current_situation "
+more ../current_situation
+echo " "
+
+ echo " *** *** *** *** "
+ echo " 1) md no. "
+ echo " 2) n of v-states "
+ echo " 3) starting run no. "
+ echo " 4) ending run no. "
+
+ echo " "
+ echo "  @@@@@@@@ Important comments: @@@@@@@@ "
+ echo "  (1) If fitting is wrong, you can do the following:"
+ echo "   "
+ echo "    (1-1) Chenge the polynomial orders in 2_com. "
+ echo "   "
+ echo "    (2-2) You can edit files range.b* by your hands,  "
+ echo "          when the parameter fitting is not good. "
+ echo "          This editting should be done after using 1_com. "
+ echo " "
+ echo "  (2) The factor in fac.squeeze should be small when "
+ echo "      when md stage is young: such as 0.1 or 0.25 "
+ echo "      For older md stage, the factor should be 0.8 or 1.0.  "
+
+  head -1 fac.squeeze  > aaa
+  set bbb = ` more aaa ` 
+ echo " "
+ echo "           current factor =" $bbb " <--- OK? "
+ echo "  "
+ rm aaa
+

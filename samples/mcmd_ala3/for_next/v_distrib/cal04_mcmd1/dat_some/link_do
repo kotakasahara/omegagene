@@ -1,0 +1,45 @@
+set at = `more ../../../current_md_num`
+set nvst = `more ../../../current_vst_num`
+echo "md No. = " $at
+echo "N of v states = " $nvst
+
+
+if ( $at  < 10 ) then
+  set at = "0${at}"
+endif
+
+set caldir = cal${at}_mcmd1
+
+
+set n_stages = $1
+set n_series = $2
+@ kk = 1
+@ jj = 1
+@ filenum = 1
+rm e*
+rm v*
+
+echo "100.0   1000\n-100000.0\nEND" > tmp.dat
+@ totalnum = ${n_stages} * ${n_series}
+##set totalnum = ${n_stages} * ${n_series}
+echo $totalnum >> tmp.dat
+
+while( ${kk} <= ${n_stages} )
+  while( ${jj} <= ${n_series} )
+   ##echo "ln -s ../../../../${caldir}/${kk}/n${jj}/mult.ene e${filenum}
+   ln -s ../../../../${caldir}/${kk}/n${jj}/mult.ene e${filenum}
+   ln -s ../../../../${caldir}/${kk}/n${jj}/ttp_v_mcmd.out  v${filenum}
+   echo "${filenum}   10000  990000000  1 " >> tmp.dat
+   @ jj ++
+   @ filenum ++
+  end
+  echo ${kk}_$jj
+  @ jj = 1
+  @ kk ++
+end
+echo "END" >> tmp.dat
+
+cd ..
+ls -1 dat_some/e* > fil.all
+ls -1 dat_some/v* > filv.all
+mv dat_some/tmp.dat inp_c1_all

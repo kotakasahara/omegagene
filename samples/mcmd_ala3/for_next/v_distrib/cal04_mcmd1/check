@@ -1,0 +1,18 @@
+#
+  echo "------------------"
+  diff v_pdf/s1.pdf v_pdf_kp/s1.pdf 
+  diff v_pdf/s2.pdf v_pdf_kp/s2.pdf 
+  diff v_pdf/s3.pdf v_pdf_kp/s3.pdf 
+  diff v_pdf/s4.pdf v_pdf_kp/s4.pdf 
+  diff v_pdf/s5.pdf v_pdf_kp/s5.pdf 
+  diff v_pdf/s6.pdf v_pdf_kp/s6.pdf 
+  diff v_pdf/s7.pdf v_pdf_kp/s7.pdf 
+
+  echo "------------------"
+  diff aho_h.res  aho_h.res_kp 
+  echo "------------------"
+  diff bin.info  bin.info_kp 
+  echo "------------------"
+  diff tran.mat  tran.mat_kp 
+  echo "------------------"
+

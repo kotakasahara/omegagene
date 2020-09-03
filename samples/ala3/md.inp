@@ -1,0 +1,11 @@
+--fn-i-tpl               ala3.tpl
+--fn-i-initial-pdb       ala3.pdb
+--fn-i-restart           md.restart
+--cell-x                  39.7098
+--cell-y                  39.7098
+--cell-z                  39.7098
+--cell-center-x 0.0
+--cell-center-y 0.0
+--cell-center-z 0.0
+--fn-i-shake             ala3.shk
+--fn-i-atom-groups       atom_groups.inp

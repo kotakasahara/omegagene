@@ -1,0 +1,104 @@
+#!/bin/csh
+
+ifort -o aaa.exe  integ.f
+#*******************************************
+echo " "
+echo "*************************************************************"
+echo "*  <<files are made for fitting in the subsequent step>>    *"
+echo "* 1) Output pdf & range for each v-state.                   *"
+echo "*    If simulation had been done with tmat =/= 1            *"
+echo "*    the program integ.f resets pdfs as done with tmat = 1. *"
+echo "* 2) The entire range is output.           (not used)       *"
+echo "* 3) Concatenate v-state ranges into blocks & output.       *"
+echo "* 4) Integrate v-state pdf's into entire pdf.               *" 
+echo "*************************************************************"
+
+  head -1 ../current_situation > aaa
+  set mdn = `more aaa`
+  rm aaa
+  head -2 ../current_situation > aaa
+  tail -1 aaa > bbb
+  set nvs = `more bbb`
+  rm aaa bbb
+
+  echo " "
+  echo  "  MD No. ="  ${mdn}
+  echo  "  N. of v states ="  ${nvs}
+  echo "  "
+
+  set dir1 = ../Markov/md${mdn}_Mk
+  set dir2 = /work2/kasahara/higo20150608/For_Training_VAUS/ala_ala/9_md/md_ty2_wide/inp_data
+
+  echo "  positiojns of twpo input files:"
+  echo "      " $dir1
+  echo "      " $dir2 "   <------------------- OK? "
+  echo "  "
+
+##set sfac = `head -1 scale.fact`
+##echo " Scaling factor = " $sfac
+##echo "  "
+
+  echo " May I proceed? "
+  echo " If OK, input 1.  If No, input any number else 1. "
+
+  set ok = $<
+  if( $ok == 1) then
+     echo " OK. I proceed. "
+     goto p1 
+  endif
+  echo " I stop here. "
+  echo " "
+  exit
+#********
+p1:  
+
+  echo " Generate directory " md$mdn
+  set dir = md$mdn
+  rm -r $dir
+  mkdir $dir
+
+#  Link I/O files.
+
+  @ ist= 1
+  while( $ist <= $nvs )
+    echo " file linking:" $ist
+
+# <I>
+    @ idev = 100 + $ist
+    set fil = ${dir1}/s${ist}.pdf 
+##  set fil = ../v_distrib/md${mdn}/s${ist}/e1.pdf  <-- this is another choice.
+    ln -s  $fil  fort.${idev}
+# <O>
+    @ idot = 200 + $ist
+    ln -s  ${dir}/s${ist}.pdf  fort.${idot}
+    @ idotr = 300 + $ist
+    ln -s  ${dir}/range.s${ist}  fort.${idotr}
+    @ iotn = 400 + $ist
+    ln -s  ${dir}/range.b${ist}  fort.${iotn}
+
+    @ ist ++
+  end
+
+# <I>  not important.
+   ln -s  ${dir2}/aus_coef_ty2_md${mdn}.inp  fort.501
+###  ln -s scale.fact fort.11   <-- do not use this file any more.
+# <O>
+  ln -s ${dir}/range.entire  fort.90
+
+  echo ${nvs} > work1
+  ./aaa.exe < work1 > ${dir}/out1
+
+  rm aaa.exe  fort.*
+  rm work1
+#********
+  echo " "
+  echo " integrate pdfs. "
+  @ ii = 1
+  while( ${ii} <= ${nvs} )
+    echo "#" ${ii}
+    more  ${dir}/s${ii}.pdf >> ${dir}/entire.pdf
+    @ ii ++
+  end
+#*************************************************
+  exit
+

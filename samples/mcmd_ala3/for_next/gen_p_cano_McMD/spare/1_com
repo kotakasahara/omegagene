@@ -1,0 +1,83 @@
+#
+  ifort -o aaa.exe  inp_poly.f
+##########################################################
+echo " "
+echo " ***********************************************************************"
+echo " * Input polynomial files of dln[n(E)]/dE from fit_mix/md*/s*_fort.20. *"
+echo " * Generate point data of ln[n(E)] from polynpmial files.              *"
+echo " * Finally, output the point data.                                     *"
+echo " ***********************************************************************"
+echo " NOTE: The ln[n(E)] has discontinuity. "
+echo " "
+
+  set done = ` head -1 md_vst `
+  head -2 md_vst > bbb 
+  set nst = ` tail -1 bbb `
+  set bin = ` tail -1 md_vst `
+  echo $nst > aaa
+  echo $bin > bin
+
+  set dir = ../fit_mix/md${done}
+
+  echo " "
+  echo " md No. = " $done
+  echo " N of v states = " $nst
+  echo " bin size for output = " $bin
+  echo " "
+
+  echo "  Input 1, if OK. "
+  echo " "
+  set ok = $<
+  if( $ok == 1) goto p1 
+  echo " Strange. I stop here. "
+  exit
+
+################################################
+p1:
+
+  rm -r p_cano
+  mkdir p_cano
+
+  ln -s aaa   fort.10
+  ln -s bin   fort.11
+
+  @ ii = 1
+  while( $ii <= $nst )
+
+# <I>
+    @ nn = 100 + $ii
+    ln -s ${dir}/s${ii}.fort.20  fort.${nn}
+# <O>
+    @ mm = 1000 + $ii
+    ln -s s${ii}_poly.dat  fort.${mm}
+
+    @ ii ++
+  end
+
+# <O>
+  ln -s inp.dat_for_next  fort.30
+
+  ./aaa.exe > p_cano/out1
+##################
+##cp s1_poly.dat start
+##@ i = 2
+##while( $i <= $nst )
+##  cat start s${i}_poly.dat > bbb
+##  mv bbb start
+##  @ i ++
+##end
+##mv start poly_whole.dat
+################################################
+echo " "
+  echo " md No. = " $done
+  echo " N of v states = " $nst
+echo " "
+################################################
+  rm aaa.exe
+  rm fort.*
+  rm aaa bin
+
+  mv *.dat  p_cano
+  mv inp.dat_for_next p_cano
+
+exit

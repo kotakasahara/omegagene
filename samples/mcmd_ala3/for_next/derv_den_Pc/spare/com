@@ -1,0 +1,51 @@
+#
+set nstage = 9
+####################################
+ifort -o abc.exe  derv_den_Pc.f
+####################################
+@ kk = 1
+while ( $kk <= ${nstage} )
+  if( $kk == 1) set t = 800.0270
+  if( $kk == 2) set t = 774.1800
+  if( $kk == 3) set t = 718.8814
+  if( $kk == 4) set t = 670.9560
+  if( $kk == 5) set t = 629.0212
+  if( $kk == 6) set t = 592.0200
+  if( $kk == 7) set t = 559.1300
+  if( $kk == 8) set t = 529.7021
+  if( $kk == 9) set t = 503.2170
+  if( $kk == 10) set t = 479.2543
+  if( $kk == 11) set t = 457.4700
+  if( $kk == 12) set t = 437.5800
+  if( $kk == 13) set t = 419.3475
+  if( $kk == 14) set t = 402.5736
+  if( $kk == 15) set t = 387.0900
+  if( $kk == 16) set t = 372.7533
+  if( $kk == 17) set t = 359.4407
+  if( $kk == 18) set t = 347.0462
+  if( $kk == 19) set t = 335.4780
+  if( $kk == 20) set t = 324.6561
+  if( $kk == 21) set t = 314.5106
+  if( $kk == 22) set t = 304.9800
+
+  rm -r md1_${kk}
+  mkdir md1_${kk}
+  echo $t > md1_${kk}/inp 
+
+  echo $kk $t
+
+#  In.
+  ln -s  ../distrib/md1_${kk}/e1.pdf  fort.10
+#  Out.
+  ln -s  md1_${kk}/dden.dat  fort.20
+
+  ./abc.exe < md1_${kk}/inp > md1_${kk}/aho.dat
+
+  rm fort.10  fort.20
+
+  @ kk ++
+end
+
+rm abc.exe
+
+exit
