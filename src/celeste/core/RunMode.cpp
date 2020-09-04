@@ -8,7 +8,7 @@ RunMode::~RunMode() {
 }
 
 int RunMode::initial_preprocess() {
-  int i=0;
+  //int i=0;
   /*for ( auto itr = cfg->fn_o_crd.begin();
 	itr != cfg->fn_o_crd.end(); itr++){
     if (cfg->format_o_crd == CRDOUT_GROMACS) {
@@ -23,7 +23,7 @@ int RunMode::initial_preprocess() {
   return 0;
 }
 int RunMode::terminal_process() {
-  int i=0;
+  // int i=0;
   /*
   for ( auto itr = cfg->fn_o_crd.begin();
 	itr != cfg->fn_o_crd.end(); itr++){

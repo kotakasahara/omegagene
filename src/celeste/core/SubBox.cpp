@@ -94,8 +94,8 @@ SubBox::~SubBox() {
 #endif
 #endif
     free_variables();
-    delete constraint;
     delete settle;
+    delete constraint;
     delete thermostat;
 }
 
@@ -287,7 +287,6 @@ int SubBox::free_variables() {
     delete[] vel_just;
     delete[] work;
     delete[] work_prev;
-    //delete[] frc;
     //delete[] atomids;
     
     if (cfg->thermostat_type != THMSTT_NONE) { delete[] buf_crd; }
@@ -302,6 +301,7 @@ int SubBox::free_variables() {
     delete[] mass_inv;
     delete[] atomids;
     delete[] atomids_rev;
+
     free_variables_for_bonds();
     free_variables_for_angles();
     free_variables_for_torsions();
