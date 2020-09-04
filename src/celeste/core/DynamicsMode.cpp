@@ -109,8 +109,11 @@ int DynamicsMode::initial_preprocess() {
     mmsys.vcmd->set_lambda_interval(cfg->print_intvl_extended_lambda);
     mmsys.vcmd->print_info();
     cout << "print_info" << endl;
+
+    int recov_mode = 0;
+    if(cfg->integrator_type == INTGRTR_MC){ recov_mode = 1; }
     mmsys.vcmd->set_params(&mmsys.random_mt, cfg->enhance_sigma, cfg->enhance_recov_coef,
-			   cfg->n_steps, cfg->begin_count_qraw, cfg->vcmd_drift); //, cfg->aus_type);
+			   cfg->n_steps, cfg->begin_count_qraw, cfg->vcmd_drift, recov_mode); //, cfg->aus_type);
     mmsys.vcmd->set_temperature(cfg->temperature);
     
     mmsys.vcmd->set_default_q_cano();
@@ -815,16 +818,17 @@ int DynamicsModeLangevin::calc_in_each_step() {
       if (cfg->dist_restraint_type != DISTREST_NONE) apply_dist_restraint();
       if (cfg->pos_restraint_type != POSREST_NONE) apply_pos_restraint();
     }
-    
     if (cfg->extended_ensemble == EXTENDED_VMCMD) {
       subbox.extended_apply_bias(mmsys.cur_step, mmsys.set_potential_e());
     } else if (cfg->extended_ensemble == EXTENDED_VAUS) {
       subbox.extended_apply_bias_struct_param(mmsys.cur_step);
     } else if (cfg->extended_ensemble == EXTENDED_VCMD) {
       //subbox.vcmd_apply_bias(mmsys.cur_step);
+      //cout << "dbg0904 1  scale force"<< endl;
       mmsys.pote_extend = subbox.vcmd_scale_force();
+      //cout << "dbg0904 2  vs_step"<< endl;
       subbox.vcmd_vs_step(mmsys.cur_step);
-
+      //cout << "dbg0904 3 /vs_step"<< endl;      
     }
     
     subbox.cpy_crd_prev2();
@@ -833,6 +837,7 @@ int DynamicsModeLangevin::calc_in_each_step() {
       //subbox.update_coordinates_from_vel(time_step);
       subbox.update_coordinates_cur(time_step);
     }else{
+      
       subbox.update_coordinates_langevin(time_step_half, cfg->langevin_gamma, cfg->temperature, mmsys.cur_step);
       //subbox.cpy_vel_prev();
       //subbox.update_velocities(time_step_half, cfg->langevin_gamma, cfg->temperature);
@@ -841,6 +846,15 @@ int DynamicsModeLangevin::calc_in_each_step() {
       cal_kinetic_energy((const real **)mmsys.vel_just);
     }
     //subbox.cancel_com_motion();
+
+    //cout << "DBG0707x4 " << mmsys.cur_step  << " " 
+    //<< subbox.get_crds()[0]  << " " 
+    //<< subbox.get_crds()[1]  << " " 
+    //<< subbox.get_crds()[2]  << " " 
+    //<< subbox.get_work()[0]  << " " 
+    //<< subbox.get_work()[1]  << " " 
+    //<< subbox.get_work()[2]  << " " 
+    //<< mmsys.potential_e  <<  endl;	
 
     // if(mmsys.leapfrog_coef == 1.0){
     if (cfg->thermostat_type == THMSTT_SCALING) {
@@ -869,14 +883,14 @@ int DynamicsModeLangevin::calc_in_each_step() {
     mmsys.ctime_per_step += endTimeStep - startTimeStep;
 
     // test output 0707
-    if ((cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0){
-      mmsys.set_potential_e();
+    //if ((cfg->print_intvl_log > 0 && mmsys.cur_step % cfg->print_intvl_log == 0) || mmsys.cur_step == 0){
+    //mmsys.set_potential_e();
       //cout << "DBG0707 " << mmsys.cur_step  << " " 
       //<< subbox.get_crds()[0]  << " " 
       //<< subbox.get_crds()[1]  << " " 
       //<< subbox.get_crds()[2]  << " " 
       //<< mmsys.potential_e  <<  endl;	
-    }
+      //}
 
     return 0;
 }

@@ -1784,7 +1784,9 @@ real SubBox::vcmd_set_struct_parameters(){
 }
 
 real SubBox::vcmd_scale_force(){
+  //  cout << "dbg0904 subbox vcmd_set_struct_param" << endl;
   vcmd_set_struct_parameters();
+  //cout << "dbg0904 subbox vcmd->scale_force" << endl;  
   real ene = vcmd->scale_force(work, n_atoms_box);
   return ene;
 }
@@ -2085,6 +2087,8 @@ int SubBox::update_coordinates_langevin(const real dt_half, const real gamma, co
       real crd_p1 = crd_prev[atomid_b3+d];
       real crd_p2 = crd_prev2[atomid_b3+d];
       crd_p2 += nearbyint((crd_p1-crd_p2)/pbc->L[d]) * pbc->L[d];
+
+      //cout << "dbg0904 crd_p1,p2  "<< crd_p1 << " "  << crd_p2 << " " << d << endl;
       //if ( abs(stc_f) >= 0.01) {
       //cout << "dbg0718d " << cur_step << " " << atomid_b << " " << d << " " << crd_p1 << " " << crd_p2 << endl;
       //}
@@ -2103,6 +2107,7 @@ int SubBox::update_coordinates_langevin(const real dt_half, const real gamma, co
 	 gamma*dt_half*crd_p2 + 
 	 4*dt_half*dt_half* mass_inv[atomid_b] * (det_f + stc_f)
 	 );
+      //cout << gamma << " "  << dt_half << " " << det_f << " " << stc_f << " " << zeta << endl;
     }
   }
   return 0;

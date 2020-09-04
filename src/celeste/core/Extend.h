@@ -303,6 +303,7 @@ class ExtendedVcMD : public Extended {
     // the list of destination state for virtual state transition trials
     
     int drift;
+    int recov_mode;
  public:
     ExtendedVcMD();
     ~ExtendedVcMD();
@@ -332,7 +333,8 @@ class ExtendedVcMD : public Extended {
     }
     int set_params(celeste::random::Random *in_mt, real in_sigma,
 		   real in_recov_coef, int in_n_steps,
-		   int in_begin_count_q_raw, int in_drift);
+		   int in_begin_count_q_raw, int in_drift,
+		   int in_recov_mode);
     real set_crd_centers(real *crd, PBC *pbc);
     bool is_in_range();
     int vs_step(unsigned long cur_step);

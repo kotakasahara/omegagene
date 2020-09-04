@@ -577,7 +577,7 @@ void ExtendedVcMD::set_temperature(real in_tmp) {
 int ExtendedVcMD::set_params(random::Random *in_mt, real in_sigma,
 			     real in_recov_coef, int in_n_steps,
 			     int in_begin_count_q_raw,
-			     int in_drift) {
+			     int in_drift, int in_recov_mode) {
   lambda.resize(n_dim);
   random_mt = in_mt;
   sigma     = in_sigma;
@@ -588,6 +588,7 @@ int ExtendedVcMD::set_params(random::Random *in_mt, real in_sigma,
   // aus_type = in_aus_type;
   begin_count_q_raw = in_begin_count_q_raw;
   drift = in_drift;
+  recov_mode = in_recov_mode;
   return 0;
 }
 void ExtendedVcMD::set_n_dim(int in_n_dim){
@@ -665,10 +666,10 @@ int ExtendedVcMD::set_struct_parameters(real *crd, PBC *pbc) {
   return 0;
 }
 int ExtendedVcMD::set_struct_parameters_mass_center(real *crd, PBC *pbc) {
-      //cout << "dbg 0303 set_struct_parameters" << endl;
-      // center of mass for each groups
+  //cout << "dbg 0303 set_struct_parameters" << endl;
+  // center of mass for each groups
   set_crd_centers(crd, pbc);
-  ///cout << "dbg 0303 set_crd_centers (finished)" << endl;
+  //cout << "dbg 0303 set_crd_centers (finished)" << endl;
   //  real dist = 0.0;
   int  i_pair = 0;
   for(const auto itr_dim : enhance_group_pairs){
@@ -707,11 +708,11 @@ int ExtendedVcMD::set_struct_parameters_crd(real *crd, PBC *pbc) {
     //<< unit_vec[i_pair][1] << " "
     //<< unit_vec[i_pair][2] <<endl;
     lambda[i_pair]=crd_centers[i_grp][i_pair];
-    //cout << lambda[i_pair] << endl;
+    cout << lambda[i_pair] << endl;
     i_pair++;
     if(i_pair==3) break;
   }
-  //cout << "dbg 0303 set_struct_parameters (finished)" << endl;  
+  //  cout << "dbg 0303 set_struct_parameters (finished)" << endl;  
   return 0;
 
 }
@@ -751,32 +752,36 @@ int ExtendedVcMD::set_struct_parameters_min(real *crd, PBC *pbc) {
 
 real ExtendedVcMD::set_crd_centers(real *crd, PBC *pbc) {
   for (int i_grp = 0; i_grp < n_enhance_groups; i_grp++) {
-    // crd_centers[ grp id in the enhance groups ]
+    //crd_centers[ grp id in the enhance groups ]
 
     int grp_id = enhance_groups[i_grp];
     //int aid0   = atom_groups[grp_id][0];
     // int aid0_3 = aid0 * 3;
-    // cout << "dbg1130 grp " << i_grp << " " << grp_id << " " << n_atoms_in_groups[grp_id] << endl;
+    //cout << "dbg1130 grp " << i_grp << " " << grp_id << " " << n_atoms_in_groups[grp_id] << endl;
     // real crd0[3] = {crd[aid0_3], crd[aid0_3 + 1], crd[aid0_3 + 2]};
     for (int d = 0; d < 3; d++) { crd_centers[i_grp][d] = 0.0; }
     for (int i_atm = 0; i_atm < n_atoms_in_groups[grp_id]; i_atm++) {
       int aid   = atom_groups[grp_id][i_atm];
       int aid_3 = aid * 3;
+      //cout << "dbg1130  a " << i_atm<< endl;
       for (int d = 0; d < 3; d++) {
 	real tmp_crd = crd[aid_3 + d];
+	//cout << "dbg1130  b  tmp_crd " << aid << " " << tmp_crd << " " << crd_groups[i_grp][i_atm][d] <<  endl;
 	real diff    = tmp_crd - crd_groups[i_grp][i_atm][d];
 	while (diff > pbc->L_half[d]) {
+	  //cout << "- " << diff << " " << pbc->L_half[d] << " " << d << endl;
 	  diff -= pbc->L[d];
 	  tmp_crd -= pbc->L[d];
 	}
 	while (-diff > pbc->L_half[d]) {
+	  //cout << "+ " << diff << " " << pbc->L_half[d] << " " << d << endl;
 	  diff += pbc->L[d];
 	  tmp_crd += pbc->L[d];
 	}
 	crd_groups[i_grp][i_atm][d] = tmp_crd;
 	crd_centers[i_grp][d] += tmp_crd * mass[aid];
       }
-      // cout << "dbg1130 crd " << crd_groups[i_grp][i_atm][0] << " "
+      //cout << "dbg1130 crd " << crd_groups[i_grp][i_atm][0] << " "
       //<< crd_groups[i_grp][i_atm][1] << " "
       //<< crd_groups[i_grp][i_atm][2] << " "
       //<< endl;
@@ -1029,7 +1034,10 @@ int ExtendedVcMD::trial_transition(){  // source ... vs_id of current state
 
 real ExtendedVcMD::scale_force(real_fc *work, int n_atoms) {
   real ene = 0.0;
+  //cout << "dbg 0304 !!" << endl;
   for ( int d = 0; d < n_dim; d++){
+    //    cout << "dbg 0304 !! d= "  << d << endl;
+    //cout << "dbg 0304 !! lambda[d]= "  << lambda[d] << endl;
     real param    = lambda[d];
     real recovery = 0.0;
     real diff = 0.0;
@@ -1042,7 +1050,7 @@ real ExtendedVcMD::scale_force(real_fc *work, int n_atoms) {
     if (lambda[d] < vc_range_min[d][cur_vs[d]] - sigma){
       //cout << "dbg 0304 scale d:"<<d<< " min lambda:"<<lambda[d] << " < " << vc_range_min[d][cur_vs[d]] << " vs:" << cur_vs[d] <<endl;
       diff = (lambda[d] - (vc_range_min[d][cur_vs[d]] - sigma));
-      if ( recov_coef < EPS ){
+      if ( recov_coef < EPS && recov_mode == 1){
 	recovery = 1e100;
 	diff = 1.0;
       }else{
@@ -1052,7 +1060,7 @@ real ExtendedVcMD::scale_force(real_fc *work, int n_atoms) {
     }else if (lambda[d] >= vc_range_max[d][cur_vs[d]] + sigma){
       //cout << "dbg 0304 scale d:"<<d<< " max lambda:"<<lambda[d] << " > " << vc_range_max[d][cur_vs[d]] << " vs:" << cur_vs[d]<< endl;
       diff = (lambda[d] - (vc_range_max[d][cur_vs[d]] + sigma));
-      if ( recov_coef < EPS ){
+      if ( recov_coef < EPS && recov_mode == 1){
 	recovery = 1e100;
 	diff = 1.0;
       }else{
@@ -1065,7 +1073,7 @@ real ExtendedVcMD::scale_force(real_fc *work, int n_atoms) {
     //cout << "dbg0720 " << d << " "  << ene << " " << diff  << " "
     //<< lambda[d] << " " << cur_vs[d] << " " << vc_range_min[d][cur_vs[d]] <<" " << vc_range_max[d][cur_vs[d]] << endl;
     real dew = const_k * recovery;
-    //    cout << "dbg 0304 scale d:"<<d<<" recov: " << recovery << " dew:" << dew << endl;
+    //cout << "dbg 0304 scale d:"<<d<<" recov: " << recovery << " dew:" << dew << endl;
     real direction = 1.0;
     int n_rep = 2;
     if(reactcrd_type == AUSTYPE_CRDXYZ) n_rep = 1;
@@ -1087,7 +1095,7 @@ real ExtendedVcMD::scale_force(real_fc *work, int n_atoms) {
       //cout << endl;
       direction *= -1.0;
     }
-    // cout << "dbg 0304 scale " << endl;
+    //cout << "dbg 0304 scale " << endl;
     i_pair++;
   }
   return ene;

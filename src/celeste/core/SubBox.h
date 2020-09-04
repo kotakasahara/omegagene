@@ -260,6 +260,7 @@ class SubBox : public CelesteObject {
     real *get_box_l() { return box_l; };
     int * get_n_boxes_xyz() { return n_boxes_xyz; };
     real *get_crds() { return crd; };
+    real *get_work() { return work; };
     int * get_atomids() { return atomids; };
     int   get_n_atoms_box() { return n_atoms_box; };
 
