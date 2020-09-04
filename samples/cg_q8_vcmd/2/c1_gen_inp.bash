@@ -18,13 +18,10 @@ do
     cd n${SERIES}
     cp ../md.inp.run .
     cp ../md.inp .
-    cp ../run_node.bash  .
     perl -pi -e "s/\#\{GPU_DEVICE_ID\}/${GPU}/g" md.inp.run
     perl -pi -e "s/\#\{PREV_STAGE\}/${PREV_STAGE}/g" md.inp
     perl -pi -e "s/\#\{PREV_STAGE_V\}/${PREV_STAGE_V}/g" md.inp
     perl -pi -e "s/\#\{SERIES\}/${SERIES}/g" md.inp
-    perl -pi -e "s/\#\{PREV_STAGE\}/${PREV_STAGE}/g" run_node.bash
-    perl -pi -e "s/\#\{SERIES\}/${SERIES}/g" run_node.bash
 
     cd ..
 

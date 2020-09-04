@@ -2,7 +2,7 @@
 using namespace std;
 
 ForceField::ForceField() : ForceFieldObject() {
-    if (DBG >= 1) cout << "DBG1: ForceField::ForceField()" << endl;
+  //if (DBG >= 1) cout << "DBG1: ForceField::ForceField()" << endl;
 
     gmul[0]  = 0.0;
     gmul[1]  = 0.0;
@@ -16,11 +16,12 @@ ForceField::ForceField() : ForceFieldObject() {
     gmul[9]  = 0.0;
     gmul[10] = 10.0;
 
-    // if(DBG >= 1)
-    // cout << "DBG1: ForceField::ForceField() owari"<<endl;
 }
 
-ForceField::~ForceField() {}
+ForceField::~ForceField() {
+  delete ele;
+}
+
 
 int ForceField::set_config_parameters(const Config *cfg) {
     ForceFieldObject::set_config_parameters(cfg);

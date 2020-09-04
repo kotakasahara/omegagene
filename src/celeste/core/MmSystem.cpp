@@ -800,7 +800,7 @@ int MmSystem::output_ctimes() {
 }
 
 int MmSystem::ff_setup(const Config *cfg) {
-    ff = ForceField();
+  //    ff = ForceField();
     ff.set_config_parameters(cfg);
     ff.initial_preprocess((const PBC *)&pbc);
     ff.cal_self_energy((const int &)n_atoms, (const int &)n_excess, (const int **&)excess_pairs,

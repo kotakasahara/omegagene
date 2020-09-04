@@ -172,7 +172,8 @@ int DynamicsMode::terminal_process() {
     mmsys.vcmd->close_files();
     delete mmsys.vcmd;
   }
-
+  delete mmsys.dist_restraint;
+  delete mmsys.pos_restraint;
   cout << "term" << endl;
   return 0;
 }

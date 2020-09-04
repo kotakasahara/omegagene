@@ -22,7 +22,8 @@ VirtualState::VirtualState() : CelesteObject() {
 }
 
 VirtualState::~VirtualState() {
-    if (poly_order > 0) delete[] poly_params;
+  //if (poly_order > 0) delete[] poly_params;
+  delete[] poly_params;
 }
 
 int VirtualState::set_order(int in_order) {
@@ -60,8 +61,10 @@ ExtendedVMcMD::ExtendedVMcMD() : Extended() {
 }
 
 ExtendedVMcMD::~ExtendedVMcMD() {
-    if (n_vstates > 0) delete[] vstates;
+  //if (n_vstates > 0) delete[] vstates;
+  delete[] vstates;
     delete writer_lambda;
+    delete writer_com;
     for (int i = 0; i < n_enhance_group_pairs; i++) { delete[] enhance_group_pairs[i]; }
     delete[] enhance_group_pairs;
     free_crd_centers();

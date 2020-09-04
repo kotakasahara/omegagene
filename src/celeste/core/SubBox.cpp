@@ -96,7 +96,6 @@ SubBox::~SubBox() {
     free_variables();
     delete constraint;
     delete settle;
-
     delete thermostat;
 }
 
@@ -289,8 +288,8 @@ int SubBox::free_variables() {
     delete[] work;
     delete[] work_prev;
     //delete[] frc;
-    delete[] atomids;
-
+    //delete[] atomids;
+    
     if (cfg->thermostat_type != THMSTT_NONE) { delete[] buf_crd; }
 
 #if defined(F_CUDA)
@@ -301,6 +300,8 @@ int SubBox::free_variables() {
 #endif
     delete[] mass;
     delete[] mass_inv;
+    delete[] atomids;
+    delete[] atomids_rev;
     free_variables_for_bonds();
     free_variables_for_angles();
     free_variables_for_torsions();
@@ -470,7 +471,7 @@ int SubBox::set_parameters(int     in_n_atoms,
     //cout << "dbg0422o SubBox box_lower " << box_lower[0] << " " << box_lower[1] << " " << box_lower[2] << endl;
     //cout << "dbg0422p SubBox box_upper " << box_upper[0] << " " << box_upper[1] << " " << box_upper[2] << endl;
 
-    ff = ForceField();
+    //ff = ForceField();
     ff.set_config_parameters(cfg);
     ff.initial_preprocess((const PBC *)pbc);
 
@@ -1656,6 +1657,8 @@ int SubBox::init_thermostat(const int in_thermostat_type, const real in_temperat
         thermostat = new ThermostatScaling();
     } else if (in_thermostat_type == THMSTT_HOOVER_EVANS) {
         thermostat = new ThermostatHooverEvans();
+    } else {
+      thermostat = new ThermostatObject();
     }
     thermostat->set_temperature(in_temperature_init);
     thermostat->set_temperature_coeff(d_free);

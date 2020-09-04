@@ -86,6 +86,7 @@ int ZeroMultipoleSum::cal_self_energy(const int &  n_atoms,
         chgsmm += charge[i] * (charge[i] + dwork[i]);
         d_self_mon += energy_self[i];
     }
+    delete[] dwork;
     d_self = (-zmcore * chgsmm - piewald * chgsum) * 0.5 * CHARGE_COEFF;
 
     energy_self_sum = d_self_mon;
