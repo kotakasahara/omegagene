@@ -1,0 +1,33 @@
+----------------------------
+Usage: mdinput_generator.py [options]
+
+Options:
+  -h, --help     show this help message and exit
+  -i FN_CONFIG   Input config file
+  -o FN_OUT      Output binary file
+  -w FN_WARNING  Output warning file
+  -v VERSION     version of binary
+----------------------------
+Reading input files
+read_config
+fn-i-tpl : ../../inp/out.tpl
+fn-i-initial-pdb : ../../inp/init.pdb
+fn-i-restart : md_0.restart
+cell-x : 300
+cell-y : 300
+cell-z : 300
+cell-center-x : 0.0
+cell-center-y : 0.0
+cell-center-z : 0.0
+fn-i-atom-groups : ../../inp/atom_groups.inp
+fn-i-vcmd-inp : ../vcmd.inp
+fn-i-vcmd-initial : start.virt
+aus-type : crdxyz
+fn-i-position-restraint : ../../inp/posres.dat
+read_tpl
+../../inp/out.tpl
+MD
+New mol:particle: 1
+read initial pdb
+prepare system
+read restart

@@ -1,0 +1,38 @@
+--processor                   single        ;
+; --gpu-device-id               0
+--mode                        md            ;
+--integrator                  langevin
+--cutoff                      20
+--n-steps                     100000
+--time-step                   5
+--electrostatic               debye-huckel
+--debye-huckel-dielectric     85
+--debye-huckel-temperature    300
+--debye-huckel-ionic-strength 0.00015
+--thermostat                  none
+--temperature                 300
+--group-o-coord               all
+--print-interval-log          1000
+--print-interval-coord        1000
+--fn-o-coord                  md.cod    ;
+--format-o-coord              presto
+--fn-o-log                    md.log    ;
+--fn-o-energy                 md.ene    ;
+--nsgrid-cutoff               23
+--nsgrid-update-intvl         5
+--constraint                  none
+--expected-num-density        0.1 ; 0.1
+--hydrophobicity-scale-epsiron 0.2
+--nonbond hydrophobicity-scale-lj
+--extended-ensemble     vcmd              ; "v-aus", "v-mcmd", "vcmd"
+--fn-o-vmcmd-log        ttp_vcmd.out      ; ttp output
+--print-interval-extended-lambda 1
+--fn-o-extended-lambda  lambda.out
+--enhance-sigma         0.0                ; recovery force related parameter around vaus windows
+--format-o-extended-lambda ascii
+--enhance-recovery-coef 0.0
+--fn-o-vcmd-q-raw    vcmd_q_raw.txt
+--fn-o-vcmd-start    start_o.virt
+--begin-count-q-raw  0
+--fn-o-restart md.restart
+--print-interval-restart     50000000

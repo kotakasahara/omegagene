@@ -48,7 +48,6 @@ Users' Manual
     users-manual/run_md
     users-manual/in_out_files
     users-manual/analysis
-    users-manual/samples
 
 ==============================
 Build Manual
@@ -70,5 +69,4 @@ Tutorial
     :maxdepth: 2
 
     users-manual/tutorial_cg 
-    users-manual/tutorial_mcmd
 
