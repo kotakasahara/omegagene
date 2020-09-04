@@ -1675,7 +1675,7 @@ int SubBox::init_thermostat(const int in_thermostat_type, const real in_temperat
     if (cfg->time_step < tau) tau = cfg->time_step;
     thermostat->set_time_step(cfg->time_step, tau);
     cout << "dbg0708 thermostat set_constant"<<endl;
-    thermostat->set_constant(n_atoms_box, mass, vel_next, work);
+    thermostat->set_constant(n_atoms_box, mass_inv, vel_next, work);
     return 0;
 }
 
