@@ -6,7 +6,9 @@ Samples
 
 - ala3
 - cg_q8
+- cg_q8_vcmd
 - mcmd_ala3
+- trpc
 
 ------
 ala3
@@ -27,9 +29,22 @@ A sample data for coarse-grained simulations.
 See the "Tutorial for Coarse-grained simulations" in this documentation.
 
 -------
+cg_q8_vcmd
+-------
+
+A sample data for VcMD simulation with the coarse-grained model.
+See the "Tutorial for Coarse-grained simulations" in this documentation.
+
+-------
 mcmd_ala3
 -------
 
 A sample data for the McMD simulation.
 See the "Tutorial for multi-canonical MD (McMD) simulations" in this documentation.
 
+
+-------
+trpc
+-------
+
+A sample data for all-atom simulation. This was used for older versions.

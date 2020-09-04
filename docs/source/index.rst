@@ -69,4 +69,5 @@ Tutorial
     :maxdepth: 2
 
     users-manual/tutorial_cg 
+    users-manual/tutorial_mcmd
 

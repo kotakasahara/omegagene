@@ -24,7 +24,7 @@ To download myPresto/omegagene, execute the following command on your terminal:
 
 ::
 
-  git clone https://github.com/kotakasahara/omegagene.git
+  $ git clone https://github.com/kotakasahara/omegagene.git
 
 
 We also offer you to use our docker container.
@@ -80,8 +80,8 @@ Setting up input Files
 
 ::
 
-  export OMEGATK=${PROJECT_ROOT}/toolkit
-  export OMEGABIN=${PROJECT_ROOT}/target/bin/omegagene_wons
+  $ export OMEGATK=${PROJECT_ROOT}/toolkit
+  $ export OMEGABIN=${PROJECT_ROOT}/target/bin/omegagene_wons
 
 You should change these settings depending on your environment.
 If you use csh environment, *setenv* command should be used to set the environmental variables.
@@ -89,7 +89,8 @@ If you use csh environment, *setenv* command should be used to set the environme
 2. Seting up the directory to the simulation
 
 ::
-  mkdir ${PATH_TO_YOUR_WORKING_DIRECTORY}
+
+  $ mkdir ${PATH_TO_YOUR_WORKING_DIRECTORY}
 
 Set the variable ${PATH_TO_YOUR_TARGET_DIRECTORY} as the path to your working directory.
 (e.g. /home/user/md/test )
@@ -99,8 +100,8 @@ Then, copy the sample files to the working directory.
 
 ::
 
-  cp -r ${PROJECT_ROOT}/samples/cg_q8 ${PATH_TO_YOUR_WORKING_DIRECTORY}
-  cd ${PATH_TO_YOUR_WORKING_DIRECTORY}/cg_q8
+  $ cp -r ${PROJECT_ROOT}/samples/cg_q8 ${PATH_TO_YOUR_WORKING_DIRECTORY}
+  $ cd ${PATH_TO_YOUR_WORKING_DIRECTORY}/cg_q8
 
 3. make a topology file
 
@@ -143,7 +144,7 @@ Then, conduct the following command to generate the topology file, *md.tpl*.
 
 ::
 
-  python2.7 ${OMEGATK}/gen_tpl.py --pdb single.pdb --param param.dat --tpl md.tpl --molname mol1
+  $ python2.7 ${OMEGATK}/gen_tpl.py --pdb single.pdb --param param.dat --tpl md.tpl --molname mol1
 
 After that, change the number of molecules in the md.tpl.
 
@@ -154,7 +155,7 @@ md.tpl,::
   MD
 
   TPL> MOLECULES
-  mol1                          2  ## <== HERE. This value mult be "2".
+  mol1                          2  ## <== HERE. This value must be "2".
 
   TPL> ATOMS
   mol1
@@ -169,6 +170,7 @@ Execute the following command.
   python2.7 ${OMEGATK}/presto_generate_velocities.py   -i inp.pdb   --i-tpl md.tpl   -t 100   -o md.restart   -s ${RANDOM}  --mol --check
 
 *-s* option indicates the random seed.
+
 bash environment automatically generates a random number for the ${RANDOM} variable.
 When it does not work, replace ${RANDOM} into an arbitral arbitral number.
 
@@ -279,9 +281,9 @@ In addition, the final snapshot in the restart file can be converted into .pdb f
   python2.7 ${OMEGATK}/restart_to_pdb.py -i md.restart --i-pdb inp.pdb -o finalstep.pdb
 
 
------------------------------------------
+========================================
 VcMD
------------------------------------------
+========================================
 
 ~~~~~~~~~~~~~~~~
 Files
@@ -318,9 +320,9 @@ This script sequentially execute simulations from *n1* to *n10*.
   $ bash c3_prep_next.bash
 
 This script performes postprocessing for an iteraction.
-*vcmd_next.inp* and *vcmd_next_qraw.dat" are generated.
-*vcmd_next.inp* describes the canonical probability for each virtual state as an input for the next iteration.
-*vcmd_next_qraw.inp* describes the probability in the entire VcMD ensemble for each virtual state.
+- *vcmd_next.inp* and *vcmd_next_qraw.dat" are generated.
+- *vcmd_next.inp* describes the canonical probability for each virtual state as an input for the next iteration.
+- *vcmd_next_qraw.inp* describes the probability in the entire VcMD ensemble for each virtual state.
 
 vcmd_next_qraw.dat::
   10
@@ -342,11 +344,11 @@ vcmd_next_qraw.dat::
   7 0.377091487806
   END
 
-The first line indicates the interval steps for virtual state transition trials.
-The second line indicates the number or reaction coordinates (N_RC). 
-The third line indicates the number of virtual state and name of atom groups to define the reaction coordinate.
-Following seven lines are the range of lambda for each virtual state.
-The following lines describes the sampled probability for each state. 
+- The first line indicates the interval steps for virtual state transition trials.
+- The second line indicates the number or reaction coordinates (N_RC). 
+- The third line indicates the number of virtual state and name of atom groups to define the reaction coordinate.
+- The following seven lines are the range of lambda for each virtual state.
+- The following lines describes the sampled probability for each state. 
 
 ~~~~~~~~~~~~~~~~
 The second iteration and further
@@ -384,13 +386,13 @@ Note that ${PREV_STAGE} indicates the number of previous iteration.
 
 
 
-*--i-qcano vcmd_next.inp* is the parameter file used for the VcMD simulation.
-*--i-cod md.cod* is the trajectory file obtained from the VcMD simulation.
-*--interval-cod 1000* should specifies the value same as the *--print-interval-coord* in *md.inp.run* file.
-*--i-lmb lambda.out* is the trajectory file for lambda values obtained from the VcMD simulation.
-*--interval-lmb 1* should specifies the value same as the *--print-interval-extended-lambda* in *md.inp.run* file.
-*--i-vs ttp_vcmd.out*  is the trajectory for the virtual state obtained from the VcMD simulation.
-*--interval-vs 10* is the interval for virtual state transitions.
-*-o prob.dat* is the output file describing probabilistic weight in the canonical ensemble for each snapshot.
+- *--i-qcano vcmd_next.inp* is the parameter file used for the VcMD simulation.
+- *--i-cod md.cod* is the trajectory file obtained from the VcMD simulation.
+- *--interval-cod 1000* should specifies the value same as the *--print-interval-coord* in *md.inp.run* file.
+- *--i-lmb lambda.out* is the trajectory file for lambda values obtained from the VcMD simulation.
+- *--interval-lmb 1* should specifies the value same as the *--print-interval-extended-lambda* in *md.inp.run* file.
+- *--i-vs ttp_vcmd.out*  is the trajectory for the virtual state obtained from the VcMD simulation.
+- *--interval-vs 10* is the interval for virtual state transitions.
+- *-o prob.dat* is the output file describing probabilistic weight in the canonical ensemble for each snapshot.
 
 

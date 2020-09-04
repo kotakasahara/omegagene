@@ -17,10 +17,13 @@ For platform-specific details on building omegagene, please refer to the :doc:`b
 +-------------------+--------+-----------------+------------+----------------+
 | option            | GPU    | Neighbor-search | all-atom   | coarse-grained | 
 +===================+========+=================+============+================+
-| (none)            | -      | enable          | enable     | -              |
-| -DCELESTE_WO_NS   | -      | -               | enable     | enable         |
-| -DCELESTE_GPU     | enable | enable          | enable     | -              |
-| -DCELESTE_GPUHPS  | enable | enable          | -          | enable         |
+| none              | NA     | enable          | enable     | NA             |
++-------------------+--------+-----------------+------------+----------------+
+| -DCELESTE_WO_NS   | NA     | NA              | enable     | enable         |
++-------------------+--------+-----------------+------------+----------------+
+| -DCELESTE_GPU     | enable | enable          | enable     | NA             |
++-------------------+--------+-----------------+------------+----------------+
+| -DCELESTE_GPUHPS  | enable | enable          | NA         | enable         |
 +-------------------+--------+-----------------+------------+----------------+
 
 

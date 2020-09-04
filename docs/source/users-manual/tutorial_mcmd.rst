@@ -116,8 +116,9 @@ The following files are input configuration files.
 The following command generates inputs of 10 independent runs.
 
 ::
-  $alias mcmd="python cal03_mcmd_inp/kkmcmd_job_control.py -i cal03_mcmd_inp/_kkmcmdconf.txt"
-  $mcmd
+
+  $ alias mcmd="python cal03_mcmd_inp/kkmcmd_job_control.py -i cal03_mcmd_inp/_kkmcmdconf.txt"
+  $ mcmd
 
 This command will be repeatedly executed during the iterations of McMD simulations.
 
@@ -127,8 +128,9 @@ Then, execute *job.bash* in each of n*X* directories.
 After ending of all the 10 runs, execute *mcmd* command twice.
 
 ::
-  $mcmd
-  $mcmd
+
+  $ mcmd
+  $ mcmd
 
 
 In *cal04_mcmd1/2* directory, n1, n2, ..., n10 are generated.
@@ -138,7 +140,8 @@ Repeat this process 10 times.
 Finally, execute the script *gen_ttpvout.bash*.
 
 ::
-  $bash gen_ttpvout.bash
+
+  $ bash gen_ttpvout.bash
 
 
 ---------------------------------------
@@ -149,6 +152,7 @@ After ending the *cal04_mcmd1/10*, the initial guess of the density of states is
 Edit the text file *for_next/current_situation*.
 
 ::
+
   4
   1
   1
@@ -162,14 +166,16 @@ Next move to the directory *for_next/v_distrib/cal04_mcmd1_pre*.
 Excecute the following command.
 
 ::
-  $bash com.bash 10 10 5
+
+  $ bash com.bash 10 10 5
 
 Note the minimum and maximum energies.
 
 ::
-  $tail -n1 stg_1/v_pdf/s1.pdf
+
+  $ tail -n1 stg_1/v_pdf/s1.pdf
   -1.4130000e+04   -1.2206073e+01
-  $head -n1 stg_10/v_pdf/s1.pdf
+  $ head -n1 stg_10/v_pdf/s1.pdf
   -1.9970000e+04   -1.2899220e+01
 
 The first value is the energy (kcal/mol), and the second value is log probability.
@@ -177,24 +183,28 @@ The first value is the energy (kcal/mol), and the second value is log probabilit
 Edit the text file *range.info* to input these minimum and maximum energeis at the first line.
 
 ::
-  $python2.7 gen_mcmdinp.py -i range.info -o ttp_v_mcmd.inp
-  $cp ttp_v_mcmd.inp ../../../cal04_mcmd1
+
+  $ python2.7 gen_mcmdinp.py -i range.info -o ttp_v_mcmd.inp
+  $ cp ttp_v_mcmd.inp ../../../cal04_mcmd1
 
 Execute the following program again.
 
 ::
-   $bash com.bash 10 10 5
+
+   $ bash com.bash 10 10 5
 
 Then, move to the directory *derv_den_Pc*.
 Execute the command
 
 ::
-   $cd ../../derv_de_Pc
-   $csh com
+
+   $ cd ../../derv_de_Pc
+   $ csh com
 
 When the follwing text appears, input "1" by your keyboard.
 
 ::
+
   nstage =  10
   ####  If OK, input 1. #### 
 
@@ -205,9 +215,11 @@ Move to the directory *fit_dden*,
 Edit the *cal04_mcmd1/inp.dat_e1* to specify the minimum and maximum potential energies as the same way for *range.info* which was editted above.
 
 ::
-  emacs -nw  cal04_mcmd1/inp.dat_e1
+
+  $ emacs -nw  cal04_mcmd1/inp.dat_e1
 
 ::
+
   -19970.0   5.0    999.0  0.0 3 0.0
   -19970.0  -14130.0   -19970.0  -14130.0
   -19970.0  -14130.0
@@ -215,10 +227,13 @@ Edit the *cal04_mcmd1/inp.dat_e1* to specify the minimum and maximum potential e
 Execute the command
 
 ::
-  $csh com_pre
+
+  $ csh com_pre
 
 When the follwing text appears,	input "1" by your keyboard.
+
 ::
+
   This is specialized for md1_*.  Are you OK?
   
   ####  If OK, input 1. ####
@@ -234,8 +249,9 @@ cal05_mcmd1
 The directory for the next iteration *cal05_mcmd1* should be copied from the *samples/mcmd_ala3* directory of the omegagene repository.
 
 ::
-   cd ../../
-   cp OMEGAGENE_REPOSITORY_DIR/samples/mcmd_ala3/cal05_mcmd1 . -r
+
+   $ cd ../../
+   $ cp OMEGAGENE_REPOSITORY_DIR/samples/mcmd_ala3/cal05_mcmd1 . -r
 
 The McMD parameter file *cal05_mcmd1/ttp_v_mcmd.inp* is prepared by adding the content of *e1_fort.20* to the tail of *cal04_mcmd1/ttp_v_mcmd.inp*. See the sample file, *samples/mcmd_ala3/cal05_mcmd1/ttp_v_mcmd.inp*.
 In this file, there are nine copies of the content of *e1_fort.20*, because this sample simulation configured to use the nine virtual states.
@@ -243,6 +259,7 @@ In this file, there are nine copies of the content of *e1_fort.20*, because this
 The next iteration is defined in  *cal03_mcmd_inp/_kkmcmdconf.txt*
 
 ::
+
   ; cal05_mcmd1 phase=2
   --cal-dir        ${PRJ_HOME}/cal05_mcmd1
   --mcmd-stages              2  1
@@ -255,8 +272,9 @@ The next iteration is defined in  *cal03_mcmd_inp/_kkmcmdconf.txt*
 To run the simulation, execute the *mcmd* command.
    
 ::
-  $mcmd
-  $mcmd
+
+  $ mcmd
+  $ mcmd
 
 Then, execute *job.bash* in each of cal05_mcme1/1/nX directories, where X is one of 1-10.
 
@@ -267,28 +285,33 @@ Postprocessing of cal05_mcmd1
 After finishing the simulations, post-processing will be done in *for_next* directory.
 
 ::
-  for_next
+
+  $ cd for_next
 
 Edit the first two lines of *current_situation* as follows
 
 ::
+
   5
   9
   1
   60
 
 ::
-  cd v_distrib/cal05_mcmd1
+
+  $ cd v_distrib/cal05_mcmd1
 
 Edit the *com_pre.bash* to set the variable OMEGATK to your omegagene toolekit directory.
 
 ::
-  OMEGATK=${HOME}/local/og0/toolkit
+
+  $ OMEGATK=${HOME}/local/og0/toolkit
 
 Then, execute the script.
 
 ::
-  csh ./com_pre.bash 1 10
+
+  $ csh ./com_pre.bash 1 10
 
 Argument 1 and 10 indicates the number of runs.
 The histogram of populations for each potential energy bin for each virtual state is generated in *v_pdf* directory.
@@ -297,12 +320,14 @@ If *R* is working, the image file *v_distrib.png* is generated.
 After that, Run the following scripts.
 
 ::
-  cd ../../fit_pmc_entire
-  csh ./1234_com 4 7 0
+
+  $ cd ../../fit_pmc_entire
+  $ csh ./1234_com 4 7 0
 
 ::
-  cd ../
-  csh do_fitmix_nextpre.csh 7 0 
+
+  $ cd ../
+  $ csh do_fitmix_nextpre.csh 7 0 
 
 The directory *cal06_mcmd1* will be generated in the parent directory.
 Run this iteration in the same way as the previous iteration.
@@ -316,6 +341,7 @@ Reweigthing of the production run is performed *for_next/gen_p_cano_McMD* direct
 Edit *md_vst* file as follows.
 
 ::
+
   14
   9
   5.0
@@ -326,25 +352,28 @@ The second line is the number of virtual states.
 The third line is bin for the potential energy in kcal/mol unit.
 
 ::
-  csh 1_com
-  csh 2_com_integ
-  csh 3_com_P_E_T
+
+  $ csh 1_com
+  $ csh 2_com_integ
+  $ csh 3_com_P_E_T
 
 Then, the potential energies of each snapshot in the trajectory are obtained by the following script.
 
 ::
-  python2.7 ${OMEGATK}/kkmcmd_pot_from_crd.py \
-      --cod md.cod
+
+  $ python2.7 ${OMEGATK}/kkmcmd_pot_from_crd.py \
+      --cod md.cod \
       -o    pot.txt
 
-*md.cod* is a trajectory file generated by omegagene.
-*pot.txt* is output file.
+- *md.cod* is a trajectory file generated by omegagene.
+- *pot.txt* is output file.
 
 The probability of existance in the canonical ensemble is obtained by the following scripts.
 
 ::
-  echo pot.txt > list.txt
-  python2.7 ${OMEGATK}/kkmcmd_reweighting.py \
+
+  $ echo pot.txt > list.txt
+  $ python2.7 ${OMEGATK}/kkmcmd_reweighting.py \
     --flg-pot -i pot.txt \
     --i-cano for_next/gen_p_cano_McMD/p_cano/P_E_T300.dat \
     -o prob.txt 
@@ -357,8 +386,8 @@ For the AUS method
 The protocol for the AUS method is similar to the McMD.
 For running an AUS simulation on the omegagene, following settings are required.
 
-* --fn-i-aus-restart ... A file name for the output restart file.
-* --aus-type ... This should be "dist-mass-center*.
-* --enhance-group-name ... Names for two atom groups should be specified. The distance between centroids of these groups is used as the reaction coordinate.
+-  --fn-i-aus-restart ... A file name for the output restart file.
+-  --aus-type ... This should be "dist-mass-center*.
+-  --enhance-group-name ... Names for two atom groups should be specified. The distance between centroids of these groups is used as the reaction coordinate.
 
 The same protocol using *for_next* scripts can be applied to the AUS method.

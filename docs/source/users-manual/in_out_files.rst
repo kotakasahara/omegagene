@@ -2,8 +2,6 @@
 In/Out Files
 ========================
 
-:Author: Kota Kasahara
-
 ------------------------------------
 Input Files
 ------------------------------------
@@ -27,7 +25,7 @@ System configuration file (.cfg)
 ===================================
 
 The input file describing configurations about a simulation system.
-Other some input files are specified in this file, and they are integrated into the integrated binary file (.cls) by using *mdinput_generator.py* program.
+sOther some input files are specified in this file, and they are integrated into the integrated binary file (.cls) by using *mdinput_generator.py* program.
 In the configuration file, a set of a key and value(s) is specified in each line.
 
 * --fn-i-tpl          md.tpl
