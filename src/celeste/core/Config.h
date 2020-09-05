@@ -102,6 +102,7 @@ struct Config : public CelesteObject {
     real        langevin_gamma = 0.0;
 
     real        testmc_delta_x = 1.0;
+    real        testmc_max_pot = 1e99;
 
     Config() = default;
     Config(std::vector<std::string> &&arg);

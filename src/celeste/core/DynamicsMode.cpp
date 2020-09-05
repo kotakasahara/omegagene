@@ -1053,7 +1053,9 @@ int DynamicsModeMC::calc_in_each_step() {
   real delta_e = mmsys.potential_e + mmsys.pote_extend - (mmsys.potential_e_prev + mmsys.pote_extend_prev);
   real rnd = 0;
   real prob = 0;
-  if(delta_e > 0) {
+  if( mmsys.potential_e + mmsys.pote_extend > cfg->testmc_max_pot){
+    flg_accept = false;
+  }else if(delta_e > 0) {
     //cout << "dbg0803b"<<endl;
     rnd = mmsys.random_mt();
     prob = exp(-delta_e/(GAS_CONST/JOULE_CAL * 1e-3 * mmsys.temperature));

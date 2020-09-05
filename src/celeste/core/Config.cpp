@@ -348,6 +348,8 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
 	  // convert the unit from ps^-1 to fs^-1
         } else if (*itr == "--testmc-delta-x") {
 	  testmc_delta_x = atof((*++itr).c_str());
+        } else if (*itr == "--testmc-max-pot") {
+	  testmc_max_pot = atof((*++itr).c_str());
         } else {
 	  stringstream ss;
 	  error_exit(ss.str(), "1A00001");
