@@ -708,7 +708,7 @@ int ExtendedVcMD::set_struct_parameters_crd(real *crd, PBC *pbc) {
     //<< unit_vec[i_pair][1] << " "
     //<< unit_vec[i_pair][2] <<endl;
     lambda[i_pair]=crd_centers[i_grp][i_pair];
-    cout << lambda[i_pair] << endl;
+    //cout << lambda[i_pair] << endl;
     i_pair++;
     if(i_pair==3) break;
   }
