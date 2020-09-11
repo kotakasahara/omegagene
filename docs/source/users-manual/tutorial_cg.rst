@@ -15,9 +15,9 @@ The following environments are required to use myPresto/omegagene.
 In addition, use of bash environment is assumed in this document.
 Some trivial changes are needed for csh users.
 
-------------------------------
+~~~~~~~~~~~~~~~~
 Download myPresto/omegagene
-------------------------------
+~~~~~~~~~~~~~~~~
 
 
 To download myPresto/omegagene, execute the following command on your terminal:
@@ -33,9 +33,9 @@ We also offer you to use our docker container.
 
   git clone https://github.com/terapizawa/myPresto-omegagene.git
 
-------------------------------------
+~~~~~~~~~~~~~~~~
 Installation
-------------------------------------
+~~~~~~~~~~~~~~~~
 
 Setting up a target build folder:
 
@@ -45,32 +45,28 @@ Setting up a target build folder:
 	$ mkdir target
         $ cd target
 
-The "${PROJECT_ROOT}" indicates the path to the directory of the downloaded omegagene repository in your environment.
+The **${PROJECT_ROOT}** indicates the path to the directory of the downloaded omegagene repository in your environment.
 Then, CMake evaluates all the external software dependencies for the selected build variant, and exit with errors if the dependency requirements are not met. CMake must be invoked on the `CMakeLists.txt` file in the **${PROJECT_ROOT}** directory.
-Run the following command to configure for building the desired variant of myPresto/omegagene in ${PROJECT_ROOT}/target directory
+Run the following command to configure for building the desired variant of myPresto/omegagene in **${PROJECT_ROOT}/target** directory
 
 ::
 
    $ cmake -DCELESTE_WO_NS=1 ..
 
-If you use our gpu-based myPreto/omegagene, use the *-DCELESTE_GPUHPS=1 option* as follows:
+When you use the GPU version of myPreto/omegagene, apply the option *-DCELESTE_GPUHPS=1* as follows:
 
 ::
 
    $ cmake -DCELESTE_GPUHPS=1 ..
 
-Then, make command compiles and builds the software.
+Then, *make* command compiles and builds the software.
 
 ::
 
    $ make
 
-See also "Installation" and "Build manual" in this documentation.
+See also "Installation" and "Build manual" in this documentation for details.
 The executable binary is generated in ${PROJECT_ROOT}/target/bin directory.
-
------------------------------------------
-MD simulations with coarse grained model
------------------------------------------
 
 ~~~~~~~~~~~~~~~~~~~~~~~
 Setting up input Files
@@ -180,10 +176,10 @@ When it does not work, replace ${RANDOM} into an arbitral arbitral number.
 
   python2.7 ${OMEGATK}/mdinput_generator.py -i md.inp -o md.inp.cls -v v.0.52 > log_inputgen.txt
 
-*md.inp.cls* file is the input file for myPresto/omegagene.
+*md.inp.cls* file is an input file for myPresto/omegagene.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Set up your simulation conditions
+Setting up your simulation conditions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The simulation conditions and systems are configured by the following files.
@@ -262,9 +258,9 @@ To run an MD simulation using myPresto/omegagene, execute the following command.
 
 Simulation log is given in *md.out*, and the trajectory is *md.cod*.
 
------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~
 Visualize the resulant trajectory
------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~
 
 The trajectory file md.cod is written in myPresto format. This can be converted into the Gromacs trajectory .trr format.
 
@@ -296,15 +292,23 @@ These two directories should be copied into your working directory.
 In *${PROJECT_ROOT}/samples/cg_q8_vcmd* directory,  there are directories named as *1* and *2*. They correspond to the first, and second iterations.
 In each directory, 10 parallel simulations will be carried out in directories named "n1", "n2", ..., "n10".
 
+::
+
+  cd ${PATH_TO_YOUR_WORKIND_DIRECTORY}
+  cp -r ${PROJECT_ROOT}/saples/cg_q8 .
+  cp -r ${PROJECT_ROOT}/saples/cg_q8_vcmd .
+
+
 ~~~~~~~~~~~~~~~~
 The first iteration
 ~~~~~~~~~~~~~~~~
 
 In *1* directory, execute the following scripts attached to the samples.
-Note that modify these scripts to adjust the path ${OMEGABIN} and ${OMEGATK} to your omegagene binary and toolkit directory.
+Note that these scripts requiers appropriate settings for ${OMEGABIN} and ${OMEGATK} to your omegagene binary and toolkit directory.
 
 ::
 
+  cd ${PATH_TO_YOUR_WORKING_DIRECTORY}/cg_q8_vcmd/1
   $ bash c1_gen_inp.bash 
 
 This script generates the directory *n1* to *n10*.
@@ -320,11 +324,13 @@ This script sequentially execute simulations from *n1* to *n10*.
   $ bash c3_prep_next.bash
 
 This script performes postprocessing for an iteraction.
-- *vcmd_next.inp* and *vcmd_next_qraw.dat" are generated.
+
+- *vcmd_next.inp* and *vcmd_next_qraw.dat* are generated.
 - *vcmd_next.inp* describes the canonical probability for each virtual state as an input for the next iteration.
 - *vcmd_next_qraw.inp* describes the probability in the entire VcMD ensemble for each virtual state.
 
 vcmd_next_qraw.dat::
+
   10
   1
   7 mol1 mol2
@@ -362,7 +368,7 @@ Then, repeat the same protocols.
 Production run
 ~~~~~~~~~~~~~~~~
 
-After the convergence of the distribution in *vcmd_next_qraw.dat", execute the production run with the same manner.
+After the convergence of the distribution in *vcmd_next_qraw.dat*, execute the production run with the same manner.
 
 ~~~~~~~~~~~~~~~~~~~
 Post-processing
@@ -375,14 +381,14 @@ Note that ${PREV_STAGE} indicates the number of previous iteration.
 :: 
 
   $ python ${OMEGATK}/assign_traj_vs_lambda.py
-     --i-qcano ../../${PREV_STAGE}/vcmd_next.inp     
-     --i-cod md.cod             
-    --interval-cod 1000   
-     --i-lmb lambda.out    
-    --interval-lmb 1        
-     --i-vs ttp_vcmd.out   
-     --interval-vs 10  
-     -o prob.dat    
+     --i-qcano ../../${PREV_STAGE}/vcmd_next.inp \
+     --i-cod md.cod \
+    --interval-cod 1000 \
+     --i-lmb lambda.out \  
+    --interval-lmb 1 \   
+     --i-vs ttp_vcmd.out \
+     --interval-vs 10  \
+     -o prob.dat \
 
 
 
@@ -393,6 +399,6 @@ Note that ${PREV_STAGE} indicates the number of previous iteration.
 - *--interval-lmb 1* should specifies the value same as the *--print-interval-extended-lambda* in *md.inp.run* file.
 - *--i-vs ttp_vcmd.out*  is the trajectory for the virtual state obtained from the VcMD simulation.
 - *--interval-vs 10* is the interval for virtual state transitions.
-- *-o prob.dat* is the output file describing probabilistic weight in the canonical ensemble for each snapshot.
+- *-o prob.dat* is the output file describing probabilistic weight in the canonical ensemble for each snapshot. This file is a tab-separated acsii file. The first column is the step number, the second is the probabilistic weight, the third is lambda, and tha fourth is the virtual state ID.
 
 
