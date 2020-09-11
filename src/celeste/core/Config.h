@@ -103,6 +103,7 @@ struct Config : public CelesteObject {
 
     real        testmc_delta_x = 1.0;
     real        testmc_max_pot = 1e99;
+    real        testmc_max_r2 = 1e99;
 
     Config() = default;
     Config(std::vector<std::string> &&arg);

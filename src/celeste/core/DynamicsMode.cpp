@@ -1053,7 +1053,14 @@ int DynamicsModeMC::calc_in_each_step() {
   real delta_e = mmsys.potential_e + mmsys.pote_extend - (mmsys.potential_e_prev + mmsys.pote_extend_prev);
   real rnd = 0;
   real prob = 0;
-  if( mmsys.potential_e + mmsys.pote_extend > cfg->testmc_max_pot){
+
+  real r2 = subbox.get_crds()[0] * subbox.get_crds()[0] +
+    subbox.get_crds()[1] * subbox.get_crds()[1] +
+    subbox.get_crds()[2] * subbox.get_crds()[2];
+
+  if( cfg->testmc_max_pot > 0 && mmsys.potential_e + mmsys.pote_extend > cfg->testmc_max_pot){
+    flg_accept = false;
+  }if ( cfg->testmc_max_r2 > 0 && r2 > cfg->testmc_max_r2){
     flg_accept = false;
   }else if(delta_e > 0) {
     //cout << "dbg0803b"<<endl;

@@ -350,6 +350,8 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
 	  testmc_delta_x = atof((*++itr).c_str());
         } else if (*itr == "--testmc-max-pot") {
 	  testmc_max_pot = atof((*++itr).c_str());
+        } else if (*itr == "--testmc-max-r2") {
+	  testmc_max_r2 = atof((*++itr).c_str());
         } else {
 	  stringstream ss;
 	  error_exit(ss.str(), "1A00001");
