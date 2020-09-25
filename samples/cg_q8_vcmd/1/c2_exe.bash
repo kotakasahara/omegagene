@@ -6,8 +6,8 @@ STAGE=${path##*/}
 SERIES=1
 N_SERIES=10
 
-OMEGABIN=${HOME}/local/omegagene/target/bin/omegagene_wons
-OMEGATK=${HOME}/local/omegagene/toolkit
+#OMEGABIN=${HOME}/local/omegagene/target/bin/omegagene_wons
+#OMEGATK=${HOME}/local/omegagene/toolkit
 
 while [ $SERIES -le $N_SERIES ]
 do 

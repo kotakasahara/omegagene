@@ -6,8 +6,8 @@ STAGE=${path##*/}
 PREV_STAGE=$(( $STAGE - 1 ))
 PREV_STAGE_V=$PREV_STAGE
 
-OMEGABIN=${HOME}/local/omegagene/target/bin/omegagene_wons
-OMEGATK=${HOME}/local/omegagene/toolkit
+#OMEGABIN=${HOME}/local/omegagene/target/bin/omegagene_wons
+#OMEGATK=${HOME}/local/omegagene/toolkit
 
 SERIES=1
 N_SERIES=10
