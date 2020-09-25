@@ -1,0 +1,1068 @@
+omegagene eef8ea6-dirty (2020-09-01 12:27:04)
+conf.set_arguments
+-----------------------------------
+Reading from configuration file:  md.inp.run
+--processor                   single        
+--gpu-device-id  0
+--mode                        md            
+--integrator                  leapfrog-presto      
+--cutoff                      12.0          
+--n-steps                     100       
+--time-step                   2.0
+--electrostatic               zero-dipole   
+--ele-alpha                   0             
+--thermostat                  none
+--temperature                 300           
+--com-motion                  cancel      
+--com-cancel-group-name       solute
+--com-cancel-group-name       solvent
+--print-interval-log          1
+--print-interval-coord        100
+--fn-o-coord                  run.cod    
+--format-o-coord              presto
+--group-o-coord               solute
+--fn-o-log                    md.log    
+--fn-o-energy                 md.ene    
+--fn-o-restart                run_o.restart
+--nsgrid-cutoff               13.0
+--nsgrid-update-intvl         10
+--constraint                  shake
+--const-max-loops	      1000
+--const-tolerance             0.0000001
+--thermo-const-max-loops      100
+--thermo-const-tolerance      0.00001
+-----------------------------------
+/setup
+mainstream
+dynamics_mode
+DBG1: ForceFieldObject::ForceFieldObject()
+DBG1: ForceField::ForceField()
+//DBG1: ForceField::ForceField()
+DBG1: ForceFieldObject::ForceFieldObject()
+DBG1: ForceField::ForceField()
+//DBG1: ForceField::ForceField()
+DBG1: dynamics->set_config_parameters(cfg)
+DBG1: RunMode::set_config_parameters()
+-- Load Celeste input package.
+--- Load file header.
+---- Input file format : version v.0.52
+size_box:            96
+size_crd:            148972
+size_vel:            148972
+size_topol:          468140
+size_constraint:     74424
+size_settle:         0
+size_extended:       0
+size_groups:         24863
+size_dist_restraint: 4
+size_pos_restraint:  4
+size_group_coord:    0
+size_extended_vcmd:  0
+size_pote:           8
+--- Load PBC definition   : 96 bytes.
+load_ls_box : 39.7098 0 0 0 39.7098 0 0 0 39.7098 0 0 0 L[i]: 39.7098
+L[i]: 39.7098
+L[i]: 39.7098
+--- Load atom coordinates : 148972 bytes.
+n_atoms: 6207
+--- Load atom velocities  : 148972 bytes.
+read_ls_vel ... n_atoms: 6207
+--- Load topology data    : 468140 bytes.
+n_bonds 6204
+n_angles 108
+n_torsions 177
+n_impros 12
+n_nb14 123
+n_nb15off 12870
+alloc_excess_pairs 12870
+excess set 6435 / 12870
+--- Load constraint definition : 74424 bytes.
+--- Load atom group definition : 24863 bytes.
+n_groups 3
+read atom groups : 1 66 solute solute
+read atom groups : 2 6141 solvent solvent
+--- Load distance restraint definition : 4 bytes.
+--- Load position restraint definition : 4 bytes.
+alloc 0
+--- Load potential: 8 bytes.
+dbg0803a 0
+DBG1: dynamics->initial_preprocess()
+DBG1: DynamicsMode::initial_preprocess()
+DBG1: ForceFieldObject::set_config_parameters()
+dbg0711 ele
+DBG1: ElectrostaticObject::ElectrostaticObject()
+dielect_inv inf debye_inv -nan
+DBG1: ForceField::initial_preprocess
+DBG1: ZeroMultipoleSum::set_zms_params()
+cal_self_energy 
+DBG1: ZeroMultipoleSum::cal_self_energy()
+fcoeff : 0.000578703708015382
+bcoeff : 0.000289351854007691
+scoeff : 0.000868055562023073
+zmcore : 0.125
+chgsum : 2141.9560546875
+chgsmm: 4.63646030426025
+selfEnergy_dcore : 96.2250334032881
+d_self: -96.2250366210938
+sum of energy self: -96.2250061035156
+writer presto new 0
+subbox_setup() 1 1 1
+DBG1: ForceFieldObject::set_config_parameters()
+dbg0711 ele
+DBG1: ElectrostaticObject::ElectrostaticObject()
+dielect_inv inf debye_inv -nan
+DBG1: ForceField::initial_preprocess
+DBG1: ZeroMultipoleSum::set_zms_params()
+dbg0708 thermostat set_constant
+COM cancel atom groups: 
+  Group 1 solute : 66 atoms.
+  Group 2 solvent : 6141 atoms.
+Trajectory output group: 
+Group 1
+solute : 66 atoms.
+Initial kinetic energy : 3701.28839155006
+Initial temperature : 300.000000576232
+Degree of freedom : 12417
+DBG1: dynamics->main_stream()
+Step:        0    Time:     0.0000
+Total:     -2.0941493926e+04
+Potential: -2.4650818326e+04    Kinetic:  3.7093243997e+03
+Bond:      5.8932634564e+01    Angle:    4.1796133554e+00
+Torsion:   2.8320798304e+01    Improper: 6.4242037627e-02
+14-VDW:    9.0292888221e+00    14-Ele:   1.3497128865e+02
+VDW:       4.1648848106e+03    Ele:      -2.9051201002e+04
+Temperature:       3.0065134200e+02
+Comput Time:       9.2680400610e-01
+Step:        1    Time:     2.0000
+Total:     -2.1007059506e+04
+Potential: -2.4695087652e+04    Kinetic:  3.6880281463e+03
+Bond:      4.0180648885e+00    Angle:    5.4429061392e+00
+Torsion:   2.8493561015e+01    Improper: 1.3080954053e-01
+14-VDW:    8.9646199693e+00    14-Ele:   1.3498523232e+02
+VDW:       4.1786833099e+03    Ele:      -2.9055806156e+04
+Temperature:       2.9892521981e+02
+Comput Time:       1.8525660038e+00
+Step:        2    Time:     4.0000
+Total:     -2.1014010788e+04
+Potential: -2.4632293069e+04    Kinetic:  3.6182822808e+03
+Bond:      8.7247183473e+00    Angle:    8.0485522601e+00
+Torsion:   2.8834219897e+01    Improper: 4.9375603718e-01
+14-VDW:    8.9433936818e+00    14-Ele:   1.3485582329e+02
+VDW:       4.2304487706e+03    Ele:      -2.9052642303e+04
+Temperature:       2.9327211811e+02
+Comput Time:       2.7799749374e+00
+Step:        3    Time:     6.0000
+Total:     -2.1013591908e+04
+Potential: -2.4537675634e+04    Kinetic:  3.5240837257e+03
+Bond:      1.1051677248e+01    Angle:    1.0638068075e+01
+Torsion:   2.9265446527e+01    Improper: 1.0108256535e+00
+14-VDW:    8.9071233543e+00    14-Ele:   1.3454276269e+02
+VDW:       4.3183383087e+03    Ele:      -2.9051429846e+04
+Temperature:       2.8563705605e+02
+Comput Time:       3.7069430351e+00
+Step:        4    Time:     8.0000
+Total:     -2.1013487885e+04
+Potential: -2.4418309092e+04    Kinetic:  3.4048212066e+03
+Bond:      9.4638305663e+00    Angle:    1.2277490322e+01
+Torsion:   2.9680965861e+01    Improper: 1.4981132238e+00
+14-VDW:    8.8183989880e+00    14-Ele:   1.3408553672e+02
+VDW:       4.4395541908e+03    Ele:      -2.9053687618e+04
+Temperature:       2.7597048808e+02
+Comput Time:       4.6336579323e+00
+Step:        5    Time:    10.0000
+Total:     -2.1013362420e+04
+Potential: -2.4276842370e+04    Kinetic:  3.2634799499e+03
+Bond:      7.1066576086e+00    Angle:    1.2836235755e+01
+Torsion:   2.9993642164e+01    Improper: 1.8018557286e+00
+14-VDW:    8.6808364840e+00    14-Ele:   1.3359037885e+02
+VDW:       4.5898452228e+03    Ele:      -2.9060697199e+04
+Temperature:       2.6451437534e+02
+Comput Time:       5.5600290298e+00
+Step:        6    Time:    12.0000
+Total:     -2.1012942941e+04
+Potential: -2.4116209047e+04    Kinetic:  3.1032661055e+03
+Bond:      7.1047311944e+00    Angle:    1.2557273448e+01
+Torsion:   3.0166305017e+01    Improper: 1.8487130801e+00
+14-VDW:    8.5247859072e+00    14-Ele:   1.3319213721e+02
+VDW:       4.7632282573e+03    Ele:      -2.9072831250e+04
+Temperature:       2.5152858544e+02
+Comput Time:       6.4867720604e+00
+Step:        7    Time:    14.0000
+Total:     -2.1012380463e+04
+Potential: -2.3943517971e+04    Kinetic:  2.9311375083e+03
+Bond:      8.7170881108e+00    Angle:    1.1805231268e+01
+Torsion:   3.0212700636e+01    Improper: 1.6592938847e+00
+14-VDW:    8.3783106795e+00    14-Ele:   1.3300349849e+02
+VDW:       4.9517591232e+03    Ele:      -2.9089053217e+04
+Temperature:       2.3757707078e+02
+Comput Time:       7.4131960869e+00
+Step:        8    Time:    16.0000
+Total:     -2.1011960505e+04
+Potential: -2.3767948815e+04    Kinetic:  2.7559883097e+03
+Bond:      9.1890788684e+00    Angle:    1.1234069939e+01
+Torsion:   3.0180341326e+01    Improper: 1.3268277886e+00
+14-VDW:    8.2509233314e+00    14-Ele:   1.3307134503e+02
+VDW:       5.1456053390e+03    Ele:      -2.9106806740e+04
+Temperature:       2.2338072775e+02
+Comput Time:       8.3389511108e+00
+Step:        9    Time:    18.0000
+Total:     -2.1011660936e+04
+Potential: -2.3596719575e+04    Kinetic:  2.5850586390e+03
+Bond:      7.8987740430e+00    Angle:    1.1523210669e+01
+Torsion:   3.0129882250e+01    Improper: 9.7096672751e-01
+14-VDW:    8.1366175974e+00    14-Ele:   1.3336211357e+02
+VDW:       5.3336061307e+03    Ele:      -2.9122347270e+04
+Temperature:       2.0952638950e+02
+Comput Time:       9.2646217346e+00
+Step:       10    Time:    20.0000
+Total:     -2.1011290593e+04
+Potential: -2.3435115059e+04    Kinetic:  2.4238244655e+03
+Bond:      6.8992611756e+00    Angle:    1.2514133855e+01
+Torsion:   3.0118475387e+01    Improper: 6.9074327269e-01
+14-VDW:    8.0252421213e+00    14-Ele:   1.3378382420e+02
+VDW:       5.5042904757e+03    Ele:      -2.9131437214e+04
+Temperature:       1.9645789902e+02
+Comput Time:       1.0190663338e+01
+Step:       11    Time:    22.0000
+Total:     -2.1010847497e+04
+Potential: -2.3289231349e+04    Kinetic:  2.2783838520e+03
+Bond:      7.6504279612e+00    Angle:    1.3064990258e+01
+Torsion:   3.0188765510e+01    Improper: 5.4048311860e-01
+14-VDW:    7.9138502266e+00    14-Ele:   1.3423199308e+02
+VDW:       5.6473567364e+03    Ele:      -2.9130178596e+04
+Temperature:       1.8466952169e+02
+Comput Time:       1.1117162704e+01
+Step:       12    Time:    24.0000
+Total:     -2.1010574611e+04
+Potential: -2.3166025324e+04    Kinetic:  2.1554507126e+03
+Bond:      8.9328999700e+00    Angle:    1.2327474575e+01
+Torsion:   3.0362080211e+01    Improper: 5.2970241223e-01
+14-VDW:    7.8166210903e+00    14-Ele:   1.3463373163e+02
+VDW:       5.7550860682e+03    Ele:      -2.9115713902e+04
+Temperature:       1.7470543946e+02
+Comput Time:       1.2042927742e+01
+Step:       13    Time:    26.0000
+Total:     -2.1010649776e+04
+Potential: -2.3069716291e+04    Kinetic:  2.0590665150e+03
+Bond:      8.7657604481e+00    Angle:    1.0941789963e+01
+Torsion:   3.0634457861e+01    Improper: 6.3408351053e-01
+14-VDW:    7.7661537505e+00    14-Ele:   1.3497027183e+02
+VDW:       5.8232676065e+03    Ele:      -2.9086696415e+04
+Temperature:       1.6689322483e+02
+Comput Time:       1.2968935013e+01
+Step:       14    Time:    28.0000
+Total:     -2.1010885654e+04
+Potential: -2.2999417706e+04    Kinetic:  1.9885320528e+03
+Bond:      7.2462621408e+00    Angle:    1.0386012649e+01
+Torsion:   3.0977323383e+01    Improper: 8.0842379729e-01
+14-VDW:    7.7976632052e+00    14-Ele:   1.3527307466e+02
+VDW:       5.8514627676e+03    Ele:      -2.9043369234e+04
+Temperature:       1.6117620512e+02
+Comput Time:       1.3897351265e+01
+Step:       15    Time:    30.0000
+Total:     -2.1011032119e+04
+Potential: -2.2951624663e+04    Kinetic:  1.9405925444e+03
+Bond:      6.1615294728e+00    Angle:    1.1149773051e+01
+Torsion:   3.1344822969e+01    Improper: 9.9906971939e-01
+14-VDW:    7.9258557407e+00    14-Ele:   1.3559708749e+02
+VDW:       5.8425007038e+03    Ele:      -2.8987303506e+04
+Temperature:       1.5729057097e+02
+Comput Time:       1.4823486328e+01
+Step:       16    Time:    32.0000
+Total:     -2.1011113481e+04
+Potential: -2.2923847145e+04    Kinetic:  1.9127336642e+03
+Bond:      6.2619827892e+00    Angle:    1.2173774880e+01
+Torsion:   3.1686851763e+01    Improper: 1.1559644485e+00
+14-VDW:    8.1350056767e+00    14-Ele:   1.3597801279e+02
+VDW:       5.8015593585e+03    Ele:      -2.8920798096e+04
+Temperature:       1.5503252912e+02
+Comput Time:       1.5749802589e+01
+Step:       17    Time:    34.0000
+Total:     -2.1011351860e+04
+Potential: -2.2914338873e+04    Kinetic:  1.9029870130e+03
+Bond:      6.4394071761e+00    Angle:    1.2366630426e+01
+Torsion:   3.1962262117e+01    Improper: 1.2440856248e+00
+14-VDW:    8.3875812583e+00    14-Ele:   1.3639166159e+02
+VDW:       5.7351634232e+03    Ele:      -2.8846293924e+04
+Temperature:       1.5424253520e+02
+Comput Time:       1.6676092148e+01
+Step:       18    Time:    36.0000
+Total:     -2.1011763375e+04
+Potential: -2.2919053057e+04    Kinetic:  1.9072896820e+03
+Bond:      5.7912856474e+00    Angle:    1.2059406857e+01
+Torsion:   3.2143797205e+01    Improper: 1.2512446811e+00
+14-VDW:    8.6399288636e+00    14-Ele:   1.3674425117e+02
+VDW:       5.6502605910e+03    Ele:      -2.8765943562e+04
+Temperature:       1.5459127881e+02
+Comput Time:       1.7601987839e+01
+Step:       19    Time:    38.0000
+Total:     -2.1012095587e+04
+Potential: -2.2931400154e+04    Kinetic:  1.9193045672e+03
+Bond:      5.0893649759e+00    Angle:    1.2353619673e+01
+Torsion:   3.2214324119e+01    Improper: 1.1870574500e+00
+14-VDW:    8.8566716257e+00    14-Ele:   1.3690833997e+02
+VDW:       5.5534980766e+03    Ele:      -2.8681507609e+04
+Temperature:       1.5556511959e+02
+Comput Time:       1.8527664185e+01
+Step:       20    Time:    40.0000
+Total:     -2.1012197752e+04
+Potential: -2.2945841054e+04    Kinetic:  1.9336433023e+03
+Bond:      5.4158518435e+00    Angle:    1.3413495088e+01
+Torsion:   3.2165042344e+01    Improper: 1.0724241074e+00
+14-VDW:    9.0249668380e+00    14-Ele:   1.3678695544e+02
+VDW:       5.4507032195e+03    Ele:      -2.8594423009e+04
+Temperature:       1.5672731504e+02
+Comput Time:       1.9453598022e+01
+Step:       21    Time:    42.0000
+Total:     -2.1012196974e+04
+Potential: -2.2960287037e+04    Kinetic:  1.9480900624e+03
+Bond:      6.2891394566e+00    Angle:    1.4203505095e+01
+Torsion:   3.2001299928e+01    Improper: 9.2730190110e-01
+14-VDW:    9.1654899653e+00    14-Ele:   1.3636623433e+02
+VDW:       5.3466515071e+03    Ele:      -2.8505891514e+04
+Temperature:       1.5789826623e+02
+Comput Time:       2.0379575729e+01
+Step:       22    Time:    44.0000
+Total:     -2.1012306619e+04
+Potential: -2.2974170448e+04    Kinetic:  1.9618638297e+03
+Bond:      6.2816059297e+00    Angle:    1.3953957127e+01
+Torsion:   3.1747227385e+01    Improper: 7.6537815786e-01
+14-VDW:    9.3270291420e+00    14-Ele:   1.3572377948e+02
+VDW:       5.2449557819e+03    Ele:      -2.8416925207e+04
+Temperature:       1.5901466943e+02
+Comput Time:       2.1307256699e+01
+Step:       23    Time:    46.0000
+Total:     -2.1012517172e+04
+Potential: -2.2985270149e+04    Kinetic:  1.9727529763e+03
+Bond:      5.2291697779e+00    Angle:    1.3190295068e+01
+Torsion:   3.1440320562e+01    Improper: 5.9675080300e-01
+14-VDW:    9.5578987070e+00    14-Ele:   1.3499627064e+02
+VDW:       5.1480971682e+03    Ele:      -2.8328378022e+04
+Temperature:       1.5989726588e+02
+Comput Time:       2.2233850479e+01
+Step:       24    Time:    48.0000
+Total:     -2.1012592716e+04
+Potential: -2.2990091202e+04    Kinetic:  1.9774984861e+03
+Bond:      4.6741269260e+00    Angle:    1.2857126454e+01
+Torsion:   3.1117943635e+01    Improper: 4.3406301798e-01
+14-VDW:    9.8696491735e+00    14-Ele:   1.3433678507e+02
+VDW:       5.0575948979e+03    Ele:      -2.8240975794e+04
+Temperature:       1.6028190301e+02
+Comput Time:       2.3159612656e+01
+Step:       25    Time:    50.0000
+Total:     -2.1012410851e+04
+Potential: -2.2987345889e+04    Kinetic:  1.9749350380e+03
+Bond:      5.7262222419e+00    Angle:    1.2834920494e+01
+Torsion:   3.0806812700e+01    Improper: 2.9750038622e-01
+14-VDW:    1.0221994769e+01    14-Ele:   1.3387903391e+02
+VDW:       4.9742161548e+03    Ele:      -2.8155328528e+04
+Temperature:       1.6007412821e+02
+Comput Time:       2.4088649750e+01
+Step:       26    Time:    52.0000
+Total:     -2.1012209674e+04
+Potential: -2.2979375880e+04    Kinetic:  1.9671662065e+03
+Bond:      7.3290009796e+00    Angle:    1.2125196310e+01
+Torsion:   3.0525741239e+01    Improper: 2.1523143860e-01
+14-VDW:    1.0546418727e+01    14-Ele:   1.3370100236e+02
+VDW:       4.8980836189e+03    Ele:      -2.8071902090e+04
+Temperature:       1.5944444222e+02
+Comput Time:       2.5014703751e+01
+Step:       27    Time:    54.0000
+Total:     -2.1012210332e+04
+Potential: -2.2968971753e+04    Kinetic:  1.9567614208e+03
+Bond:      7.4796418317e+00    Angle:    1.0510723590e+01
+Torsion:   3.0296900062e+01    Improper: 2.1612403080e-01
+14-VDW:    1.0796201092e+01    14-Ele:   1.3378918158e+02
+VDW:       4.8289227871e+03    Ele:      -2.7990983312e+04
+Temperature:       1.5860110461e+02
+Comput Time:       2.5940399170e+01
+Step:       28    Time:    56.0000
+Total:     -2.1012345185e+04
+Potential: -2.2956093142e+04    Kinetic:  1.9437479576e+03
+Bond:      5.8090756027e+00    Angle:    9.1629534256e+00
+Torsion:   3.0148610376e+01    Improper: 3.1534558623e-01
+14-VDW:    1.0979962131e+01    14-Ele:   1.3402937357e+02
+VDW:       4.7661236209e+03    Ele:      -2.7912662084e+04
+Temperature:       1.5754632623e+02
+Comput Time:       2.6866485596e+01
+Step:       29    Time:    58.0000
+Total:     -2.1012373795e+04
+Potential: -2.2938768580e+04    Kinetic:  1.9263947850e+03
+Bond:      3.9950093057e+00    Angle:    9.2720983425e+00
+Torsion:   3.0100479297e+01    Improper: 5.0140500128e-01
+14-VDW:    1.1140765169e+01    14-Ele:   1.3424585790e+02
+VDW:       4.7088798581e+03    Ele:      -2.7836904053e+04
+Temperature:       1.5613980200e+02
+Comput Time:       2.7792539597e+01
+Step:       30    Time:    60.0000
+Total:     -2.1012224243e+04
+Potential: -2.2916519663e+04    Kinetic:  1.9042954201e+03
+Bond:      3.5878322163e+00    Angle:    1.0752246312e+01
+Torsion:   3.0144436772e+01    Improper: 7.3505038916e-01
+14-VDW:    1.1304008588e+01    14-Ele:   1.3427757309e+02
+VDW:       4.6562905458e+03    Ele:      -2.7763611356e+04
+Temperature:       1.5434858532e+02
+Comput Time:       2.8718280792e+01
+Step:       31    Time:    62.0000
+Total:     -2.1012049020e+04
+Potential: -2.2891439922e+04    Kinetic:  1.8793909014e+03
+Bond:      4.3289733794e+00    Angle:    1.2679599884e+01
+Torsion:   3.0245774869e+01    Improper: 9.6095672382e-01
+14-VDW:    1.1453659985e+01    14-Ele:   1.3404942913e+02
+VDW:       4.6074890643e+03    Ele:      -2.7692647380e+04
+Temperature:       1.5233000292e+02
+Comput Time:       2.9644445419e+01
+Step:       32    Time:    64.0000
+Total:     -2.1011988040e+04
+Potential: -2.2866069149e+04    Kinetic:  1.8540811099e+03
+Bond:      4.9503810860e+00    Angle:    1.4423131862e+01
+Torsion:   3.0365068224e+01    Improper: 1.1234816358e+00
+14-VDW:    1.1552096864e+01    14-Ele:   1.3359871222e+02
+VDW:       4.5617806191e+03    Ele:      -2.7623862640e+04
+Temperature:       1.5027857200e+02
+Comput Time:       3.0570220947e+01
+Step:       33    Time:    66.0000
+Total:     -2.1011989866e+04
+Potential: -2.2841439093e+04    Kinetic:  1.8294492271e+03
+Bond:      4.9212219084e+00    Angle:    1.5789453706e+01
+Torsion:   3.0474544938e+01    Improper: 1.1794790285e+00
+14-VDW:    1.1571447168e+01    14-Ele:   1.3304969113e+02
+VDW:       4.5186970747e+03    Ele:      -2.7557122006e+04
+Temperature:       1.4828208751e+02
+Comput Time:       3.1508064270e+01
+Step:       34    Time:    68.0000
+Total:     -2.1011977787e+04
+Potential: -2.2817588501e+04    Kinetic:  1.8056107138e+03
+Bond:      4.7762672501e+00    Angle:    1.6390217257e+01
+Torsion:   3.0553929271e+01    Improper: 1.1087487052e+00
+14-VDW:    1.1506533911e+01    14-Ele:   1.3256062516e+02
+VDW:       4.4779016406e+03    Ele:      -2.7492386463e+04
+Temperature:       1.4634990789e+02
+Comput Time:       3.2433887482e+01
+Step:       35    Time:    70.0000
+Total:     -2.1011950049e+04
+Potential: -2.2794790473e+04    Kinetic:  1.7828404241e+03
+Bond:      4.9851994328e+00    Angle:    1.5667926137e+01
+Torsion:   3.0583083924e+01    Improper: 9.2383571090e-01
+14-VDW:    1.1367594549e+01    14-Ele:   1.3226793358e+02
+VDW:       4.4391325590e+03    Ele:      -2.7429718605e+04
+Temperature:       1.4450431084e+02
+Comput Time:       3.3359924316e+01
+Step:       36    Time:    72.0000
+Total:     -2.1011969755e+04
+Potential: -2.2773471332e+04    Kinetic:  1.7615015766e+03
+Bond:      5.1956833994e+00    Angle:    1.3808250552e+01
+Torsion:   3.0551629915e+01    Improper: 6.7375000297e-01
+14-VDW:    1.1173074841e+01    14-Ele:   1.3224026263e+02
+VDW:       4.4021155031e+03    Ele:      -2.7369229486e+04
+Temperature:       1.4277473628e+02
+Comput Time:       3.4288654327e+01
+Step:       37    Time:    74.0000
+Total:     -2.1012049101e+04
+Potential: -2.2753225976e+04    Kinetic:  1.7411768748e+03
+Bond:      4.8654156411e+00    Angle:    1.2088718324e+01
+Torsion:   3.0476010544e+01    Improper: 4.3316235622e-01
+14-VDW:    1.0947084771e+01    14-Ele:   1.3245463579e+02
+VDW:       4.3664832753e+03    Ele:      -2.7310974279e+04
+Temperature:       1.4112736112e+02
+Comput Time:       3.5214126587e+01
+Step:       38    Time:    76.0000
+Total:     -2.1012075785e+04
+Potential: -2.2732893254e+04    Kinetic:  1.7208174693e+03
+Bond:      4.1870284437e+00    Angle:    1.1813314726e+01
+Torsion:   3.0399721060e+01    Improper: 2.7648134153e-01
+14-VDW:    1.0702429166e+01    14-Ele:   1.3280938148e+02
+VDW:       4.3317984939e+03    Ele:      -2.7254880104e+04
+Temperature:       1.3947717312e+02
+Comput Time:       3.6139747620e+01
+Step:       39    Time:    78.0000
+Total:     -2.1011976665e+04
+Potential: -2.2712157355e+04    Kinetic:  1.7001806897e+03
+Bond:      3.8357654291e+00    Angle:    1.2986856073e+01
+Torsion:   3.0369982477e+01    Improper: 2.4853770780e-01
+14-VDW:    1.0423023343e+01    14-Ele:   1.3317455800e+02
+VDW:       4.2975788360e+03    Ele:      -2.7200774914e+04
+Temperature:       1.3780450317e+02
+Comput Time:       3.7065181732e+01
+Step:       40    Time:    80.0000
+Total:     -2.1011838047e+04
+Potential: -2.2692515327e+04    Kinetic:  1.6806772796e+03
+Bond:      4.0071462147e+00    Angle:    1.4250756268e+01
+Torsion:   3.0412912848e+01    Improper: 3.4884358528e-01
+14-VDW:    1.0082478579e+01    14-Ele:   1.3345544743e+02
+VDW:       4.2633637265e+03    Ele:      -2.7148436639e+04
+Temperature:       1.3622369605e+02
+Comput Time:       3.7990749359e+01
+Step:       41    Time:    82.0000
+Total:     -2.1011809826e+04
+Potential: -2.2676003622e+04    Kinetic:  1.6641937969e+03
+Bond:      4.3395476465e+00    Angle:    1.4128585271e+01
+Torsion:   3.0534511855e+01    Improper: 5.3801222890e-01
+14-VDW:    9.6873570764e+00    14-Ele:   1.3363200617e+02
+VDW:       4.2288049413e+03    Ele:      -2.7097668584e+04
+Temperature:       1.3488766268e+02
+Comput Time:       3.8916816711e+01
+Step:       42    Time:    84.0000
+Total:     -2.1011919793e+04
+Potential: -2.2662993226e+04    Kinetic:  1.6510734324e+03
+Bond:      4.7322714087e+00    Angle:    1.2393008371e+01
+Torsion:   3.0740736699e+01    Improper: 7.5988067794e-01
+14-VDW:    9.2930241903e+00    14-Ele:   1.3375272575e+02
+VDW:       4.1937182180e+03    Ele:      -2.7048383091e+04
+Temperature:       1.3382421965e+02
+Comput Time:       3.9841945648e+01
+Step:       43    Time:    86.0000
+Total:     -2.1012022052e+04
+Potential: -2.2651821939e+04    Kinetic:  1.6397998865e+03
+Bond:      5.5547634392e+00    Angle:    1.0270198632e+01
+Torsion:   3.1044070816e+01    Improper: 9.6374602639e-01
+14-VDW:    8.9695505217e+00    14-Ele:   1.3389376055e+02
+VDW:       4.1581022114e+03    Ele:      -2.7000620240e+04
+Temperature:       1.3291046653e+02
+Comput Time:       4.0767536163e+01
+Step:       44    Time:    88.0000
+Total:     -2.1011995780e+04
+Potential: -2.2640865562e+04    Kinetic:  1.6288697816e+03
+Bond:      6.8513537443e+00    Angle:    9.2819894650e+00
+Torsion:   3.1440570330e+01    Improper: 1.1149597444e+00
+14-VDW:    8.7566397864e+00    14-Ele:   1.3411408851e+02
+VDW:       4.1221105439e+03    Ele:      -2.6954535707e+04
+Temperature:       1.3202455029e+02
+Comput Time:       4.1693065643e+01
+Step:       45    Time:    90.0000
+Total:     -2.1011884083e+04
+Potential: -2.2630364659e+04    Kinetic:  1.6184805756e+03
+Bond:      7.8437190068e+00    Angle:    9.9568456085e+00
+Torsion:   3.1878651923e+01    Improper: 1.1947209651e+00
+14-VDW:    8.6471791153e+00    14-Ele:   1.3442954011e+02
+VDW:       4.0860053004e+03    Ele:      -2.6910320616e+04
+Temperature:       1.3118247546e+02
+Comput Time:       4.2619171143e+01
+Step:       46    Time:    92.0000
+Total:     -2.1011810335e+04
+Potential: -2.2621905621e+04    Kinetic:  1.6100952865e+03
+Bond:      7.6678598417e+00    Angle:    1.1573315624e+01
+Torsion:   3.2260301068e+01    Improper: 1.1969760873e+00
+14-VDW:    8.5959405047e+00    14-Ele:   1.3480944186e+02
+VDW:       4.0501439806e+03    Ele:      -2.6868153437e+04
+Temperature:       1.3050282382e+02
+Comput Time:       4.3546897888e+01
+Step:       47    Time:    94.0000
+Total:     -2.1011858789e+04
+Potential: -2.2616539661e+04    Kinetic:  1.6046808723e+03
+Bond:      6.5250149736e+00    Angle:    1.2824301063e+01
+Torsion:   3.2488078972e+01    Improper: 1.1267399294e+00
+14-VDW:    8.5479272271e+00    14-Ele:   1.3519083436e+02
+VDW:       4.0149314757e+03    Ele:      -2.6828174033e+04
+Temperature:       1.3006397008e+02
+Comput Time:       4.4473560333e+01
+Step:       48    Time:    96.0000
+Total:     -2.1011991794e+04
+Potential: -2.2613564566e+04    Kinetic:  1.6015727717e+03
+Bond:      5.6948683020e+00    Angle:    1.2853860717e+01
+Torsion:   3.2522412058e+01    Improper: 9.9881524889e-01
+14-VDW:    8.4800347359e+00    14-Ele:   1.3550401541e+02
+VDW:       3.9808209866e+03    Ele:      -2.6790439559e+04
+Temperature:       1.2981204964e+02
+Comput Time:       4.5399032593e+01
+Step:       49    Time:    98.0000
+Total:     -2.1012102845e+04
+Potential: -2.2611008899e+04    Kinetic:  1.5989060538e+03
+Bond:      6.1707847899e+00    Angle:    1.2100570204e+01
+Torsion:   3.2402279289e+01    Improper: 8.3479315464e-01
+14-VDW:    8.4162570744e+00    14-Ele:   1.3570198113e+02
+VDW:       3.9482685666e+03    Ele:      -2.6754904131e+04
+Temperature:       1.2959590454e+02
+Comput Time:       4.6324611664e+01
+Step:       50    Time:   100.0000
+Total:     -2.1012105816e+04
+Potential: -2.2607239671e+04    Kinetic:  1.5951338553e+03
+Bond:      7.4663737799e+00    Angle:    1.1973805813e+01
+Torsion:   3.2214678885e+01    Improper: 6.5848555605e-01
+14-VDW:    8.4004851370e+00    14-Ele:   1.3578261124e+02
+VDW:       3.9177099422e+03    Ele:      -2.6721446054e+04
+Temperature:       1.2929015707e+02
+Comput Time:       4.7250015259e+01
+Step:       51    Time:   102.0000
+Total:     -2.1012021516e+04
+Potential: -2.2602246556e+04    Kinetic:  1.5902250404e+03
+Bond:      8.0974833926e+00    Angle:    1.3257025827e+01
+Torsion:   3.2044431098e+01    Improper: 4.9226020579e-01
+14-VDW:    8.4634566669e+00    14-Ele:   1.3579188953e+02
+VDW:       3.8895491278e+03    Ele:      -2.6689942231e+04
+Temperature:       1.2889228360e+02
+Comput Time:       4.8175861359e+01
+Step:       52    Time:   104.0000
+Total:     -2.1011980760e+04
+Potential: -2.2597223810e+04    Kinetic:  1.5852430496e+03
+Bond:      7.2505780762e+00    Angle:    1.5061469740e+01
+Torsion:   3.1948531806e+01    Improper: 3.5563298913e-01
+14-VDW:    8.6041190754e+00    14-Ele:   1.3580329264e+02
+VDW:       3.8640860451e+03    Ele:      -2.6660333479e+04
+Temperature:       1.2848847901e+02
+Comput Time:       4.9100967407e+01
+Step:       53    Time:   106.0000
+Total:     -2.1012043630e+04
+Potential: -2.2592765296e+04    Kinetic:  1.5807216658e+03
+Bond:      5.6617940273e+00    Angle:    1.5827140500e+01
+Torsion:   3.1960608543e+01    Improper: 2.6489362117e-01
+14-VDW:    8.7844023411e+00    14-Ele:   1.3588124361e+02
+VDW:       3.8415395888e+03    Ele:      -2.6632684967e+04
+Temperature:       1.2812200793e+02
+Comput Time:       5.0026271820e+01
+Step:       54    Time:   108.0000
+Total:     -2.1012126015e+04
+Potential: -2.2588016042e+04    Kinetic:  1.5758900261e+03
+Bond:      4.6557646246e+00    Angle:    1.5131618380e+01
+Torsion:   3.2096102751e+01    Improper: 2.3179978949e-01
+14-VDW:    8.9508085957e+00    14-Ele:   1.3604851423e+02
+VDW:       3.8220234952e+03    Ele:      -2.6607154145e+04
+Temperature:       1.2773038973e+02
+Comput Time:       5.0951473236e+01
+Step:       55    Time:   110.0000
+Total:     -2.1012111787e+04
+Potential: -2.2581890174e+04    Kinetic:  1.5697783870e+03
+Bond:      4.5621599132e+00    Angle:    1.3976351287e+01
+Torsion:   3.2339531691e+01    Improper: 2.6058918844e-01
+14-VDW:    9.0761534401e+00    14-Ele:   1.3627712963e+02
+VDW:       3.8055578007e+03    Ele:      -2.6583939890e+04
+Temperature:       1.2723502392e+02
+Comput Time:       5.1877651215e+01
+Step:       56    Time:   112.0000
+Total:     -2.1012030580e+04
+Potential: -2.2574662217e+04    Kinetic:  1.5626316369e+03
+Bond:      4.5226373744e+00    Angle:    1.3345637821e+01
+Torsion:   3.2631846401e+01    Improper: 3.4499697582e-01
+14-VDW:    9.1705725484e+00    14-Ele:   1.3650538126e+02
+VDW:       3.7920605858e+03    Ele:      -2.6563243875e+04
+Temperature:       1.2665575940e+02
+Comput Time:       5.2803096771e+01
+Step:       57    Time:   114.0000
+Total:     -2.1012006998e+04
+Potential: -2.2567595656e+04    Kinetic:  1.5555886587e+03
+Bond:      3.8674561470e+00    Angle:    1.3096251356e+01
+Torsion:   3.2889286482e+01    Improper: 4.6830712991e-01
+14-VDW:    9.2553653757e+00    14-Ele:   1.3666619939e+02
+VDW:       3.7813637200e+03    Ele:      -2.6545202242e+04
+Temperature:       1.2608490588e+02
+Comput Time:       5.3728893280e+01
+Step:       58    Time:   116.0000
+Total:     -2.1012075488e+04
+Potential: -2.2561149193e+04    Kinetic:  1.5490737052e+03
+Bond:      3.1370932231e+00    Angle:    1.2597127305e+01
+Torsion:   3.3047907415e+01    Improper: 6.0712127566e-01
+14-VDW:    9.3508678844e+00    14-Ele:   1.3671026751e+02
+VDW:       3.7732059844e+03    Ele:      -2.6529805562e+04
+Temperature:       1.2555685029e+02
+Comput Time:       5.4654945374e+01
+Step:       59    Time:   118.0000
+Total:     -2.1012139888e+04
+Potential: -2.2554399575e+04    Kinetic:  1.5422596865e+03
+Bond:      3.3508586372e+00    Angle:    1.1973773198e+01
+Torsion:   3.3091448484e+01    Improper: 7.3591730681e-01
+14-VDW:    9.4824738532e+00    14-Ele:   1.3661786441e+02
+VDW:       3.7672074426e+03    Ele:      -2.6516859353e+04
+Temperature:       1.2500455460e+02
+Comput Time:       5.5580520630e+01
+Step:       60    Time:   120.0000
+Total:     -2.1012076859e+04
+Potential: -2.2546585733e+04    Kinetic:  1.5345088746e+03
+Bond:      4.5239540873e+00    Angle:    1.2002528562e+01
+Torsion:   3.3039682617e+01    Improper: 8.2962178904e-01
+14-VDW:    9.6724806939e+00    14-Ele:   1.3640086131e+02
+VDW:       3.7629181969e+03    Ele:      -2.6505973059e+04
+Temperature:       1.2437632915e+02
+Comput Time:       5.6506088257e+01
+Step:       61    Time:   122.0000
+Total:     -2.1011943486e+04
+Potential: -2.2538747461e+04    Kinetic:  1.5268039753e+03
+Bond:      5.4543167047e+00    Angle:    1.2809518443e+01
+Torsion:   3.2917615737e+01    Improper: 8.6522403661e-01
+14-VDW:    9.9199664470e+00    14-Ele:   1.3609753601e+02
+VDW:       3.7598326856e+03    Ele:      -2.6496644324e+04
+Temperature:       1.2375182504e+02
+Comput Time:       5.7431449890e+01
+Step:       62    Time:   124.0000
+Total:     -2.1011915715e+04
+Potential: -2.2532842390e+04    Kinetic:  1.5209266746e+03
+Bond:      5.1732517181e+00    Angle:    1.3377685070e+01
+Torsion:   3.2739551642e+01    Improper: 8.2720810344e-01
+14-VDW:    1.0196349803e+01    14-Ele:   1.3576040859e+02
+VDW:       3.7574118289e+03    Ele:      -2.6488328674e+04
+Temperature:       1.2327545303e+02
+Comput Time:       5.8357048035e+01
+Step:       63    Time:   126.0000
+Total:     -2.1012039432e+04
+Potential: -2.2529305572e+04    Kinetic:  1.5172661401e+03
+Bond:      4.2150458726e+00    Angle:    1.2697507979e+01
+Torsion:   3.2519481364e+01    Improper: 7.2031415519e-01
+14-VDW:    1.0468172237e+01    14-Ele:   1.3543917990e+02
+VDW:       3.7551654979e+03    Ele:      -2.6480530772e+04
+Temperature:       1.2297875625e+02
+Comput Time:       5.9282718658e+01
+Step:       64    Time:   128.0000
+Total:     -2.1012149519e+04
+Potential: -2.2526476357e+04    Kinetic:  1.5143268388e+03
+Bond:      3.9436417397e+00    Angle:    1.0997816262e+01
+Torsion:   3.2288186793e+01    Improper: 5.8290769301e-01
+14-VDW:    1.0722673076e+01    14-Ele:   1.3516811700e+02
+VDW:       3.7526902466e+03    Ele:      -2.6472869947e+04
+Temperature:       1.2274051747e+02
+Comput Time:       6.0208496094e+01
+Step:       65    Time:   130.0000
+Total:     -2.1012124459e+04
+Potential: -2.2522831465e+04    Kinetic:  1.5107070063e+03
+Bond:      4.7781638279e+00    Angle:    9.4011278305e+00
+Torsion:   3.2091987651e+01    Improper: 4.8428694619e-01
+14-VDW:    1.0962942411e+01    14-Ele:   1.3496756657e+02
+VDW:       3.7496824164e+03    Ele:      -2.6465199957e+04
+Temperature:       1.2244711971e+02
+Comput Time:       6.1145797729e+01
+Step:       66    Time:   132.0000
+Total:     -2.1012035282e+04
+Potential: -2.2518795661e+04    Kinetic:  1.5067603791e+03
+Bond:      5.7377959428e+00    Angle:    8.6386092989e+00
+Torsion:   3.1972463625e+01    Improper: 4.9589130563e-01
+14-VDW:    1.1183673819e+01    14-Ele:   1.3485590721e+02
+VDW:       3.7459350384e+03    Ele:      -2.6457615040e+04
+Temperature:       1.2212723430e+02
+Comput Time:       6.2071689606e+01
+Step:       67    Time:   134.0000
+Total:     -2.1012017439e+04
+Potential: -2.2515740454e+04    Kinetic:  1.5037230151e+03
+Bond:      5.8599914121e+00    Angle:    8.6534137862e+00
+Torsion:   3.1949028075e+01    Improper: 6.5085126580e-01
+14-VDW:    1.1365647349e+01    14-Ele:   1.3485702162e+02
+VDW:       3.7413467257e+03    Ele:      -2.6450423133e+04
+Temperature:       1.2188104727e+02
+Comput Time:       6.2998718262e+01
+Step:       68    Time:   136.0000
+Total:     -2.1012068229e+04
+Potential: -2.2513984795e+04    Kinetic:  1.5019165662e+03
+Bond:      5.4587291609e+00    Angle:    9.2516765335e+00
+Torsion:   3.2019873296e+01    Improper: 9.2485160799e-01
+14-VDW:    1.1490754672e+01    14-Ele:   1.3499320192e+02
+VDW:       3.7358816324e+03    Ele:      -2.6444005515e+04
+Temperature:       1.2173462942e+02
+Comput Time:       6.3928020477e+01
+Step:       69    Time:   138.0000
+Total:     -2.1012046937e+04
+Potential: -2.2512935538e+04    Kinetic:  1.5008886013e+03
+Bond:      5.5427938660e+00    Angle:    1.0338620665e+01
+Torsion:   3.2172051439e+01    Improper: 1.2522847280e+00
+14-VDW:    1.1552434705e+01    14-Ele:   1.3526786436e+02
+VDW:       3.7295821990e+03    Ele:      -2.6438643787e+04
+Temperature:       1.2165130993e+02
+Comput Time:       6.4853935242e+01
+Step:       70    Time:   140.0000
+Total:     -2.1011928275e+04
+Potential: -2.2513018220e+04    Kinetic:  1.5010899450e+03
+Bond:      6.2584533281e+00    Angle:    1.1416600880e+01
+Torsion:   3.2382852403e+01    Improper: 1.5563416631e+00
+14-VDW:    1.1561693378e+01    14-Ele:   1.3565278895e+02
+VDW:       3.7225645216e+03    Ele:      -2.6434411472e+04
+Temperature:       1.2166762941e+02
+Comput Time:       6.5779830933e+01
+Step:       71    Time:   142.0000
+Total:     -2.1011893953e+04
+Potential: -2.2515941273e+04    Kinetic:  1.5040473199e+03
+Bond:      6.5535620707e+00    Angle:    1.1623777802e+01
+Torsion:   3.2610899724e+01    Improper: 1.7705182509e+00
+14-VDW:    1.1555866007e+01    14-Ele:   1.3609066024e+02
+VDW:       3.7149967048e+03    Ele:      -2.6431143262e+04
+Temperature:       1.2190733310e+02
+Comput Time:       6.6708824158e+01
+Step:       72    Time:   144.0000
+Total:     -2.1012052255e+04
+Potential: -2.2522271648e+04    Kinetic:  1.5102193929e+03
+Bond:      5.6725968412e+00    Angle:    1.0686919622e+01
+Torsion:   3.2791668546e+01    Improper: 1.8488414821e+00
+14-VDW:    1.1588274275e+01    14-Ele:   1.3650930270e+02
+VDW:       3.7071236583e+03    Ele:      -2.6428492910e+04
+Temperature:       1.2240759725e+02
+Comput Time:       6.7638252258e+01
+Step:       73    Time:   146.0000
+Total:     -2.1012243113e+04
+Potential: -2.2529839424e+04    Kinetic:  1.5175963102e+03
+Bond:      4.4108904925e+00    Angle:    9.4279944338e+00
+Torsion:   3.2849994295e+01    Improper: 1.7707302385e+00
+14-VDW:    1.1691459669e+01    14-Ele:   1.3683558898e+02
+VDW:       3.6992623192e+03    Ele:      -2.6426088401e+04
+Temperature:       1.2300551748e+02
+Comput Time:       6.8565856934e+01
+Step:       74    Time:   148.0000
+Total:     -2.1012271573e+04
+Potential: -2.2535804600e+04    Kinetic:  1.5235330271e+03
+Bond:      4.1536765240e+00    Angle:    8.8651611802e+00
+Torsion:   3.2729383212e+01    Improper: 1.5445615000e+00
+14-VDW:    1.1849059235e+01    14-Ele:   1.3700391505e+02
+VDW:       3.6917044793e+03    Ele:      -2.6423654836e+04
+Temperature:       1.2348670535e+02
+Comput Time:       6.9492477417e+01
+Step:       75    Time:   150.0000
+Total:     -2.1012144069e+04
+Potential: -2.2539748984e+04    Kinetic:  1.5276049144e+03
+Bond:      4.9768306879e+00    Angle:    8.9881301822e+00
+Torsion:   3.2423789174e+01    Improper: 1.2099453113e+00
+14-VDW:    1.2003203498e+01    14-Ele:   1.3696349635e+02
+VDW:       3.6847365209e+03    Ele:      -2.6421050900e+04
+Temperature:       1.2381674345e+02
+Comput Time:       7.0421569824e+01
+Step:       76    Time:   152.0000
+Total:     -2.1012092545e+04
+Potential: -2.2543496457e+04    Kinetic:  1.5314039113e+03
+Bond:      5.6018694682e+00    Angle:    9.0044694247e+00
+Torsion:   3.1988743992e+01    Improper: 8.3468641662e-01
+14-VDW:    1.2088032908e+01    14-Ele:   1.3669102382e+02
+VDW:       3.6786068933e+03    Ele:      -2.6418312176e+04
+Temperature:       1.2412466301e+02
+Comput Time:       7.1347267151e+01
+Step:       77    Time:   154.0000
+Total:     -2.1012213132e+04
+Potential: -2.2547776292e+04    Kinetic:  1.5355631592e+03
+Bond:      5.2270121257e+00    Angle:    8.8037729606e+00
+Torsion:   3.1518903797e+01    Improper: 5.0001295877e-01
+14-VDW:    1.2065184180e+01    14-Ele:   1.3620684504e+02
+VDW:       3.6734809481e+03    Ele:      -2.6415578971e+04
+Temperature:       1.2446178193e+02
+Comput Time:       7.2272674561e+01
+Step:       78    Time:   156.0000
+Total:     -2.1012323997e+04
+Potential: -2.2550841702e+04    Kinetic:  1.5385177048e+03
+Bond:      4.5661852680e+00    Angle:    9.3009807065e+00
+Torsion:   3.1108054465e+01    Improper: 2.7451587736e-01
+14-VDW:    1.1940624359e+01    14-Ele:   1.3558348245e+02
+VDW:       3.6694745378e+03    Ele:      -2.6413090083e+04
+Temperature:       1.2470125629e+02
+Comput Time:       7.3198219299e+01
+Step:       79    Time:   158.0000
+Total:     -2.1012238694e+04
+Potential: -2.2551153784e+04    Kinetic:  1.5389150902e+03
+Bond:      4.7652931019e+00    Angle:    1.0834716867e+01
+Torsion:   3.0819687454e+01    Improper: 1.9181188154e-01
+14-VDW:    1.1754036797e+01    14-Ele:   1.3493553074e+02
+VDW:       3.6666351429e+03    Ele:      -2.6411090004e+04
+Temperature:       1.2473346551e+02
+Comput Time:       7.4132537842e+01
+Step:       80    Time:   160.0000
+Total:     -2.1012054324e+04
+Potential: -2.2550054743e+04    Kinetic:  1.5380004195e+03
+Bond:      5.8116357273e+00    Angle:    1.2095695064e+01
+Torsion:   3.0678257095e+01    Improper: 2.4654708686e-01
+14-VDW:    1.1550928716e+01    14-Ele:   1.3438852864e+02
+VDW:       3.6649600103e+03    Ele:      -2.6409786346e+04
+Temperature:       1.2465932884e+02
+Comput Time:       7.5058204651e+01
+Step:       81    Time:   162.0000
+Total:     -2.1012025683e+04
+Potential: -2.2550257546e+04    Kinetic:  1.5382318631e+03
+Bond:      6.5670025023e+00    Angle:    1.1633750030e+01
+Torsion:   3.0673245101e+01    Improper: 4.0571592512e-01
+14-VDW:    1.1360529561e+01    14-Ele:   1.3403704891e+02
+VDW:       3.6643717128e+03    Ele:      -2.6409306551e+04
+Temperature:       1.2467808801e+02
+Comput Time:       7.5984413147e+01
+Step:       82    Time:   164.0000
+Total:     -2.1012192988e+04
+Potential: -2.2552189638e+04    Kinetic:  1.5399966506e+03
+Bond:      6.3048243071e+00    Angle:    9.9865945368e+00
+Torsion:   3.0766634095e+01    Improper: 6.2361941114e-01
+14-VDW:    1.1191457125e+01    14-Ele:   1.3391432521e+02
+VDW:       3.6647659724e+03    Ele:      -2.6409743065e+04
+Temperature:       1.2482112908e+02
+Comput Time:       7.6910629272e+01
+Step:       83    Time:   166.0000
+Total:     -2.1012294271e+04
+Potential: -2.2553563150e+04    Kinetic:  1.5412688781e+03
+Bond:      5.5906655679e+00    Angle:    9.2037146812e+00
+Torsion:   3.0901982164e+01    Improper: 8.5285670557e-01
+14-VDW:    1.1036833561e+01    14-Ele:   1.3399124796e+02
+VDW:       3.6660322048e+03    Ele:      -2.6411172655e+04
+Temperature:       1.2492424675e+02
+Comput Time:       7.7837104797e+01
+Step:       84    Time:   168.0000
+Total:     -2.1012162967e+04
+Potential: -2.2553050627e+04    Kinetic:  1.5408876597e+03
+Bond:      5.2979164236e+00    Angle:    1.0151199576e+01
+Torsion:   3.1017571000e+01    Improper: 1.0502563943e+00
+14-VDW:    1.0880797960e+01    14-Ele:   1.3420064421e+02
+VDW:       3.6680412104e+03    Ele:      -2.6413690223e+04
+Temperature:       1.2489334791e+02
+Comput Time:       7.8763282776e+01
+Step:       85    Time:   170.0000
+Total:     -2.1011992532e+04
+Potential: -2.2552666299e+04    Kinetic:  1.5406737674e+03
+Bond:      5.3148038953e+00    Angle:    1.1317909704e+01
+Torsion:   3.1062469374e+01    Improper: 1.1821219074e+00
+14-VDW:    1.0705471000e+01    14-Ele:   1.3446736618e+02
+VDW:       3.6706818233e+03    Ele:      -2.6417398264e+04
+Temperature:       1.2487601132e+02
+Comput Time:       7.9689537048e+01
+Step:       86    Time:   172.0000
+Total:     -2.1012042978e+04
+Potential: -2.2555046576e+04    Kinetic:  1.5430035983e+03
+Bond:      4.9315013524e+00    Angle:    1.0989866792e+01
+Torsion:   3.1009802767e+01    Improper: 1.2322264749e+00
+14-VDW:    1.0497883669e+01    14-Ele:   1.3473058447e+02
+VDW:       3.6739096924e+03    Ele:      -2.6422348134e+04
+Temperature:       1.2506485078e+02
+Comput Time:       8.0615234375e+01
+Step:       87    Time:   174.0000
+Total:     -2.1012291198e+04
+Potential: -2.2559496920e+04    Kinetic:  1.5472057223e+03
+Bond:      4.1887272652e+00    Angle:    9.8533039750e+00
+Torsion:   3.0860942651e+01    Improper: 1.2075808522e+00
+14-VDW:    1.0256610638e+01    14-Ele:   1.3495370211e+02
+VDW:       3.6776926410e+03    Ele:      -2.6428510428e+04
+Temperature:       1.2540544493e+02
+Comput Time:       8.1541320801e+01
+Step:       88    Time:   176.0000
+Total:     -2.1012396013e+04
+Potential: -2.2562649772e+04    Kinetic:  1.5502537585e+03
+Bond:      3.9577574540e+00    Angle:    1.0181944681e+01
+Torsion:   3.0641095317e+01    Improper: 1.1330982644e+00
+14-VDW:    9.9942836372e+00    14-Ele:   1.3512299000e+02
+VDW:       3.6820652675e+03    Ele:      -2.6435746209e+04
+Temperature:       1.2565249698e+02
+Comput Time:       8.2471992493e+01
+Step:       89    Time:   178.0000
+Total:     -2.1012210444e+04
+Potential: -2.2563229377e+04    Kinetic:  1.5510189332e+03
+Bond:      4.6087038106e+00    Angle:    1.2519495226e+01
+Torsion:   3.0391486996e+01    Improper: 1.0370494282e+00
+14-VDW:    9.7314838096e+00    14-Ele:   1.3524023454e+02
+VDW:       3.6870715617e+03    Ele:      -2.6443829393e+04
+Temperature:       1.2571451658e+02
+Comput Time:       8.3398422241e+01
+Step:       90    Time:   180.0000
+Total:     -2.1012027541e+04
+Potential: -2.2563942253e+04    Kinetic:  1.5519147117e+03
+Bond:      5.3542184353e+00    Angle:    1.4588207126e+01
+Torsion:   3.0160769988e+01    Improper: 9.4061207302e-01
+14-VDW:    9.4886497305e+00    14-Ele:   1.3531288876e+02
+VDW:       3.6926866191e+03    Ele:      -2.6452474218e+04
+Temperature:       1.2578712198e+02
+Comput Time:       8.4324745178e+01
+Step:       91    Time:   182.0000
+Total:     -2.1012126814e+04
+Potential: -2.2567524618e+04    Kinetic:  1.5553978036e+03
+Bond:      5.3113895891e+00    Angle:    1.4183517703e+01
+Torsion:   2.9994669359e+01    Improper: 8.5778532631e-01
+14-VDW:    9.2866759210e+00    14-Ele:   1.3534300452e+02
+VDW:       3.6988820092e+03    Ele:      -2.6461383670e+04
+Temperature:       1.2606943654e+02
+Comput Time:       8.5251724243e+01
+Step:       92    Time:   184.0000
+Total:     -2.1012392547e+04
+Potential: -2.2572664347e+04    Kinetic:  1.5602718000e+03
+Bond:      4.7459386133e+00    Angle:    1.2095457138e+01
+Torsion:   2.9922317365e+01    Improper: 7.9824544411e-01
+14-VDW:    9.1460961590e+00    14-Ele:   1.3532189218e+02
+VDW:       3.7056060761e+03    Ele:      -2.6470300370e+04
+Temperature:       1.2646448787e+02
+Comput Time:       8.6178321838e+01
+Step:       93    Time:   186.0000
+Total:     -2.1012481314e+04
+Potential: -2.2575623203e+04    Kinetic:  1.5631418891e+03
+Bond:      4.6788516455e+00    Angle:    1.0967926568e+01
+Torsion:   2.9944033207e+01    Improper: 7.6593571695e-01
+14-VDW:    9.0711335992e+00    14-Ele:   1.3523598652e+02
+VDW:       3.7127305879e+03    Ele:      -2.6479017658e+04
+Temperature:       1.2669711679e+02
+Comput Time:       8.7104537964e+01
+Step:       94    Time:   188.0000
+Total:     -2.1012293415e+04
+Potential: -2.2575288017e+04    Kinetic:  1.5629946021e+03
+Bond:      5.4130748769e+00    Angle:    1.1730637887e+01
+Torsion:   3.0031274658e+01    Improper: 7.5676830765e-01
+14-VDW:    9.0386629219e+00    14-Ele:   1.3507818141e+02
+VDW:       3.7200365168e+03    Ele:      -2.6487373134e+04
+Temperature:       1.2668517876e+02
+Comput Time:       8.8030746460e+01
+Step:       95    Time:   190.0000
+Total:     -2.1012115194e+04
+Potential: -2.2574497743e+04    Kinetic:  1.5623825499e+03
+Bond:      6.1183976198e+00    Angle:    1.2658234960e+01
+Torsion:   3.0143015623e+01    Improper: 7.6340856017e-01
+14-VDW:    9.0139377596e+00    14-Ele:   1.3485810420e+02
+VDW:       3.7272493380e+03    Ele:      -2.6495302180e+04
+Temperature:       1.2663557018e+02
+Comput Time:       8.8956878662e+01
+Step:       96    Time:   192.0000
+Total:     -2.1012193805e+04
+Potential: -2.2575896976e+04    Kinetic:  1.5637031712e+03
+Bond:      6.0418348528e+00    Angle:    1.2198229715e+01
+Torsion:   3.0248343227e+01    Improper: 7.8540697901e-01
+14-VDW:    8.9799259751e+00    14-Ele:   1.3461107360e+02
+VDW:       3.7340298235e+03    Ele:      -2.6502791614e+04
+Temperature:       1.2674261031e+02
+Comput Time:       8.9883369446e+01
+Step:       97    Time:   194.0000
+Total:     -2.1012369360e+04
+Potential: -2.2578546327e+04    Kinetic:  1.5661769678e+03
+Bond:      5.4795510625e+00    Angle:    1.1243001438e+01
+Torsion:   3.0337295174e+01    Improper: 8.3119345279e-01
+14-VDW:    8.9511656254e+00    14-Ele:   1.3440059948e+02
+VDW:       3.7400982695e+03    Ele:      -2.6509887403e+04
+Temperature:       1.2694311860e+02
+Comput Time:       9.0809638977e+01
+Step:       98    Time:   196.0000
+Total:     -2.1012352069e+04
+Potential: -2.2580146483e+04    Kinetic:  1.5677944140e+03
+Bond:      5.0944583194e+00    Angle:    1.1611595114e+01
+Torsion:   3.0412938448e+01    Improper: 9.0596385847e-01
+14-VDW:    8.9598337952e+00    14-Ele:   1.3430730021e+02
+VDW:       3.7452496974e+03    Ele:      -2.6516688270e+04
+Temperature:       1.2707421723e+02
+Comput Time:       9.1747894287e+01
+Step:       99    Time:   198.0000
+Total:     -2.1012176988e+04
+Potential: -2.2581080059e+04    Kinetic:  1.5689030703e+03
+Bond:      4.8290925674e+00    Angle:    1.3181776107e+01
+Torsion:   3.0477579568e+01    Improper: 9.9904125689e-01
+14-VDW:    9.0296357318e+00    14-Ele:   1.3440449976e+02
+VDW:       3.7493687712e+03    Ele:      -2.6523370455e+04
+Temperature:       1.2716407700e+02
+Comput Time:       9.2674209595e+01
+== The last step ==
+Step:      100    Time:   200.0000
+Total:     -2.1012095770e+04
+Potential: -2.2584048590e+04    Kinetic:  1.5719528200e+03
+Bond:      4.2437898676e+00    Angle:    1.3884403814e+01
+Torsion:   3.0527184719e+01    Improper: 1.0856199436e+00
+14-VDW:    9.1621123804e+00    14-Ele:   1.3472616760e+02
+VDW:       3.7524672145e+03    Ele:      -2.6530145083e+04
+Temperature:       1.2741126792e+02
+Comput Time:       9.3602821350e+01
+DynamicsMode::terminal_process()
+delete writer_trr 0
+term
+DBG1 DynamicsModePresto::~DynamicsModePresto()
+DBG1 DynamicsMode::~DynamicsMode()
+DBG1 SubBox::~SubBox()
+DBG1 delete settle
+DBG1 delete constraint
+DBG1 delete thermostat
+DBG1 end of ~SubBox()
+DBG1 ~MiniCell
+//DBG1 ~MiniCell
+~ForceField()
+//~ForceField()
+DBG1 RunMode::~RunMode()
+DBG1 ~MmSystem()
+free_atom_vars()
+free atom vars
+free_lj_params()
+free_bonds()
+free_angles()
+free_torsions()
+free_impros()
+free_nb14()
+free_excess_pairs()
+free_nb15off()
+//DBG1 ~MmSystem()
+~ForceField()
+//~ForceField()
+terminate Celeste
+Terminated.
+Time: 94.563746
