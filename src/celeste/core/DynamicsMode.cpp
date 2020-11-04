@@ -1065,7 +1065,7 @@ int DynamicsModeMC::calc_in_each_step() {
   }else if(delta_e > 0) {
     //cout << "dbg0803b"<<endl;
     rnd = mmsys.random_mt();
-    prob = exp(-delta_e/(GAS_CONST/JOULE_CAL * 1e-3 * mmsys.temperature));
+    prob = exp(-delta_e/(GAS_CONST/JOULE_CAL * 1e-3 * cfg->temperature));
     if ( mmsys.pote_extend > 1.0e99 || rnd  > prob ){
       //cout << "dbg0803c"<<endl;
       flg_accept = false;
