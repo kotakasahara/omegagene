@@ -65,6 +65,7 @@ cal03_mcmd_inp
 *_kkmcmdconf.txt* file is the configuration file for the McMD.
 
 ::
+
   --mode               celeste
   --job-script         ${PRJ_HOME}/cal03_mcmd_inp/job.bash
   --project-log        ${PRJ_HOME}/kkmcmd.log

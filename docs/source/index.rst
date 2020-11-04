@@ -48,6 +48,7 @@ Users' Manual
     users-manual/run_md
     users-manual/in_out_files
     users-manual/analysis
+    users-manual/samples
 
 ==============================
 Build Manual
