@@ -10,8 +10,6 @@ def option_parse():
     
     p.add_option('--i-qcano', dest='fn_qcano',
                  help="Omegagene vcmd parameter file")
-    p.add_option('--i-cod', dest='fn_cod',
-                 help="Omegagene coordinate file")
     p.add_option('--i-lmb', dest='fn_lmb',
                  help="Omegagene lambda file")
     p.add_option('--i-vs', dest='fn_vs',
@@ -27,6 +25,9 @@ def option_parse():
                  help="Coordinate output interval")
     p.add_option('-o', dest='fn_out',
                  help="output file")
+    p.add_option('--gmx', dest='flg_gmx',
+                 action="store_true",
+                 help="anayze gromacs output")
 
     opts, args = p.parse_args()
     print "----------------------------"
@@ -51,11 +52,12 @@ def cal_prob(cano, vs, lmb):
         prob[frame] = cur_prob
     return prob
 
-def read_dat(fn, itv_dat, itv_cod, valtype="int"):
+def read_dat(fn, itv_dat, itv_cod, first_step=0, skip=0, valtype="int"):
     dat={}
     f=open(fn)
-
-    for i, line in enumerate(f):
+    line_num = first_step
+    for line in f:
+        if line[0] == "#": continue
         buf = []
         if valtype=="int":
             buf = [int(x) for x in line.strip().split()]
@@ -64,10 +66,12 @@ def read_dat(fn, itv_dat, itv_cod, valtype="int"):
         else:
             sys.stderr.write("Variable type error.")
             sys.exit(1)
-
-        frame = (i+1) * itv_dat
+        buf = buf[skip:]
+        frame = line_num * itv_dat
         if frame % itv_cod == 0:
             dat[frame] = tuple(buf)
+
+        line_num += 1
 
     f.close()
     return dat
@@ -90,8 +94,13 @@ def _main():
     cano = kkmm_vcmd.VcMDConf()
     cano.read_params(opts.fn_qcano)
     
-    vs = read_dat(opts.fn_vs, opts.itv_vs, opts.itv_cod, "int")
-    lmb = read_dat(opts.fn_lmb, opts.itv_lmb, opts.itv_cod, "float")
+    vs = read_dat(opts.fn_vs, opts.itv_vs, opts.itv_cod, 1, 0, "int")
+    lmb = []
+    if opts.flg_gmx:
+        lmb = read_dat(opts.fn_lmb, opts.itv_lmb, opts.itv_cod, 0, 1,"float")
+    else:
+        lmb = read_dat(opts.fn_lmb, opts.itv_lmb, opts.itv_cod, 1, 0, "float")
+
     prob = cal_prob(cano, vs, lmb)
 
     write_dat(opts.fn_out, vs, lmb, prob)
