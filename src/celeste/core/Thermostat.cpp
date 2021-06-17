@@ -173,7 +173,7 @@ int ThermostatScaling::apply_thermostat_with_shake(int               n_atoms,
 ThermostatHooverEvans::ThermostatHooverEvans() : ThermostatObject() {}
 ThermostatHooverEvans::~ThermostatHooverEvans() {}
 
-int ThermostatHooverEvans::set_constant(int n_atoms, real_pw *mass, real *vel, real *force) {
+int ThermostatHooverEvans::set_constant(int n_atoms, real_pw *mass_inv, real *vel, real *force) {
   //real ff = 0.0;
   real vf = 0.0;
   real k0 = 0.0;
@@ -188,9 +188,9 @@ int ThermostatHooverEvans::set_constant(int n_atoms, real_pw *mass, real *vel, r
     }
     //ff += ff_i * mass_inv[i];
     //vf += vf_i * mass_inv[i];
-    k0 += pre * mass[i];
+    k0 += pre * mass_inv[i];
   }
-  cout << "dbg0708 sthe setconst " << vel[0] << " " << vel[1] << " "<< vel[2] << " " << mass[0]  << endl;
+  cout << "dbg0708 sthe setconst " << vel[0] << " " << vel[1] << " "<< vel[2] << " " << mass_inv[0]  << endl;
   const_k0_inv = 1.0 / k0;
   //zeta0 = -const_k0_inv * vf;
   //alpha = sqrt(const_k0_inv * ff);
@@ -217,20 +217,21 @@ int ThermostatHooverEvans::apply_thermostat(int      n_atoms,
         ff += ff_i * mass_inv[i];
     }
     cout << "dbg0708 tsnh1 " <<  vel[0] << " " <<  vel[1] << " " << vel[2] 
-	 << " " << work[0] << " " << work[1] << " " <<work[2] << endl;
+    << " " << work[0] << " " << work[1] << " " <<work[2] << endl;
 
     real zeta       = -const_k0_inv * vf;
     real alpha      = sqrt(const_k0_inv * ff);
     real beta       = exp(-alpha * time_step);
     real gamma      = (zeta - alpha) / (zeta + alpha);
     real gamma_beta = gamma / beta;
-    cout << "dbg0708 tsnh " << vf << " " 
+    cout << "dbg0708 tshe " << vf << " " 
 	 << ff << " " << zeta << " " << alpha
 	 << " " << beta << " " << gamma << endl;
     for (int i = 0, i_3 = 0; i < n_atoms * 3; i++) {
         vel_next[i] = (1.0 - gamma) / (beta - gamma_beta)
-                        * (vel[i] + work[i] * (1.0 + gamma - beta - gamma_beta) / (alpha - gamma * alpha
-));
+                        * (vel[i] + work[i] * (1.0 + gamma - beta - gamma_beta) / (alpha - gamma * alpha));
+	cout << "dbg0708 tshe " << vel[i] << " " << work[i] << " " << vel_next[i] << " " 
+	     << (1.0-gamma)/(beta-gamma_beta) << " " << (1.0 + gamma - beta - gamma_beta) / (alpha - gamma * alpha) << endl;
     }
 
     return 0;

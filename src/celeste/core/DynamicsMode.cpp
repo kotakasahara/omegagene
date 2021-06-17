@@ -610,6 +610,12 @@ int DynamicsModeZhang::calc_in_each_step() {
     subbox.calc_energy(mmsys.cur_step);
     // cout << "gather_energies()"<<endl;
     gather_energies();
+    if (cfg->dist_restraint_type != DISTREST_NONE || cfg->pos_restraint_type != POSREST_NONE) {
+      subbox.copy_crd(mmsys.crd);
+      if (cfg->dist_restraint_type != DISTREST_NONE) { apply_dist_restraint(); }
+      if (cfg->pos_restraint_type != POSREST_NONE) { apply_pos_restraint(); }
+    }
+
     const clock_t endTimeEne = clock();
     mmsys.ctime_calc_energy += endTimeEne - startTimeEne;
     if (cfg->extended_ensemble == EXTENDED_VMCMD) {
@@ -620,17 +626,14 @@ int DynamicsModeZhang::calc_in_each_step() {
       //mmsys.pote_extend = subbox.vcmd_apply_bias(mmsys.cur_step);
       mmsys.pote_extend = subbox.vcmd_scale_force();
       subbox.vcmd_vs_step(mmsys.cur_step);
-
     }
     
-    if (cfg->dist_restraint_type != DISTREST_NONE) { apply_dist_restraint(); }
-    if (cfg->pos_restraint_type != POSREST_NONE) { apply_pos_restraint(); }
 
     const clock_t startTimeVel = clock();
     subbox.cpy_crd_prev();
-    // subbox.apply_thermostat();
+    subbox.apply_thermostat();
 
-    if (cfg->constraint_type != CONST_NONE) {
+    //if (cfg->constraint_type != CONST_NONE) {
         // subbox.update_velocities(cfg->time_step);
         // vel_next
         // subbox.update_coordinates_cur(cfg->time_step);
@@ -640,9 +643,9 @@ int DynamicsModeZhang::calc_in_each_step() {
         // subbox.update_velocities(cfg->time_step);
         // subbox.update_coordinates_cur(cfg->time_step);
         // subbox.apply_thermostat();
-    }
+      //}
 
-    subbox.apply_thermostat();
+    //subbox.apply_thermostat();
 
     const clock_t endTimeVel = clock();
     mmsys.ctime_update_velo += endTimeVel - startTimeVel;

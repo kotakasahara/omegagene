@@ -10,9 +10,7 @@ def get_options():
     p.add_option('-o', dest='fn_out',
                  help="output file")
     opts, args = p.parse_args()
-    print "----------------------------"
     p.print_help()
-    print "----------------------------"
     return opts,args
 
 

@@ -30,9 +30,9 @@ def opt_parse():
                  action="store_true",
                  help="Symmetrize the counts")
     opts, args = p.parse_args()
-    print "----------------------------"
+    print("----------------------------")
     p.print_help()
-    print "----------------------------"
+    print("----------------------------")
     return opts, args
 
 def read_fnlist(fn):
@@ -72,14 +72,14 @@ def _main():
     vc.read_params(fn_list[0], False)
     tmp = vc.sum_params()
     vc.scale_params(trj_weight[0])
-    print  "%30s : samples %15.1f (%15.1f) : weight %6.4f"%(fn_list[0], tmp, vc.sum_params(), trj_weight[0])
+    print("%30s : samples %15.1f (%15.1f) : weight %6.4f"%(fn_list[0], tmp, vc.sum_params(), trj_weight[0]))
 
     for i, fn_qraw in enumerate(fn_list[1:]):
         vc_sub = kkmm_vcmd.VcMDConf()
         vc_sub.read_params(fn_qraw, False)
         tmp = vc_sub.sum_params()
         vc_sub.scale_params(trj_weight[i+1])        
-        print  "%30s : samples %15.1f (%15.1f) : weight %6.4f"%(fn_qraw, tmp, vc_sub.sum_params(), trj_weight[i+1])
+        print("%30s : samples %15.1f (%15.1f) : weight %6.4f"%(fn_qraw, tmp, vc_sub.sum_params(), trj_weight[i+1]))
         vc.add_params(vc_sub)
 
     if opts.symmetrize:
