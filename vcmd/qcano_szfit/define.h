@@ -12,9 +12,16 @@ using namespace std;
 #define ABOUT_ME_PUBLIC ""
 #define PI 3.14159265
 
+// mode
 enum {
   M_SUBZONEBASED=0,
   M_DUMMY
 };
 
+// file type
+enum {
+  FT_PARAMS=0,
+  FT_QRAW_IS,
+  FT_DUMMY
+};
 #endif

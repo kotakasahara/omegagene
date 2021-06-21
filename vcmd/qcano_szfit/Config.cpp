@@ -21,7 +21,7 @@ void Config::setAll(vector<string> arg){
   vector<string>::iterator itr;
   string type,val;
   for(itr=arg.begin(); itr!=arg.end(); itr++){
-    if(*itr=="-mode"){
+    if(*itr=="--mode"){
       itr++;
       if(*itr=="subzone")         { mode=M_SUBZONEBASED; }
       else if(*itr=="")           { mode=M_DUMMY; }

@@ -91,32 +91,36 @@ void VirtualStateCoupling::parse_vstate(const string &fname){
 
 void VirtualStateCoupling::parse_params(const string &fname)
 {
-  (void) fname;
-
   ifstream ifs;
-  vector<string> args;
-  string         buf;
-  string         cur, cur1, cur2;
   ifs.open(fname.c_str());
   //dimension
   nstates = 1;
-  getline(ifs, buf);
+  parse_params_state_definition(&ifs);
+  parse_params_qweight(&ifs);
+  ifs.close();
+}
+
+void VirtualStateCoupling::parse_params_state_definition(ifstream* ifs){
+  vector<string> args;
+  string         buf;
+  string         cur, cur1, cur2;
+  getline(*ifs, buf);
   exchange_interval = atoi(buf.c_str());
   printf("exchange_interval: %d \n", exchange_interval);
-  getline(ifs, buf);
+  getline(*ifs, buf);
   n_dim = atoi(buf.c_str());
   printf("n_dim: %d \n", n_dim);
   // read lower and upper bounds for each state in each axis
   for (size_t c_dim=0; c_dim < n_dim; c_dim++){
     int cur_nstates; 
-    getline(ifs, buf);
+    getline(*ifs, buf);
     stringstream ss(buf);
     ss >> cur;  cur_nstates = atoi(cur.c_str());
     printf("%d-th dim : %d states\n", c_dim, cur_nstates);
     vector<double> buf_lowers;
     vector<double> buf_uppers;
     for(int c_state = 0; c_state < cur_nstates; c_state++){
-      getline(ifs, buf);
+      getline(*ifs, buf);
       stringstream ss2(buf);
       //ss2 << buf;
       ss2 >> cur1 >> cur2;
@@ -159,8 +163,13 @@ void VirtualStateCoupling::parse_params(const string &fname)
     printf(")\n");
   }
   // read information about parameters
-
-  while(ifs && getline(ifs, buf)){
+}
+void VirtualStateCoupling::parse_params_qweight(ifstream* ifs){
+  vector<string> args;
+  string         buf;
+  string         cur, cur1, cur2;
+  
+  while(*ifs && getline(*ifs, buf)){
     size_t pos1 = buf.find_first_of("#;");
     if (pos1 != string::npos) { buf = buf.substr(0, pos1); }
     if (buf.size() == 0) continue;
@@ -180,56 +189,29 @@ void VirtualStateCoupling::parse_params(const string &fname)
     double cur_param = atof(cur.c_str()) ;
     if(flg_default){
       default_weight = cur_param;
-      //std::cout << "dbg default " << ss << " " << default_weight << std::endl;
       continue;
     }
     
     size_t v_id = conv_vstate_crd2id(v_crd);
     state_weights[v_id] = cur_param;
-    printf("dbg0604b %d :", v_id);
-    for(const auto c : v_crd)
-      printf(" %d", c);
-    printf(" %lf %s\n", cur_param, cur.c_str());
-    //std::cout << "dbg0617c default " << " " << default_weight << std::endl;
   }
-
-  ifs.close();
-  //std::cout << "dbg0617d default " << " " << default_weight << std::endl;
   //
   for(size_t v_id=0; v_id < nstates; v_id++){
     if(state_weights[v_id] < 0.0){
-      //std::cout << "dbg0604c " << v_id << " " << state_weights[v_id] << " " <<  default_weight << std::endl;
       state_weights[v_id] = default_weight;      
     }
   }  
-  for(size_t v_id=0; v_id < nstates; v_id++){
-    vector<int> v_crd = conv_vstate_id2crd(v_id);
-    //std::cout << "v_id %d ("<<  v_id;
-    for(int d=0; d<n_dim; d++){
-      //std::cout << " " << v_crd[d];
-    }
-    //std::cout << state_weights[v_id] << std::endl;
-  }
   
-
-  /* This part really should be reading parameters from fname */
-
-  //nstates = 10;
-  //for(size_t i = 0; i < nstates; ++i) {
-  //vector<double> lower;
-  //vector<double> upper;
-  //for(size_t d = 0; d < n_dim; ++d) {
-  //lower.push_back((i + 0.5) * 0.1);
-  //upper.push_back((i + 1.5) * 0.1);
+  //for(size_t v_id=0; v_id < nstates; v_id++){
+  //vector<int> v_crd = conv_vstate_id2crd(v_id);
+  //for(int d=0; d<n_dim; d++){
+  //    }
   //}
-  //lowers.push_back(lower);
-  //uppers.push_back(upper);
-  //state_weights.push_back(0.);
-  //}
-
+  
   cur_vsis.reserve(n_dim*2);
   cur_vsis.assign(n_dim*2, 0);
 }
+
 
 void VirtualStateCoupling::init_transition_table()
 {

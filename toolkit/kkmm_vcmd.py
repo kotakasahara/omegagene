@@ -291,3 +291,66 @@ class VcMDParamsReader(kkkit.FileI):
         return interval, dim, group_names, lambda_ranges, params, n_vs_l
 
             
+
+class VcMDQrawISReader(kkkit.FileI):
+    def __init__(self, fn):
+        super(VcMDParamsReader, self).__init__(fn)
+    def read(self, chk4gen=True):
+        self.open()
+        qraw_is  = {}
+
+        # The first line: VS transition interval (step)
+        interval = int(self.readline_comment().strip().split()[0])
+        # The second line: the number of dimensions
+        dim = int(self.readline_comment().strip().split()[0])
+        lambda_ranges = [(0.0, 0.0)]
+        n_states = 1
+        group_names = [[""]]
+        n_vs_l = []
+        # Definitions of VS ranges in each dimension
+        for i in range(dim):
+            cur_dim = i+1
+            # [The number of VS] [Group name] [Group name]
+            terms = self.readline_comment().strip().split()
+            n_vs = int(terms[0])
+            n_vs_l.append(n_vs)
+            group_names.append([])
+            for tm in terms[1:]:
+                group_names[-1].append(tm)
+            cur_ranges = [(0,0)]
+            for j in range(n_vs):
+                # [Min lambda] [Max lambda] 
+                terms = self.readline_comment().strip().split()
+                try:
+                    assert(len(terms) == 2)
+                    lmin = float(terms[0])
+                    lmax = float(terms[1])
+                except:
+                    sys.stderr.write("Format error in the VS definition.\n")
+                    sys.stderr.write("\t".join(terms))
+                    sys.stderr.write("The minimum and maximum values of lambda in each VS should be specified in float values.\n")
+                    sys.exit(1)
+                cur_ranges.append((float(terms[0]), float(terms[1])))
+
+            lambda_ranges.append(cur_ranges)
+            #print "dim " + str(cur_dim)
+            #print group_names[-1]
+            #print n_vs
+            #print cur_ranges
+            #print "n_states : " + str(n_states)
+        while 1:
+            line =self.readline_comment()
+            if not line or re.match("end", line, re.IGNORECASE):
+                break
+            terms = line.strip().split()
+            # elif re.match("default", terms[0], re.IGNORECASE):
+            # default_q = float(terms[1])
+            crd    = tuple([int(x) for x in terms[:(dim*2)]])
+            pop = float(terms[dim*2])
+            assert(not crd in params)
+            #param = [float(x) for x in terms[dim:]]
+            qraw_is[crd] = pop
+            
+        return interval, dim, group_names, lambda_ranges, qraw_is, n_vs_l
+
+            

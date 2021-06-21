@@ -82,6 +82,8 @@ private:
   size_t state_qraw_sum;
   void parse_vstate(const string& fname);
   void parse_params(const string& fname);
+  void parse_params_state_definition(ifstream* ifs);
+  void parse_params_qweight(ifstream* ifs);
   void init_transition_table();
   size_t conv_vstate_crd2id(std::vector<int> vcrd);
   std::vector<int> conv_vstate_id2crd(size_t v_id);
