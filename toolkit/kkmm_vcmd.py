@@ -19,6 +19,7 @@ class VcMDConf():
         self.lambda_ranges = []
         # lambda_ranges[dim][vsid] = (min, max)
         self.params = {}
+        self.qraw_is = {}
         # params[(vs1, vs2, ...)] = (param1, param2)
 
         self.init_vs = []
@@ -33,6 +34,16 @@ class VcMDConf():
     def read_params(self, fn, chk4gen=True):
         self.interval, self.dim, self.group_names, \
             self.lambda_ranges, self.params, self.n_vs = VcMDParamsReader(fn).read(chk4gen)
+    def read_qraw_is(self, fn, chk4gen=False):
+        ret = VcMDParamsReader(fn).read_qraw_is()
+        self.interval = ret[0]
+        self.dim = ret[1]
+        self.group_names = ret[2]
+        self.lambda_ranges = ret[3]
+        self.n_vs_l = ret[5]
+        self.qraw_is = ret[4]
+
+        
     def read_init(self, fn):
         self.init_vs, self.seed = VcMDInitReader(fn).read(self.dim)
     def add_params(self, conf):
@@ -52,6 +63,12 @@ class VcMDConf():
         for vs, param in self.params.items():
             if vs == key_def: continue
             self.params[vs][0] *= factor
+        return
+    def scale_qraw_is(self, factor):
+        key_def = tuple([ 0 for x in range(self.dim)])
+        for vs, param in self.qraw_is.items():
+            if vs == key_def: continue
+            self.qraw_is[vs][0] *= factor
         return
     def multiply_params(self, conf):
         key_def = tuple([ 0 for x in range(self.dim)])
@@ -126,6 +143,16 @@ class VcMDConf():
         #self.params[key_def].append(min_param)
         # print min_param
         return
+    def sum_qraw_is(self, conf):
+        for k, v in conf.qraw_is.items():
+            if k in self.qraw_is:
+                for i, c_v in enumerate(v):
+                    if len(self.qraw_is[k]) > i:
+                        self.qraw_is[k][i] += c_v
+                print(k,self.qraw_is[k])
+            else:
+                self.qraw_is[k] = v
+        return
     def symmetrize(self):
         vs_param01 = {}
         vs_num = {}
@@ -191,9 +218,15 @@ class VcMDInitReader(kkkit.FileI):
         return init_vs, seed
 
 class VcMDParamsWriter(kkkit.FileO):
+
     def __init__(self, fn):
         super(VcMDParamsWriter, self).__init__(fn)
-    def write(self, vc):
+    def write(self, vc, mode_param):
+        """
+        mode_param:
+        0 ... VcMDConf.param
+        1 ... VcMDConf.qraw_is
+        """
         self.open()
         self.f.write(str(vc.interval)+"\n")
         self.f.write(str(vc.dim)+"\n")        
@@ -205,13 +238,21 @@ class VcMDParamsWriter(kkkit.FileO):
             self.f.write(buf+"\n")
             for lmbd in vc.lambda_ranges[d][1:]:
                 self.f.write(str(lmbd[0]) + " " + str(lmbd[1]) + "\n")
-        keys = vc.params.keys()
-        keys.sort()
+        params = {}
+        if mode_param==0:
+            params = vc.params
+        elif mode_param==1:
+            params = vc.qraw_is
+        else:
+            stderr.write("Invalid mode_param:", mode_param)
+            
+        keys = params.keys()
+        #keys.sort()
         for vs in keys:
-            param = vc.params[vs]
+            prm = params[vs]
             # for vs, param in vc.params.items():
             buf = " ".join([str(x) for x in vs]) 
-            for x in param:
+            for x in prm:
                 buf += " " + str(x)
             self.f.write(buf+"\n")
         self.f.write("END")
@@ -221,55 +262,9 @@ class VcMDParamsReader(kkkit.FileI):
     def __init__(self, fn):
         super(VcMDParamsReader, self).__init__(fn)
     def read(self, chk4gen=True):
-        self.open()
+        interval, dim, group_names, lambda_ranges, ret_params, n_vs_l = self.read_sub()
         params = {}
-
-        # The first line: VS transition interval (step)
-        interval = int(self.readline_comment().strip().split()[0])
-        # The second line: the number of dimensions
-        dim = int(self.readline_comment().strip().split()[0])
-        lambda_ranges = [(0.0, 0.0)]
-        n_states = 1
-        group_names = [[""]]
-        n_vs_l = []
-        # Definitions of VS ranges in each dimension
-        for i in range(dim):
-            cur_dim = i+1
-            # [The number of VS] [Group name] [Group name]
-            terms = self.readline_comment().strip().split()
-            n_vs = int(terms[0])
-            n_vs_l.append(n_vs)
-            group_names.append([])
-            for tm in terms[1:]:
-                group_names[-1].append(tm)
-            cur_ranges = [(0,0)]
-            for j in range(n_vs):
-                # [Min lambda] [Max lambda] 
-                terms = self.readline_comment().strip().split()
-                try:
-                    assert(len(terms) == 2)
-                    lmin = float(terms[0])
-                    lmax = float(terms[1])
-                except:
-                    sys.stderr.write("Format error in the VS definition.\n")
-                    sys.stderr.write("\t".join(terms))
-                    sys.stderr.write("The minimum and maximum values of lambda in each VS should be specified in float values.\n")
-                    sys.exit(1)
-                cur_ranges.append((float(terms[0]), float(terms[1])))
-
-            lambda_ranges.append(cur_ranges)
-            #print "dim " + str(cur_dim)
-            #print group_names[-1]
-            #print n_vs
-            #print cur_ranges
-            #print "n_states : " + str(n_states)
-        while 1:
-            line =self.readline_comment()
-            if not line or re.match("end", line, re.IGNORECASE):
-                break
-            terms = line.strip().split()
-            # elif re.match("default", terms[0], re.IGNORECASE):
-            # default_q = float(terms[1])
+        for terms in ret_params:
             crd = tuple([int(x) for x in terms[:dim]])
             assert(not crd in params)
             param = [float(x) for x in terms[dim:]]
@@ -287,17 +282,21 @@ class VcMDParamsReader(kkkit.FileI):
                     sys.stderr.write("\t".join(terms)+"\n")
 
             params[crd] = param
-
-        return interval, dim, group_names, lambda_ranges, params, n_vs_l
-
-            
-
-class VcMDQrawISReader(kkkit.FileI):
-    def __init__(self, fn):
-        super(VcMDParamsReader, self).__init__(fn)
-    def read(self, chk4gen=True):
+        return interval, dim, group_names, lambda_ranges, params, n_vs_l        
+        
+    def read_qraw_is(self):
+        interval, dim, group_names, lambda_ranges, ret_params, n_vs_l = self.read_sub()
+        params = {}
+        for terms in ret_params:
+            crd = tuple([int(x) for x in terms[:(dim*2)]])
+            assert(not crd in params)
+            param = [float(x) for x in terms[(dim*2):]]
+            params[crd] = param
+        return interval, dim, group_names, lambda_ranges, params, n_vs_l        
+        
+    def read_sub(self, chk4gen=True):
         self.open()
-        qraw_is  = {}
+        params = {}
 
         # The first line: VS transition interval (step)
         interval = int(self.readline_comment().strip().split()[0])
@@ -307,6 +306,7 @@ class VcMDQrawISReader(kkkit.FileI):
         n_states = 1
         group_names = [[""]]
         n_vs_l = []
+        ret_params = []
         # Definitions of VS ranges in each dimension
         for i in range(dim):
             cur_dim = i+1
@@ -343,14 +343,5 @@ class VcMDQrawISReader(kkkit.FileI):
             if not line or re.match("end", line, re.IGNORECASE):
                 break
             terms = line.strip().split()
-            # elif re.match("default", terms[0], re.IGNORECASE):
-            # default_q = float(terms[1])
-            crd    = tuple([int(x) for x in terms[:(dim*2)]])
-            pop = float(terms[dim*2])
-            assert(not crd in params)
-            #param = [float(x) for x in terms[dim:]]
-            qraw_is[crd] = pop
-            
-        return interval, dim, group_names, lambda_ranges, qraw_is, n_vs_l
-
-            
+            ret_params.append(terms)
+        return interval, dim, group_names, lambda_ranges, ret_params, n_vs_l
