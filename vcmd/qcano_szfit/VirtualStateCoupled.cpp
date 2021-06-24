@@ -3,7 +3,6 @@
 VirtualStateCoupling::VirtualStateCoupling()
 {
   default_weight = 1.0;
-
 }  
   
 VirtualStateCoupling::~VirtualStateCoupling(){
@@ -94,33 +93,48 @@ void VirtualStateCoupling::parse_params(const string &fname)
   ifstream ifs;
   ifs.open(fname.c_str());
   //dimension
+
   nstates = 1;
-  parse_params_state_definition(&ifs);
-  parse_params_qweight(&ifs);
+  parse_params_state_definition(ifs);
+  parse_params_qweight(ifs);
   ifs.close();
 }
 
-void VirtualStateCoupling::parse_params_state_definition(ifstream* ifs){
+void VirtualStateCoupling::parse_qraw_is(const string &fname)
+{
+  ifstream ifs;
+  ifs.open(fname.c_str());
+  //dimension
+  nstates = 1;
+
+  parse_params_state_definition(ifs);
+  parse_params_qraw_is(ifs);
+  ifs.close();
+}
+
+
+void VirtualStateCoupling::parse_params_state_definition(ifstream &ifs){
   vector<string> args;
   string         buf;
   string         cur, cur1, cur2;
-  getline(*ifs, buf);
+  getline(ifs, buf);
+  cout << "dbg : " <<  buf << endl;;
   exchange_interval = atoi(buf.c_str());
   printf("exchange_interval: %d \n", exchange_interval);
-  getline(*ifs, buf);
+  getline(ifs, buf);
   n_dim = atoi(buf.c_str());
   printf("n_dim: %d \n", n_dim);
   // read lower and upper bounds for each state in each axis
   for (size_t c_dim=0; c_dim < n_dim; c_dim++){
     int cur_nstates; 
-    getline(*ifs, buf);
+    getline(ifs, buf);
     stringstream ss(buf);
     ss >> cur;  cur_nstates = atoi(cur.c_str());
     printf("%d-th dim : %d states\n", c_dim, cur_nstates);
     vector<double> buf_lowers;
     vector<double> buf_uppers;
     for(int c_state = 0; c_state < cur_nstates; c_state++){
-      getline(*ifs, buf);
+      getline(ifs, buf);
       stringstream ss2(buf);
       //ss2 << buf;
       ss2 >> cur1 >> cur2;
@@ -164,12 +178,12 @@ void VirtualStateCoupling::parse_params_state_definition(ifstream* ifs){
   }
   // read information about parameters
 }
-void VirtualStateCoupling::parse_params_qweight(ifstream* ifs){
+void VirtualStateCoupling::parse_params_qweight(ifstream &ifs){
   vector<string> args;
   string         buf;
   string         cur, cur1, cur2;
   
-  while(*ifs && getline(*ifs, buf)){
+  while(ifs && getline(ifs, buf)){
     size_t pos1 = buf.find_first_of("#;");
     if (pos1 != string::npos) { buf = buf.substr(0, pos1); }
     if (buf.size() == 0) continue;
@@ -210,6 +224,50 @@ void VirtualStateCoupling::parse_params_qweight(ifstream* ifs){
   
   cur_vsis.reserve(n_dim*2);
   cur_vsis.assign(n_dim*2, 0);
+}
+
+void VirtualStateCoupling::parse_params_qraw_is(ifstream &ifs){
+  vector<string> args;
+  string         buf;
+  string         cur, cur1, cur2;
+  
+  while(ifs && getline(ifs, buf)){
+    size_t pos1 = buf.find_first_of("#;");
+    if (pos1 != string::npos) { buf = buf.substr(0, pos1); }
+    if (buf.size() == 0) continue;
+    if(buf=="END") break;
+
+    vector<int> v_crd(n_dim);
+
+    stringstream ss(buf);
+
+    for (size_t c_dim=0; c_dim < n_dim; c_dim++){
+      ss >> cur;
+      v_crd[c_dim] = atoi(cur.c_str())-1;
+    }
+    size_t v_id = conv_vstate_crd2id(v_crd);
+    vector<size_t> is_crd(n_dim+1);
+    is_crd[0] = v_id;
+    bool flg_out = false;    
+    for (size_t c_dim=0; c_dim < n_dim; c_dim++){
+      ss >> cur;
+      int is_crd_in_state = atoi(cur.c_str())-1;
+      if ( is_crd_in_state != 0 && is_crd_in_state != 1 )
+	flg_out = true;
+      is_crd[c_dim+1] = is_crd_in_state;
+    }
+    
+    ss >> cur;
+    double cur_param = atof(cur.c_str()) ;
+    if (!flg_out) {
+      state_qraw_is[is_crd] = cur_param;
+      state_qraw[v_id] += cur_param;
+    }
+  }
+  for (const auto& [key, value] : state_qraw_is){
+    state_qraw_is[key] /= state_qraw[key[0]];
+  }
+
 }
 
 
@@ -344,6 +402,7 @@ void VirtualStateCoupling::write_transit_count(){
 }
 */
 int VirtualStateCoupling::setup(Config cfg){
+  cout << "dbg setup()" << endl;
   fname_i_params = cfg.fname_i_params;
   fname_o_qcano = cfg.fname_o_qcano;
   parse_params(fname_i_params);
@@ -356,6 +415,10 @@ int VirtualStateCoupling::setup(Config cfg){
     printf("  Total No. of possible transitions: %ld\n", tottransition);
   }
 
+  return 0;
+}
+
+int VirtualStateCoupling::reweighting_heiristic(int pivot){
   return 0;
 }
 

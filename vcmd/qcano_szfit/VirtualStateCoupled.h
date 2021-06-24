@@ -72,18 +72,20 @@ private:
 
   std::vector<size_t> state_qraw;
   // state_qraw[d] = qraw
-  std::map< std::vector<size_t>, size_t > state_qraw_is;
+  std::map< std::vector<size_t>, double > state_qraw_is;
   std::map< std::vector<size_t>, size_t > state_transit_count;
-  // state_qraw_is[(vs1, vs2, ..., is1, is2, ...)] = qraw
-  //   vs1, vs2, ... virtual state coordinate in 1-st, 2-nd, ... -th dimension.
+  // state_qraw_is[(vs_id, is1, is2, ...)] = qraw
+  //   vs_id ... virtual state Id.
   //   is1, is2, ... -1, 0, 1, or 2 corresponding to the lower or higher region from the state boundary
   //                    in each axis
 
   size_t state_qraw_sum;
   void parse_vstate(const string& fname);
   void parse_params(const string& fname);
-  void parse_params_state_definition(ifstream* ifs);
-  void parse_params_qweight(ifstream* ifs);
+  void parse_qraw_is(const string& fname);  
+  void parse_params_state_definition(ifstream &ifs);
+  void parse_params_qweight(ifstream &ifs);
+  void parse_params_qraw_is(ifstream &ifs);
   void init_transition_table();
   size_t conv_vstate_crd2id(std::vector<int> vcrd);
   std::vector<int> conv_vstate_id2crd(size_t v_id);
@@ -102,6 +104,8 @@ public:
   ~VirtualStateCoupling();
 
   int setup(Config cfg);
+  int reweighting_heiristic(int pivot);
+  
   int subzonebased_mc();
 };
 
