@@ -155,9 +155,8 @@ void VirtualStateCoupling::parse_params_state_definition(ifstream &ifs){
   //kappa = vector<double>(nstates);
   state_weights = vector<double>(nstates);
   state_qraw = vector<size_t>(nstates);
-  state_qraw_sum = 0;
   transition_candidates = vector< vector<size_t> >(nstates);
-
+  
   for(size_t v_id=0; v_id < nstates; v_id++){
     vector<int> v_crd = conv_vstate_id2crd(v_id);
     vector<double> tmp_upp(n_dim);
@@ -168,7 +167,7 @@ void VirtualStateCoupling::parse_params_state_definition(ifstream &ifs){
     }
     uppers[v_id] = tmp_upp;
     lowers[v_id] = tmp_low;
-    printf("dbg read param: v_id %ld %d ... [%lf ... %lf]\n",v_id, v_crd[0], uppers[v_id][0], lowers[v_id][0]);
+    printf("dbg read param: v_id %ld %d ... [%lf ... %lf]\n",v_id, v_crd[0], lowers[v_id][0], uppers[v_id][0]);
     state_weights[v_id] = -1.0;
     printf("v_id %d (", v_id);
     for(int d=0; d<n_dim; d++){
@@ -266,6 +265,11 @@ void VirtualStateCoupling::parse_params_qraw_is(ifstream &ifs){
   }
   for (const auto& [key, value] : state_qraw_is){
     state_qraw_is[key] /= state_qraw[key[0]];
+    cout << "dbg parse : ";
+    for ( const auto& a : key ){
+      cout << a << " ";
+    }
+    cout <<  state_qraw_is[key] << endl;
   }
 
 }
@@ -277,7 +281,7 @@ void VirtualStateCoupling::init_transition_table()
   // One workaround is to input transition information as well from the external script.
   transition_candidates.clear();
   for(size_t i = 0; i < nstates; ++i) {
-    printf("dbg: transition from state %ld : ", i);
+    //printf("dbg: transition from state %ld : ", i);
     transition_candidates.push_back(vector<size_t>());
     for(size_t j = 0; j < nstates; ++j) {
       bool transitionable = true;
@@ -291,14 +295,34 @@ void VirtualStateCoupling::init_transition_table()
       }
       if(transitionable) {
         transition_candidates[i].push_back(j);
-	printf("%ld ", j);
+	//printf("%ld ", j);
       }
 
     }
-    printf("\n");
-    for(size_t d = 0; d < n_dim; ++d) {
-      printf("[%lf ... %lf] \n", lowers[i][d], uppers[i][d]);
-    }
+    //printf("\n");
+    //for(size_t d = 0; d < n_dim; ++d) {
+      //printf("[%lf ... %lf] \n", lowers[i][d], uppers[i][d]);
+    //}
+  }
+
+  size_t tottransition = 0;
+  for(size_t i = 0; i < nstates; ++i) {
+    tottransition += transition_candidates[i].size();
+  }
+  printf("  Total No. of possible transitions: %ld\n", tottransition);
+
+}
+
+void VirtualStateCoupling::init_data(){
+  opt_err = 1e10;
+  state_adj_qw = vector<double>(nstates);
+  state_adj_qw_opt = vector<double>(nstates);
+
+  state_qraw_sum = 0;
+  
+  for(size_t v_id=0; v_id < nstates; v_id++){
+    state_adj_qw[v_id] = 1.0;
+    state_adj_qw_opt[v_id] = 1.0;
   }
 }
 
@@ -348,22 +372,23 @@ bool VirtualStateCoupling::is_in_range(size_t state, std::vector<double> arg){
   }
   return true;
 }
-/*
-void VirtualStateCoupling::write_qrawstat(){
+
+void VirtualStateCoupling::write_qweight(std::string fname, std::vector<double> in_qw){
   std::string state_defs = get_str_state_definition();
-  ofstream ofs_qrawstat(fname_o_qrawstat);
-  ofs_qrawstat << state_defs;
+  ofstream ofs(fname);
+  ofs << state_defs;
   for ( int l = 0; l < nstates; l++){
     std::vector<int> vs_crd = conv_vstate_id2crd(l);
     for ( const auto vsc : vs_crd )
       // (+1) convert to 1-origin integer
-      ofs_qrawstat << vsc+1 << " ";
-    ofs_qrawstat << state_qraw[l] << std::endl;
+      ofs << vsc+1 << " ";
+    ofs << in_qw[l] << std::endl;
   }
-  ofs_qrawstat << "END" << std::endl;
-  ofs_qrawstat.close();
+  ofs << "END" << std::endl;
+  ofs.close();
   return;
 }
+/*
 void VirtualStateCoupling::write_qrawstat_is(){
   std::string state_defs = get_str_state_definition();
   ofstream ofs_qrawstat_is(fname_o_qrawstat_is);
@@ -403,25 +428,245 @@ void VirtualStateCoupling::write_transit_count(){
 */
 int VirtualStateCoupling::setup(Config cfg){
   cout << "dbg setup()" << endl;
+  //cout << " dbg setup : mc_steps: " << mc_steps <<  " " << cfg.mc_steps << endl;
   fname_i_params = cfg.fname_i_params;
   fname_o_qcano = cfg.fname_o_qcano;
-  parse_params(fname_i_params);
-  init_transition_table();
-  {
-    size_t tottransition = 0;
-    for(size_t i = 0; i < nstates; ++i) {
-      tottransition += transition_candidates[i].size();
+  fname_o_qweight_opt = cfg.fname_o_qweight_opt;
+  fname_i_qraw_is = cfg.fname_i_qraw_is;
+  mc_temp = cfg.mc_temp;
+  mc_delta_x = cfg.mc_delta_x;
+  mc_steps = cfg.mc_steps;
+  mc_log_interval = cfg.mc_log_interval;
+  cout << "dbg mc_log_interval " << mc_log_interval << " " << cfg.mc_log_interval << endl;
+  return 0;
+}
+
+int VirtualStateCoupling::enum_overlapping_subzones(){
+  // set
+  ////  overlapping subzones
+
+  cout << "dbg: enum_overlapping_subzones() " << n_dim << endl;
+  overlapping_subzones = vector< std::map< size_t, std::vector< std::vector<int> > > >(nstates);
+
+
+  for ( int st_i = 0; st_i < nstates; st_i++ ){
+    for (const auto& st_j : transition_candidates[st_i] ) {
+      if (st_j == st_i) continue;
+      std::vector<int> overlap_positions(n_dim);
+      for ( int c_dim = 0 ; c_dim < n_dim ; c_dim++ ){
+	if(uppers[st_j][c_dim] < uppers[st_i][c_dim])
+	  overlap_positions[c_dim] = -1;
+	else if(uppers[st_i][c_dim] < uppers[st_j][c_dim])
+	  overlap_positions[c_dim] = 1;
+	else
+	  overlap_positions[c_dim] = 0;
+      }
+
+      std::vector<int> tmp_vec;
+      std::vector< std::vector<int> > subzones;
+      enum_overlapping_subzones_sub(overlap_positions,
+				tmp_vec, subzones);
+      overlapping_subzones[st_i][st_j] = subzones;
     }
-    printf("  Total No. of possible transitions: %ld\n", tottransition);
+  }
+  
+  return 0;
+}
+int VirtualStateCoupling::enum_overlapping_subzones_sub
+(std::vector<int>& overlap_positions, std::vector<int>& cur_vec,
+ std::vector< std::vector<int> >& subzones){
+  int cur_depth = n_dim - overlap_positions.size();
+  if(overlap_positions.empty()){
+    subzones.push_back(cur_vec);
+    return 1;
+  }
+  int pos = overlap_positions[0];
+  overlap_positions.erase(overlap_positions.begin());
+  std::vector<int> olp1(overlap_positions.size());
+  std::vector<int> olp2(overlap_positions.size());
+  for ( int i=0; i < overlap_positions.size(); i++) {
+    olp1[i] = overlap_positions[i];
+    olp2[i] = overlap_positions[i];
+  }
+  
+  std::vector<int> v1(n_dim*2);
+  std::vector<int> v2(n_dim*2);
+  for ( int i=0; i < cur_vec.size(); i++){
+    v1[i] = cur_vec[i];
+    v2[i] = cur_vec[i];
   }
 
+  if ( pos == -1 ){
+    v1[cur_depth]   = 0;
+    v1[n_dim+cur_depth] = 1;
+    enum_overlapping_subzones_sub(olp1, v1, subzones);
+  }else if( pos == 1 ){
+    v1[cur_depth]   = 1;
+    v1[n_dim+cur_depth] = 0;
+    enum_overlapping_subzones_sub(olp1, v1, subzones);
+  }else{
+    v1[cur_depth] = 0;
+    v1[n_dim+cur_depth] = 0;    
+    enum_overlapping_subzones_sub(olp1, v1, subzones);
+    v2[cur_depth] = 1;
+    v2[n_dim+cur_depth] = 1;    
+    enum_overlapping_subzones_sub(olp2, v2, subzones);
+  }
   return 0;
+}
+
+int VirtualStateCoupling::print_overlapping_subzones(){
+  for ( int st_i = 0 ; st_i < nstates; st_i++) {
+    for (const auto& [st_j, subzones] : overlapping_subzones[st_i]){
+      for (const auto& sz : subzones ) {
+	cout << "ovlp " << st_i << "-" << st_j << " [" ;
+	for (const auto& crd : sz ) {
+	  cout << crd << " ";
+	}
+	cout << "]" <<endl;
+      }
+    }
+  }
+  return 0;
+}
+double VirtualStateCoupling::calc_qraw_error_all(){
+  // set
+  //  state_adj_qw_error
+  //  total_err
+
+  state_adj_qw_error = vector<double>(nstates);
+  total_err = 0.0;
+
+  for (int i = 0 ; i < nstates; i++){
+    state_adj_qw_error[i] = calc_qraw_error(i, state_adj_qw[i], false);
+    total_err += state_adj_qw_error[i];
+  }
+  total_err *= 0.5;
+  cout << "dbg0626 sqer_sum: " << total_err << endl;
+  return total_err;
+}
+
+double VirtualStateCoupling::calc_qraw_error(size_t st_i, double qw_i, bool skip_lower_id=false){
+  //cout << "abs"<< endl;
+  double sqer_sum=0.0;
+  for (const auto& [st_j, subzones] : overlapping_subzones[st_i]){
+    if(skip_lower_id && st_j < st_i) continue;
+    for (const auto& sz : subzones ) {
+      std::vector<size_t> sz_crd_i(n_dim+1), sz_crd_j(n_dim+1);
+      sz_crd_i[0]=st_i;
+      sz_crd_j[0]=st_j;
+      for ( int i = 0; i < n_dim; i++){
+	sz_crd_i[i+1] = sz[i];
+	sz_crd_j[i+1] = sz[n_dim+i];
+      }
+      //cout << "dbg err sz_crd_i : ";
+      //for ( int i = 0; i < n_dim+1; i++){
+      //cout << sz_crd_i[i] << " ";
+      //}
+      //cout << endl;
+      
+      double qcano_i = qw_i * state_qraw[st_i] * state_qraw_is[sz_crd_i];
+      double qcano_j = state_adj_qw[st_j] * state_qraw[st_j] * state_qraw_is[sz_crd_j];
+      double sqer = (qcano_i-qcano_j)*(qcano_i-qcano_j);
+      sqer_sum += sqer;
+      
+    }
+  }
+  return sqer_sum;
 }
 
 int VirtualStateCoupling::reweighting_heiristic(int pivot){
+  // set
+  //// state_adj_qw
+  
+  
   return 0;
 }
 
-int VirtualStateCoupling::subzonebased_mc(){
+
+int VirtualStateCoupling::mode_test(){
+  parse_params(fname_i_params);
+  init_transition_table();
+  return 0;
+}
+
+int VirtualStateCoupling::mode_subzonebased_mc(){
+  cout << "mode_subzonebased_mc(): " << fname_i_qraw_is << endl;
+  parse_qraw_is(fname_i_qraw_is);
+  init_transition_table();
+  init_data();
+  enum_overlapping_subzones();
+  print_overlapping_subzones();
+  //cout << "Error : " << err << endl;
+
+  opt_err = 1e10;
+  mc_acc = 0;
+  mc_loop();
+  cout << calc_qraw_error_all() << endl;
+  cout << "opt err : " << opt_err << endl;
+  cout << "mc acc  : " << mc_acc << endl;
+
+  for (int i=0; i < nstates; i++){
+    state_adj_qw[i] = state_adj_qw_opt[i];
+  }
+  
+  mc_steps *= 0.1;
+  mc_delta_x *= 0.1;
+  mc_temp *= 0.1;
+  mc_loop();
+  
+  cout << calc_qraw_error_all() << endl;
+  cout << "opt err : " << opt_err << endl;
+  cout << "mc acc  : " << mc_acc << endl;
+  write_qweight(fname_o_qweight_opt, state_adj_qw_opt);
+
+}
+int VirtualStateCoupling::mc_loop(){
+  double err = calc_qraw_error_all();
+
+  size_t cur_step = 0;
+
+  random_device rnd;
+  mt19937 mt(rnd());
+  uniform_int_distribution<> ri(0,nstates-1);
+  uniform_real_distribution<> rd(0,1);
+  cout << rd(mt) << endl;
+
+  for (cur_step=0; cur_step < mc_steps; cur_step++){
+    size_t v_id_mig = ri(mt);
+    double delta_qw = (rd(mt)*2-1) * mc_delta_x;
+    double err_cur = calc_qraw_error(v_id_mig, state_adj_qw[v_id_mig]);
+    double err_att = calc_qraw_error(v_id_mig, state_adj_qw[v_id_mig]+delta_qw);
+    double delta_err = err_att - err_cur;
+    bool acc=false;
+    if( delta_err <= 0 ){
+      acc=true;
+    }else{
+      acc = ( rd(mt) < exp(-delta_err/mc_temp) );
+    }
+    if(acc){
+      mc_acc += 1;
+      state_adj_qw[v_id_mig] += delta_qw;
+      total_err += delta_err;
+      
+      double dq = delta_qw/nstates;
+      //for(int st_i=0; st_i < nstates; st_i++){
+      //state_adj_qw[st_i] -= dq;
+      //}
+
+      if (total_err < opt_err){
+	opt_err = total_err;
+	for (int i=0; i < nstates; i++){
+	  state_adj_qw_opt[i] = state_adj_qw[i];
+	}
+      }
+
+    }
+    //    cout << cur_step << " " << cur_step % mc_log_interval << endl;
+      if (cur_step % mc_log_interval ==0){
+      cout << "  " << cur_step << " " << total_err << endl;
+    }
+  }
+  
   return 0;
 }

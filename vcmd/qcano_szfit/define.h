@@ -14,7 +14,8 @@ using namespace std;
 
 // mode
 enum {
-  M_SUBZONEBASED=0,
+  M_TEST=0,
+  M_SUBZONEBASED,
   M_DUMMY
 };
 

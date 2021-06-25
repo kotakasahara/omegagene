@@ -25,7 +25,8 @@ vector<string> Read::read_config(string in_filename){
   vector<string> vconf;
   open(in_filename);
   string buf;
-  while(getline(ifs,buf)){
+  while(getline(ifs, buf)){
+    //cout << buf << endl;
     if(buf[0]!='#'){
       stringstream ss(buf);
       string tmp;
