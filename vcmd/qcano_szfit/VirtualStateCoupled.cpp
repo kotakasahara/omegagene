@@ -433,11 +433,16 @@ int VirtualStateCoupling::setup(Config cfg){
   fname_o_qcano = cfg.fname_o_qcano;
   fname_o_qweight_opt = cfg.fname_o_qweight_opt;
   fname_i_qraw_is = cfg.fname_i_qraw_is;
+
+  // for mc
   mc_temp = cfg.mc_temp;
   mc_delta_x = cfg.mc_delta_x;
   mc_steps = cfg.mc_steps;
   mc_log_interval = cfg.mc_log_interval;
-  cout << "dbg mc_log_interval " << mc_log_interval << " " << cfg.mc_log_interval << endl;
+  mc_target_acc_ratio = cfg.mc_target_acc_ratio;
+  //mc_acc_duration = cfg.mc_acc_duration;
+
+
   return 0;
 }
 
@@ -610,6 +615,8 @@ int VirtualStateCoupling::mode_subzonebased_mc(){
     state_adj_qw[i] = state_adj_qw_opt[i];
   }
   
+  mc_acc = 0;
+  mc_target_acc_ratio = 0.0;
   mc_steps *= 0.1;
   mc_delta_x *= 0.1;
   mc_temp *= 0.1;
@@ -662,9 +669,24 @@ int VirtualStateCoupling::mc_loop(){
       }
 
     }
+    double acc_ratio = 0.0;
+    acc_ratio = (double)mc_acc / (double)cur_step;
+    double factor = acc_ratio/mc_target_acc_ratio;
+    //cout << " dbg " << acc_ratio << " " << mc_target_acc_ratio << " " << factor << endl;
+    if ( factor > 1.1 ) factor = 1.1;
+    if ( factor < 0.9 ) factor = 0.9;
+
+    if(cur_step > 10){
+      if (mc_target_acc_ratio > 0 ){
+
+	mc_delta_x *= factor;
+
+	//mc_delta_x *= 
+      }
+      }
     //    cout << cur_step << " " << cur_step % mc_log_interval << endl;
-      if (cur_step % mc_log_interval ==0){
-      cout << "  " << cur_step << " " << total_err << endl;
+    if (cur_step % mc_log_interval ==0){
+      cout << "  " << cur_step << " " << total_err << " " << acc_ratio << " " << mc_delta_x << " " << factor << endl;
     }
   }
   

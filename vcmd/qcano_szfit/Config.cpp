@@ -7,7 +7,7 @@ Config::Config(){
 }
 
 Config::~Config(){
-
+  mc_target_acc_ratio = 0.0;
 }
 void Config::setAll(int argn, char* argv[]){
   vector<string> arg;
@@ -39,9 +39,9 @@ void Config::setAll(vector<string> arg){
     else if(*itr=="--mc-temp"){ itr++; mc_temp=atof((*itr).c_str()); }
     else if(*itr=="--mc-delta-x"){ itr++; mc_delta_x=atof((*itr).c_str()); }
     else if(*itr=="--mc-steps"){ itr++; mc_steps = atoi((*itr).c_str()); }
-    else if(*itr=="--mc-log-interval"){ itr++; mc_log_interval = atoi((*itr).c_str());
-      cout << "xxx " << mc_log_interval << endl;
-    }
+    else if(*itr=="--mc-log-interval"){ itr++; mc_log_interval = atoi((*itr).c_str()); }
+    else if(*itr=="--mc-target-acc-ratio"){ itr++; mc_target_acc_ratio = atof((*itr).c_str());}
+    //else if(*itr=="--mc-acc-duration"){ itr++; mc_acc_duration = atoi((*itr).c_str());}
     
     else{
       cerr<<"unknown keyword <"<<*itr<<">"<<endl;

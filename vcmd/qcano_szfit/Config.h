@@ -22,6 +22,8 @@ public:
   double mc_delta_x;
   size_t mc_steps;
   int mc_log_interval;
+  double mc_target_acc_ratio;
+  //int mc_acc_duration;
   
   Config();
   ~Config();
