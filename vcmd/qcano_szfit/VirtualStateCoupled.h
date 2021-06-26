@@ -29,7 +29,7 @@ private:
   size_t mc_steps;
   int mc_log_interval;
   double mc_target_acc_ratio;
-  //int mc_acc_duration;
+  int mc_acc_duration;
 
   int greedy_max_steps;
   size_t greedy_pivot;

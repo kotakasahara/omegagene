@@ -25,7 +25,7 @@ public:
   double mc_target_acc_ratio;
   int greedy_max_steps;
   size_t greedy_pivot;
-  //int mc_acc_duration;
+  int mc_acc_duration;
   
   Config();
   ~Config();

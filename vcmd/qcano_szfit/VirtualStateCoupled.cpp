@@ -224,53 +224,6 @@ void VirtualStateCoupling::parse_params_qweight(ifstream &ifs){
   cur_vsis.reserve(n_dim*2);
   cur_vsis.assign(n_dim*2, 0);
 }
-void VirtualStateCoupling::parse_params_qraw_is(ifstream* ifs){
-  vector<string> args;
-  string         buf;
-  string         cur, cur1, cur2;
-  
-  while(*ifs && getline(*ifs, buf)){
-    size_t pos1 = buf.find_first_of("#;");
-    if (pos1 != string::npos) { buf = buf.substr(0, pos1); }
-    if (buf.size() == 0) continue;
-
-    if(buf=="END") break;
-    vector<int> v_crd(n_dim);
-
-    stringstream ss(buf);
-
-    bool flg_default = false;
-    for (size_t c_dim=0; c_dim < n_dim*2; c_dim++){
-      ss >> cur;
-      v_crd[c_dim] = atoi(cur.c_str())-1;
-      if(atoi(cur.c_str())-1 < 0) flg_default=true;
-    }
-    ss >> cur;
-    double cur_param = atof(cur.c_str()) ;
-    if(flg_default){
-      default_weight = cur_param;
-      continue;
-    }
-    
-    size_t v_id = conv_vstate_crd2id(v_crd);
-    state_weights[v_id] = cur_param;
-  }
-  //
-  for(size_t v_id=0; v_id < nstates; v_id++){
-    if(state_weights[v_id] < 0.0){
-      state_weights[v_id] = default_weight;      
-    }
-  }  
-  
-  //for(size_t v_id=0; v_id < nstates; v_id++){
-  //vector<int> v_crd = conv_vstate_id2crd(v_id);
-  //for(int d=0; d<n_dim; d++){
-  //    }
-  //}
-  
-  cur_vsis.reserve(n_dim*2);
-  cur_vsis.assign(n_dim*2, 0);
-}
 
 void VirtualStateCoupling::parse_params_qraw_is(ifstream &ifs){
   vector<string> args;
@@ -487,7 +440,7 @@ int VirtualStateCoupling::setup(Config cfg){
   mc_steps = cfg.mc_steps;
   mc_log_interval = cfg.mc_log_interval;
   mc_target_acc_ratio = cfg.mc_target_acc_ratio;
-  //mc_acc_duration = cfg.mc_acc_duration;
+  mc_acc_duration = cfg.mc_acc_duration;
 
   // for greedy search
   greedy_max_steps = cfg.greedy_max_steps;
@@ -621,7 +574,8 @@ double VirtualStateCoupling::calc_qraw_error(size_t st_i, double qw_i, bool skip
       
       double qcano_i = qw_i * state_qraw[st_i] * state_qraw_is[sz_crd_i];
       double qcano_j = state_adj_qw[st_j] * state_qraw[st_j] * state_qraw_is[sz_crd_j];
-      double sqer = (qcano_i-qcano_j)*(qcano_i-qcano_j);
+      double sqer = pow(log(qcano_i/qcano_j),2);
+      //double sqer = pow(qcano_i-qcano_j,2);
       sqer_sum += sqer;
       
     }
@@ -677,7 +631,7 @@ int VirtualStateCoupling::mode_subzonebased_mc(){
   }
   
   mc_acc = 0;
-  mc_target_acc_ratio = 0.0;
+  //mc_target_acc_ratio = 0.0;
   mc_steps *= 0.1;
   mc_delta_x *= 0.1;
   mc_temp *= 0.1;
@@ -692,18 +646,23 @@ int VirtualStateCoupling::mode_subzonebased_mc(){
   
 }
 int VirtualStateCoupling::mc_loop(){
+  double delta_x = mc_delta_x;
   double err = calc_qraw_error_all();
-
+  
   size_t cur_step = 0;
 
   random_device rnd;
   mt19937 mt(rnd());
   uniform_int_distribution<> ri(0,nstates-1);
   uniform_real_distribution<> rd(0,1);
+
+  vector<int> acc_rec;
   
   for (cur_step=0; cur_step < mc_steps; cur_step++){
     size_t v_id_mig = ri(mt);
-    double delta_qw = (rd(mt)*2-1) * mc_delta_x;
+    double delta_qw = (rd(mt)*2-1) * delta_x;
+    //double err_cur = total_err;
+    //double err_att = calc_qraw_error_all();
     double err_cur = calc_qraw_error(v_id_mig, state_adj_qw[v_id_mig]);
     double err_att = calc_qraw_error(v_id_mig, state_adj_qw[v_id_mig]+delta_qw);
     double delta_err = err_att - err_cur;
@@ -716,12 +675,13 @@ int VirtualStateCoupling::mc_loop(){
     if(acc){
       mc_acc += 1;
       state_adj_qw[v_id_mig] += delta_qw;
+
+
+      double dq = 1.0/ (1.0+delta_qw);
       total_err += delta_err;
-      
-      double dq = delta_qw/nstates;
-      //for(int st_i=0; st_i < nstates; st_i++){
-      //state_adj_qw[st_i] -= dq;
-      //}
+      for(int st_i=0; st_i < nstates; st_i++){
+	state_adj_qw[st_i] *= dq;
+      }
 
       if (total_err < opt_err){
 	opt_err = total_err;
@@ -729,26 +689,35 @@ int VirtualStateCoupling::mc_loop(){
 	  state_adj_qw_opt[i] = state_adj_qw[i];
 	}
       }
-
+      //}else{
+      //total_err = err_cur;
     }
-    double acc_ratio = 0.0;
-    acc_ratio = (double)mc_acc / (double)cur_step;
+    if(acc) acc_rec.push_back(1);
+    else    acc_rec.push_back(0);
+    if(acc_rec.size() > mc_acc_duration){
+      acc_rec.erase(acc_rec.begin());
+    }
+    
+    int acc_count = 0;
+    for(int i = 0; i < acc_rec.size(); i++){
+      if (acc_rec[i] == 1) acc_count+=1;
+    }
+    double acc_ratio = (double)acc_count/(double)acc_rec.size();
     double factor = acc_ratio/mc_target_acc_ratio;
     //cout << " dbg " << acc_ratio << " " << mc_target_acc_ratio << " " << factor << endl;
+    if ( acc_ratio == 0 ) factor = 0.9;
     if ( factor > 1.1 ) factor = 1.1;
     if ( factor < 0.9 ) factor = 0.9;
 
-    if(cur_step > 10){
+    //cout << acc_rec.size() << "-" << mc_acc_duration << "-" << mc_target_acc_ratio << endl;
+    if(acc_rec.size() == mc_acc_duration ){ 
       if (mc_target_acc_ratio > 0 ){
-
-	mc_delta_x *= factor;
-
-	//mc_delta_x *= 
+	delta_x *= factor;
       }
-      }
+    }
     //    cout << cur_step << " " << cur_step % mc_log_interval << endl;
     if (cur_step % mc_log_interval ==0){
-      cout << "  " << cur_step << " " << total_err << " " << acc_ratio << " " << mc_delta_x << " " << factor << endl;
+      cout << "  " << cur_step << " " << total_err << " " << acc_ratio << " " << delta_x << " " << factor << endl;
     }
   }
   

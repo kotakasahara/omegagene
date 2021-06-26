@@ -42,7 +42,7 @@ void Config::setAll(vector<string> arg){
     else if(*itr=="--mc-steps"){ itr++; mc_steps = atoi((*itr).c_str()); }
     else if(*itr=="--mc-log-interval"){ itr++; mc_log_interval = atoi((*itr).c_str()); }
     else if(*itr=="--mc-target-acc-ratio"){ itr++; mc_target_acc_ratio = atof((*itr).c_str());}
-    //else if(*itr=="--mc-acc-duration"){ itr++; mc_acc_duration = atoi((*itr).c_str());}
+    else if(*itr=="--mc-acc-duration"){ itr++; mc_acc_duration = atoi((*itr).c_str());}
 
     else if(*itr=="--greedy-max-steps"){ itr++; greedy_max_steps = atoi((*itr).c_str());}
     else if(*itr=="--greedy-pivot"){ itr++; greedy_pivot = atoi((*itr).c_str());}
