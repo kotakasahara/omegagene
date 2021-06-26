@@ -211,6 +211,53 @@ void VirtualStateCoupling::parse_params_qweight(ifstream* ifs){
   cur_vsis.reserve(n_dim*2);
   cur_vsis.assign(n_dim*2, 0);
 }
+void VirtualStateCoupling::parse_params_qraw_is(ifstream* ifs){
+  vector<string> args;
+  string         buf;
+  string         cur, cur1, cur2;
+  
+  while(*ifs && getline(*ifs, buf)){
+    size_t pos1 = buf.find_first_of("#;");
+    if (pos1 != string::npos) { buf = buf.substr(0, pos1); }
+    if (buf.size() == 0) continue;
+
+    if(buf=="END") break;
+    vector<int> v_crd(n_dim);
+
+    stringstream ss(buf);
+
+    bool flg_default = false;
+    for (size_t c_dim=0; c_dim < n_dim*2; c_dim++){
+      ss >> cur;
+      v_crd[c_dim] = atoi(cur.c_str())-1;
+      if(atoi(cur.c_str())-1 < 0) flg_default=true;
+    }
+    ss >> cur;
+    double cur_param = atof(cur.c_str()) ;
+    if(flg_default){
+      default_weight = cur_param;
+      continue;
+    }
+    
+    size_t v_id = conv_vstate_crd2id(v_crd);
+    state_weights[v_id] = cur_param;
+  }
+  //
+  for(size_t v_id=0; v_id < nstates; v_id++){
+    if(state_weights[v_id] < 0.0){
+      state_weights[v_id] = default_weight;      
+    }
+  }  
+  
+  //for(size_t v_id=0; v_id < nstates; v_id++){
+  //vector<int> v_crd = conv_vstate_id2crd(v_id);
+  //for(int d=0; d<n_dim; d++){
+  //    }
+  //}
+  
+  cur_vsis.reserve(n_dim*2);
+  cur_vsis.assign(n_dim*2, 0);
+}
 
 
 void VirtualStateCoupling::init_transition_table()

@@ -56,6 +56,7 @@ def check_in_vs(lmb, vs, vcparams):
 
 def get_vs_candidates(lmb, vcparams):
     vs_cand = []
+    print(lmb)
     for dim_tmp, val_lmb in enumerate(lmb):
         dim = dim_tmp+1
         vs_cand_dim = []
@@ -64,10 +65,19 @@ def get_vs_candidates(lmb, vcparams):
             #print(lmb, dim, rg)
             if val_lmb > rg[0] and val_lmb <= rg[1]:
                 vs_cand_dim.append(vsid)
-
+        
+        
         if len(vs_cand_dim) == 0:
-            return []
-        elif len(vs_cand_dim) == 1:
+            rg = vcparams.lambda_ranges[dim][1]
+            vsid = 1
+            if val_lmb < rg[0]:
+                vs_cand_dim.append(vsid)
+            rg = vcparams.lambda_ranges[dim][-1]
+            vsid = len(vcparams.lambda_ranges[dim])-1
+            if val_lmb > rg[1]:
+                vs_cand_dim.append(vsid)
+
+        if len(vs_cand_dim) == 1:
             vs_cand.append(vs_cand_dim[0])
         elif len(vs_cand_dim) == 2:
             val1 = vcparams.lambda_ranges[dim][vs_cand_dim[0]][1] - val_lmb

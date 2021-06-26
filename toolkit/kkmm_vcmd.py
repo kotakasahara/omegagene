@@ -221,7 +221,7 @@ class VcMDParamsWriter(kkkit.FileO):
 
     def __init__(self, fn):
         super(VcMDParamsWriter, self).__init__(fn)
-    def write(self, vc, mode_param):
+    def write(self, vc, mode_param=0):
         """
         mode_param:
         0 ... VcMDConf.param
