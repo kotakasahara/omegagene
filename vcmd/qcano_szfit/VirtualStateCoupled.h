@@ -31,6 +31,8 @@ private:
   double mc_target_acc_ratio;
   //int mc_acc_duration;
 
+  int greedy_max_steps;
+  size_t greedy_pivot;
 
   size_t nstates;
   //std::vector<double> kappa;
@@ -104,12 +106,16 @@ private:
   double total_err;
   double opt_err;
   size_t mc_acc;
+
   // 
 
   size_t state_qraw_sum;
 
   vector< map<size_t, vector< vector<int> > > > overlapping_subzones;
   // overlapping_subzones[vs_id][vs_id, [[0,0], [0,1], ...]]
+
+  std::vector<int> state_flg;
+  // flag for greedy search
 
 
   void parse_vstate(const string& fname);
@@ -126,7 +132,7 @@ private:
   void write_qweight(std::string fname, std::vector<double> in_qw);
   int trial_transition();
   std::string get_str_state_definition();
-void set_cur_vsis(std::vector<int> v_crd, std::vector<double> arg);
+  void set_cur_vsis(std::vector<int> v_crd, std::vector<double> arg);
 
   //i/o
   void write_qrawstat();
@@ -150,6 +156,8 @@ public:
   int mode_test();
   int mode_subzonebased_mc();
   int mc_loop();
+  int greedy_search(size_t pivot);
+
 };
 
 
