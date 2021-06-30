@@ -348,6 +348,10 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
 	  // convert the unit from ps^-1 to fs^-1
         } else if (*itr == "--testmc-delta-x") {
 	  testmc_delta_x = atof((*++itr).c_str());
+        } else if (*itr == "--testmc-delta-y") {
+	  testmc_delta_y = atof((*++itr).c_str());
+        } else if (*itr == "--testmc-delta-z") {
+	  testmc_delta_z = atof((*++itr).c_str());
         } else if (*itr == "--testmc-max-pot") {
 	  testmc_max_pot = atof((*++itr).c_str());
         } else if (*itr == "--testmc-max-r2") {
@@ -358,4 +362,6 @@ void Config::set_arguments(std::vector<std::string> &&arg) {
         }
     }
     if (temperature_init < 0) temperature_init = temperature;
+    if (testmc_delta_y < 0.0) testmc_delta_y = testmc_delta_x;
+    if (testmc_delta_z < 0.0) testmc_delta_z = testmc_delta_x;
 }

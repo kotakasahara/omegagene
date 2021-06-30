@@ -265,11 +265,11 @@ void VirtualStateCoupling::parse_params_qraw_is(ifstream &ifs){
   }
   for (const auto& [key, value] : state_qraw_is){
     state_qraw_is[key] /= state_qraw[key[0]];
-    cout << "dbg parse : ";
-    for ( const auto& a : key ){
-      cout << a << " ";
-    }
-    cout <<  state_qraw_is[key] << endl;
+    //cout << "dbg parse : ";
+    //for ( const auto& a : key ){
+    //cout << a << " ";
+    //}
+    //cout <<  state_qraw_is[key] << endl;
   }
 
 }
@@ -571,6 +571,9 @@ double VirtualStateCoupling::calc_qraw_error(size_t st_i, double qw_i, bool skip
       //cout << sz_crd_i[i] << " ";
       //}
       //cout << endl;
+      //cout << "dbg err x1 "<< state_adj_qw[st_i];
+      //cout << " " << state_qraw[st_i] << " " << state_qraw_is[sz_crd_i];
+      //cout << " " << state_adj_qw[st_j] << " " << state_qraw[st_j] << " " << state_qraw_is[sz_crd_j] << endl;;
       
       double qcano_i = qw_i * state_qraw[st_i] * state_qraw_is[sz_crd_i];
       double qcano_j = state_adj_qw[st_j] * state_qraw[st_j] * state_qraw_is[sz_crd_j];
@@ -604,7 +607,7 @@ int VirtualStateCoupling::mode_subzonebased_mc(){
   init_transition_table();
   init_data();
   enum_overlapping_subzones();
-  print_overlapping_subzones();
+  //print_overlapping_subzones();
   //cout << "Error : " << err << endl;
 
   cout << "Error init : " << calc_qraw_error_all() << endl;
@@ -710,6 +713,7 @@ int VirtualStateCoupling::mc_loop(){
     if ( factor < 0.9 ) factor = 0.9;
 
     //cout << acc_rec.size() << "-" << mc_acc_duration << "-" << mc_target_acc_ratio << endl;
+
     if(acc_rec.size() == mc_acc_duration ){ 
       if (mc_target_acc_ratio > 0 ){
 	delta_x *= factor;
@@ -742,7 +746,7 @@ int VirtualStateCoupling::greedy_search(size_t pivot){
     double pi_factors = 1.0;
     int n_factors = 0;
     for (const auto& [st_j, subzones] : overlapping_subzones[st_i]){
-      cout << "gr " << st_j << " " << state_flg[st_j] << endl;
+      //cout << "gr " << st_j << " " << state_flg[st_j] << endl;
       if(state_flg[st_j] == 0 ){
 	todo_st.push_back(st_j);
 	state_flg[st_j] = 1;
@@ -757,22 +761,37 @@ int VirtualStateCoupling::greedy_search(size_t pivot){
 	  }
 	  double qcano_j = state_adj_qw[st_j] * state_qraw[st_j] * state_qraw_is[sz_crd_j];
 	  double qcano_i_uni = state_qraw[st_i] * state_qraw_is[sz_crd_i];
+
+	  if (qcano_j == 0 || qcano_i_uni == 0){
+	    //cout << st_i << " " << st_j << " " << state_adj_qw[st_j] <<" " << state_qraw[st_j] << " "  << state_qraw_is[sz_crd_j] << endl;;
+	    continue;
+	  }
+
 	  double factor = qcano_j / qcano_i_uni;
-	  cout << st_i << " " << st_j << " ";
-	  for ( int i = 0; i < n_dim; i++)
-	    cout << sz_crd_i[i+1] << " " ;
-	  for ( int i = 0; i < n_dim; i++)
-	    cout << sz_crd_j[i+1] << " " ;
-	  cout << qcano_j << " " << qcano_i_uni << " "<< factor << endl;
+	  //cout << st_i << " " << st_j << " ";
+	  //for ( int i = 0; i < n_dim; i++)
+	  //cout << sz_crd_i[i+1] << " " ;
+	  //for ( int i = 0; i < n_dim; i++)
+	  //cout << sz_crd_j[i+1] << " " ;
+	  //cout << qcano_j << " " << qcano_i_uni << " "<< factor << endl;
 	  pi_factors *= factor;
 	  n_factors++;
 	}
       }
     }
+
     state_adj_qw[st_i] = pow(pi_factors, 1.0/(double)n_factors);
-    cout << "qw " << st_i << " " << pi_factors << " " << n_factors << " " << state_adj_qw[st_i] << endl;
+    //    cout << "qw " << st_i << " " << pi_factors << " " << n_factors << " " << state_adj_qw[st_i] << endl;
     state_flg[st_i] = 2;
   }
+  double sum_qw = 0.0;
+  for ( int st_i = 0; st_i < nstates; st_i++){
+    sum_qw += state_adj_qw[st_i];
+  }
+  for ( int st_i = 0; st_i < nstates; st_i++){
+    state_adj_qw[st_i] /= sum_qw;
+  }
+
   return 0;
 }
 

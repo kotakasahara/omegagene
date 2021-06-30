@@ -30,23 +30,28 @@ def option_parse():
                  help="anayze gromacs output")
 
     opts, args = p.parse_args()
-    print "----------------------------"
     p.print_help()
-    print "----------------------------"
 
     return opts, args
 
 def cal_prob(cano, vs, lmb):
+
+
     prob = {}
     frames = sorted(vs.keys())
     for frame in frames:
         #print frame
         cur_vs = vs[frame]
         if not frame in lmb:
-            print "Lambda value is missing: " + str(frame)
+            print("Lambda value is missing: " + str(frame))
             break
         cur_lmb = lmb[frame]
-        cur_prob = cano.params[cur_vs][0]
+        cur_prob = 0.0
+        if not cur_vs in cano.params:
+            def_vs = tuple([ 0 for x in cur_vs ])
+            cur_prob = cano.params[def_vs][0]
+        else:
+            cur_prob = cano.params[cur_vs][0]
         if not cano.is_in_range(cur_vs, cur_lmb):
             cur_prob = 0
         prob[frame] = cur_prob

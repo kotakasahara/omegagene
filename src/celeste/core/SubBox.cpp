@@ -2113,11 +2113,13 @@ int SubBox::update_coordinates_langevin(const real dt_half, const real gamma, co
   return 0;
 }
 
-int SubBox::testmc_trial_move(const real delta_max){
+int SubBox::testmc_trial_move(const real delta_x_max,
+			      const real delta_y_max,
+			      const real delta_z_max){
 
-  real dx = (*random_mt)() * delta_max * 2 - delta_max;
-  real dy = (*random_mt)() * delta_max * 2 - delta_max;
-  real dz = (*random_mt)() * delta_max * 2 - delta_max;
+  real dx = (*random_mt)() * delta_x_max * 2 - delta_x_max;
+  real dy = (*random_mt)() * delta_y_max * 2 - delta_y_max;
+  real dz = (*random_mt)() * delta_z_max * 2 - delta_z_max;
   crd[0] += dx;
   crd[1] += dy;
   crd[2] += dz;

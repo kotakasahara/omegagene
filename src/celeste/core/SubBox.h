@@ -365,6 +365,8 @@ class SubBox : public CelesteObject {
     int update_coordinates_langevin(const real dt_half, const real gamma, const real temperature, const int cur_step);
     int update_coordinates_from_vel(const real dt);
 
-    int testmc_trial_move(const real delta_max);
+  int testmc_trial_move(const real delta_x_max,
+			const real delta_y_max,
+			const real delta_z_max);
 };
 #endif

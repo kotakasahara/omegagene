@@ -1027,7 +1027,9 @@ int DynamicsModeMC::calc_in_each_step() {
   const clock_t startTimeStep = clock();
   
   subbox.cpy_crd_prev();
-  subbox.testmc_trial_move(cfg->testmc_delta_x);
+  subbox.testmc_trial_move(cfg->testmc_delta_x,
+			   cfg->testmc_delta_y,
+			   cfg->testmc_delta_z);
 #ifndef F_WO_NS
   subbox.update_coordinates_nsgrid();
 #endif
