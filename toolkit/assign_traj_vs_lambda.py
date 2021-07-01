@@ -101,9 +101,11 @@ def write_dat(fn_out, vs, lmb, prob):
     return
 
 def _main():
-    
-
     opts, args = option_parse()
+
+    if not opts.flg_v57:
+        sys.stderr.write("--v57 option is required.\n")
+        sys.exit()
 
     cano = kkmm_vcmd.VcMDConf()
     cano.read_params(opts.fn_qcano)
