@@ -52,9 +52,13 @@ def cal_prob(cano, vs, lmb):
             cur_prob = cano.params[def_vs][0]
         else:
             cur_prob = cano.params[cur_vs][0]
+        #print(cur_vs)
+        n_overlapping_states = 0
         if not cano.is_in_range(cur_vs, cur_lmb):
             cur_prob = 0
-        prob[frame] = cur_prob
+        else:
+            n_overlapping_states = cano.count_overlapping_states(cur_vs, cur_lmb)
+        prob[frame] = cur_prob/float(n_overlapping_states)
     return prob
 
 def read_dat(fn, itv_dat, itv_cod, first_step=0, skip=0, valtype="int"):

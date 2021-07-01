@@ -26,6 +26,12 @@ class VcMDConf():
         # init_vs[dim] = vsid
 
         self.seed = -1
+
+        self.surr_states = {}
+        ## surr_states[(vs1, vs2, ..., vs_dim)] =
+        ##     [(vs1, vs2, ..., vs_dim), (vs1, vs2, ...), ... ]
+
+
     def sum_params(self, param_od=0):
         s = 0.0;
         for k,v in self.params.items():
@@ -193,7 +199,44 @@ class VcMDConf():
                lmb[d] >= self.lambda_ranges[d+1][vs[d]][1]:
                 flg=False; break
         return flg
+    def get_surrounding_states_sub(self, vs, cur_dim, vs_list):
+        #print("vs : ", vs)
+        #print("cur_dim : ", cur_dim)
+        #print("self.dim : ", self.dim)
+        #print("tmp : ", self.lambda_ranges[cur_dim+1])
+        if cur_dim >= self.dim: return
+        if vs[cur_dim] > 1:
+            cur_vs = list(copy.deepcopy(vs))
+            cur_vs[cur_dim] -= 1
+            vs_list.append(tuple(cur_vs))
+            self.get_surrounding_states_sub(vs, cur_dim+1, vs_list)
+        if vs[cur_dim] < len(self.lambda_ranges[cur_dim+1])-1:
+            cur_vs = list(copy.deepcopy(vs))
+            cur_vs[cur_dim] += 1
+            vs_list.append(tuple(cur_vs))
+            self.get_surrounding_states_sub(vs, cur_dim+1, vs_list)
+        vs_list.append(vs)
+        self.get_surrounding_states_sub(vs, cur_dim+1, vs_list)
+        return
+    
+    def get_surrounding_states(self, vs):
+        if vs in self.surr_states:
+            return self.surr_states[vs]
+        else:
+            vs_list = []
+            self.get_surrounding_states_sub(vs, 0, vs_list)
+            self.surr_states[vs] = vs_list
+            return vs_list
+        return
 
+    def count_overlapping_states(self, vs, lmb):
+        surr = self.get_surrounding_states(vs)
+        #print("surr ",surr)
+        n_ovl = 0
+        for c_vs in surr:
+            if self.is_in_range(c_vs, lmb):
+                n_ovl += 1
+        return n_ovl
 class VcMDInitReader(kkkit.FileI):
     def __init__(self, fn):
         super(VcMDInitReader, self).__init__(fn)
