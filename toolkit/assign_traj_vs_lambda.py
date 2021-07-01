@@ -28,6 +28,9 @@ def option_parse():
     p.add_option('--gmx', dest='flg_gmx',
                  action="store_true",
                  help="anayze gromacs output")
+    p.add_option('--v57', dest='flg_v57',
+                 action="store_true",
+                 help="For assertion of the version.")
 
     opts, args = p.parse_args()
     p.print_help()
@@ -98,6 +101,8 @@ def write_dat(fn_out, vs, lmb, prob):
     return
 
 def _main():
+    
+
     opts, args = option_parse()
 
     cano = kkmm_vcmd.VcMDConf()
