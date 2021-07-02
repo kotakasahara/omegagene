@@ -208,14 +208,15 @@ class VcMDConf():
         if vs[cur_dim] > 1:
             cur_vs = list(copy.deepcopy(vs))
             cur_vs[cur_dim] -= 1
-            vs_list.append(tuple(cur_vs))
-            self.get_surrounding_states_sub(vs, cur_dim+1, vs_list)
+            vs_list.add(tuple(cur_vs))
+            self.get_surrounding_states_sub(cur_vs, cur_dim+1, vs_list)
         if vs[cur_dim] < len(self.lambda_ranges[cur_dim+1])-1:
             cur_vs = list(copy.deepcopy(vs))
             cur_vs[cur_dim] += 1
-            vs_list.append(tuple(cur_vs))
-            self.get_surrounding_states_sub(vs, cur_dim+1, vs_list)
-        vs_list.append(vs)
+            vs_list.add(tuple(cur_vs))
+            self.get_surrounding_states_sub(cur_vs, cur_dim+1, vs_list)
+        cur_vs = copy.deepcopy(vs)
+        vs_list.add(tuple(cur_vs))
         self.get_surrounding_states_sub(vs, cur_dim+1, vs_list)
         return
     
@@ -223,7 +224,7 @@ class VcMDConf():
         if vs in self.surr_states:
             return self.surr_states[vs]
         else:
-            vs_list = []
+            vs_list = set()
             self.get_surrounding_states_sub(vs, 0, vs_list)
             self.surr_states[vs] = vs_list
             return vs_list

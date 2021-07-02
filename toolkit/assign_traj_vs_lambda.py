@@ -28,7 +28,7 @@ def option_parse():
     p.add_option('--gmx', dest='flg_gmx',
                  action="store_true",
                  help="anayze gromacs output")
-    p.add_option('--v57', dest='flg_v57',
+    p.add_option('--v58', dest='flg_v58',
                  action="store_true",
                  help="For assertion of the version.")
 
@@ -103,8 +103,8 @@ def write_dat(fn_out, vs, lmb, prob):
 def _main():
     opts, args = option_parse()
 
-    if not opts.flg_v57:
-        sys.stderr.write("--v57 option is required.\n")
+    if not opts.flg_v58:
+        sys.stderr.write("--v58 option is required.\n")
         sys.exit()
 
     cano = kkmm_vcmd.VcMDConf()
@@ -121,6 +121,9 @@ def _main():
 
     write_dat(opts.fn_out, vs, lmb, prob)
     
+    # for debug
+    #for vs, surr in cano.surr_states.items():
+    #print(vs,len(surr))
     
 
 if __name__ == "__main__":
