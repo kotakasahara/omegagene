@@ -42,9 +42,6 @@ private:
   size_t n_dim;
   // the number of dimensions in the virtual system
 
-
-
-
   ofstream ofs_logstate;
   ofstream ofs_dbg;
   // output filename specified with LOGSTATE key
@@ -59,8 +56,9 @@ private:
   int verbose;
 
   // properties for each state
-  std::vector<std::vector<double> > lowers;
-  std::vector<std::vector<double> > uppers;
+  std::vector< std::vector<std::string> > aus_groups;
+  std::vector< std::vector<double> > lowers;
+  std::vector< std::vector<double> > uppers;
   // lower[v_id][d] ... lower boundary of d-th reaction coordinates of v_id-th state
   //    v_id is in {0, 1, 2, ... nstates-1}
 
@@ -114,6 +112,7 @@ private:
   vector< map<size_t, vector< vector<int> > > > overlapping_subzones;
   // overlapping_subzones[vs_id][vs_id, [[0,0], [0,1], ...]]
 
+  int n_state_flg2;
   std::vector<int> state_flg;
   // flag for greedy search
 
@@ -129,7 +128,7 @@ private:
   size_t conv_vstate_crd2id(std::vector<int> vcrd);
   std::vector<int> conv_vstate_id2crd(size_t v_id);
   bool is_in_range(size_t state, std::vector<double> arg);
-  void write_qweight(std::string fname, std::vector<double> in_qw);
+  void write_qweight(std::string fname, std::vector<double> in_qw, bool def_val);
   int trial_transition();
   std::string get_str_state_definition();
   void set_cur_vsis(std::vector<int> v_crd, std::vector<double> arg);
@@ -156,6 +155,7 @@ public:
   int mode_subzonebased_mc();
   int mc_loop();
   int greedy_search(int in_pivot);
+  int greedy_search_pivot(int in_pivot);
 
 };
 

@@ -13,8 +13,14 @@ std::string VirtualStateCoupling::get_str_state_definition(){
   std::stringstream ss;
   ss << exchange_interval << std::endl;
   ss << n_dim << std::endl;
+
+
   for ( int d = 0; d < n_dim; d ++){
-    ss << lowers_vaxis[d].size() << std::endl;
+    ss << lowers_vaxis[d].size();
+    for ( const auto itr : aus_groups[d] ){
+      ss << " " << itr;
+    }
+    ss  << std::endl;
     for ( int l = 0; l < lowers_vaxis[d].size(); l++){
       ss << lowers_vaxis[d][l] << " " << uppers_vaxis[d][l] << std::endl;
     }
@@ -131,6 +137,9 @@ void VirtualStateCoupling::parse_params_state_definition(ifstream &ifs){
     getline(ifs, buf);
     stringstream ss(buf);
     ss >> cur;  cur_nstates = atoi(cur.c_str());
+    vector<string> groups;
+    while(ss >> cur) groups.push_back(cur);
+    aus_groups.push_back(groups);
     //printf("%d-th dim : %d states\n", c_dim, cur_nstates);
     vector<double> buf_lowers;
     vector<double> buf_uppers;
@@ -374,10 +383,20 @@ bool VirtualStateCoupling::is_in_range(size_t state, std::vector<double> arg){
   return true;
 }
 
-void VirtualStateCoupling::write_qweight(std::string fname, std::vector<double> in_qw){
+void VirtualStateCoupling::write_qweight(std::string fname, std::vector<double> in_qw, bool def_val){
   std::string state_defs = get_str_state_definition();
   ofstream ofs(fname);
   ofs << state_defs;
+  if (def_val){
+    double min_qw = 1e10;
+    for ( int l = 0; l < nstates; l++){
+      if ( in_qw[l] < min_qw ) min_qw=in_qw[1];
+    }
+    for ( int d = 0; d < n_dim; d++){
+      ofs << "0 ";
+    }
+    ofs << min_qw << std::endl;
+  }
   for ( int l = 0; l < nstates; l++){
     std::vector<int> vs_crd = conv_vstate_id2crd(l);
     for ( const auto vsc : vs_crd )
@@ -578,6 +597,7 @@ double VirtualStateCoupling::calc_qraw_error(size_t st_i, double qw_i, bool skip
       
       double qcano_i = qw_i * state_qraw[st_i] * state_qraw_is[sz_crd_i];
       double qcano_j = state_adj_qw[st_j] * state_qraw[st_j] * state_qraw_is[sz_crd_j];
+      if(qcano_i == 0.0 || qcano_j == 0.0) continue;
       double sqer = pow(log(qcano_i/qcano_j),2);
       //double sqer = pow(qcano_i-qcano_j,2);
       sqer_sum += sqer;
@@ -637,7 +657,7 @@ int VirtualStateCoupling::mode_subzonebased_mc(){
   cout << "mc acc  : " << mc_acc << endl;
 
 
-  write_qweight(fname_o_qweight_opt, state_adj_qw_opt);
+  write_qweight(fname_o_qweight_opt, state_adj_qw_opt, true);
   
 }
 int VirtualStateCoupling::mc_loop(){
@@ -720,16 +740,28 @@ int VirtualStateCoupling::mc_loop(){
   return 0;
 }
 int VirtualStateCoupling::greedy_search(int in_pivot){
-  size_t pivot = 0;
-  size_t max_qraw = 0;
+  int pivot = 0;
+  n_state_flg2 = 0;
   for (size_t st_i=0; st_i < nstates; st_i++){
     state_flg[st_i] = 0;
-    if ( state_qraw[st_i] >= max_qraw) {
-      max_qraw = state_qraw[st_i];
-      pivot = st_i;
-    }
   }
+
+  while(n_state_flg2 < nstates){
+    size_t max_qraw = 0;
+    for (size_t st_i=0; st_i < nstates; st_i++){
+      if ( state_qraw[st_i] >= max_qraw && state_flg[st_i] == 0) {
+	max_qraw = state_qraw[st_i];
+	pivot = st_i;
+      }
+    }
+    greedy_search_pivot(pivot);
+  }
+}
+
+int VirtualStateCoupling::greedy_search_pivot(int pivot){
+
   state_flg[pivot] = 2;
+  n_state_flg2++;
   size_t cur_step = 0;
   state_adj_qw[pivot] = 1.0;
   
@@ -781,6 +813,7 @@ int VirtualStateCoupling::greedy_search(int in_pivot){
     state_adj_qw[st_i] = pow(pi_factors, 1.0/(double)n_factors);
     //    cout << "qw " << st_i << " " << pi_factors << " " << n_factors << " " << state_adj_qw[st_i] << endl;
     state_flg[st_i] = 2;
+    n_state_flg2--;
   }
   double sum_qw = 0.0;
   for ( int st_i = 0; st_i < nstates; st_i++){

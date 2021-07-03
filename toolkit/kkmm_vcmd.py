@@ -138,7 +138,7 @@ class VcMDConf():
         key_def = tuple([ 0 for x in range(self.dim)])
         #if key_def in self.params: return
         min_param = 1e10
-        print(len(self.params.items()))
+        #print(len(self.params.items()))
         for k, v in self.params.items():
             if k == key_def: continue
             if v[0] < min_param and v[0] > 0:
@@ -155,7 +155,7 @@ class VcMDConf():
                 for i, c_v in enumerate(v):
                     if len(self.qraw_is[k]) > i:
                         self.qraw_is[k][i] += c_v
-                print(k,self.qraw_is[k])
+                #print(k,self.qraw_is[k])
             else:
                 self.qraw_is[k] = v
         return
