@@ -60,13 +60,14 @@ void VirtualStateCoupling::parse_vstate(const string &fname){
 
   int i_line=0;
   while (ifs && getline(ifs, buf)) {
-    printf("%s\n", buf.c_str());
+    //printf("%s\n", buf.c_str());
     unsigned int pos1 = buf.find_first_of("#;");
     if (pos1 != string::npos) { buf = buf.substr(0, pos1); }
     if (buf.size() == 0) continue;
     stringstream ss(buf);
-    while (ss >> buf) { args.push_back(buf);
-      printf("%s\n", buf.c_str());
+    while (ss >> buf) {
+      args.push_back(buf);
+      //printf("%s\n", buf.c_str());
     }
   }
   ifs.close();
@@ -118,7 +119,7 @@ void VirtualStateCoupling::parse_params_state_definition(ifstream &ifs){
   string         buf;
   string         cur, cur1, cur2;
   getline(ifs, buf);
-  cout << "dbg : " <<  buf << endl;;
+  //cout << "dbg : " <<  buf << endl;;
   exchange_interval = atoi(buf.c_str());
   printf("exchange_interval: %d \n", exchange_interval);
   getline(ifs, buf);
@@ -130,7 +131,7 @@ void VirtualStateCoupling::parse_params_state_definition(ifstream &ifs){
     getline(ifs, buf);
     stringstream ss(buf);
     ss >> cur;  cur_nstates = atoi(cur.c_str());
-    printf("%d-th dim : %d states\n", c_dim, cur_nstates);
+    //printf("%d-th dim : %d states\n", c_dim, cur_nstates);
     vector<double> buf_lowers;
     vector<double> buf_uppers;
     for(int c_state = 0; c_state < cur_nstates; c_state++){
@@ -138,7 +139,7 @@ void VirtualStateCoupling::parse_params_state_definition(ifstream &ifs){
       stringstream ss2(buf);
       //ss2 << buf;
       ss2 >> cur1 >> cur2;
-      printf("dbg param read: %s %s\n", cur1.c_str(), cur2.c_str());
+      //printf("dbg param read: %s %s\n", cur1.c_str(), cur2.c_str());
       buf_lowers.push_back(atof(cur1.c_str()));
       buf_uppers.push_back(atof(cur2.c_str()));
     }
@@ -167,13 +168,13 @@ void VirtualStateCoupling::parse_params_state_definition(ifstream &ifs){
     }
     uppers[v_id] = tmp_upp;
     lowers[v_id] = tmp_low;
-    printf("dbg read param: v_id %ld %d ... [%lf ... %lf]\n",v_id, v_crd[0], lowers[v_id][0], uppers[v_id][0]);
+    //printf("dbg read param: v_id %ld %d ... [%lf ... %lf]\n",v_id, v_crd[0], lowers[v_id][0], uppers[v_id][0]);
     state_weights[v_id] = -1.0;
-    printf("v_id %d (", v_id);
-    for(int d=0; d<n_dim; d++){
-      printf("%d ", v_crd[d]);
-    }
-    printf(")\n");
+    //printf("v_id %d (", v_id);
+    //for(int d=0; d<n_dim; d++){
+    //printf("%d ", v_crd[d]);
+    //}
+    //printf(")\n");
   }
   // read information about parameters
 }
