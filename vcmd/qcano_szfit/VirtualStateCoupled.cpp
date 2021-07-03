@@ -586,15 +586,6 @@ double VirtualStateCoupling::calc_qraw_error(size_t st_i, double qw_i, bool skip
   return sqer_sum;
 }
 
-int VirtualStateCoupling::reweighting_heiristic(int pivot){
-  // set
-  //// state_adj_qw
-  
-  
-  return 0;
-}
-
-
 int VirtualStateCoupling::mode_test(){
   parse_params(fname_i_params);
   init_transition_table();
@@ -727,9 +718,15 @@ int VirtualStateCoupling::mc_loop(){
   
   return 0;
 }
-int VirtualStateCoupling::greedy_search(size_t pivot){
+int VirtualStateCoupling::greedy_search(int in_pivot){
+  size_t pivot = 0;
+  size_t max_qraw = 0;
   for (size_t st_i=0; st_i < nstates; st_i++){
     state_flg[st_i] = 0;
+    if ( state_qraw[st_i] >= max_qraw) {
+      max_qraw = state_qraw[st_i];
+      pivot = st_i;
+    }
   }
   state_flg[pivot] = 2;
   size_t cur_step = 0;

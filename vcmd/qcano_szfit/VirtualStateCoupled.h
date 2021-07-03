@@ -144,7 +144,6 @@ public:
   ~VirtualStateCoupling();
 
   int setup(Config cfg);
-  int reweighting_heiristic(int pivot);
   int enum_overlapping_subzones();
   int enum_overlapping_subzones_sub(std::vector<int>& overlap_positions,
 				    std::vector<int>& cur_vec,
@@ -156,7 +155,7 @@ public:
   int mode_test();
   int mode_subzonebased_mc();
   int mc_loop();
-  int greedy_search(size_t pivot);
+  int greedy_search(int in_pivot);
 
 };
 
