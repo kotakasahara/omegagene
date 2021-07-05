@@ -56,7 +56,7 @@ def cal_prob(cano, vs, lmb):
         else:
             cur_prob = cano.params[cur_vs][0]
         #print(cur_vs)
-        n_overlapping_states = 0
+        n_overlapping_states = 1
         if not cano.is_in_range(cur_vs, cur_lmb):
             cur_prob = 0
         else:
