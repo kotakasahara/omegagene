@@ -10,6 +10,7 @@
 #include "Config.h"
 
 using namespace std;
+//const double VirtualSystemCoupling::EPS = 1e-10;
 
 class VirtualStateCoupling {
 private:

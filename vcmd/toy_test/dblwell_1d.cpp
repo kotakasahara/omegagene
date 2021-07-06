@@ -5,7 +5,7 @@
 #include <cmath>
 using namespace std; 
 
-#define TEMPERATURE  30
+//#define TEMPERATURE  30
 
 #define BINWIDTH 0.05
 #define DX 0.001
@@ -22,19 +22,20 @@ int main(int argn, char* argv[]){
 
   string fname_i_cfg;
 
-  if(argn!=3){
+  if(argn!=4){
     cerr << "Usage:"<<endl;
-    cerr << "./dblwell_1d [min_x] [max_x]"<<endl;
+    cerr << "./dblwell_1d [min_x] [max_x] [temperature]"<<endl;
     exit(1);
     }
   //double max_r = sqrt(MAX_X*MAX_X+MAX_X*MAX_X+MAX_X*MAX_X);
   double min_x = atof(argv[1]);
   double max_x = atof(argv[2]);
+  double temperature = atof(argv[3]);
   int n_bin=(max_x-min_x)/BINWIDTH;
   vector<double> hist(n_bin);
   //vector<double> hist;
   for(int i = 0; i < n_bin; i++) hist[i] = 0.0;
-  double temp_fact = GAS_CONST/JOULE_CAL * 1e-3 * TEMPERATURE;
+  double temp_fact = GAS_CONST/JOULE_CAL * 1e-3 * temperature;
   double sum_pop = 0.0;
   for ( double x = min_x; x < max_x; x += DX){
     //for ( double y = 0; y < MAX_X; y += DX){

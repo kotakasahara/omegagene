@@ -274,7 +274,11 @@ void VirtualStateCoupling::parse_params_qraw_is(ifstream &ifs){
     }
   }
   for (const auto& [key, value] : state_qraw_is){
-    state_qraw_is[key] /= state_qraw[key[0]];
+    if (state_qraw[key[0]] == 0){
+      state_qraw_is[key] = 0;
+    }else{
+      state_qraw_is[key] /= state_qraw[key[0]];
+    }
     //cout << "dbg parse : ";
     //for ( const auto& a : key ){
     //cout << a << " ";
@@ -390,7 +394,7 @@ void VirtualStateCoupling::write_qweight(std::string fname, std::vector<double> 
   if (def_val){
     double min_qw = 1e10;
     for ( int l = 0; l < nstates; l++){
-      if ( in_qw[l] < min_qw ) min_qw=in_qw[1];
+      if ( in_qw[l] < min_qw && in_qw[l] > 0.0) min_qw = in_qw[1];
     }
     for ( int d = 0; d < n_dim; d++){
       ofs << "0 ";
@@ -398,6 +402,7 @@ void VirtualStateCoupling::write_qweight(std::string fname, std::vector<double> 
     ofs << min_qw << std::endl;
   }
   for ( int l = 0; l < nstates; l++){
+    if( in_qw[l] <= 0.0 ) continue;
     std::vector<int> vs_crd = conv_vstate_id2crd(l);
     for ( const auto vsc : vs_crd )
       // (+1) convert to 1-origin integer
@@ -676,10 +681,12 @@ int VirtualStateCoupling::mc_loop(){
   for (cur_step=0; cur_step < mc_steps; cur_step++){
     size_t v_id_mig = ri(mt);
     double delta_qw = (rd(mt)*2-1) * delta_x;
+    double new_qw = state_adj_qw[v_id_mig]+delta_qw;
+    if ( new_qw < 0.0 ) new_qw = 0.0;
     //double err_cur = total_err;
     //double err_att = calc_qraw_error_all();
     double err_cur = calc_qraw_error(v_id_mig, state_adj_qw[v_id_mig]);
-    double err_att = calc_qraw_error(v_id_mig, state_adj_qw[v_id_mig]+delta_qw);
+    double err_att = calc_qraw_error(v_id_mig, new_qw);
     double delta_err = err_att - err_cur;
     bool acc=false;
     if( delta_err <= 0 ){
@@ -689,10 +696,12 @@ int VirtualStateCoupling::mc_loop(){
     }
     if(acc){
       mc_acc += 1;
-      state_adj_qw[v_id_mig] += delta_qw;
+
+      double delta_qw_acc =  new_qw - state_adj_qw[v_id_mig];
+      state_adj_qw[v_id_mig] = new_qw;
 
 
-      double dq = 1.0/ (1.0+delta_qw);
+      double dq = 1.0/ (1.0+delta_qw_acc);
       total_err += delta_err;
       for(int st_i=0; st_i < nstates; st_i++){
 	state_adj_qw[st_i] *= dq;
