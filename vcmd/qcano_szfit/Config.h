@@ -17,6 +17,7 @@ public:
   string fname_o_qcano;
   string fname_o_qweight_opt;
   
+  double target_error;
 
   double mc_temp;
   double mc_delta_x;

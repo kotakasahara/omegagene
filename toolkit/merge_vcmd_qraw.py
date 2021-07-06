@@ -104,7 +104,7 @@ def _main():
     if opts.symmetrize:       vc_prev.symmetrize()
     vc.multiply_params(vc_prev)
     vc.normalize_params()
-    vc.pop_zero_vs()
+    #vc.pop_zero_vs()
 
     vc.set_default_param()
 

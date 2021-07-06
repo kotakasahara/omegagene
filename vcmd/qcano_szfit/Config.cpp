@@ -9,6 +9,7 @@ Config::Config(){
 Config::~Config(){
   mc_target_acc_ratio = 0.0;
   greedy_pivot = 0;
+  target_error = 1e-8;
 }
 void Config::setAll(int argn, char* argv[]){
   vector<string> arg;
@@ -25,8 +26,8 @@ void Config::setAll(vector<string> arg){
     if(*itr=="--mode"){
       itr++;
       if(*itr=="test")         { mode=M_TEST; }
-      else if(*itr=="subzone")         { mode=M_SUBZONEBASED; }
-      else if(*itr=="")           { mode=M_DUMMY; }
+      else if(*itr=="subzone") { mode=M_SUBZONEBASED; }
+      else if(*itr=="")        { mode=M_DUMMY; }
       else{
         cerr<<"invalid mode ["<<*itr<<"]\n"; exit(1);
       }
@@ -37,6 +38,7 @@ void Config::setAll(vector<string> arg){
     else if(*itr=="--o-qcano"){ itr++; fname_o_qcano=(*itr); }
     else if(*itr=="--o-qweight-opt"){ itr++; fname_o_qweight_opt=(*itr); }
 
+    else if(*itr=="--target-error"){ itr++; target_error=atof((*itr).c_str()); }
     else if(*itr=="--mc-temp"){ itr++; mc_temp=atof((*itr).c_str()); }
     else if(*itr=="--mc-delta-x"){ itr++; mc_delta_x=atof((*itr).c_str()); }
     else if(*itr=="--mc-steps"){ itr++; mc_steps = atoi((*itr).c_str()); }

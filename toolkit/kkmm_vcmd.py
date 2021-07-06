@@ -106,14 +106,15 @@ class VcMDConf():
             #print self.params[vs]
         return
     def normalize_params(self):
-        p_sum = np.zeros(len(self.params.values()[0]), dtype=np.float)
+        p_sum = np.zeros(len(list(self.params.values())[0]), dtype=np.float)
+        #p_sum = np.zeros(len(self.params.values()[0]), dtype=np.float)
         key_def = tuple([ 0 for x in range(self.dim)])
         for vs, param in self.params.items():
             if vs == key_def: continue
             p_sum += np.array(param)
         print("p_sum")
         print( p_sum)
-        p_sum_t = np.zeros(len(self.params.values()[0]), dtype=np.float)
+        p_sum_t = np.zeros(len(list(self.params.values())[0]), dtype=np.float)
         for vs, param in self.params.items():
             if vs == key_def: continue
             #for i, q in enumerate(param):
@@ -294,6 +295,7 @@ class VcMDParamsWriter(kkkit.FileO):
         #keys.sort()
         for vs in keys:
             prm = params[vs]
+            if prm[0] == 0: continue
             # for vs, param in vc.params.items():
             buf = " ".join([str(x) for x in vs]) 
             for x in prm:

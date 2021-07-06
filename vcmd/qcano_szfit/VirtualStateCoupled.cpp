@@ -14,7 +14,6 @@ std::string VirtualStateCoupling::get_str_state_definition(){
   ss << exchange_interval << std::endl;
   ss << n_dim << std::endl;
 
-
   for ( int d = 0; d < n_dim; d ++){
     ss << lowers_vaxis[d].size();
     for ( const auto itr : aus_groups[d] ){
@@ -394,7 +393,7 @@ void VirtualStateCoupling::write_qweight(std::string fname, std::vector<double> 
   if (def_val){
     double min_qw = 1e10;
     for ( int l = 0; l < nstates; l++){
-      if ( in_qw[l] < min_qw && in_qw[l] > 0.0) min_qw = in_qw[1];
+      if ( in_qw[l] < min_qw && in_qw[l] > 1e-50) min_qw = in_qw[1];
     }
     for ( int d = 0; d < n_dim; d++){
       ofs << "0 ";
@@ -458,7 +457,7 @@ int VirtualStateCoupling::setup(Config cfg){
   fname_o_qcano = cfg.fname_o_qcano;
   fname_o_qweight_opt = cfg.fname_o_qweight_opt;
   fname_i_qraw_is = cfg.fname_i_qraw_is;
-
+  target_error = cfg.target_error;
   // for mc
   mc_temp = cfg.mc_temp;
   mc_delta_x = cfg.mc_delta_x;
@@ -663,8 +662,12 @@ int VirtualStateCoupling::mode_subzonebased_mc(){
 
 
   write_qweight(fname_o_qweight_opt, state_adj_qw_opt, true);
-  
+  return 0;
 }
+
+
+
+
 int VirtualStateCoupling::mc_loop(){
   double delta_x = mc_delta_x;
   double err = calc_qraw_error_all();
@@ -725,6 +728,7 @@ int VirtualStateCoupling::mc_loop(){
     int acc_count = 0;
     for(int i = 0; i < acc_rec.size(); i++){
       if (acc_rec[i] == 1) acc_count+=1;
+      
     }
     double acc_ratio = (double)acc_count/(double)acc_rec.size();
     double factor = acc_ratio/mc_target_acc_ratio;
@@ -743,6 +747,9 @@ int VirtualStateCoupling::mc_loop(){
     //    cout << cur_step << " " << cur_step % mc_log_interval << endl;
     if (cur_step % mc_log_interval ==0){
       cout << "  " << cur_step << " " << total_err << " " << acc_ratio << " " << delta_x << " " << factor << endl;
+    }
+    if (total_err < target_error ){
+      return 1;
     }
   }
   

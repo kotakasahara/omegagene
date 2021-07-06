@@ -25,6 +25,8 @@ private:
   string fname_o_transit_count;
   int flg_transit_count;
 
+  double target_error;
+
   double mc_temp;
   double mc_delta_x;
   size_t mc_steps;
