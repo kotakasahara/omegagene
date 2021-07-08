@@ -163,7 +163,7 @@ void VirtualStateCoupling::parse_params_state_definition(ifstream &ifs){
   uppers = vector< vector<double> >(nstates);
   //kappa = vector<double>(nstates);
   state_weights = vector<double>(nstates);
-  state_qraw = vector<size_t>(nstates);
+  state_qraw = vector<double>(nstates);
   transition_candidates = vector< vector<size_t> >(nstates);
   
   for(size_t v_id=0; v_id < nstates; v_id++){
@@ -177,7 +177,7 @@ void VirtualStateCoupling::parse_params_state_definition(ifstream &ifs){
     uppers[v_id] = tmp_upp;
     lowers[v_id] = tmp_low;
     //printf("dbg read param: v_id %ld %d ... [%lf ... %lf]\n",v_id, v_crd[0], lowers[v_id][0], uppers[v_id][0]);
-    state_weights[v_id] = -1.0;
+    state_weights[v_id] = 1.0;
     //printf("v_id %d (", v_id);
     //for(int d=0; d<n_dim; d++){
     //printf("%d ", v_crd[d]);
@@ -210,16 +210,16 @@ void VirtualStateCoupling::parse_params_qweight(ifstream &ifs){
     ss >> cur;
     double cur_param = atof(cur.c_str()) ;
     if(flg_default){
-      default_weight = cur_param;
+      default_weight = log(cur_param);
       continue;
     }
     
     size_t v_id = conv_vstate_crd2id(v_crd);
-    state_weights[v_id] = cur_param;
+    state_weights[v_id] = log(cur_param);
   }
   //
   for(size_t v_id=0; v_id < nstates; v_id++){
-    if(state_weights[v_id] < 0.0){
+    if(state_weights[v_id] >= 1.0){
       state_weights[v_id] = default_weight;      
     }
   }  
@@ -238,7 +238,7 @@ void VirtualStateCoupling::parse_params_qraw_is(ifstream &ifs){
   vector<string> args;
   string         buf;
   string         cur, cur1, cur2;
-  
+  state_qraw_sum = 0;
   while(ifs && getline(ifs, buf)){
     size_t pos1 = buf.find_first_of("#;");
     if (pos1 != string::npos) { buf = buf.substr(0, pos1); }
@@ -270,13 +270,15 @@ void VirtualStateCoupling::parse_params_qraw_is(ifstream &ifs){
     if (!flg_out) {
       state_qraw_is[is_crd] = cur_param;
       state_qraw[v_id] += cur_param;
+      state_qraw_sum += cur_param;
     }
   }
   for (const auto& [key, value] : state_qraw_is){
     if (state_qraw[key[0]] == 0){
-      state_qraw_is[key] = 0;
+      state_qraw_is[key] = 1.0;
     }else{
-      state_qraw_is[key] /= state_qraw[key[0]];
+      state_qraw_is[key] = log(value/state_qraw[key[0]]);
+
     }
     //cout << "dbg parse : ";
     //for ( const auto& a : key ){
@@ -284,6 +286,10 @@ void VirtualStateCoupling::parse_params_qraw_is(ifstream &ifs){
     //}
     //cout <<  state_qraw_is[key] << endl;
   }
+  for (int st=0; st < nstates; st++){
+    state_qraw[st] = log(state_qraw[st]/state_qraw_sum);
+  }
+
 
 }
 
@@ -334,8 +340,8 @@ void VirtualStateCoupling::init_data(){
   state_qraw_sum = 0;
   
   for(size_t v_id=0; v_id < nstates; v_id++){
-    state_adj_qw[v_id] = 1.0;
-    state_adj_qw_opt[v_id] = 1.0;
+    state_adj_qw[v_id] = -1.0;
+    state_adj_qw_opt[v_id] = -1.0;
   }
 }
 
@@ -393,23 +399,24 @@ void VirtualStateCoupling::write_qweight(std::string fname, std::vector<double> 
   if (def_val){
     double min_qw = 1e10;
     for ( int l = 0; l < nstates; l++){
+      cout << "min : " << l << " "  <<  in_qw[l] << " " << min_qw << endl;
       if ( in_qw[l] < min_qw){
-	min_qw = in_qw[1];
-	cout << "min : " << l << " "  <<  in_qw[l] << " "<< min_qw << endl;
+	min_qw = in_qw[l];
+	cout << "min update: " << l << " "  <<  in_qw[l] << " " << min_qw << endl;
       }
     }
     for ( int d = 0; d < n_dim; d++){
       ofs << "0 ";
     }
-    ofs << min_qw << std::endl;
+    ofs << exp(min_qw) << std::endl;
   }
   for ( int l = 0; l < nstates; l++){
-    if( in_qw[l] <= 0.0 ) continue;
+    if( in_qw[l] >= 1.0 ) continue;
     std::vector<int> vs_crd = conv_vstate_id2crd(l);
     for ( const auto vsc : vs_crd )
       // (+1) convert to 1-origin integer
       ofs << vsc+1 << " ";
-    ofs << in_qw[l] << std::endl;
+    ofs << exp(in_qw[l]) << std::endl;
   }
   ofs << "END" << std::endl;
   ofs.close();
@@ -598,15 +605,17 @@ double VirtualStateCoupling::calc_qraw_error(size_t st_i, double qw_i, bool skip
       //cout << sz_crd_i[i] << " ";
       //}
       //cout << endl;
-      //cout << "dbg err x1 "<< state_adj_qw[st_i];
+      //cout << "dbg err x1 "<< qw_i ;
       //cout << " " << state_qraw[st_i] << " " << state_qraw_is[sz_crd_i];
       //cout << " " << state_adj_qw[st_j] << " " << state_qraw[st_j] << " " << state_qraw_is[sz_crd_j] << endl;;
       
-      double qcano_i = qw_i * state_qraw[st_i] * state_qraw_is[sz_crd_i];
-      double qcano_j = state_adj_qw[st_j] * state_qraw[st_j] * state_qraw_is[sz_crd_j];
-      if(qcano_i == 0.0 || qcano_j == 0.0) continue;
-      double sqer = pow(log(qcano_i/qcano_j),2);
+      double qcano_i = qw_i + state_qraw[st_i] + state_qraw_is[sz_crd_i];
+      double qcano_j = state_adj_qw[st_j] + state_qraw[st_j] + state_qraw_is[sz_crd_j];
+      //cout << "dbg err qcano " << qcano_i << " " << qcano_j << " " << endl;
+      if(qcano_i > 0 || qcano_j > 0) continue;
+      double sqer = pow(qcano_i-qcano_j,2);
       //double sqer = pow(qcano_i-qcano_j,2);
+      //cout <<  " dgg err sqer " << sqer << endl;
       sqer_sum += sqer;
       
     }
@@ -688,7 +697,7 @@ int VirtualStateCoupling::mc_loop(){
     size_t v_id_mig = ri(mt);
     double delta_qw = (rd(mt)*2-1) * delta_x;
     double new_qw = state_adj_qw[v_id_mig]+delta_qw;
-    if ( new_qw < 0.0 ) new_qw = 0.0;
+    if ( new_qw > 0.0 ) new_qw = 0.0;
     //double err_cur = total_err;
     //double err_att = calc_qraw_error_all();
     double err_cur = calc_qraw_error(v_id_mig, state_adj_qw[v_id_mig]);
@@ -703,14 +712,13 @@ int VirtualStateCoupling::mc_loop(){
     if(acc){
       mc_acc += 1;
 
-      double delta_qw_acc =  new_qw - state_adj_qw[v_id_mig];
+      double delta_qw_acc =  exp(new_qw) - exp(state_adj_qw[v_id_mig]);
       state_adj_qw[v_id_mig] = new_qw;
-
-
-      double dq = 1.0/ (1.0+delta_qw_acc);
       total_err += delta_err;
+
+      double dq = log(1.0+delta_qw_acc);
       for(int st_i=0; st_i < nstates; st_i++){
-	state_adj_qw[st_i] *= dq;
+	state_adj_qw[st_i] -= dq;
       }
 
       if (total_err < opt_err){
@@ -737,13 +745,13 @@ int VirtualStateCoupling::mc_loop(){
     double factor = acc_ratio/mc_target_acc_ratio;
     //cout << " dbg " << acc_ratio << " " << mc_target_acc_ratio << " " << factor << endl;
     if ( acc_ratio == 0 ) factor = 0.9;
-    if ( factor > 1.1 ) factor = 1.1;
-    if ( factor < 0.9 ) factor = 0.9;
+    if ( factor > 1.01 ) factor = 1.01;
+    if ( factor < 0.99 ) factor = 0.99;
 
     //cout << acc_rec.size() << "-" << mc_acc_duration << "-" << mc_target_acc_ratio << endl;
 
     if(acc_rec.size() == mc_acc_duration ){ 
-      if (mc_target_acc_ratio > 0 ){
+      if (mc_target_acc_ratio > 0){
 	delta_x *= factor;
       }
     }
@@ -782,7 +790,7 @@ int VirtualStateCoupling::greedy_search_pivot(int pivot){
   state_flg[pivot] = 2;
   n_state_flg2++;
   size_t cur_step = 0;
-  state_adj_qw[pivot] = 1.0;
+  state_adj_qw[pivot] = -1.0;
   cout << " greedy [pivot] " << pivot << " " << state_adj_qw[pivot] << endl;
   vector<size_t> todo_st;
   for (const auto& [st_j, subzones] : overlapping_subzones[pivot]){
@@ -808,38 +816,42 @@ int VirtualStateCoupling::greedy_search_pivot(int pivot){
 	    sz_crd_i[i+1] = sz[i];
 	    sz_crd_j[i+1] = sz[n_dim+i];
 	  }
-	  double qcano_j = state_adj_qw[st_j] * state_qraw[st_j] * state_qraw_is[sz_crd_j];
-	  double qcano_i_uni = state_qraw[st_i] * state_qraw_is[sz_crd_i];
+	  double qcano_j = state_adj_qw[st_j] + state_qraw[st_j] + state_qraw_is[sz_crd_j];
+	  double qcano_i_uni = state_qraw[st_i] + state_qraw_is[sz_crd_i];
 
-	  if (qcano_j == 0 || qcano_i_uni == 0){
-	    //cout << st_i << " " << st_j << " " << state_adj_qw[st_j] <<" " << state_qraw[st_j] << " "  << state_qraw_is[sz_crd_j] << endl;;
+	  if (qcano_j > 0 || qcano_i_uni > 0){
+	    cout << "i " << st_i << " " << st_j << " " << state_adj_qw[st_j] <<" " << state_qraw[st_j] << " "  << state_qraw_is[sz_crd_j] << " " << state_qraw[st_i] << " "  << state_qraw_is[sz_crd_i] <<endl;;
 	    continue;
 	  }
 
-	  double factor = qcano_j / qcano_i_uni;
-	  //cout << st_i << " " << st_j << " ";
-	  //for ( int i = 0; i < n_dim; i++)
-	  //cout << sz_crd_i[i+1] << " " ;
-	  //for ( int i = 0; i < n_dim; i++)
-	  //cout << sz_crd_j[i+1] << " " ;
-	  //cout << qcano_j << " " << qcano_i_uni << " "<< factor << endl;
-	  pi_factors *= factor;
+	  double factor = qcano_j - qcano_i_uni;
+	  cout << "scale " << st_i << " " << st_j << " ";
+	  for ( int i = 0; i < n_dim; i++)
+ 	    cout << sz_crd_i[i+1] << " " ;
+	  for ( int i = 0; i < n_dim; i++)
+	    cout << sz_crd_j[i+1] << " " ;
+	  cout << qcano_j << " " << qcano_i_uni << " "<< factor << " " 
+	       << state_adj_qw[st_j] << " " <<  state_qraw[st_j] << " " <<  state_qraw_is[sz_crd_j] << endl;
+	  pi_factors += factor;
 	  n_factors++;
 	}
       }
     }
 
-    state_adj_qw[st_i] = pow(pi_factors, 1.0/(double)n_factors);
-    cout << "greedy qw " << st_i << " " << pi_factors << " " << n_factors << " " << state_adj_qw[st_i] << endl;
+    state_adj_qw[st_i] += pi_factors/(double)n_factors;
     state_flg[st_i] = 2;
-    n_state_flg2--;
-  }
-  double sum_qw = 0.0;
-  for ( int st_i = 0; st_i < nstates; st_i++){
-    sum_qw += state_adj_qw[st_i];
-  }
-  for ( int st_i = 0; st_i < nstates; st_i++){
-    state_adj_qw[st_i] /= sum_qw;
+    n_state_flg2++;
+
+    // normalize
+    double sum_qw = 0.0;
+    for ( int st_i = 0; st_i < nstates; st_i++){
+      sum_qw += exp(state_adj_qw[st_i]);
+    }
+    for ( int st_i = 0; st_i < nstates; st_i++){
+      state_adj_qw[st_i] = log(exp(state_adj_qw[st_i])/sum_qw);
+    }
+    cout << "greedy qw " << st_i << " " << pi_factors << " " << n_factors << " " << state_adj_qw[st_i] << endl;
+
   }
 
   return 0;

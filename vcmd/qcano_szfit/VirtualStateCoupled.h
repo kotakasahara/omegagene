@@ -88,7 +88,7 @@ private:
   // cur_vsis is the current state in vs coordinate
   // cur_vsis[(vs1, vs2, ..., is1, is2, ...)]
 
-  std::vector<size_t> state_qraw;
+  std::vector<double> state_qraw;
   // state_qraw[d] = qraw
   std::map< std::vector<size_t>, double > state_qraw_is;
   std::map< std::vector<size_t>, size_t > state_transit_count;
