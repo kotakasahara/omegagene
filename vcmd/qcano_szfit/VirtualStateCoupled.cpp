@@ -393,7 +393,10 @@ void VirtualStateCoupling::write_qweight(std::string fname, std::vector<double> 
   if (def_val){
     double min_qw = 1e10;
     for ( int l = 0; l < nstates; l++){
-      if ( in_qw[l] < min_qw && in_qw[l] > 1e-50) min_qw = in_qw[1];
+      if ( in_qw[l] < min_qw){
+	min_qw = in_qw[1];
+	cout << "min : " << l << " "  <<  in_qw[l] << " "<< min_qw << endl;
+      }
     }
     for ( int d = 0; d < n_dim; d++){
       ofs << "0 ";
@@ -780,7 +783,7 @@ int VirtualStateCoupling::greedy_search_pivot(int pivot){
   n_state_flg2++;
   size_t cur_step = 0;
   state_adj_qw[pivot] = 1.0;
-  
+  cout << " greedy [pivot] " << pivot << " " << state_adj_qw[pivot] << endl;
   vector<size_t> todo_st;
   for (const auto& [st_j, subzones] : overlapping_subzones[pivot]){
     todo_st.push_back(st_j);
@@ -827,7 +830,7 @@ int VirtualStateCoupling::greedy_search_pivot(int pivot){
     }
 
     state_adj_qw[st_i] = pow(pi_factors, 1.0/(double)n_factors);
-    //    cout << "qw " << st_i << " " << pi_factors << " " << n_factors << " " << state_adj_qw[st_i] << endl;
+    cout << "greedy qw " << st_i << " " << pi_factors << " " << n_factors << " " << state_adj_qw[st_i] << endl;
     state_flg[st_i] = 2;
     n_state_flg2--;
   }

@@ -13,7 +13,7 @@ using namespace std;
 #define GAS_CONST    8.31451
 #define JOULE_CAL    4.184
 
-#define PRM_D 0.0005
+#define PRM_D 0.0009
 #define PRM_A 10
 #define PRM_B 20
 
