@@ -21,12 +21,15 @@ public:
 
   double mc_temp;
   double mc_delta_x;
+  double mc_delta_x_max;
   size_t mc_steps;
   int mc_log_interval;
   double mc_target_acc_ratio;
   int greedy_max_steps;
   size_t greedy_pivot;
   int mc_acc_duration;
+
+  int qweight_write_mode;
   
   Config();
   ~Config();

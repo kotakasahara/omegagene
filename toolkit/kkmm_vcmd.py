@@ -31,6 +31,10 @@ class VcMDConf():
         ## surr_states[(vs1, vs2, ..., vs_dim)] =
         ##     [(vs1, vs2, ..., vs_dim), (vs1, vs2, ...), ... ]
 
+        self.param_mode = 0
+        ## 0 ... raw value in self.params
+        ## 1 ... log value in self.params
+
 
     def sum_params(self, param_od=0):
         s = 0.0;
@@ -38,8 +42,13 @@ class VcMDConf():
             s += v[param_od]
         return s;
     def read_params(self, fn, chk4gen=True):
+        reader = VcMDParamsReader(fn)
         self.interval, self.dim, self.group_names, \
-            self.lambda_ranges, self.params, self.n_vs = VcMDParamsReader(fn).read(chk4gen)
+            self.lambda_ranges, self.params, self.n_vs = reader.read(chk4gen)
+        self.param_mode = reader.param_mode
+        #print("dbg0709b  param_mode ", self.param_mode)
+        return 
+
     def read_qraw_is(self, fn, chk4gen=False):
         ret = VcMDParamsReader(fn).read_qraw_is()
         self.interval = ret[0]
@@ -76,6 +85,12 @@ class VcMDConf():
             if vs == key_def: continue
             self.qraw_is[vs][0] *= factor
         return
+
+    def param_log(self):
+        for vs, param in self.params.items():
+            self.params[vs] = np.log(param)
+        self.param_mode = 1
+
     def multiply_params(self, conf):
         key_def = tuple([ 0 for x in range(self.dim)])
         #print "test"
@@ -94,15 +109,24 @@ class VcMDConf():
         #        self.params[vs] = self.params[key_def]
         #self.normalize_params()
 
+        #print("dbg0709", self.param_mode, conf.param_mode)
+
         for vs, param in conf.params.items():
             if not vs in self.params: continue
             if vs == key_def: continue
             for i, p in enumerate(conf.params[vs]):
-                if self.params[vs][i] > 0:
-                    if p > 0:
-                        self.params[vs][i] *= p
-                    else:
-                        self.params[vs][i] *= self.params[vs][i]
+                if self.param_mode == 1:
+                    if conf.param_mode == 0:
+                        p = np.log(p)
+                    self.params[vs][i] += p
+                else:
+                    if conf.param_mode == 1:
+                        p = np.exp(p)
+                    if self.params[vs][i] > 0:
+                        if p > 0:
+                            self.params[vs][i] *= p
+                        else:
+                            self.params[vs][i] *= self.params[vs][i]
             #print self.params[vs]
         return
     def normalize_params(self):
@@ -111,14 +135,20 @@ class VcMDConf():
         key_def = tuple([ 0 for x in range(self.dim)])
         for vs, param in self.params.items():
             if vs == key_def: continue
+            if self.param_mode == 1:
+                param = [ np.exp(p) for p in param ] 
             p_sum += np.array(param)
+
         print("p_sum")
         print( p_sum)
         p_sum_t = np.zeros(len(list(self.params.values())[0]), dtype=np.float)
         for vs, param in self.params.items():
             if vs == key_def: continue
             #for i, q in enumerate(param):
-            self.params[vs] /= p_sum
+            if self.param_mode == 0:
+                self.params[vs] /= p_sum
+            elif self.param_mode == 1:
+                self.params[vs] -= np.log(p_sum)
             p_sum_t += param
         print(p_sum_t)
         return
@@ -239,6 +269,7 @@ class VcMDConf():
             if self.is_in_range(c_vs, lmb):
                 n_ovl += 1
         return n_ovl
+
 class VcMDInitReader(kkkit.FileI):
     def __init__(self, fn):
         super(VcMDInitReader, self).__init__(fn)
@@ -266,14 +297,20 @@ class VcMDParamsWriter(kkkit.FileO):
 
     def __init__(self, fn):
         super(VcMDParamsWriter, self).__init__(fn)
-    def write(self, vc, mode_param=0):
+    def write(self, vc, param_type=0, param_mode=0):
         """
-        mode_param:
-        0 ... VcMDConf.param
-        1 ... VcMDConf.qraw_is
+        param_type:
+          0 ... VcMDConf.param
+          1 ... VcMDConf.qraw_is
+        param_mode
+          0 ... raw value
+          1 ... log value
         """
         self.open()
-        self.f.write(str(vc.interval)+"\n")
+        self.f.write(str(vc.interval))
+        if param_mode  == 1:
+            self.f.write(" LOG")
+        self.f.write("\n")
         self.f.write(str(vc.dim)+"\n")        
         for d in range(1, vc.dim+1):
             buf = ""
@@ -284,12 +321,12 @@ class VcMDParamsWriter(kkkit.FileO):
             for lmbd in vc.lambda_ranges[d][1:]:
                 self.f.write(str(lmbd[0]) + " " + str(lmbd[1]) + "\n")
         params = {}
-        if mode_param==0:
+        if param_type==0:
             params = vc.params
-        elif mode_param==1:
+        elif param_type==1:
             params = vc.qraw_is
         else:
-            stderr.write("Invalid mode_param:", mode_param)
+            stderr.write("Invalid param_type:", param_type)
             
         keys = params.keys()
         #keys.sort()
@@ -299,13 +336,19 @@ class VcMDParamsWriter(kkkit.FileO):
             # for vs, param in vc.params.items():
             buf = " ".join([str(x) for x in vs]) 
             for x in prm:
-                buf += " " + str(x)
+                val = x
+                if param_mode == 0 and vc.param_mode == 1:
+                    val = np.exp(x)
+                elif param_mode == 1 and vc.param_mode == 0:
+                    val = np.log(x)
+                buf += " " + str(val)
             self.f.write(buf+"\n")
         self.f.write("END")
         self.close()
 
 class VcMDParamsReader(kkkit.FileI):
     def __init__(self, fn):
+        self.param_mode = 0
         super(VcMDParamsReader, self).__init__(fn)
     def read(self, chk4gen=True):
         interval, dim, group_names, lambda_ranges, ret_params, n_vs_l = self.read_sub()
@@ -326,9 +369,8 @@ class VcMDParamsReader(kkkit.FileI):
                 except:
                     sys.stderr.write("WARNING: The parameter shoud be larger than zero.\n")
                     sys.stderr.write("\t".join(terms)+"\n")
-
             params[crd] = param
-        return interval, dim, group_names, lambda_ranges, params, n_vs_l        
+        return interval, dim, group_names, lambda_ranges, params, n_vs_l
         
     def read_qraw_is(self):
         interval, dim, group_names, lambda_ranges, ret_params, n_vs_l = self.read_sub()
@@ -345,7 +387,13 @@ class VcMDParamsReader(kkkit.FileI):
         params = {}
 
         # The first line: VS transition interval (step)
-        interval = int(self.readline_comment().strip().split()[0])
+        terms = self.readline_comment().strip().split()
+        interval = int(terms[0])
+        self.param_mode = 0 # raw value
+        if len(terms) >= 2:
+            if terms[1] == "LOG":
+                self.param_mode = 1 # raw value                
+                print("parameter file: LOG value")
         # The second line: the number of dimensions
         dim = int(self.readline_comment().strip().split()[0])
         lambda_ranges = [(0.0, 0.0)]

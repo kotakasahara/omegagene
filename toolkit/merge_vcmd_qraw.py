@@ -29,6 +29,9 @@ def opt_parse():
     p.add_option('--symmetrize', dest='symmetrize',
                  action="store_true",
                  help="Symmetrize the counts")
+    p.add_option('--out-log-param', dest='out_log_param',
+                 action="store_true",
+                 help="Output paramters in log value")
     opts, args = p.parse_args()
     print("----------------------------")
     p.print_help()
@@ -86,20 +89,21 @@ def _main():
        vc.symmetrize()
 
     if opts.fn_out_qraw_cnt:
-        kkmm_vcmd.VcMDParamsWriter(opts.fn_out_qraw_cnt).write(vc)
+        kkmm_vcmd.VcMDParamsWriter(opts.fn_out_qraw_cnt).write(vc, param_type=0)
+
     if opts.fn_out_qraw:
         vc_tmp = copy.deepcopy(vc)
         vc_tmp.normalize_params()
-        kkmm_vcmd.VcMDParamsWriter(opts.fn_out_qraw).write(vc_tmp)
+        kkmm_vcmd.VcMDParamsWriter(opts.fn_out_qraw).write(vc_tmp, param_type=0)
 
     vc.add_const(opts.pseudo_count)
     vc.normalize_params()
-    vc.set_default_param()
 
+    vc.set_default_param()
     vc.statistics()
 
-
     vc_prev = kkmm_vcmd.VcMDConf()
+    print("dbg0709c")
     vc_prev.read_params(opts.fn_qcano, False)
     if opts.symmetrize:       vc_prev.symmetrize()
     vc.multiply_params(vc_prev)
@@ -109,7 +113,10 @@ def _main():
     vc.set_default_param()
 
     if opts.fn_out:
-        kkmm_vcmd.VcMDParamsWriter(opts.fn_out).write(vc)
+        param_mode = 0
+        if opts.out_log_param:
+            param_mode = 1
+        kkmm_vcmd.VcMDParamsWriter(opts.fn_out).write(vc, param_type=0, param_mode=param_mode)
 
 
 

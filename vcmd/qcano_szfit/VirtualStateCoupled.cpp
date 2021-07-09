@@ -9,9 +9,12 @@ VirtualStateCoupling::~VirtualStateCoupling(){
 
 }
 
-std::string VirtualStateCoupling::get_str_state_definition(){
+std::string VirtualStateCoupling::get_str_state_definition(int param_mode){
   std::stringstream ss;
-  ss << exchange_interval << std::endl;
+  ss << exchange_interval;
+  if ( param_mode == 1 )
+    ss << " LOG";
+  ss << std::endl;
   ss << n_dim << std::endl;
 
   for ( int d = 0; d < n_dim; d ++){
@@ -101,8 +104,8 @@ void VirtualStateCoupling::parse_params(const string &fname)
   //dimension
 
   nstates = 1;
-  parse_params_state_definition(ifs);
-  parse_params_qweight(ifs);
+  int param_mode = parse_params_state_definition(ifs);
+  parse_params_qweight(ifs, param_mode);
   ifs.close();
 }
 
@@ -119,13 +122,21 @@ void VirtualStateCoupling::parse_qraw_is(const string &fname)
 }
 
 
-void VirtualStateCoupling::parse_params_state_definition(ifstream &ifs){
+int VirtualStateCoupling::parse_params_state_definition(ifstream &ifs){
   vector<string> args;
-  string         buf;
+  string         buf, buf2;
   string         cur, cur1, cur2;
   getline(ifs, buf);
+  stringstream buf_ss(buf);
+  int param_mode = 0;
+  buf_ss >> buf2;
   //cout << "dbg : " <<  buf << endl;;
-  exchange_interval = atoi(buf.c_str());
+  exchange_interval = atoi(buf2.c_str());
+  if( buf_ss >> buf2 ){
+    if (buf2 == "LOG"){
+      param_mode = 1;
+    }
+  }
   printf("exchange_interval: %d \n", exchange_interval);
   getline(ifs, buf);
   n_dim = atoi(buf.c_str());
@@ -184,9 +195,12 @@ void VirtualStateCoupling::parse_params_state_definition(ifstream &ifs){
     //}
     //printf(")\n");
   }
+
   // read information about parameters
+  return param_mode;
+
 }
-void VirtualStateCoupling::parse_params_qweight(ifstream &ifs){
+void VirtualStateCoupling::parse_params_qweight(ifstream &ifs, int param_mode){
   vector<string> args;
   string         buf;
   string         cur, cur1, cur2;
@@ -209,13 +223,14 @@ void VirtualStateCoupling::parse_params_qweight(ifstream &ifs){
     }
     ss >> cur;
     double cur_param = atof(cur.c_str()) ;
+    if(param_mode == 0) cur_param = log(cur_param);
     if(flg_default){
-      default_weight = log(cur_param);
+      default_weight = cur_param;
       continue;
     }
     
     size_t v_id = conv_vstate_crd2id(v_crd);
-    state_weights[v_id] = log(cur_param);
+    state_weights[v_id] = cur_param;
   }
   //
   for(size_t v_id=0; v_id < nstates; v_id++){
@@ -394,23 +409,28 @@ bool VirtualStateCoupling::is_in_range(size_t state, std::vector<double> arg){
   return true;
 }
 
-void VirtualStateCoupling::write_qweight(std::string fname, std::vector<double> in_qw, bool def_val){
-  std::string state_defs = get_str_state_definition();
+void VirtualStateCoupling::write_qweight(std::string fname, std::vector<double> in_qw, bool def_val, int param_mode){
+  cout << "write_qweight " << param_mode << endl;
+
+  std::string state_defs = get_str_state_definition(qweight_write_mode);
   ofstream ofs(fname);
   ofs << state_defs;
+  
   if (def_val){
     double min_qw = 1e10;
     for ( int l = 0; l < nstates; l++){
       //cout << "min : " << l << " "  <<  in_qw[l] << " " << min_qw << endl;
       if ( in_qw[l] < min_qw){
 	min_qw = in_qw[l];
-	//cout << "min update: " << l << " "  <<  in_qw[l] << " " << min_qw << endl;
+	//cout << "min update: " << l << " "  <<  in_qw[l] << " " << min_qw <<  endl;
       }
     }
     for ( int d = 0; d < n_dim; d++){
       ofs << "0 ";
     }
-    ofs << exp(min_qw) << std::endl;
+    double put_qw = min_qw;
+    if(param_mode == 0) put_qw = exp(min_qw);
+    ofs << put_qw << std::endl;
   }
   for ( int l = 0; l < nstates; l++){
     if( in_qw[l] >= 0.0 ) continue;
@@ -418,7 +438,9 @@ void VirtualStateCoupling::write_qweight(std::string fname, std::vector<double> 
     for ( const auto vsc : vs_crd )
       // (+1) convert to 1-origin integer
       ofs << vsc+1 << " ";
-    ofs << exp(in_qw[l]) << std::endl;
+    double put_qw = in_qw[l];
+    if(param_mode == 0) put_qw = exp(in_qw[l]);
+    ofs << put_qw << std::endl;
   }
   ofs << "END" << std::endl;
   ofs.close();
@@ -469,10 +491,14 @@ int VirtualStateCoupling::setup(Config cfg){
   fname_o_qcano = cfg.fname_o_qcano;
   fname_o_qweight_opt = cfg.fname_o_qweight_opt;
   fname_i_qraw_is = cfg.fname_i_qraw_is;
+  qweight_write_mode = cfg.qweight_write_mode;
+  cout << "qweight_write_mode " <<   qweight_write_mode << endl;
+
   target_error = cfg.target_error;
   // for mc
   mc_temp = cfg.mc_temp;
   mc_delta_x = cfg.mc_delta_x;
+  mc_delta_x_max = cfg.mc_delta_x_max;
   mc_steps = cfg.mc_steps;
   mc_log_interval = cfg.mc_log_interval;
   mc_target_acc_ratio = cfg.mc_target_acc_ratio;
@@ -481,6 +507,8 @@ int VirtualStateCoupling::setup(Config cfg){
   // for greedy search
   greedy_max_steps = cfg.greedy_max_steps;
   greedy_pivot = cfg.greedy_pivot;
+
+
   return 0;
 }
 
@@ -675,8 +703,7 @@ int VirtualStateCoupling::mode_subzonebased_mc(){
   cout << "opt err : " << opt_err << endl;
   cout << "mc acc  : " << mc_acc << endl;
 
-
-  write_qweight(fname_o_qweight_opt, state_adj_qw_opt, true);
+  write_qweight(fname_o_qweight_opt, state_adj_qw_opt, true, qweight_write_mode);
   return 0;
 }
 
@@ -698,7 +725,7 @@ int VirtualStateCoupling::mc_loop(){
   
   for (cur_step=0; cur_step < mc_steps; cur_step++){
     size_t v_id_mig = ri(mt);
-    double delta_qw = (rd(mt)*2-1) * delta_x;
+    double delta_qw = 1.0 + (rd(mt)*2-1) * delta_x;
     double new_qw = state_adj_qw[v_id_mig]+delta_qw;
     if ( new_qw > 0.0 ) new_qw = 0.0;
     //double err_cur = total_err;
@@ -715,15 +742,23 @@ int VirtualStateCoupling::mc_loop(){
     if(acc){
       mc_acc += 1;
 
-      double delta_qw_acc =  exp(new_qw) - exp(state_adj_qw[v_id_mig]);
       state_adj_qw[v_id_mig] = new_qw;
       total_err += delta_err;
 
-      double dq = log(1.0+delta_qw_acc);
+      //double delta_qw_acc =  exp(new_qw) - exp(state_adj_qw[v_id_mig]);
+      //double dq = log(1.0+delta_qw_acc);
+      //double nrm_fact = (1.0+delta_qw_acc);
+      double nrm_fact_test = 0.0;
+      double sum_qw_test = 0.0;
       for(int st_i=0; st_i < nstates; st_i++){
-	state_adj_qw[st_i] -= dq;
+	nrm_fact_test += exp(state_adj_qw[st_i]);
       }
-
+      for(int st_i=0; st_i < nstates; st_i++){
+	//state_adj_qw[st_i] -= dq;
+	state_adj_qw[st_i] = state_adj_qw[st_i] - log(nrm_fact_test);
+	sum_qw_test += exp(state_adj_qw[st_i]);
+      }
+      //cout << "dbg sum_qw_test "<< cur_step << " : " <<  sum_qw_test << " / " << log(nrm_fact_test) << "   " << delta_x << " " << delta_qw << "  " << new_qw << endl;
       if (total_err < opt_err){
 	opt_err = total_err;
 	for (int i=0; i < nstates; i++){
@@ -733,29 +768,31 @@ int VirtualStateCoupling::mc_loop(){
       //}else{
       //total_err = err_cur;
     }
+
+    // Acceptance ratio
     if(acc) acc_rec.push_back(1);
     else    acc_rec.push_back(0);
     if(acc_rec.size() > mc_acc_duration){
       acc_rec.erase(acc_rec.begin());
     }
-    
     int acc_count = 0;
     for(int i = 0; i < acc_rec.size(); i++){
       if (acc_rec[i] == 1) acc_count+=1;
       
     }
     double acc_ratio = (double)acc_count/(double)acc_rec.size();
+
+    // Updating dX for each attempt
     double factor = acc_ratio/mc_target_acc_ratio;
     //cout << " dbg " << acc_ratio << " " << mc_target_acc_ratio << " " << factor << endl;
     if ( acc_ratio == 0 ) factor = 0.9;
     if ( factor > 1.01 ) factor = 1.01;
     if ( factor < 0.99 ) factor = 0.99;
-
     //cout << acc_rec.size() << "-" << mc_acc_duration << "-" << mc_target_acc_ratio << endl;
-
     if(acc_rec.size() == mc_acc_duration ){ 
       if (mc_target_acc_ratio > 0){
 	delta_x *= factor;
+	if(delta_x > mc_delta_x_max) delta_x = mc_delta_x_max;
       }
     }
     //    cout << cur_step << " " << cur_step % mc_log_interval << endl;
@@ -861,7 +898,7 @@ int VirtualStateCoupling::greedy_search_pivot(int pivot){
     for ( int st = 0; st < nstates; st++){
       state_adj_qw[st] = log(exp(state_adj_qw[st])/sum_qw);
     }
-    cout << "greedy qw " << st_i << " " << pi_factors << " " << n_factors << " " << state_adj_qw[st_i] << endl;
+    //cout << "greedy qw " << st_i << " " << pi_factors << " " << n_factors << " " << state_adj_qw[st_i] << endl;
 
   }
 

@@ -29,6 +29,7 @@ private:
 
   double mc_temp;
   double mc_delta_x;
+  double mc_delta_x_max;
   size_t mc_steps;
   int mc_log_interval;
   double mc_target_acc_ratio;
@@ -57,8 +58,12 @@ private:
   // >0 ... Drifting VcMD, without the detailed balance.
 
   int verbose;
+  int qweight_write_mode;
+  // 0 ... raw value
+  // 1 ... log value
 
   // properties for each state
+
   std::vector< std::vector<std::string> > aus_groups;
   std::vector< std::vector<double> > lowers;
   std::vector< std::vector<double> > uppers;
@@ -123,17 +128,17 @@ private:
   void parse_vstate(const string& fname);
   void parse_params(const string& fname);
   void parse_qraw_is(const string& fname);  
-  void parse_params_state_definition(ifstream &ifs);
-  void parse_params_qweight(ifstream &ifs);
+  int parse_params_state_definition(ifstream &ifs);
+  void parse_params_qweight(ifstream &ifs, int param_mode);
   void parse_params_qraw_is(ifstream &ifs);
   void init_transition_table();
   void init_data();
   size_t conv_vstate_crd2id(std::vector<int> vcrd);
   std::vector<int> conv_vstate_id2crd(size_t v_id);
   bool is_in_range(size_t state, std::vector<double> arg);
-  void write_qweight(std::string fname, std::vector<double> in_qw, bool def_val);
+  void write_qweight(std::string fname, std::vector<double> in_qw, bool def_val, int param_mode);
   int trial_transition();
-  std::string get_str_state_definition();
+  std::string get_str_state_definition(int param_mode);
   void set_cur_vsis(std::vector<int> v_crd, std::vector<double> arg);
 
   //i/o
