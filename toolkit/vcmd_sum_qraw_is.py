@@ -56,7 +56,7 @@ def main():
             vc_tmp.scale_qraw_is(weight[i+1])
         vc.sum_qraw_is(vc_tmp)
 
-    kkmm_vcmd.VcMDParamsWriter(args.out).write(vc, mode_param=1)
+    kkmm_vcmd.VcMDParamsWriter(args.out).write(vc, param_type=1, param_mode=0)
     
     return
     

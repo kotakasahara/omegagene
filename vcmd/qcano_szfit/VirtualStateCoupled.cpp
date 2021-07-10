@@ -430,7 +430,7 @@ void VirtualStateCoupling::write_qweight(std::string fname, std::vector<double> 
     }
     double put_qw = min_qw;
     if(param_mode == 0) put_qw = exp(min_qw);
-    ofs << put_qw << std::endl;
+    ofs << scientific << put_qw << std::endl;
   }
   for ( int l = 0; l < nstates; l++){
     if( in_qw[l] >= 0.0 ) continue;
@@ -440,7 +440,7 @@ void VirtualStateCoupling::write_qweight(std::string fname, std::vector<double> 
       ofs << vsc+1 << " ";
     double put_qw = in_qw[l];
     if(param_mode == 0) put_qw = exp(in_qw[l]);
-    ofs << put_qw << std::endl;
+    ofs << scientific << put_qw << std::endl;
   }
   ofs << "END" << std::endl;
   ofs.close();
