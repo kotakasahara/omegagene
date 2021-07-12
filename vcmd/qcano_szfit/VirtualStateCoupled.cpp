@@ -688,7 +688,7 @@ double VirtualStateCoupling::calc_qraw_error(size_t st_i, double qw_i, bool skip
       if(qw_i > 0.0 ||  state_qraw[st_i] > 0.0 || state_qraw_is[sz_crd_i] > 0.0 ||
 	 state_adj_qw[st_j] > 0.0 ||  state_qraw[st_j] > 0.0 ||  state_qraw_is[sz_crd_j] > 0.0) continue;
       double sqer = pow(qcano_i-qcano_j,2);
-      //double sqer = pow(qcano_i-qcano_j,2);
+      //double sqer = exp(nstates * 2 +state_qraw[st_j] + state_qraw[st_i]) * pow(qcano_i-qcano_j,2);
       if (sqer < 0) cout << "dbg nega error " << st_i << "  " << st_j << " " << sqer << endl;
       sqer_sum += sqer;
       
@@ -752,6 +752,7 @@ int VirtualStateCoupling::mode_subzonebased_mc(){
   mc_steps *= 0.1;
   mc_delta_x *= 0.1;
   mc_temp *= 0.1;
+  mc_delta_temp = 0.0;
   mc_loop();
   
 
