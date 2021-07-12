@@ -447,7 +447,7 @@ bool VirtualStateCoupling::is_in_range(size_t state, std::vector<double> arg){
 }
 
 void VirtualStateCoupling::write_qweight(std::string fname, std::vector<double> in_qw, bool def_val, int param_mode){
-  cout << "write_qweight " << param_mode << endl;
+  //cout << "write_qweight " << param_mode << endl;
 
   std::string state_defs = get_str_state_definition(qweight_write_mode);
   ofstream ofs(fname);
@@ -470,10 +470,7 @@ void VirtualStateCoupling::write_qweight(std::string fname, std::vector<double> 
     ofs << scientific << put_qw << std::endl;
   }
   for ( int l = 0; l < nstates; l++){
-    if( in_qw[l] > 0.0 ){
-      cout << "dbg3 " << l << endl;
-      continue;
-    }
+    if( in_qw[l] > 0.0 ){ continue;  }
     std::vector<int> vs_crd = conv_vstate_id2crd(l);
     for ( const auto vsc : vs_crd )
       // (+1) convert to 1-origin integer
@@ -658,7 +655,7 @@ double VirtualStateCoupling::calc_qraw_error_all(){
     total_error += state_adj_qw_error[i];
   }
   total_error *= 0.5;
-  cout << "dbg0626 sqer_sum: " << total_error << endl;
+  //cout << "dbg0626 sqer_sum: " << total_error << endl;
   return total_error;
 }
 
@@ -714,6 +711,10 @@ int VirtualStateCoupling::mode_subzonebased_mc(){
   enum_overlapping_subzones();
   //print_overlapping_subzones();
   //cout << "Error : " << err << endl;
+  opt_error = calc_qraw_error_all();
+  for (int i=0; i < nstates; i++){
+    state_adj_qw_opt[i] = state_adj_qw[i];
+  }
 
   cout << "Error init : " << calc_qraw_error_all() << endl;
 
@@ -721,10 +722,19 @@ int VirtualStateCoupling::mode_subzonebased_mc(){
     cout << "greedy" << endl;
     greedy_search(greedy_pivot-1);
   }
-  opt_error = calc_qraw_error_all();
-  cout << "Error gr   : " << calc_qraw_error_all() << endl;
-  for (int i=0; i < nstates; i++){
-    state_adj_qw_opt[i] = state_adj_qw[i];
+
+  double gr_error = calc_qraw_error_all();
+  cout << "Error gr   : " << gr_error << endl;
+
+  if (gr_error < opt_error){
+    opt_error = gr_error;
+    for (int i=0; i < nstates; i++){
+      state_adj_qw_opt[i] = state_adj_qw[i];
+    }
+  }else{
+    for (int i=0; i < nstates; i++){
+      state_adj_qw[i] = state_adj_qw_opt[i];
+    }
   }
 
   mc_acc = 0;
@@ -732,8 +742,6 @@ int VirtualStateCoupling::mode_subzonebased_mc(){
   cout << "Error mc1  : " << calc_qraw_error_all() << endl;
   cout << "opt err : " << opt_error << endl;
   cout << "mc acc  : " << mc_acc << endl;
-	  
-
 
   for (int i=0; i < nstates; i++){
     state_adj_qw[i] = state_adj_qw_opt[i];
