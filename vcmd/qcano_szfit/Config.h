@@ -29,7 +29,17 @@ public:
   size_t greedy_pivot;
   int mc_acc_duration;
 
+  //annealing
+  int mc_n_window_trend;
+  int mc_error_ave_window_size;
+  double mc_max_temp;
+  double mc_min_temp;
+  double mc_delta_temp;
+
+  
   int qweight_write_mode;
+
+
   
   Config();
   ~Config();

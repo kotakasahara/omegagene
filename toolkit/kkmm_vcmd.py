@@ -90,6 +90,13 @@ class VcMDConf():
         for vs, param in self.params.items():
             self.params[vs] = np.log(param)
         self.param_mode = 1
+        return 
+
+    def param_exp(self):
+        for vs, param in self.params.items():
+            self.params[vs] = np.exp(param)
+        self.param_mode = 0
+        return
 
     def multiply_params(self, conf):
         key_def = tuple([ 0 for x in range(self.dim)])

@@ -13,6 +13,13 @@ Config::~Config(){
   mc_delta_x_max = 1.0;
   mc_delta_x = 0.1;
   qweight_write_mode = 1;
+
+  mc_n_window_trend = 0;
+  mc_error_ave_window_size = 0;
+  mc_max_temp = 0;
+  mc_min_temp = 0;
+  mc_delta_temp = 0;
+
 }
 void Config::setAll(int argn, char* argv[]){
   vector<string> arg;
@@ -58,6 +65,11 @@ void Config::setAll(vector<string> arg){
     else if(*itr=="--mc-log-interval"){ itr++; mc_log_interval = atoi((*itr).c_str()); }
     else if(*itr=="--mc-target-acc-ratio"){ itr++; mc_target_acc_ratio = atof((*itr).c_str());}
     else if(*itr=="--mc-acc-duration"){ itr++; mc_acc_duration = atoi((*itr).c_str());}
+    else if(*itr=="--mc-n-window-trend"){ itr++; mc_n_window_trend = atoi((*itr).c_str());}
+    else if(*itr=="--mc-error-ave-window-size"){ itr++; mc_error_ave_window_size = atoi((*itr).c_str());}
+    else if(*itr=="--mc-min-temp"){ itr++; mc_min_temp = atof((*itr).c_str());}
+    else if(*itr=="--mc-max-temp"){ itr++; mc_max_temp = atof((*itr).c_str());}
+    else if(*itr=="--mc-delta-temp"){ itr++; mc_delta_temp = atof((*itr).c_str());}
 
     else if(*itr=="--greedy-max-steps"){ itr++; greedy_max_steps = atoi((*itr).c_str());}
     else if(*itr=="--greedy-pivot"){ itr++; greedy_pivot = atoi((*itr).c_str());}

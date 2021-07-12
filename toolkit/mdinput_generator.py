@@ -247,6 +247,8 @@ class MDInputGen(object):
         if self.config.get_val("fn-i-vcmd-inp"):
             self.extended_vcmd = kkmm_vcmd.VcMDConf()
             self.extended_vcmd.read_params(self.config.get_val("fn-i-vcmd-inp"))
+            if self.extended_vcmd.param_mode == 1:
+                self.extended_vcmd.param_mode.param_exp()
             self.extended_vcmd.read_init(self.config.get_val("fn-i-vcmd-initial"))
             grp_names = set()
             for grps in self.extended_vcmd.group_names[1:]:

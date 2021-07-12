@@ -351,7 +351,7 @@ void VirtualStateCoupling::init_transition_table()
 }
 
 void VirtualStateCoupling::init_data(){
-  opt_err = 1e10;
+  opt_error = 1e10;
   state_adj_qw = vector<double>(nstates);
   state_adj_qw_opt = vector<double>(nstates);
   state_flg = vector<int>(nstates);
@@ -509,7 +509,11 @@ int VirtualStateCoupling::setup(Config cfg){
   greedy_max_steps = cfg.greedy_max_steps;
   greedy_pivot = cfg.greedy_pivot;
 
-
+  mc_n_window_trend = cfg.mc_n_window_trend;
+  mc_error_ave_window_size = cfg.mc_error_ave_window_size;
+  mc_max_temp = cfg.mc_max_temp;
+  mc_min_temp = cfg.mc_min_temp;
+  mc_delta_temp = cfg.mc_delta_temp;
   return 0;
 }
 
@@ -607,15 +611,15 @@ double VirtualStateCoupling::calc_qraw_error_all(){
   //  total_err
 
   state_adj_qw_error = vector<double>(nstates);
-  total_err = 0.0;
+  total_error = 0.0;
 
   for (int i = 0 ; i < nstates; i++){
     state_adj_qw_error[i] = calc_qraw_error(i, state_adj_qw[i], false);
-    total_err += state_adj_qw_error[i];
+    total_error += state_adj_qw_error[i];
   }
-  total_err *= 0.5;
+  total_error *= 0.5;
   //cout << "dbg0626 sqer_sum: " << total_err << endl;
-  return total_err;
+  return total_error;
 }
 
 double VirtualStateCoupling::calc_qraw_error(size_t st_i, double qw_i, bool skip_lower_id=false){
@@ -677,7 +681,7 @@ int VirtualStateCoupling::mode_subzonebased_mc(){
     cout << "greedy" << endl;
     greedy_search(greedy_pivot-1);
   }
-  opt_err = calc_qraw_error_all();
+  opt_error = calc_qraw_error_all();
   cout << "Error gr   : " << calc_qraw_error_all() << endl;
   for (int i=0; i < nstates; i++){
     state_adj_qw_opt[i] = state_adj_qw[i];
@@ -687,7 +691,7 @@ int VirtualStateCoupling::mode_subzonebased_mc(){
   mc_acc = 0;
   mc_loop();
   cout << "Error mc1  : " << calc_qraw_error_all() << endl;
-  cout << "opt err : " << opt_err << endl;
+  cout << "opt err : " << opt_error << endl;
   cout << "mc acc  : " << mc_acc << endl;
 
   for (int i=0; i < nstates; i++){
@@ -702,7 +706,7 @@ int VirtualStateCoupling::mode_subzonebased_mc(){
   mc_loop();
   
   cout << "Error mc2  : " << calc_qraw_error_all() << endl;
-  cout << "opt err : " << opt_err << endl;
+  cout << "opt err : " << opt_error << endl;
   cout << "mc acc  : " << mc_acc << endl;
 
   write_qweight(fname_o_qweight_opt, state_adj_qw_opt, true, qweight_write_mode);
@@ -713,6 +717,8 @@ int VirtualStateCoupling::mode_subzonebased_mc(){
 
 
 int VirtualStateCoupling::mc_loop(){
+  double cur_temp = mc_temp;
+
   double delta_x = mc_delta_x;
   double err = calc_qraw_error_all();
   
@@ -723,6 +729,13 @@ int VirtualStateCoupling::mc_loop(){
   uniform_int_distribution<> ri(0,nstates-1);
   uniform_real_distribution<> rd(0,1);
 
+  //annealing
+  vector<double> mc_window_error_sum = vector<double>(mc_n_window_trend);
+  int current_anneal_trend = -1;
+  int prev_anneal_trend = -1;
+  size_t step_anneal_on = mc_error_ave_window_size * mc_n_window_trend * 10;
+  
+  for (int i=0; i<mc_n_window_trend; i++) mc_window_error_sum[i] = 0.0;
   vector<int> acc_rec;
   
   for (cur_step=0; cur_step < mc_steps; cur_step++){
@@ -730,23 +743,23 @@ int VirtualStateCoupling::mc_loop(){
     double delta_qw = (rd(mt)*2-1) * delta_x;
     double new_qw = state_adj_qw[v_id_mig]+delta_qw;
     if ( new_qw > 0.0 ) new_qw = 0.0;
-    //double err_cur = total_err;
+    //double err_cur = total_error;
     //double err_att = calc_qraw_error_all();
     double err_cur = calc_qraw_error(v_id_mig, state_adj_qw[v_id_mig]);
     double err_att = calc_qraw_error(v_id_mig, new_qw);
     //cout << "dbg0711 " <<cur_step << " "<< err_cur << " " << err_att << endl;
-    double delta_err = err_att - err_cur;
+    double delta_error = err_att - err_cur;
     bool acc=false;
-    if( delta_err <= 0 ){
+    if( delta_error <= 0 ){
       acc=true;
     }else{
-      acc = ( rd(mt) < exp(-delta_err/mc_temp) );
+      acc = ( rd(mt) < exp(-delta_error/cur_temp) );
     }
     if(acc){
       mc_acc += 1;
 
       state_adj_qw[v_id_mig] = new_qw;
-      total_err += delta_err;
+      total_error += delta_error;
 
       //double delta_qw_acc =  exp(new_qw) - exp(state_adj_qw[v_id_mig]);
       //double dq = log(1.0+delta_qw_acc);
@@ -762,8 +775,8 @@ int VirtualStateCoupling::mc_loop(){
 	sum_qw_test += exp(state_adj_qw[st_i]);
       }
       //cout << "dbg sum_qw_test "<< cur_step << " : " <<  sum_qw_test << " / " << log(nrm_fact_test) << "   " << delta_x << " " << delta_qw << "  " << new_qw << endl;
-      if (total_err < opt_err){
-	opt_err = total_err;
+      if (total_error < opt_error){
+	opt_error = total_error;
 	for (int i=0; i < nstates; i++){
 	  state_adj_qw_opt[i] = state_adj_qw[i];
 	}
@@ -799,10 +812,56 @@ int VirtualStateCoupling::mc_loop(){
       }
     }
     //    cout << cur_step << " " << cur_step % mc_log_interval << endl;
-    if (cur_step % mc_log_interval ==0){
-      cout << "  " << cur_step << " " << total_err << " " << acc_ratio << " " << delta_x << " " << factor << endl;
+
+    
+    //annealing
+
+    size_t window_id = (cur_step/mc_error_ave_window_size)%mc_n_window_trend;
+    mc_window_error_sum[window_id] += total_error;
+    if (mc_delta_temp != 0){
+      //cout << "dbg anneal chg "  << cur_temp << " " << current_anneal_trend << " "  << mc_delta_temp << " " << 1.0 + current_anneal_trend * mc_delta_temp << endl;;
+      cur_temp *= 1.0 + current_anneal_trend * mc_delta_temp;
+
+      if(cur_temp < mc_min_temp) cur_temp = mc_min_temp;
+      if(cur_temp > mc_max_temp) cur_temp = mc_max_temp;
     }
-    if (total_err < target_error ){
+	
+    if (mc_delta_temp != 0 &&
+	cur_step%mc_error_ave_window_size == 0){
+      int trend_count = 0;
+
+      for(int i=1; i < mc_n_window_trend; i++){
+	int cur_win = window_id + i;
+	if ( cur_win >= mc_n_window_trend ) cur_win -= mc_n_window_trend;
+	double diff = mc_window_error_sum[cur_win] -  mc_window_error_sum[window_id];
+	if (diff > 0) trend_count += 1;
+	else          trend_count -= 1;
+      }
+
+      if(trend_count != mc_n_window_trend &&
+	 trend_count != -mc_n_window_trend &&
+	 current_anneal_trend != 0 &&
+	 step_anneal_on == 0){
+	prev_anneal_trend = current_anneal_trend;
+	current_anneal_trend = 0;
+	step_anneal_on = cur_step + mc_error_ave_window_size * mc_n_window_trend;
+      }
+      if (cur_step == step_anneal_on){
+	if(current_anneal_trend == 0){
+	  current_anneal_trend = -prev_anneal_trend;
+	  step_anneal_on = cur_step + mc_error_ave_window_size * mc_n_window_trend * 10;
+	}else{
+	  step_anneal_on = 0;
+	}
+      }
+      mc_window_error_sum[window_id] = 0.0;
+    }
+    
+    if (cur_step % mc_log_interval ==0){
+      cout << "  " << cur_step << " " << total_error << " " << acc_ratio << " " << delta_x << " " << factor << " " << cur_temp << " " << current_anneal_trend << endl;
+    }
+
+    if (total_error < target_error ){
       return 1;
     }
   }

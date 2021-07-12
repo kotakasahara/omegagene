@@ -38,6 +38,14 @@ private:
   int greedy_max_steps;
   size_t greedy_pivot;
 
+  //anneal
+  int mc_n_window_trend;
+  int mc_error_ave_window_size;
+  double mc_max_temp;
+  double mc_min_temp;
+  double mc_delta_temp;
+
+
   size_t nstates;
   //std::vector<double> kappa;
   double kappa;
@@ -109,8 +117,8 @@ private:
   std::vector<double> state_adj_qw_opt;
   
   std::vector<double> state_adj_qw_error;
-  double total_err;
-  double opt_err;
+  double total_error;
+  double opt_error;
   size_t mc_acc;
 
   // 
