@@ -35,4 +35,8 @@ enum {
   QW_FILE_MODE_RAW=0,
   QW_FILE_MODE_LOG
 };
+enum {
+  DEFQW_MIN=0,
+  DEFQW_MIN01
+};
 #endif

@@ -14,7 +14,7 @@ Config::~Config(){
   mc_delta_x = 0.1;
   qweight_write_mode = QW_FILE_MODE_RAW;
   process_unsampled_zone = UNSAMPLE_OMIT;
-
+  default_qweight_mode = DEFQW_MIN01;
   mc_n_window_trend = 0;
   mc_error_ave_window_size = 0;
   mc_max_temp = 0;
@@ -67,6 +67,16 @@ void Config::setAll(vector<string> arg){
 	cerr << "invalid option for --process-unsampled-zone " << (*itr) << endl;
       }
       cout << "dbg config qweight_write_mode " << qweight_write_mode << endl;
+    }
+    else if(*itr=="--default-qweight-mode"){ itr++;
+      if  ((*itr) == "MIN")
+	default_qweight_mode = DEFQW_MIN;
+      else if ((*itr) == "MIN01")
+	default_qweight_mode = DEFQW_MIN01;
+      else{
+	cerr << "invalid option for --default-qweight-mode " << (*itr) << endl;
+      }
+      //cout << "dbg config qweight_write_mode " << qweight_write_mode << endl;
     }
 
 

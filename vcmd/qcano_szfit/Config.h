@@ -36,6 +36,7 @@ public:
   double mc_min_temp;
   double mc_delta_temp;
 
+  int default_qweight_mode;
   
   int qweight_write_mode;
   int process_unsampled_zone;

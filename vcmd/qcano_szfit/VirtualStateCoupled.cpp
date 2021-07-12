@@ -465,8 +465,10 @@ void VirtualStateCoupling::write_qweight(std::string fname, std::vector<double> 
     for ( int d = 0; d < n_dim; d++){
       ofs << "0 ";
     }
-    double put_qw = min_qw;
-    if(param_mode == 0) put_qw = exp(min_qw);
+    double put_qw;
+    if(default_qweight_mode == DEFQW_MIN){ put_qw = min_qw; }
+    else if(default_qweight_mode == DEFQW_MIN01){ put_qw = min_qw + log(0.1); }
+    if(param_mode == 0) put_qw = exp(put_qw);
     ofs << scientific << put_qw << std::endl;
   }
   for ( int l = 0; l < nstates; l++){
@@ -550,6 +552,9 @@ int VirtualStateCoupling::setup(Config cfg){
   mc_max_temp = cfg.mc_max_temp;
   mc_min_temp = cfg.mc_min_temp;
   mc_delta_temp = cfg.mc_delta_temp;
+
+  default_qweight_mode = cfg.default_qweight_mode;
+  cout << "dbg default_qweight_mode " << default_qweight_mode << endl;
   return 0;
 }
 
