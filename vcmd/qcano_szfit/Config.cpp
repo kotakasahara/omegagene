@@ -12,7 +12,8 @@ Config::~Config(){
   target_error = 1e-8;
   mc_delta_x_max = 1.0;
   mc_delta_x = 0.1;
-  qweight_write_mode = 1;
+  qweight_write_mode = QW_FILE_MODE_RAW;
+  process_unsampled_zone = UNSAMPLE_OMIT;
 
   mc_n_window_trend = 0;
   mc_error_ave_window_size = 0;
@@ -49,14 +50,26 @@ void Config::setAll(vector<string> arg){
     else if(*itr=="--o-qweight-opt"){ itr++; fname_o_qweight_opt=(*itr); }
     else if(*itr=="--qweight-write-mode"){ itr++;
       if  ((*itr) == "RAW")
-	qweight_write_mode=0;
+	qweight_write_mode = QW_FILE_MODE_RAW;
       else if ((*itr) == "LOG")
-	qweight_write_mode=1;
+	qweight_write_mode = QW_FILE_MODE_LOG;
       else{
 	cerr << "invalid option for --qweight-write-mode " << (*itr) << endl;
       }
+      //cout << "dbg config qweight_write_mode " << qweight_write_mode << endl;
+    }
+    else if(*itr=="--process-unsapmled-zone"){ itr++;
+      if  ((*itr) == "OMIT")
+	process_unsampled_zone = UNSAMPLE_OMIT;
+      else if ((*itr) == "MIN")
+	process_unsampled_zone = UNSAMPLE_MIN;
+      else{
+	cerr << "invalid option for --process-unsampled-zone " << (*itr) << endl;
+      }
       cout << "dbg config qweight_write_mode " << qweight_write_mode << endl;
     }
+
+
     else if(*itr=="--target-error"){ itr++; target_error=atof((*itr).c_str()); }
     else if(*itr=="--mc-temp"){ itr++; mc_temp=atof((*itr).c_str()); }
     else if(*itr=="--mc-delta-x"){ itr++; mc_delta_x=atof((*itr).c_str()); }
@@ -70,7 +83,6 @@ void Config::setAll(vector<string> arg){
     else if(*itr=="--mc-min-temp"){ itr++; mc_min_temp = atof((*itr).c_str());}
     else if(*itr=="--mc-max-temp"){ itr++; mc_max_temp = atof((*itr).c_str());}
     else if(*itr=="--mc-delta-temp"){ itr++; mc_delta_temp = atof((*itr).c_str());}
-
     else if(*itr=="--greedy-max-steps"){ itr++; greedy_max_steps = atoi((*itr).c_str());}
     else if(*itr=="--greedy-pivot"){ itr++; greedy_pivot = atoi((*itr).c_str());}
     else{

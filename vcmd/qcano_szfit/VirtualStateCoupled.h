@@ -67,8 +67,12 @@ private:
 
   int verbose;
   int qweight_write_mode;
-  // 0 ... raw value
-  // 1 ... log value
+  // QW_FILE_MODE_RAW = 0 ... raw value
+  // QW_FILE_MODE_LOG = 1 ... log value
+  int process_unsampled_zone;
+  // UNSAMPLED_OMIT = 0
+  // UNSAMPLED_MIN = 1
+
 
   // properties for each state
 

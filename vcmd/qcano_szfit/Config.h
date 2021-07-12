@@ -38,7 +38,7 @@ public:
 
   
   int qweight_write_mode;
-
+  int process_unsampled_zone;
 
   
   Config();

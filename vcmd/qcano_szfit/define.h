@@ -25,4 +25,14 @@ enum {
   FT_QRAW_IS,
   FT_DUMMY
 };
+
+enum {
+  UNSAMPLE_OMIT=0,
+  UNSAMPLE_MIN
+};
+
+enum {
+  QW_FILE_MODE_RAW=0,
+  QW_FILE_MODE_LOG
+};
 #endif
