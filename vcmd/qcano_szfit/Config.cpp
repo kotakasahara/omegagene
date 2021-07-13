@@ -20,7 +20,7 @@ Config::~Config(){
   mc_max_temp = 0;
   mc_min_temp = 0;
   mc_delta_temp = 0;
-
+  default_value_factor = 1.0;
 }
 void Config::setAll(int argn, char* argv[]){
   vector<string> arg;
@@ -95,6 +95,7 @@ void Config::setAll(vector<string> arg){
     else if(*itr=="--mc-delta-temp"){ itr++; mc_delta_temp = atof((*itr).c_str());}
     else if(*itr=="--greedy-max-steps"){ itr++; greedy_max_steps = atoi((*itr).c_str());}
     else if(*itr=="--greedy-pivot"){ itr++; greedy_pivot = atoi((*itr).c_str());}
+        else if(*itr=="--default-value-factor"){ itr++; default_value_factor = atof((*itr).c_str());}
     else{
       cerr<<"unknown keyword <"<<*itr<<">"<<endl;
       exit(1);
