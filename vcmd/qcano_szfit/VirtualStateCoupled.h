@@ -46,7 +46,7 @@ private:
   double mc_delta_temp;
 
   int default_qweight_mode;
-  double default_value_factor;
+  double default_qweight_factor;
 
   size_t nstates;
   //std::vector<double> kappa;

@@ -41,7 +41,7 @@ public:
   int qweight_write_mode;
   int process_unsampled_zone;
 
-  double default_value_factor;
+  double default_qweight_factor;
   
   Config();
   ~Config();
