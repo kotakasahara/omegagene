@@ -19,8 +19,12 @@ class VcMDConf():
         self.lambda_ranges = []
         # lambda_ranges[dim][vsid] = (min, max)
         self.params = {}
+        # params[(vs1, vs2, ...)] = (param1, param2, ...)
         self.qraw_is = {}
-        # params[(vs1, vs2, ...)] = (param1, param2)
+        # qraw_is[(vs1, vs2, ..., is1, is2, ...)] = (param1, param2, ...)
+        self.qraw_is_state = {}
+	# qraw_is_state[(vs1, vs2, ...)][(is1, is2, ...)] = (param1, param2, ...)
+        self.qraw = {}        
 
         self.init_vs = []
         # init_vs[dim] = vsid
@@ -196,6 +200,32 @@ class VcMDConf():
                 #print(k,self.qraw_is[k])
             else:
                 self.qraw_is[k] = v
+        return
+    def gen_qraw_is_state(self):
+        self.qraw_is_state = {}
+        for k, v in self.qraw_is.items():
+            state_key = []
+            is_key = []
+            for i in range(self.dim):
+                state_key.append(k[i])
+                is_key.append(k[self.dim+i])
+            state_key = tuple(state_key)
+            is_key = tuple(is_key)
+            if not state_key in self.qraw_is_state:
+                self.qraw_is_state[state_key] = {}
+            self.qraw_is_state[state_key][is_key] = v
+        return
+    def sum_qraw_is_state(self):
+        """
+        Summation qraw_is_state values for each state
+        and record as self.qraw
+        """
+        ret = {}
+        for k_state, sub_dict in self.qraw_is_state.items():
+            qraw = 0.0
+            for k_is, val in sub_dict.items():
+                qraw += val[0]
+            self.qraw[k_state] = qraw
         return
     def symmetrize(self):
         vs_param01 = {}
