@@ -28,6 +28,9 @@ def option_parse():
     p.add_option('--gmx', dest='flg_gmx',
                  action="store_true",
                  help="anayze gromacs output")
+    p.add_option('--weight-factor', dest='weight_factor',
+                 default=1.0, type="float",
+                 help="")
     p.add_option('--v58', dest='flg_v58',
                  action="store_true",
                  help="For assertion of the version.")
@@ -37,9 +40,7 @@ def option_parse():
 
     return opts, args
 
-def cal_prob(cano, vs, lmb):
-
-
+def cal_prob(cano, vs, lmb, factor):
     prob = {}
     frames = sorted(vs.keys())
     for frame in frames:
@@ -61,7 +62,7 @@ def cal_prob(cano, vs, lmb):
             cur_prob = 0
         else:
             n_overlapping_states = cano.count_overlapping_states(cur_vs, cur_lmb)
-        prob[frame] = cur_prob/float(n_overlapping_states)
+        prob[frame] = cur_prob/float(n_overlapping_states) * factor
     return prob
 
 def read_dat(fn, itv_dat, itv_cod, first_step=0, skip=0, valtype="int"):
@@ -117,7 +118,7 @@ def _main():
     else:
         lmb = read_dat(opts.fn_lmb, opts.itv_lmb, opts.itv_cod, 1, 0, "float")
 
-    prob = cal_prob(cano, vs, lmb)
+    prob = cal_prob(cano, vs, lmb, opts.weight_factor)
 
     write_dat(opts.fn_out, vs, lmb, prob)
     

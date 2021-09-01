@@ -39,7 +39,7 @@ def main():
     if args.i_weight:
         weight = read_weight(args.i_weight)
         if len(qraw_files) != len(weight):
-            stderr.write("The lengths of", args.i_qraw_list, "and", args.i_weight, "differ.")
+            sys.stderr.write("The lengths of", args.i_qraw_list, "and", args.i_weight, "differ.")
     
     
     vc = kkmm_vcmd.VcMDConf()

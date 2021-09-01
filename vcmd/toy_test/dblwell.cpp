@@ -66,6 +66,7 @@ int main(int argn, char* argv[]){
   for(int i = 0; i < n_bin; i++){
     cout << i*BINWIDTH << " " << hist[i] << " " << pmf[i]-min_pmf << endl;
   }
+  //cout << "test"<< endl;
 
   return(0);
 }

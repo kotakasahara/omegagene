@@ -47,6 +47,7 @@ def read_qrawis(qrawis_files, weight):
         vc.sum_qrawis(vc_tmp)
     vc.gen_qraw_is_state()
     vc.sum_qraw_is_state()
+    vc.normalize_qraw()
     return vc
 
 def cal_correlation_zone(vc_a, vc_b):

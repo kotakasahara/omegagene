@@ -89,7 +89,6 @@ class VcMDConf():
             if vs == key_def: continue
             self.qraw_is[vs][0] *= factor
         return
-
     def param_log(self):
         for vs, param in self.params.items():
             self.params[vs] = np.log(param)
@@ -101,7 +100,6 @@ class VcMDConf():
             self.params[vs] = np.exp(param)
         self.param_mode = 0
         return
-
     def multiply_params(self, conf):
         key_def = tuple([ 0 for x in range(self.dim)])
         #print "test"
@@ -214,6 +212,13 @@ class VcMDConf():
             if not state_key in self.qraw_is_state:
                 self.qraw_is_state[state_key] = {}
             self.qraw_is_state[state_key][is_key] = v
+        return
+    def normalize_qraw(self):
+        qraw_sum = 0
+        for k, v in self.qraw.items():        
+            qraw_sum += v
+        for k, v in self.qraw.items():
+            self.qraw[k] = v/qraw_sum
         return
     def sum_qraw_is_state(self):
         """
