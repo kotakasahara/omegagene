@@ -36,14 +36,14 @@ def read_qrawis(qrawis_files, weight):
     vc = kkmm_vcmd.VcMDConf()
     vc.read_qraw_is(qrawis_files[0])
     if weight != []:
-        vc.scale_qrawis(weight[0])
+        vc.scale_qraw_is(weight[0])
 
     for i, i_fn in enumerate(qrawis_files[1:]):
         vc_tmp = kkmm_vcmd.VcMDConf()        
-        vc_tmp.read_qrawis(i_fn)
+        vc_tmp.read_qraw_is(i_fn)
         #print(vc_tmp.qrawis)
         if weight != []:
-            vc_tmp.scale_qrawis(weight[i+1])
+            vc_tmp.scale_qraw_is(weight[i+1])
         vc.sum_qrawis(vc_tmp)
     vc.gen_qraw_is_state()
     vc.sum_qraw_is_state()
@@ -57,14 +57,23 @@ def cal_correlation_zone(vc_a, vc_b):
     sum_a2 = 0.0
     sum_b2 = 0.0
     n_dat = 0
+    sum_err = 0.0
     for k_state, qraw in vc_a.qraw.items():
-        if not k_state in vc_b.qraw: continue
+        if not k_state in vc_b.qraw:
+            #vc_b.qraw[k_state]=0.0
+            continue
+        flg_complete = True
+        for k_is, qraw_val in vc_a.qraw_is_state[k_state].items():
+            if not k_is in vc_b.qraw_is_state[k_state]:
+                flg_complete = False
+        if not flg_complete: continue
         n_dat += 1
         sum_a += vc_a.qraw[k_state]
         sum_b += vc_b.qraw[k_state]
         sum_ab += vc_a.qraw[k_state] * vc_b.qraw[k_state]
         sum_a2 += vc_a.qraw[k_state] * vc_a.qraw[k_state]
         sum_b2 += vc_b.qraw[k_state] * vc_b.qraw[k_state]
+        sum_err += (vc_a.qraw[k_state] - vc_b.qraw[k_state])**2
     ave_ab = sum_ab/n_dat
     ave_a = sum_a/n_dat
     ave_b = sum_b/n_dat
@@ -73,7 +82,7 @@ def cal_correlation_zone(vc_a, vc_b):
     sd_a = (ave_a2 - ave_a*ave_a)**0.5
     sd_b = (ave_b2 - ave_b*ave_b)**0.5
     cor = (ave_ab-ave_a*ave_b)/(sd_a*sd_b)
-    return cor
+    return cor, sum_err
         
 def cal_correlation_subzone(vc_a, vc_b):
     cor_is = {}
@@ -81,6 +90,7 @@ def cal_correlation_subzone(vc_a, vc_b):
     sum_cor2 = 0.0
     n_cor = 0
     n_complete_zones = 0
+    sum_err = 0.0
     for k_state, sub_dict in vc_a.qraw_is_state.items():
         sum_ab = 0.0
         sum_a = 0.0
@@ -88,37 +98,48 @@ def cal_correlation_subzone(vc_a, vc_b):
         sum_a2 = 0.0
         sum_b2 = 0.0
         n_dat = 0
+        flg_complete = True
+        if not k_state in vc_b.qraw_is_state:
+            flg_complete = False
+            continue
+            #vc_b.qraw_is_state[k_state] = {}
+            #vc_b.qraw[k_state] = 0.0
         for k_is, qraw_val in sub_dict.items():
-            if not k_state in vc_b.qraw_is_state or \
-               not k_is in vc_b.qraw_is_state[k_state]:
+            if not k_is in vc_b.qraw_is_state[k_state]:
+                #vc_b.qraw_is_state[k_state][k_is] = [0.0001]
+                #vc_b.qraw[k_state] += 0.0001
+                flg_complete = False
                 continue
             n_dat += 1
             rho_a = vc_a.qraw_is_state[k_state][k_is][0]/vc_a.qraw[k_state]
             rho_b = vc_b.qraw_is_state[k_state][k_is][0]/vc_b.qraw[k_state]
+            sum_err = (rho_a - rho_b)**2
             sum_ab += rho_a * rho_b
             sum_a += rho_a
             sum_b += rho_b
             sum_a2 += rho_a * rho_a
             sum_b2 += rho_b * rho_b
-        if n_dat != 2**vc_a.dim: continue
-        n_complete_zones += 1
-        ave_ab = sum_ab/n_dat
-        ave_a = sum_a/n_dat
-        ave_b = sum_b/n_dat
-        ave_a2 = sum_a2/n_dat
-        ave_b2 = sum_b2/n_dat
-        sd_a = (ave_a2 - ave_a*ave_a)**0.5
-        sd_b = (ave_b2 - ave_b*ave_b)**0.5
-        cor = (ave_ab - ave_a*ave_b)/(sd_a*sd_b)
-        sum_cor += cor
-        sum_cor2 += cor * cor
-        n_cor += 1
-        cor_is[k_state] = cor
+        if flg_complete:
+            n_complete_zones += 1
+            #if n_dat != 2**vc_a.dim: continue
+            ave_ab = sum_ab/n_dat
+            ave_a = sum_a/n_dat
+            ave_b = sum_b/n_dat
+            ave_a2 = sum_a2/n_dat
+            ave_b2 = sum_b2/n_dat
+            sd_a = (ave_a2 - ave_a*ave_a)**0.5
+            sd_b = (ave_b2 - ave_b*ave_b)**0.5
+            if sd_a==0 or sd_b==0 : continue
+            cor = (ave_ab - ave_a*ave_b)/(sd_a*sd_b)
+            sum_cor += cor
+            sum_cor2 += cor * cor
+            n_cor += 1
+            cor_is[k_state] = cor
         
     ave_cor = sum_cor/n_cor
     ave_cor2 = sum_cor2/n_cor
     sd_cor = (ave_cor2 - ave_cor*ave_cor)**0.5
-    return ave_cor, sd_cor, n_complete_zones
+    return ave_cor, sd_cor, sum_err, n_complete_zones
 
 def main():
     args = argparser()
@@ -146,13 +167,12 @@ def main():
             if len(qrawis_files_b) != len(weight_b):
                 stderr.write("The lengths of", args.i_qrawis_list[1], "and", i_weight[1], "differ.")
 
-
     vc_a = read_qrawis(qrawis_files_a,  weight_a)
     vc_b = read_qrawis(qrawis_files_b,  weight_b)
 
-    sz_cor_ave, sz_cor_sd, n_complete_zones = cal_correlation_subzone(vc_a, vc_b)
-    z_cor = cal_correlation_zone(vc_a, vc_b)
-    print(z_cor, sz_cor_ave, sz_cor_sd, n_complete_zones)
+    z_cor, z_err = cal_correlation_zone(vc_a, vc_b)
+    sz_cor_ave, sz_cor_sd, sz_err, n_complete_zones = cal_correlation_subzone(vc_a, vc_b)
+    print(z_cor, sz_cor_ave, sz_cor_sd, n_complete_zones, z_err, sz_err)
 
     return
 

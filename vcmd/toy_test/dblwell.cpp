@@ -10,7 +10,7 @@ using namespace std;
 #define BINWIDTH 0.05
 #define DX 0.01
 #define MAX_X 3.0
-#define MAX_R 4.5
+#define MAX_R 5.2
 #define GAS_CONST    8.31451
 #define JOULE_CAL    4.184
 
