@@ -56,7 +56,7 @@ def check_in_vs(lmb, vs, vcparams):
 
 def get_vs_candidates(lmb, vcparams):
     vs_cand = []
-    print(lmb)
+    #print(lmb)
     for dim_tmp, val_lmb in enumerate(lmb):
         dim = dim_tmp+1
         vs_cand_dim = []

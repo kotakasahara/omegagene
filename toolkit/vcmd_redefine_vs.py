@@ -16,9 +16,6 @@ def opt_parse():
                  help="q_cano file")
     p.add_option('-o', dest='fn_out',
                  help="filename for output")    
-    p.add_option('--cfg', dest='fn_config',
-                 default="md.inp",
-                 help="config file")    
     p.add_option('--lambda-log', dest='fn_lambda',
                  default="lambda.out",
                  help="lambda log file")    
@@ -47,7 +44,7 @@ def opt_parse():
     return opts, args
 
 class VcMDData(object):
-    def __init__(self, bin_width, fn_config, fn_lambda, fn_vslog, path_cal):
+    def __init__(self, bin_width, fn_qweight, fn_lambda, fn_vslog, path_cal):
         self.bin_width = bin_width
 
         # self.distrib[bin_id][(vs1,vs2...)] = prob
@@ -61,7 +58,7 @@ class VcMDData(object):
         self.path_cal = path_cal
         self.fn_lambda = fn_lambda
         self.fn_vslog = fn_vslog
-        self.fn_config = fn_config
+        # self.fn_config = fn_config
         # self.fn_qcano = "vcmd_next.inp"
         self.stages = []
         self.series = []
@@ -69,7 +66,7 @@ class VcMDData(object):
         ## self.files_lambda[stage][series] = "fn"
         self.files_lambda = {} 
         self.files_vslog = {} 
-        self.files_qcano = {}
+        self.files_qweight = {}
 
 
         return
@@ -98,19 +95,21 @@ class VcMDData(object):
         self.stages = self.parse_unit(stages_str)
         self.series = self.parse_unit(series_str)
         for st in self.stages:
-            #fn_qcano = os.path.join(self.path_cal, str(st-1), self.fn_qcano)
-            
-            fn_cfg = os.path.join(self.path_cal, str(st), "n"+str(self.series[0]), self.fn_config)
-            cfgr = kkmmconfig.ConfigReader(fn_cfg)
-            cfgr.debug=False
-            cfg = cfgr.read_config()
-            fn_qcano = os.path.join(self.path_cal, str(st), "n"+str(self.series[0]), cfg.get_val("fn-i-vcmd-inp"))
 
-            if not os.path.exists(fn_qcano):
-                sys.stderr.write("File not found; qcano for the stage "+str(st)+"\n")
-                sys.stderr.write(fn_qcano+"\n")
+            fn_qweight = os.path.join(self.path_cal, str(st-1), self.fn_qweight)
+            
+
+            #fn_cfg = os.path.join(self.path_cal, str(st), "n"+str(self.series[0]), self.fn_config)
+            #cfgr = kkmmconfig.ConfigReader(fn_cfg)
+            #cfgr.debug=False
+            #cfg = cfgr.read_config()
+            #fn_qcano = os.path.join(self.path_cal, str(st), "n"+str(self.series[0]), cfg.get_val("fn-i-vcmd-inp"))
+
+            if not os.path.exists(fn_qweight):
+                sys.stderr.write("File not found; qweight for the stage "+str(st)+"\n")
+                sys.stderr.write(fn_qweight+"\n")
                 continue
-            self.files_qcano[st] = fn_qcano
+            self.files_qweight[st] = fn_qweight
             self.files_lambda[st] = {}
             self.files_vslog[st] = {}
             for se in self.series:
@@ -143,6 +142,19 @@ class VcMDData(object):
             trj.append(term)
         f.close()
         return trj
+
+    def read_lambda(self, fn_trj):
+        trj = []
+        f = open(fn_trj)
+        f.readline()
+        for line in f:
+            buf = line.strip().split()            
+            term = None
+            term = [float(x) for x in buf]
+            trj.append(term[1:])
+        f.close()
+        return trj
+
     def add_distrib(self, vcconf, trj_lambda, trj_vslog, unweighted=False):
         #for i, vs_l in enumerate(trj_vslog):
         for i, lmb in enumerate(trj_lambda):
@@ -173,20 +185,20 @@ class VcMDData(object):
     def calc_canonical(self, unweigthed=False):
         self.distrib = {}
         self.sum_prob = 0.0
-        for st, fn_qcano in self.files_qcano.items():
+        for st, fn_qweight in self.files_qweight.items():
             vcconf = kkmm_vcmd.VcMDConf()
-            vcconf.read_params(fn_qcano)
+            vcconf.read_params(fn_qweight)
             if self.dim == 0:
                 self.dim = vcconf.dim
             if self.dim != vcconf.dim:
                 sys.stderr.write("Inconsistency in the VS dimension\n")
-                sys.stderr.write(fn_qcano+"\n")
+                sys.stderr.write(fn_qweight+"\n")
                 sys.exit(1)
 
             for se, fn_lambda in self.files_lambda[st].items():
-                print "Stage:"+str(st) + " - Series:" + str(se)
+                print("Stage:"+str(st) + " - Series:" + str(se))
                 fn_vslog = self.files_vslog[st][se]
-                trj_lambda = self.read_trj(fn_lambda, "float")
+                trj_lambda = self.read_lambda(fn_lambda)
                 trj_vslog = self.read_trj(fn_vslog, "int")
                 #try:
                 #    assert(len(trj_vslog)==len(trj_lambda))
@@ -233,7 +245,7 @@ class VcMDData(object):
             vs.append(tmp_vs)
         all_vs = self.enum_vs(vs, [], [])
         return all_vs
-    def set_qcano_to_vs(self, vcnew):
+    def set_qweight_to_vs(self, vcnew):
         for bin_id, val in self.distrib_nrm.items():
             vs = self.find_vs(bin_id, vcnew)
             for i_vs in vs:
@@ -247,7 +259,7 @@ class VcMDData(object):
 def _main():
     opts, args = opt_parse()
 
-    vcdat = VcMDData(opts.bin_width, opts.fn_config,
+    vcdat = VcMDData(opts.bin_width, fn_qweight,
                      opts.fn_lambda, opts.fn_vslog,
                      opts.cal_dir)
     vcdat.set_trajectory_files(opts.stages, opts.series)
@@ -262,7 +274,7 @@ def _main():
     if opts.fn_out:
         vcnew = kkmm_vcmd.VcMDConf()
         vcnew.read_params(opts.fn_new_vs)
-        vcnew = vcdat.set_qcano_to_vs(vcnew)
+        vcnew = vcdat.set_qweight_to_vs(vcnew)
         kkmm_vcmd.VcMDParamsWriter(opts.fn_out).write(vcnew)
 
     return

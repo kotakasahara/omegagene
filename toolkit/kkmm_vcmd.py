@@ -311,6 +311,35 @@ class VcMDConf():
             if self.is_in_range(c_vs, lmb):
                 n_ovl += 1
         return n_ovl
+    def get_states_for_lambda_sub(self, cur_vs, vs_cand):
+        cur_dim = len(cur_vs)
+        if cur_dim == self.dim:
+            self.vs_set.add(tuple(cur_vs))
+            return
+        for i_vs in vs_cand[cur_dim]:
+            new_vs = copy.deepcopy(cur_vs)
+            new_vs.append(i_vs)
+            self.get_states_for_lambda_sub(new_vs, vs_cand)
+        return
+    def get_states_for_lambda(self, lmb):
+        """
+        Enumerating virtual states overlapping with the argument lambda value.
+        """
+        states = []
+        vs_axes = []
+        for  i_dim in range(self.dim):
+            dim = i_dim + 1
+            vs_axes_dim = []
+            for i_vs in range(self.n_vs[i_dim]):
+                vs = i_vs+1
+                if lmb[dim-1] <=  self.lambda_ranges[dim][vs][0]: break
+                if lmb[dim-1] >   self.lambda_ranges[dim][vs][1]: continue
+                vs_axes_dim.append(vs)
+            vs_axes.append(vs_axes_dim)
+        self.vs_set = set()
+        
+        self.get_states_for_lambda_sub([], vs_axes)
+        return self.vs_set
 
 class VcMDInitReader(kkkit.FileI):
     def __init__(self, fn):
