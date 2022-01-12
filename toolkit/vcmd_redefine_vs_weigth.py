@@ -56,9 +56,8 @@ def _main():
     for i_weight in weight_list:
         print(i_weight)
         vcmd = add_cano_weight(vcmd, i_weight)
-
+    vcmd.normalize_params()
     writer = kkmm_vcmd.VcMDParamsWriter(args.o_param_new)
-
     writer.write(vcmd)
 
     return

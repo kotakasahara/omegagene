@@ -92,13 +92,15 @@ def get_vs_candidates(lmb, vcparams):
 def main():
     args = argparser()
     lmd = read_lambda(args.i_lambda)[-1]
-    vs = read_vs(args.i_vs)[-1]
+    vs = []
+    if args.i_vs:
+        vs = read_vs(args.i_vs)[-1]
     #print(lmd)
     #print(vs)
     vcparams = kkmm_vcmd.VcMDConf()
     vcparams.read_params(args.i_param)
     new_vs = []
-    if check_in_vs(lmd, vs, vcparams):
+    if len(vs) > 0 and  check_in_vs(lmd, vs, vcparams):
         new_vs = vs
     else:
         print("state mod: ")

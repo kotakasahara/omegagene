@@ -24,6 +24,7 @@ def argparser():
     parser.add_argument('--dir_out', help="")
     parser.add_argument('--n_bins', nargs="*", type=int, help='')
     parser.add_argument('--max_prob', type=float, help='')
+    parser.add_argument('--uniform', action="store_true", help='')
     args = parser.parse_args()
     return args
 
@@ -72,7 +73,7 @@ class LambdaGrid:
                 self.n_samples += 1
         return
 
-    def pick_structures(self, n_struct, max_prob):
+    def pick_structures(self, n_struct, max_prob, uniform):
         print("pick_structures")
         picked = []
         distrib_tmp = sorted(self.grid_distrib.items(), key=lambda x:x[1], reverse=False)
@@ -82,9 +83,15 @@ class LambdaGrid:
         #    pseudo = distrib_tmp[0][1] * ratio/max_prob
         #n_samples_p = self.n_samples + pseudo*len(distrib_tmp)
         #print([(x[1]+pseudo)/n_samples_p for x in distrib_tmp ])
-        distrib = np.array([ self.n_samples/(x[1]) for x in distrib_tmp ])
+        distrib = []
+        if uniform:
+            distrib = np.array([ 1.0 for x in distrib_tmp ])
+        else:
+            distrib = np.array([ self.n_samples/(x[1]) for x in distrib_tmp ])
         distrib /= np.sum(distrib)
+                
         distrib_lmb = [ x[0] for x in distrib_tmp ]
+
         print("distrib")
         print(distrib_tmp)
         print(distrib)
@@ -175,7 +182,7 @@ def _main():
 
     vcmd.read_params(args.i_param_temp)
     grid.mesh_distribution(weight_list)
-    picked_re = grid.pick_structures(args.n_struct, args.max_prob)
+    picked_re = grid.pick_structures(args.n_struct, args.max_prob, args.uniform)
     trr_list = read_fnlist(args.i_trr_list)
 
     model = kkpdb.PDBReader(args.i_pdb).read_model()
