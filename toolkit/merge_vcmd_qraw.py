@@ -26,6 +26,9 @@ def opt_parse():
     p.add_option('--p-count', dest='pseudo_count',
                  type="int", default = 0,
                  help="pseudo_count")
+    p.add_option('--qcano-factor', dest='qcano_factor',
+                 type="float", default = 1,
+                 help="qcano factor")
     p.add_option('--symmetrize', dest='symmetrize',
                  action="store_true",
                  help="Symmetrize the counts")
@@ -103,10 +106,10 @@ def _main():
     vc.statistics()
 
     vc_prev = kkmm_vcmd.VcMDConf()
-    print("dbg0709c")
+    #print("dbg0709c")
     vc_prev.read_params(opts.fn_qcano, False)
     if opts.symmetrize:       vc_prev.symmetrize()
-    vc.multiply_params(vc_prev)
+    vc.multiply_params(vc_prev, opts.qcano_factor)
     vc.normalize_params()
     #vc.pop_zero_vs()
 

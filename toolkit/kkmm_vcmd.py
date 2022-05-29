@@ -100,7 +100,7 @@ class VcMDConf():
             self.params[vs] = np.exp(param)
         self.param_mode = 0
         return
-    def multiply_params(self, conf):
+    def multiply_params(self, conf, factor=1):
         key_def = tuple([ 0 for x in range(self.dim)])
         #print "test"
         #print self.params[key]
@@ -126,16 +126,20 @@ class VcMDConf():
             for i, p in enumerate(conf.params[vs]):
                 if self.param_mode == 1:
                     if conf.param_mode == 0:
-                        p = np.log(p)
+                        p = np.log(p) * factor
                     self.params[vs][i] += p
                 else:
                     if conf.param_mode == 1:
-                        p = np.exp(p)
+                        p = np.exp(p * factor) 
+                    else:
+                        p = p**factor
                     if self.params[vs][i] > 0:
                         if p > 0:
                             self.params[vs][i] *= p
                         else:
                             self.params[vs][i] *= self.params[vs][i]
+                        
+
             #print self.params[vs]
         return
     def normalize_params(self):
