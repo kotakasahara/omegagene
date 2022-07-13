@@ -15,7 +15,7 @@ install_manifest.txt
 
 Makefile*
 *.output
-*.o
+n*.o
 *.tmp
 
 # Compiled Object files
