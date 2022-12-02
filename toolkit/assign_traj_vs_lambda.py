@@ -36,7 +36,7 @@ def option_parse():
                  help="For assertion of the version.")
 
     opts, args = p.parse_args()
-    p.print_help()
+    #p.print_help()
 
     return opts, args
 
