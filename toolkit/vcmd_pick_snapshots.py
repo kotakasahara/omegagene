@@ -24,6 +24,8 @@ def argparser():
     parser.add_argument('--dir_out', help="")
     parser.add_argument('--n_bins', nargs="*", type=int, help='')
     parser.add_argument('--max_prob', type=float, help='')
+    parser.add_argument('--sample_min_lambda', narg="*", help='')
+    parser.add_argument('--sample_max_lambda', narg="*", help='')
     parser.add_argument('--uniform', action="store_true", help='')
     args = parser.parse_args()
     return args
@@ -45,7 +47,7 @@ class LambdaGrid:
         self.n_samples = 0
         return
 
-    def mesh_distribution(self, weight_list):
+    def mesh_distribution(self, weight_list, sample_min_lambda, sample_max_lambda):
         print("mesh_distribution")
         for dim in range(1, self.vcmd.dim+1):
             print(dim, self.vcmd.n_vs[dim-1])
@@ -65,12 +67,22 @@ class LambdaGrid:
                 lmb = np.array([float(x) for x in terms[2:2+self.vcmd.dim]])
                 lmb01 = (lmb - self.lambda_min)/(self.lambda_max - self.lambda_min)
                 lmb_bin = tuple([ int(x) for  x in lmb01 / (1.0/np.array(self.n_bins)) ])
-                if not lmb_bin in self.grid_distrib:
-                    self.grid_distrib[lmb_bin] = 0
-                    self.grid_ss[lmb_bin] = []
-                self.grid_distrib[lmb_bin] += 1
-                self.grid_ss[lmb_bin].append((file_id, line_id, lmb))
-                self.n_samples += 1
+
+                flg = True
+                for dim, l in enumerate(lmb):
+                    if dim < len(sample_min_lambda) and l < sample_min_labmda[dim]:
+                        flg = False
+                        break
+                    if dim < len(sample_max_lambda) and l >= sample_max_labmda[dim]:
+                        flg = False
+                        break
+                if flg:
+                    if not lmb_bin in self.grid_distrib:
+                        self.grid_distrib[lmb_bin] = 0
+                        self.grid_ss[lmb_bin] = []
+                    self.grid_distrib[lmb_bin] += 1
+                    self.grid_ss[lmb_bin].append((file_id, line_id, lmb))
+                    self.n_samples += 1
         return
 
     def pick_structures(self, n_struct, max_prob, uniform):
@@ -181,7 +193,7 @@ def _main():
 
 
     vcmd.read_params(args.i_param_temp)
-    grid.mesh_distribution(weight_list)
+    grid.mesh_distribution(weight_list, args.sample_min_lambda, args.ample_max_lambda)
     picked_re = grid.pick_structures(args.n_struct, args.max_prob, args.uniform)
     trr_list = read_fnlist(args.i_trr_list)
 
