@@ -191,7 +191,7 @@ def _main():
 
 
     vcmd.read_params(args.i_param_temp)
-    grid.mesh_distribution(weight_list, args.sample_min_lambda, args.ample_max_lambda)
+    grid.mesh_distribution(weight_list, args.sample_min_lambda, args.sample_max_lambda)
     picked_re = grid.pick_structures(args.n_struct, args.max_prob, args.uniform)
     trr_list = read_fnlist(args.i_trr_list)
 
