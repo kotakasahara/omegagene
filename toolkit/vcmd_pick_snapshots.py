@@ -70,9 +70,9 @@ class LambdaGrid:
 
                 flg = True
                 for dim, l in enumerate(lmb):
-                    if dim < len(sample_min_lambda) and l < sample_min_lambda[dim]:
+                    if sample_min_lambda and dim < len(sample_min_lambda) and l < sample_min_lambda[dim]:
                         flg = False
-                    if dim < len(sample_max_lambda) and l >= sample_max_lambda[dim]:
+                    if sample_max_lambda and dim < len(sample_max_lambda) and l >= sample_max_lambda[dim]:
                         flg = False
                 if flg:
                     if not lmb_bin in self.grid_distrib:
