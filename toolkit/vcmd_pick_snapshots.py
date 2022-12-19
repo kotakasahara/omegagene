@@ -24,8 +24,8 @@ def argparser():
     parser.add_argument('--dir_out', help="")
     parser.add_argument('--n_bins', nargs="*", type=int, help='')
     parser.add_argument('--max_prob', type=float, help='')
-    parser.add_argument('--sample_min_lambda', nargs="*", help='')
-    parser.add_argument('--sample_max_lambda', nargs="*", help='')
+    parser.add_argument('--sample_min_lambda', type=float, nargs="*", help='')
+    parser.add_argument('--sample_max_lambda', type=float, nargs="*", help='')
     parser.add_argument('--uniform', action="store_true", help='')
     args = parser.parse_args()
     return args
