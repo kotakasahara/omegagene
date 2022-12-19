@@ -1,0 +1,22 @@
+EXECUTABLES = qcano_szfit
+
+CC=g++
+
+GCCFLAGS = -ffast-math -O3 -Wall
+ICCFLAGS = -g -ansi -O3
+
+OBJS = Config.o  Read.o   VirtualStateCoupled.o  main.o
+
+#OBJS =$(SRCS:.c=.o)
+
+.SUFFIXES: .o .cpp
+
+$(EXECUTABLES) : $(OBJS)
+	rm -f $(EXECUTABLES)
+	$(CC) -o $(EXECUTABLES) $(OBJS) -lm
+.cpp .o:
+	$(CC) -c $(ICCFLAGS) $<
+
+$(OBJS): define.h
+clean :
+	-rm -f *~ *.o $(EXECUTABLES)
