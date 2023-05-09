@@ -9,16 +9,18 @@ def argparser():
     parser.add_argument('--out', help='')
     parser.add_argument('--i_param', type=str, help='')
     parser.add_argument('--i_vs', type=str, help='')
+    parser.add_argument('--comment_char', nargs='*', default=["#"], type=str, help='')
 #    parser.add_argument('--i_vs', action=store_true, help='')
     args = parser.parse_args()
     return args
 
-def read_lambda(fn_lambda):
+def read_lambda(fn_lambda, comment_char):
     f = open(fn_lambda)
     terms = []
     f.readline()
     lmd = []
     for line in f:
+        if line[0] in comment_char: continue
         terms = line.strip().split()
         lmd.append([ float(x) for x in  terms ][1:])
     f.close()
@@ -91,7 +93,7 @@ def get_vs_candidates(lmb, vcparams):
 
 def main():
     args = argparser()
-    lmd = read_lambda(args.i_lambda)[-1]
+    lmd = read_lambda(args.i_lambda, args.comment_char)[-1]
     vs = []
     if args.i_vs:
         vs = read_vs(args.i_vs)[-1]
